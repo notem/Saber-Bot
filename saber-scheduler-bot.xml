@@ -56,39 +56,6 @@
     <exclude name="**/?*.aj"/>
   </patternset>
   
-  <!-- JDK definitions -->
-  
-  <property name="jdk.bin.1.8" value="${jdk.home.1.8}/bin"/>
-  <path id="jdk.classpath.1.8">
-    <fileset dir="${jdk.home.1.8}">
-      <include name="../default/jre/lib/charsets.jar"/>
-      <include name="../default/jre/lib/deploy.jar"/>
-      <include name="../default/jre/lib/ext/cldrdata.jar"/>
-      <include name="../default/jre/lib/ext/dnsns.jar"/>
-      <include name="../default/jre/lib/ext/jaccess.jar"/>
-      <include name="../default/jre/lib/ext/jfxrt.jar"/>
-      <include name="../default/jre/lib/ext/localedata.jar"/>
-      <include name="../default/jre/lib/ext/nashorn.jar"/>
-      <include name="../default/jre/lib/ext/sunec.jar"/>
-      <include name="../default/jre/lib/ext/sunjce_provider.jar"/>
-      <include name="../default/jre/lib/ext/sunpkcs11.jar"/>
-      <include name="../default/jre/lib/ext/zipfs.jar"/>
-      <include name="../default/jre/lib/javaws.jar"/>
-      <include name="../default/jre/lib/jce.jar"/>
-      <include name="../default/jre/lib/jfr.jar"/>
-      <include name="../default/jre/lib/jfxswt.jar"/>
-      <include name="../default/jre/lib/jsse.jar"/>
-      <include name="../default/jre/lib/management-agent.jar"/>
-      <include name="../default/jre/lib/plugin.jar"/>
-      <include name="../default/jre/lib/resources.jar"/>
-      <include name="../default/jre/lib/rt.jar"/>
-    </fileset>
-  </path>
-  
-  <property name="project.jdk.home" value="${jdk.home.1.8}"/>
-  <property name="project.jdk.bin" value="${jdk.bin.1.8}"/>
-  <property name="project.jdk.classpath" value="jdk.classpath.1.8"/>
-  
   
   <!-- Project Libraries -->
   
