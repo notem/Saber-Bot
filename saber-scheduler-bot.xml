@@ -60,7 +60,7 @@
   <!-- Project Libraries -->
   
   <path id="library.jda-3.0.beta_75-withdependencies.classpath">
-    <pathelement location="${basedir}/../../temp/JDA-3.0.BETA_75-withDependencies.jar"/>
+    <pathelement location="${basedir}/JDA-3.0.BETA_75-withDependencies.jar"/>
   </path>
   
   <!-- Modules -->
