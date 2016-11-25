@@ -81,7 +81,7 @@ public class EventEntryParser
         // the third line is empty space,     \\
 
         // lines four through n-2 are comments \\
-        for(int c = 4; c < lines.length-2; c++ )
+        for(int c = 4; c < lines.length-3; c++ )
             eComments.add(lines[c]);
 
         // line n-1 is an empty space \\
