@@ -15,13 +15,14 @@ public class AnnounceCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
+        // can't announce a message that doesn't exist!
         return args.length > 0;
     }
 
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        // reform the message
+        // reform the args into one string
         String msg = "";
         for( String str : args )
            msg += " " + str;
@@ -38,7 +39,7 @@ public class AnnounceCommand implements Command
         }
         catch( PermissionException e )
         {
-            Main.handleException( e );
+            Main.handleException( e, event );
         }
 
     }

@@ -43,7 +43,7 @@ public class HelpCommand implements Command
         }
         catch( Exception e )
         {
-            Main.handleException( e );
+            Main.handleException( e, event );
         }
         // and attempt to delete the original help command from chat
         try
@@ -53,7 +53,7 @@ public class HelpCommand implements Command
         // catch Permission exceptions (private channel or not assigned permissions in public channel)
         catch( PermissionException e )
         {
-            Main.handleException( e );
+            Main.handleException( e, event );
         }
     }
 }

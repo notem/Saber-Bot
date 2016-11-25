@@ -30,7 +30,7 @@ public class MessageListener extends ListenerAdapter
         // bot also listens on EVENT_CHAN for it's own messages
         if( user.equals( Main.jda.getSelfUser().getId() ) &&
                 origin.equals(BotConfig.EVENT_CHAN)) {
-            Main.handleScheduledEvent(Main.scheduleParser.parse(content, event));
+            Main.handleEventEntry(Main.eventEntryParser.parse(content, event));
         }
     }
 
@@ -51,7 +51,7 @@ public class MessageListener extends ListenerAdapter
                 }
                 catch( Exception e )
                 {
-                    Main.handleException( e );
+                    Main.handleException( e, event );
                 }
             // otherwise send message to ANNOUNCE_CHAN
             else
@@ -61,7 +61,7 @@ public class MessageListener extends ListenerAdapter
                 }
                 catch( Exception e )
                 {
-                    Main.handleException( e );
+                    Main.handleException( e, event );
                 }
         }
     }
