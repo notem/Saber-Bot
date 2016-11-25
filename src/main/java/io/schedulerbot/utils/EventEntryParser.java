@@ -173,7 +173,7 @@ public class EventEntryParser
             String startMsg = "@everyone The event **" + this.eTitle + "** has begun!";
             String endMsg = "@everyone The event **" + this.eTitle + "** has ended.";
 
-            // convert the times into integers
+            // convert the times into integers representing the time in seconds
             Integer startH = Integer.parseInt(this.eStart.split(":")[0]);
             Integer startM = Integer.parseInt(this.eStart.split(":")[1]);
             Integer start = startH*60*60 + startM*60;
@@ -196,7 +196,37 @@ public class EventEntryParser
             // run the main operation of the thread
             try
             {
-                Thread.sleep(wait1*1000);        // sleep until the event starts
+                System.out.printf( "%d:", wait1);
+                Integer wait = (int)(Math.ceil( ((double)wait1)/(60*60) )*60*60) - wait1;
+                wait1 = (int)Math.floor(((double)wait1)/(60*60))*60*60;
+                System.out.printf( "%d:%d:", wait,wait1);
+                while( wait1 != 0 )
+                {
+                    try
+                    {
+                        String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                        String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + (wait1/(60*60)+1) + " hours.)";
+                        String msg = "";
+                        for(String line : lines)
+                        {
+                            if(line.equals(lines[lines.length-2]))
+                                msg += newline;
+                            else
+                                msg += line;
+                            if(!line.equals(lines[lines.length-1]))
+                                msg += "\n";
+                        }
+                        this.msgEvent.getMessage().editMessage(msg).queue();
+                    }
+                    catch( Exception e )
+                    {
+                        Main.handleException( e, this.msgEvent);
+                    }
+
+                    Thread.sleep(wait * 1000);        // sleep until the event starts
+                    wait = 60*60;                     // set wait to one hour
+                    wait1 -= 60*60;                   // decrement wait1 by one hour
+                }
 
                 // announce that the event is beginning
                 if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
@@ -206,7 +236,35 @@ public class EventEntryParser
                     guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
                             .sendMessage( startMsg ).queue();
 
-                Thread.sleep(wait2*1000);    // sleep until the event ends
+                wait = (int) (Math.ceil( ((double)wait2)/(60*60) )*60*60) - wait2;
+                wait2 = (int) Math.floor( ((double)wait2)/(60*60) )*60*60;
+                while( wait2 != 0 )
+                {
+                    try
+                    {
+                        String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                        String newline = lines[lines.length-2].split("\\(")[0] + "(ends in " + (wait2/(60*60)+1) + " hour.)";
+                        String msg = "";
+                        for(String line : lines)
+                        {
+                            if(line.equals(lines[lines.length-2]))
+                                msg += newline;
+                            else
+                                msg += line;
+                            if(!line.equals(lines[lines.length-1]))
+                                msg += "\n";
+                        }
+                        this.msgEvent.getMessage().editMessage(msg);
+                    }
+                    catch( Exception e )
+                    {
+                        Main.handleException( e, this.msgEvent);
+                    }
+
+                    Thread.sleep(wait * 1000);        // sleep until the event starts
+                    wait = 60*60;                     // set wait to one hour
+                    wait2 -= 60*60;                   // decrement wait1 by one hour
+                }
 
                 // announce that the event is ending
                 if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
