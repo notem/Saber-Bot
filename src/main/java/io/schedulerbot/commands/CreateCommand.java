@@ -30,6 +30,7 @@ public class CreateCommand implements Command
         String eStart = "00:00";    // initialized just in case verify failed it's duty
         String eEnd = "00:00";      //
         ArrayList<String> eComments = new ArrayList<String>();
+        int repeat = 0;             // default is 0 (no repeat)
 
         String buffComment = "";    // String to generate comments strings to place in eComments
 
@@ -38,6 +39,8 @@ public class CreateCommand implements Command
         boolean flag3 = false;  // true if 'eEnd' has been grabbed from args
         boolean flag4 = false;  // true if a comment argument was found and is being processed,
                                 // false when the last arg forming the comment is found
+        boolean flag5 = false;  // true if an arg=='repeat' when flag4 is not flagged
+                                // when true, reads the next arg
 
         for( String arg : args )
         {
@@ -63,6 +66,23 @@ public class CreateCommand implements Command
             }
             else
             {
+                if( flag5 )
+                {
+                    if( arg.equals("daily") )
+                        repeat = 1;
+                    else if( arg.equals("weekly") )
+                        repeat = 2;
+                    else if( Character.isDigit(arg.charAt(0)) && Integer.parseInt(arg)==1 )
+                        repeat = 1;
+                    else if ( Character.isDigit(arg.charAt(0)) && Integer.parseInt(arg)==2)
+                        repeat = 2;
+                    flag5 = false;
+                }
+                if( !flag4 && arg.equals("repeat") )
+                {
+                    flag5 = true;
+                }
+
                 if( arg.startsWith("\"") )
                     flag4 = true;
                 if( flag4 )
@@ -73,15 +93,13 @@ public class CreateCommand implements Command
                     eComments.add(buffComment);
                     buffComment = "";
                 }
-                else
+                else if( flag4 )
                     buffComment += " ";
-
             }
-
         }
 
         // generate the event entry message
-        String msg = EventEntryParser.generate( eTitle, eStart, eEnd, eComments );
+        String msg = EventEntryParser.generate( eTitle, eStart, eEnd, eComments, repeat );
 
         try
         {

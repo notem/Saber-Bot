@@ -37,6 +37,7 @@ public class EditCommand implements Command
         ArrayList<String> comments = Main.schedule.get(entryID).eComments;
         String start = Main.schedule.get(entryID).eStart;
         String end = Main.schedule.get(entryID).eEnd;
+        int repeat = Main.schedule.get(entryID).eRepeat;
 
         switch( args[1] )
         {
@@ -54,7 +55,6 @@ public class EditCommand implements Command
                 }
                 else if( args[2].equals("remove"))
                 {
-
                     String comment = "";
                     for( int i = 3; i < args.length; i++ )
                     {
@@ -87,8 +87,14 @@ public class EditCommand implements Command
             case "date":
                 //option = 5;
                 break;
+
             case "repeat":
-                //option = 6;
+                if( Character.isDigit( args[2].charAt(0) ))
+                    repeat = Integer.parseInt(args[2]);
+                else if( args[2].equals("daily") )
+                    repeat = 1;
+                else if( args[2].equals("weekly") )
+                    repeat = 2;
                 break;
         }
 
@@ -96,7 +102,7 @@ public class EditCommand implements Command
         Main.schedule.get(entryID).thread.interrupt();
 
         // generate the new event entry message
-        String msg = EventEntryParser.generate( title, start, end, comments );
+        String msg = EventEntryParser.generate( title, start, end, comments, repeat );
 
         try
         {

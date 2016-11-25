@@ -33,6 +33,7 @@ public class EventEntryParser
         String eEnd;
         ArrayList<String> eComments = new ArrayList<String>();
         Integer eID;
+        int repeat = 0;
 
         // split into lines
         String[] lines = raw.split("\n");
@@ -49,9 +50,16 @@ public class EventEntryParser
 
         String date = date_time_repeat[0];
         String[] start_end_timezone = date_time_repeat[1].split(" - ");
-        String repeat = "";
+
+        String repeat_str = "";
         if( date_time_repeat.length == 3 )
-            repeat = date_time_repeat[2].replaceFirst("repeats ","");
+        {
+            repeat_str = date_time_repeat[2].replaceFirst("repeats ", "");
+            if( repeat_str.equals("daily") )
+                repeat = 1;
+            else if( repeat_str.equals("weekly") )
+                repeat = 2;
+        }
 
         eStart = start_end_timezone[0];
         eEnd = start_end_timezone[1].split(" ")[0];
@@ -72,7 +80,7 @@ public class EventEntryParser
         ); // can through away the minutes til timer
 
 
-        return new EventEntry( eTitle, eStart, eEnd, eComments, eID, event );
+        return new EventEntry( eTitle, eStart, eEnd, eComments, eID, event, repeat );
     }
 
 
@@ -84,7 +92,7 @@ public class EventEntryParser
      * @param eComments
      * @return
      */
-    public static String generate(String eTitle, String eStart, String eEnd, ArrayList<String> eComments)
+    public static String generate(String eTitle, String eStart, String eEnd, ArrayList<String> eComments, int repeat)
     {
         // the 'actual' first line (and last line) define format
         String msg = "```Markdown\n";
@@ -92,7 +100,13 @@ public class EventEntryParser
         Integer eID = Main.newID(); // generate an ID for the entry
         String firstLine = "# " + eTitle + "\n";
 
-        String secondLine = "< " + "Today" + ", " + eStart + " - " + eEnd + " EST >\n";
+        String secondLine = "< " + "Today" + ", " + eStart + " - " + eEnd + " EST";
+        if( repeat == 1 )
+            secondLine += ", repeats daily >\n";
+        else if( repeat == 2 )
+            secondLine += ", repeats weekly >\n";
+        else
+            secondLine += " >\n";
 
         msg += firstLine + secondLine;
 
@@ -105,7 +119,7 @@ public class EventEntryParser
             msg += comment + "\n";
 
         // add the final ID and time til line
-        msg += "\n[ID: " + Integer.toHexString(eID) + "](begins in " + "xxxx" + " minutes)\n";
+        msg += "\n[ID: " + Integer.toHexString(eID) + "](begins in " + "xx" + " hours.)\n";
         // cap the code block
         msg += "```";
 
@@ -118,11 +132,12 @@ public class EventEntryParser
      */
     public class EventEntry implements Runnable {
 
-        public String eTitle;
-        public String eStart;
-        public String eEnd;
-        public ArrayList<String> eComments;
-        public Integer eID;
+        public String eTitle;                   // the title/name of the event
+        public String eStart;                   // the time in (24h) when the event starts
+        public String eEnd;                     // the ending time in 24h form
+        public ArrayList<String> eComments;     // ArrayList of strings that make up the desc
+        public Integer eID;                     // 16 bit identifier
+        public int eRepeat;                      // 1 is daily, 2 is weekly, 0 is not at all
         public MessageReceivedEvent msgEvent;
 
         public Thread thread;
@@ -136,7 +151,7 @@ public class EventEntryParser
          * @param eID the ID of the event (Integer)
          * @param msgEvent the discord message object (MessageReceivedEvent)
          */
-        public EventEntry(String eName, String eStart, String eEnd, ArrayList<String> eComments, Integer eID, MessageReceivedEvent msgEvent)
+        public EventEntry(String eName, String eStart, String eEnd, ArrayList<String> eComments, Integer eID, MessageReceivedEvent msgEvent, int eRepeat)
         {
             this.eTitle = eName;
             this.eStart = eStart;
@@ -144,6 +159,7 @@ public class EventEntryParser
             this.eComments = eComments;
             this.eID = eID;
             this.msgEvent = msgEvent;
+            this.eRepeat = eRepeat;
 
             this.thread = new Thread( this,  eName );
             this.thread.start();
@@ -156,7 +172,6 @@ public class EventEntryParser
             Guild guild = this.msgEvent.getGuild();
             String startMsg = "@everyone The event **" + this.eTitle + "** has begun!";
             String endMsg = "@everyone The event **" + this.eTitle + "** has ended.";
-            //String cancelMsg = "@everyone The event **" + this.eTitle + "** has been cancelled.";
 
             // convert the times into integers
             Integer startH = Integer.parseInt(this.eStart.split(":")[0]);
@@ -211,7 +226,40 @@ public class EventEntryParser
             // always remove the entry from schedule and delete the message
             finally
             {
+                // remove the thread from the schedule
                 Main.schedule.remove(this.eID);
+
+                // if the event entry is scheduled to repeat, must be handled with now
+                if( this.eRepeat == 1 )
+                {
+                    // generate the event entry message
+                    String msg = EventEntryParser.generate( this.eTitle, this.eStart, this.eEnd, this.eComments, this.eRepeat );
+
+                    try
+                    {
+                        this.msgEvent.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0).sendMessage(msg).queue();
+                    }
+                    catch( PermissionException e )
+                    {
+                        Main.handleException( e, this.msgEvent );
+                    }
+                }
+                else if( this.eRepeat == 2 )
+                {
+                    // generate the event entry message
+                    String msg = EventEntryParser.generate( this.eTitle, this.eStart, this.eEnd, this.eComments, this.eRepeat );
+
+                    try
+                    {
+                        this.msgEvent.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0).sendMessage(msg).queue();
+                    }
+                    catch( PermissionException e )
+                    {
+                        Main.handleException( e, this.msgEvent );
+                    }
+                }
+
+                // delete the old entry
                 try
                 {
                     this.msgEvent.getMessage().deleteMessage().queue();
