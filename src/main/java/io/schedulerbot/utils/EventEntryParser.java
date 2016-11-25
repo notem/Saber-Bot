@@ -238,9 +238,9 @@ public class EventEntryParser
                     {
                         Main.handleException( e, this.msgEvent);
                     }
-                    Thread.sleep(24*60*60*1000);
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                            + LocalTime.now().getSecond() + "]" + "[ID: " + this.eID + "] Sleeping for " + 24*60*60 + " seconds.\n");
+                            + LocalTime.now().getSecond() + "]" + " [ID: " + this.eID + "] Sleeping for " + 24*60*60 + " seconds.\n");
+                    Thread.sleep(24*60*60*1000);
                 }
 
                 Integer wait = wait1 - (int)(Math.floor( ((double)wait1)/(60*60) )*60*60);
@@ -269,7 +269,7 @@ public class EventEntryParser
                     }
 
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                            + LocalTime.now().getSecond() + "]" + "[ID: " + this.eID + "] Sleeping for " + wait +" seconds.\n");
+                            + LocalTime.now().getSecond() + "]" + " [ID: " + this.eID + "] Sleeping for " + wait +" seconds.\n");
                     Thread.sleep(wait * 1000);        // sleep until the event starts
                     wait = 60*60;                     // set wait to one hour
                     wait1 -= 60*60;                   // decrement wait1 by one hour
@@ -310,7 +310,7 @@ public class EventEntryParser
                     }
 
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                            + LocalTime.now().getSecond() + "]" + "[ID: " + this.eID + "] Sleeping for " + wait +" seconds.\n");
+                            + LocalTime.now().getSecond() + "]" + " [ID: " + this.eID + "] Sleeping for " + wait +" seconds.\n");
                     Thread.sleep(wait * 1000);        // sleep until the event starts
                     wait = 60*60;                     // set wait to one hour
                     wait2 -= 60*60;                   // decrement wait1 by one hour
