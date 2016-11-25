@@ -5,8 +5,13 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.util.ArrayList;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
  * file: EventEntryParser.java
@@ -33,32 +38,39 @@ public class EventEntryParser
         String eEnd;
         ArrayList<String> eComments = new ArrayList<String>();
         Integer eID;
-        int repeat = 0;
+        int eRepeat = 0;
+        LocalDate eDate = LocalDate.now();
 
         // split into lines
         String[] lines = raw.split("\n");
 
 
         // the first line is the title \\
-        String firstLine = lines[1].replaceFirst("# ", "");
-        eTitle = firstLine;
+        eTitle = lines[1].replaceFirst("# ", "");
 
 
         // the second line is the date and time \\
-        String[] secondLine = lines[2].replace("< ","").split(" > ");
+        String[] secondLine = lines[2].replace("< ","").split(" >");
         String[] date_time_repeat = secondLine[0].split(", ");
 
         String date = date_time_repeat[0];
+        if( date.toLowerCase().equals("today") )
+            eDate = LocalDate.now();
+        else
+        {
+            eDate = eDate.withMonth(Month.valueOf(date.split(" ")[0]).getValue());
+            eDate = eDate.withDayOfMonth(Integer.parseInt(date.split(" ")[1]));
+        }
+
         String[] start_end_timezone = date_time_repeat[1].split(" - ");
 
-        String repeat_str = "";
         if( date_time_repeat.length == 3 )
         {
-            repeat_str = date_time_repeat[2].replaceFirst("repeats ", "");
-            if( repeat_str.equals("daily") )
-                repeat = 1;
-            else if( repeat_str.equals("weekly") )
-                repeat = 2;
+            String repeat = date_time_repeat[2].replaceFirst("repeats ", "");
+            if( repeat.equals("daily") )
+                eRepeat = 1;
+            else if( repeat.equals("weekly") )
+                eRepeat = 2;
         }
 
         eStart = start_end_timezone[0];
@@ -77,10 +89,10 @@ public class EventEntryParser
         // the last line contains the ID and minutes til timer \\
         eID = Integer.decode(
                 "0x" + lines[lines.length-2].replace("[ID: ","").split("]")[0]
-        ); // can through away the minutes til timer
+        ); // can throw away the minutes til timer
 
 
-        return new EventEntry( eTitle, eStart, eEnd, eComments, eID, event, repeat );
+        return new EventEntry( eTitle, eStart, eEnd, eComments, eID, event, eRepeat, eDate );
     }
 
 
@@ -92,7 +104,7 @@ public class EventEntryParser
      * @param eComments
      * @return
      */
-    public static String generate(String eTitle, String eStart, String eEnd, ArrayList<String> eComments, int repeat)
+    public static String generate(String eTitle, String eStart, String eEnd, ArrayList<String> eComments, int eRepeat, LocalDate eDate )
     {
         // the 'actual' first line (and last line) define format
         String msg = "```Markdown\n";
@@ -100,10 +112,11 @@ public class EventEntryParser
         Integer eID = Main.newID(); // generate an ID for the entry
         String firstLine = "# " + eTitle + "\n";
 
-        String secondLine = "< " + "Today" + ", " + eStart + " - " + eEnd + " EST";
-        if( repeat == 1 )
+        String secondLine = "< " + eDate.getMonth() + " " + eDate.getDayOfMonth() + ", "
+                + eStart + " - " + eEnd + " EST";
+        if( eRepeat == 1 )
             secondLine += ", repeats daily >\n";
-        else if( repeat == 2 )
+        else if( eRepeat == 2 )
             secondLine += ", repeats weekly >\n";
         else
             secondLine += " >\n";
@@ -138,6 +151,7 @@ public class EventEntryParser
         public ArrayList<String> eComments;     // ArrayList of strings that make up the desc
         public Integer eID;                     // 16 bit identifier
         public int eRepeat;                      // 1 is daily, 2 is weekly, 0 is not at all
+        public LocalDate eDate;
         public MessageReceivedEvent msgEvent;
 
         public Thread thread;
@@ -151,7 +165,7 @@ public class EventEntryParser
          * @param eID the ID of the event (Integer)
          * @param msgEvent the discord message object (MessageReceivedEvent)
          */
-        public EventEntry(String eName, String eStart, String eEnd, ArrayList<String> eComments, Integer eID, MessageReceivedEvent msgEvent, int eRepeat)
+        public EventEntry(String eName, String eStart, String eEnd, ArrayList<String> eComments, Integer eID, MessageReceivedEvent msgEvent, int eRepeat, LocalDate eDate)
         {
             this.eTitle = eName;
             this.eStart = eStart;
@@ -160,6 +174,7 @@ public class EventEntryParser
             this.eID = eID;
             this.msgEvent = msgEvent;
             this.eRepeat = eRepeat;
+            this.eDate = eDate;
 
             this.thread = new Thread( this,  eName );
             this.thread.start();
@@ -183,29 +198,59 @@ public class EventEntryParser
             Integer end = endH*60*60 + endM*60;
 
             // using the local time, determine the wait interval (in seconds)
-            LocalTime now = LocalTime.now();
+            LocalDateTime now = LocalDateTime.now();
             Integer nowInSeconds = (now.getHour()*60*60 + now.getMinute()*60 + now.getSecond());
             Integer wait1 = start - nowInSeconds;
             Integer wait2 = end - start;
 
             if( wait1 < 0 )
-                wait1 += 24*60*60;
+            {
+                wait1 += 24 * 60 * 60;
+            }
             if( wait2 < 0 )
-                wait2 += 24*60*60;
+            {
+                wait2 += 24 * 60 * 60;
+            }
 
             // run the main operation of the thread
             try
             {
-                System.out.printf( "%d:", wait1);
-                Integer wait = (int)(Math.ceil( ((double)wait1)/(60*60) )*60*60) - wait1;
-                wait1 = (int)Math.floor(((double)wait1)/(60*60))*60*60;
-                System.out.printf( "%d:%d:", wait,wait1);
+                while( !this.eDate.equals(LocalDate.now()) )
+                {
+                    Integer days = Math.toIntExact(DAYS.between(LocalDate.now(), eDate));
+                    try
+                    {
+                        String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                        String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + days + " days.)";
+                        String msg = "";
+                        for(String line : lines)
+                        {
+                            if(line.equals(lines[lines.length-2]))
+                                msg += newline;
+                            else
+                                msg += line;
+                            if(!line.equals(lines[lines.length-1]))
+                                msg += "\n";
+                        }
+                        this.msgEvent.getMessage().editMessage(msg).queue();
+                    }
+                    catch( Exception e )
+                    {
+                        Main.handleException( e, this.msgEvent);
+                    }
+                    Thread.sleep(24*60*60*1000);
+                    System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
+                            + LocalTime.now().getSecond() + "]" + "[ID: " + this.eID + "] Sleeping for " + 24*60*60 + " seconds.\n");
+                }
+
+                Integer wait = wait1 - (int)(Math.floor( ((double)wait1)/(60*60) )*60*60);
+                wait1 = (int)Math.ceil(((double)wait1)/(60*60))*60*60;
                 while( wait1 != 0 )
                 {
                     try
                     {
                         String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
-                        String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + (wait1/(60*60)+1) + " hours.)";
+                        String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + wait1/(60*60) + " hours.)";
                         String msg = "";
                         for(String line : lines)
                         {
@@ -223,6 +268,8 @@ public class EventEntryParser
                         Main.handleException( e, this.msgEvent);
                     }
 
+                    System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
+                            + LocalTime.now().getSecond() + "]" + "[ID: " + this.eID + "] Sleeping for " + wait +" seconds.\n");
                     Thread.sleep(wait * 1000);        // sleep until the event starts
                     wait = 60*60;                     // set wait to one hour
                     wait1 -= 60*60;                   // decrement wait1 by one hour
@@ -236,14 +283,15 @@ public class EventEntryParser
                     guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
                             .sendMessage( startMsg ).queue();
 
-                wait = (int) (Math.ceil( ((double)wait2)/(60*60) )*60*60) - wait2;
-                wait2 = (int) Math.floor( ((double)wait2)/(60*60) )*60*60;
+                wait = wait2 - (int)(Math.floor( ((double)wait2)/(60*60) )*60*60);
+                wait2 = (int) Math.ceil( ((double)wait2)/(60*60) )*60*60;
                 while( wait2 != 0 )
                 {
                     try
                     {
                         String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
-                        String newline = lines[lines.length-2].split("\\(")[0] + "(ends in " + (wait2/(60*60)+1) + " hour.)";
+                        String newline = lines[lines.length-2].split("\\(")[0] +
+                                "(ends in " + (int)Math.ceil((double)wait2/(60*60)) + " hours.)";
                         String msg = "";
                         for(String line : lines)
                         {
@@ -254,13 +302,15 @@ public class EventEntryParser
                             if(!line.equals(lines[lines.length-1]))
                                 msg += "\n";
                         }
-                        this.msgEvent.getMessage().editMessage(msg);
+                        this.msgEvent.getMessage().editMessage(msg).queue();
                     }
                     catch( Exception e )
                     {
                         Main.handleException( e, this.msgEvent);
                     }
 
+                    System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
+                            + LocalTime.now().getSecond() + "]" + "[ID: " + this.eID + "] Sleeping for " + wait +" seconds.\n");
                     Thread.sleep(wait * 1000);        // sleep until the event starts
                     wait = 60*60;                     // set wait to one hour
                     wait2 -= 60*60;                   // decrement wait1 by one hour
@@ -291,7 +341,7 @@ public class EventEntryParser
                 if( this.eRepeat == 1 )
                 {
                     // generate the event entry message
-                    String msg = EventEntryParser.generate( this.eTitle, this.eStart, this.eEnd, this.eComments, this.eRepeat );
+                    String msg = EventEntryParser.generate( this.eTitle, this.eStart, this.eEnd, this.eComments, this.eRepeat, this.eDate.withDayOfYear(this.eDate.getDayOfYear()+1) );
 
                     try
                     {
@@ -305,7 +355,7 @@ public class EventEntryParser
                 else if( this.eRepeat == 2 )
                 {
                     // generate the event entry message
-                    String msg = EventEntryParser.generate( this.eTitle, this.eStart, this.eEnd, this.eComments, this.eRepeat );
+                    String msg = EventEntryParser.generate( this.eTitle, this.eStart, this.eEnd, this.eComments, this.eRepeat, this.eDate.withDayOfYear(this.eDate.getDayOfYear()+7) );
 
                     try
                     {

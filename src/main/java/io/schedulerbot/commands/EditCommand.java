@@ -6,6 +6,7 @@ import io.schedulerbot.utils.EventEntryParser;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 /**
@@ -28,7 +29,7 @@ public class EditCommand implements Command
         // check if the entry exists
         if( !Main.schedule.containsKey(entryID) )
         {
-            String msg = "There is no event entry with ID " + entryID + ".\"";
+            String msg = "There is no event entry with ID " + entryID + ".";
             event.getChannel().sendMessage( msg ).queue();
             return;
         }
@@ -38,6 +39,7 @@ public class EditCommand implements Command
         String start = Main.schedule.get(entryID).eStart;
         String end = Main.schedule.get(entryID).eEnd;
         int repeat = Main.schedule.get(entryID).eRepeat;
+        LocalDate date = Main.schedule.get(entryID).eDate;
 
         switch( args[1] )
         {
@@ -102,7 +104,7 @@ public class EditCommand implements Command
         Main.schedule.get(entryID).thread.interrupt();
 
         // generate the new event entry message
-        String msg = EventEntryParser.generate( title, start, end, comments, repeat );
+        String msg = EventEntryParser.generate( title, start, end, comments, repeat, date );
 
         try
         {

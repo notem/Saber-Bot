@@ -6,6 +6,8 @@ import io.schedulerbot.utils.EventEntryParser;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 
 /**
@@ -30,7 +32,8 @@ public class CreateCommand implements Command
         String eStart = "00:00";    // initialized just in case verify failed it's duty
         String eEnd = "00:00";      //
         ArrayList<String> eComments = new ArrayList<String>();
-        int repeat = 0;             // default is 0 (no repeat)
+        int eRepeat = 0;             // default is 0 (no repeat)
+        LocalDate eDate = LocalDate.now();
 
         String buffComment = "";    // String to generate comments strings to place in eComments
 
@@ -41,6 +44,7 @@ public class CreateCommand implements Command
                                 // false when the last arg forming the comment is found
         boolean flag5 = false;  // true if an arg=='repeat' when flag4 is not flagged
                                 // when true, reads the next arg
+        boolean flag6 = false;
 
         for( String arg : args )
         {
@@ -69,18 +73,36 @@ public class CreateCommand implements Command
                 if( flag5 )
                 {
                     if( arg.equals("daily") )
-                        repeat = 1;
+                        eRepeat = 1;
                     else if( arg.equals("weekly") )
-                        repeat = 2;
+                        eRepeat = 2;
                     else if( Character.isDigit(arg.charAt(0)) && Integer.parseInt(arg)==1 )
-                        repeat = 1;
+                        eRepeat = 1;
                     else if ( Character.isDigit(arg.charAt(0)) && Integer.parseInt(arg)==2)
-                        repeat = 2;
+                        eRepeat = 2;
                     flag5 = false;
                 }
-                if( !flag4 && arg.equals("repeat") )
+                if( !flag4 && !flag6 && arg.equals("repeat") )
                 {
                     flag5 = true;
+                }
+
+                if( flag6 )
+                {
+                    if( arg.toLowerCase().equals("today") )
+                        eDate = LocalDate.now();
+                    else if( arg.toLowerCase().equals("tomorrow") )
+                        eDate = LocalDate.now().plusDays( 1 );
+                    else if( Character.isDigit(arg.charAt(0)) )
+                    {
+                        eDate = eDate.withMonth(Integer.parseInt(arg.split("/")[0]));
+                        eDate = eDate.withDayOfMonth(Integer.parseInt(arg.split("/")[1]));
+                    }
+                    flag6 = false;
+                }
+                else if( !flag4 && !flag5 && arg.equals("date"))
+                {
+                    flag6 = true;
                 }
 
                 if( arg.startsWith("\"") )
@@ -98,8 +120,12 @@ public class CreateCommand implements Command
             }
         }
 
+        if( (Integer.parseInt(eStart.split(":")[0])*60+Integer.parseInt(eStart.split(":")[1])
+                < LocalTime.now().getHour()*60+LocalTime.now().getMinute()) && LocalDate.now().equals(eDate) )
+            eDate = eDate.plusDays(1);
+
         // generate the event entry message
-        String msg = EventEntryParser.generate( eTitle, eStart, eEnd, eComments, repeat );
+        String msg = EventEntryParser.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate );
 
         try
         {
