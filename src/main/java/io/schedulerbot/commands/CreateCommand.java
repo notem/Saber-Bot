@@ -27,11 +27,12 @@ public class CreateCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        if( Main.entriesByGuild.get( event.getGuild().getId() ).size() >= BotConfig.MAX_ENTRIES
-                || BotConfig.MAX_ENTRIES < 0)
+        if( Main.entriesByGuild.containsKey( event.getGuild().getId() )
+                && Main.entriesByGuild.get( event.getGuild().getId() ).size() >= BotConfig.MAX_ENTRIES
+                && BotConfig.MAX_ENTRIES > 0)
         {
             String msg = "Your guild already has the maximum allowed amount of event entries."
-                    +" No more entries may be add until old entries are destroyed.  Sorry. :(";
+                    +" No more entries may be added until old entries are destroyed.";
             Main.sendMsg( msg, event.getChannel() );
             return;
         }

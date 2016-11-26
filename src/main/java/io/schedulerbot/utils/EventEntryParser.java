@@ -210,7 +210,7 @@ public class EventEntryParser
             Integer wait1 = start - nowInSeconds;
             Integer wait2 = end - start;
 
-            if( wait1 < 0 )
+            if( wait1 < 0 && this.eDate.equals(LocalDate.now().plusDays(1)))
             {
                 wait1 += 24 * 60 * 60;
             }
@@ -222,15 +222,15 @@ public class EventEntryParser
             // run the main operation of the thread
             try
             {
-                // sleep until the day of the event starts
+                // sleep until the day of the event starts or if the event starts in less than 24 hours
                 Integer wait;
-                while( !this.eDate.equals(LocalDate.now()) )
+                while( !this.eDate.equals(LocalDate.now()) && wait1>(24*60*60) )
                 {
                     int days = (int) DAYS.between(LocalDate.now(), eDate);
                     String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
 
                     String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
-                    if( days < 1)
+                    if( days <= 1)
                         newline += "tomorrow.)";
                     else
                         newline += "in " + days + " days.)";
@@ -254,6 +254,9 @@ public class EventEntryParser
                             "] Sleeping for " + wait + " seconds.\n");
 
                     Thread.sleep(wait * 1000);
+
+                    if(this.eDate.equals(LocalDate.now().plusDays(1)))
+                        wait1 = start;
                 }
 
                 // sleep until the start time
@@ -262,9 +265,9 @@ public class EventEntryParser
                 while( wait1 != 0 )
                 {
                     String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
-                    int hoursTil = (int)Math.ceil((double)wait2/(60*60));
+                    int hoursTil = (int)Math.ceil((double)wait1/(60*60));
                     String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
-                    if( hoursTil < 1)
+                    if( hoursTil <= 1)
                         newline += "within the hour.)";
                     else
                         newline += "in " + hoursTil + " hours.)";
