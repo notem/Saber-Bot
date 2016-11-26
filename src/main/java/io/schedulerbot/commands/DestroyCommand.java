@@ -1,7 +1,6 @@
 package io.schedulerbot.commands;
 
 import io.schedulerbot.Main;
-import io.schedulerbot.utils.BotConfig;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -27,7 +26,7 @@ public class DestroyCommand implements Command
         if( !Main.schedule.containsKey(entryID) )
         {
             String msg = "There is no event entry with ID " + entryID + ".\"";
-            event.getChannel().sendMessage( msg ).queue();
+            Main.sendMsg( msg, event.getChannel() );
             return;
         }
 
@@ -52,25 +51,10 @@ public class DestroyCommand implements Command
 
         // if the difference is greater than 0 the event was canceled before it began
         if(dif >= 0)
-        {
-            // announce that the event is ending
-            if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
-                    guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).isEmpty())
-                guild.getPublicChannel().sendMessage( cancelMsg ).queue();
-            else
-                guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
-                        .sendMessage( cancelMsg ).queue();
-        }
+            Main.sendAnnounce( cancelMsg, guild );
+
         // if the difference is less than 0 the event was ended early
         else if(dif < 0)
-        {
-            // announce that the event is ending
-            if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
-                    guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).isEmpty())
-                guild.getPublicChannel().sendMessage( earlyMsg ).queue();
-            else
-                guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
-                        .sendMessage( earlyMsg ).queue();
-        }
+            Main.sendAnnounce( earlyMsg, guild );
     }
 }

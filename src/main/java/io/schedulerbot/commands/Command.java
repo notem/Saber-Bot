@@ -24,4 +24,7 @@ public interface Command
      * @param event the originating event object
      */
     public void action(String[] args, MessageReceivedEvent event);
+
+
+    //public String help();
 }

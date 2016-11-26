@@ -1,10 +1,8 @@
 package io.schedulerbot.commands;
 
 import io.schedulerbot.Main;
-import io.schedulerbot.utils.BotConfig;
 import io.schedulerbot.utils.EventEntryParser;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -87,7 +85,15 @@ public class EditCommand implements Command
                 break;
 
             case "date":
-                //option = 5;
+                if( args[2].toLowerCase().equals("today") )
+                        date = LocalDate.now();
+                    else if( args[2].toLowerCase().equals("tomorrow") )
+                        date = LocalDate.now().plusDays( 1 );
+                    else if( Character.isDigit(args[2].charAt(0)) )
+                    {
+                        date = date.withMonth(Integer.parseInt(args[2].split("/")[0]));
+                        date = date.withDayOfMonth(Integer.parseInt(args[2].split("/")[1]));
+                    }
                 break;
 
             case "repeat":
@@ -97,6 +103,8 @@ public class EditCommand implements Command
                     repeat = 1;
                 else if( args[2].equals("weekly") )
                     repeat = 2;
+                else if( args[2].equals("no") )
+                    repeat = 0;
                 break;
         }
 
@@ -104,15 +112,8 @@ public class EditCommand implements Command
         Main.schedule.get(entryID).thread.interrupt();
 
         // generate the new event entry message
-        String msg = EventEntryParser.generate( title, start, end, comments, repeat, date );
+        String msg = EventEntryParser.generate( title, start, end, comments, repeat, date, entryID );
 
-        try
-        {
-            event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0).sendMessage(msg).queue();
-        }
-        catch( PermissionException e )
-        {
-            Main.handleException( e, event );
-        }
+        Main.sendMsg( msg, event.getChannel() );
     }
 }

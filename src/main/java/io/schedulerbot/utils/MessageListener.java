@@ -42,28 +42,7 @@ public class MessageListener extends ListenerAdapter
 
         for( Guild guild : event.getJDA().getGuilds())
         {
-            // if guild doesn't have channel or ANNOUNCE_CHAN is empty
-            if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
-                    guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).isEmpty())
-                try
-                {
-                    guild.getPublicChannel().sendMessage(msg).queue();
-                }
-                catch( Exception e )
-                {
-                    Main.handleException( e, event );
-                }
-            // otherwise send message to ANNOUNCE_CHAN
-            else
-                try
-                {
-                    guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0).sendMessage(msg).queue();
-                }
-                catch( Exception e )
-                {
-                    Main.handleException( e, event );
-                }
+            Main.sendAnnounce( msg, guild );
         }
     }
-
 }

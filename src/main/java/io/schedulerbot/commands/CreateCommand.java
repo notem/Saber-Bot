@@ -4,7 +4,6 @@ import io.schedulerbot.Main;
 import io.schedulerbot.utils.BotConfig;
 import io.schedulerbot.utils.EventEntryParser;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -125,15 +124,8 @@ public class CreateCommand implements Command
             eDate = eDate.plusDays(1);
 
         // generate the event entry message
-        String msg = EventEntryParser.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate );
+        String msg = EventEntryParser.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate, null );
 
-        try
-        {
-            event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0).sendMessage(msg).queue();
-        }
-        catch( PermissionException e )
-        {
-            Main.handleException( e, event );
-        }
+        Main.sendMsg( msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0) );
     }
 }

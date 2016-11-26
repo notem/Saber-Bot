@@ -1,9 +1,7 @@
 package io.schedulerbot.commands;
 
 import io.schedulerbot.Main;
-import io.schedulerbot.utils.BotConfig;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
 
 /**
  * file: AnnounceCommand.java
@@ -27,20 +25,6 @@ public class AnnounceCommand implements Command
         for( String str : args )
            msg += " " + str;
 
-        try
-        {
-            // message out
-            if(BotConfig.ANNOUNCE_CHAN.isEmpty())
-                event.getGuild().getPublicChannel()
-                        .sendMessage( msg ).queue();
-            else
-                event.getGuild().getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
-                        .sendMessage( msg ).queue();
-        }
-        catch( PermissionException e )
-        {
-            Main.handleException( e, event );
-        }
-
+        Main.sendAnnounce( msg, event.getGuild() );
     }
 }

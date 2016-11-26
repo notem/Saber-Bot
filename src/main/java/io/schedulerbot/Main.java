@@ -5,7 +5,13 @@ import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.Event;
+import net.dv8tion.jda.core.events.message.GenericMessageEvent;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 
 import java.time.LocalTime;
 import java.util.HashMap;
@@ -104,16 +110,77 @@ public class Main {
 
     /**
      *
+     * @param oldID
      * @return
      */
-    public static Integer newID()
+    public static Integer newID( Integer oldID )
     {
-        Integer ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
+        Integer ID;
+        if( oldID==null )
+            ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
+        else
+            ID = oldID;
+
         while( schedule.containsKey( ID ) )
         {
             ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
         }
 
         return ID;
+    }
+
+    /**
+     *
+     * @param msg
+     * @param chan
+     */
+    public static void sendMsg( String msg, MessageChannel chan )
+    {
+        try
+        {
+            chan.sendMessage(msg).queue();
+        }
+        catch (Exception e)
+        {
+            Main.handleException(e, null);
+        }
+    }
+
+    public static void sendAnnounce( String msg, Guild guild )
+    {
+        if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
+                guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).isEmpty())
+            Main.sendMsg(msg, guild.getPublicChannel());
+
+        else
+            Main.sendMsg(msg, guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0));
+    }
+
+    public static void editMsg( String msgStr, Message msg )
+    {
+        try
+        {
+            msg.editMessage(msgStr).queue();
+        }
+        catch( Exception e )
+        {
+            return;
+        }
+    }
+
+    /**
+     *
+     * @param msg
+     */
+    public static void deleteMsg( Message msg )
+    {
+        try
+        {
+            msg.deleteMessage().queue();
+        }
+        catch( PermissionException e )
+        {
+            Main.handleException( e, null );
+        }
     }
 }

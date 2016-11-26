@@ -3,7 +3,6 @@ package io.schedulerbot.utils;
 import io.schedulerbot.Main;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -104,12 +103,20 @@ public class EventEntryParser
      * @param eComments
      * @return
      */
-    public static String generate(String eTitle, String eStart, String eEnd, ArrayList<String> eComments, int eRepeat, LocalDate eDate )
+    public static String generate(
+            String eTitle,
+            String eStart,
+            String eEnd,
+            ArrayList<String> eComments,
+            int eRepeat,
+            LocalDate eDate,
+            Integer eID
+    )
     {
         // the 'actual' first line (and last line) define format
         String msg = "```Markdown\n";
 
-        Integer eID = Main.newID(); // generate an ID for the entry
+        eID = Main.newID( eID ); // generate an ID for the entry
         String firstLine = "# " + eTitle + "\n";
 
         String secondLine = "< " + eDate.getMonth() + " " + eDate.getDayOfMonth() + ", "
@@ -203,10 +210,6 @@ public class EventEntryParser
             Integer wait1 = start - nowInSeconds;
             Integer wait2 = end - start;
 
-            if( wait1 < 0 )
-            {
-                wait1 += 24 * 60 * 60;
-            }
             if( wait2 < 0 )
             {
                 wait2 += 24 * 60 * 60;
@@ -215,61 +218,54 @@ public class EventEntryParser
             // run the main operation of the thread
             try
             {
+                Integer wait;
                 while( !this.eDate.equals(LocalDate.now()) )
                 {
                     Integer days = Math.toIntExact(DAYS.between(LocalDate.now(), eDate));
-                    try
+                    String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                    String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + days + " days.)";
+                    String msg = "";
+                    for(String line : lines)
                     {
-                        String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
-                        String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + days + " days.)";
-                        String msg = "";
-                        for(String line : lines)
-                        {
-                            if(line.equals(lines[lines.length-2]))
-                                msg += newline;
-                            else
-                                msg += line;
-                            if(!line.equals(lines[lines.length-1]))
-                                msg += "\n";
-                        }
-                        this.msgEvent.getMessage().editMessage(msg).queue();
+                        if(line.equals(lines[lines.length-2]))
+                            msg += newline;
+                        else
+                            msg += line;
+                        if(!line.equals(lines[lines.length-1]))
+                            msg += "\n";
                     }
-                    catch( Exception e )
-                    {
-                        Main.handleException( e, this.msgEvent);
-                    }
+
+                    Main.editMsg( msg, this.msgEvent.getMessage() );
+
+                    wait = LocalTime.MIDNIGHT.toSecondOfDay() - LocalTime.now().toSecondOfDay();
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                            + LocalTime.now().getSecond() + "]" + " [ID: " + this.eID + "] Sleeping for " + 24*60*60 + " seconds.\n");
-                    Thread.sleep(24*60*60*1000);
+                            + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
+                            "] Sleeping for " + wait + " seconds.\n");
+                    Thread.sleep(wait);
                 }
 
-                Integer wait = wait1 - (int)(Math.floor( ((double)wait1)/(60*60) )*60*60);
+                wait = wait1 - (int)(Math.floor( ((double)wait1)/(60*60) )*60*60);
                 wait1 = (int)Math.ceil(((double)wait1)/(60*60))*60*60;
                 while( wait1 != 0 )
                 {
-                    try
+                    String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                    String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + wait1/(60*60) + " hours.)";
+                    String msg = "";
+                    for(String line : lines)
                     {
-                        String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
-                        String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + wait1/(60*60) + " hours.)";
-                        String msg = "";
-                        for(String line : lines)
-                        {
-                            if(line.equals(lines[lines.length-2]))
-                                msg += newline;
-                            else
-                                msg += line;
-                            if(!line.equals(lines[lines.length-1]))
-                                msg += "\n";
-                        }
-                        this.msgEvent.getMessage().editMessage(msg).queue();
-                    }
-                    catch( Exception e )
-                    {
-                        Main.handleException( e, this.msgEvent);
+                        if(line.equals(lines[lines.length-2]))
+                            msg += newline;
+                        else
+                            msg += line;
+                        if(!line.equals(lines[lines.length-1]))
+                            msg += "\n";
                     }
 
+                    Main.editMsg( msg, this.msgEvent.getMessage() );
+
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                            + LocalTime.now().getSecond() + "]" + " [ID: " + this.eID + "] Sleeping for " + wait +" seconds.\n");
+                            + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
+                            "] Sleeping for " + wait + " seconds.\n");
                     Thread.sleep(wait * 1000);        // sleep until the event starts
                     wait = 60*60;                     // set wait to one hour
                     wait1 -= 60*60;                   // decrement wait1 by one hour
@@ -287,42 +283,32 @@ public class EventEntryParser
                 wait2 = (int) Math.ceil( ((double)wait2)/(60*60) )*60*60;
                 while( wait2 != 0 )
                 {
-                    try
+                    String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                    String newline = lines[lines.length-2].split("\\(")[0] +
+                            "(ends in " + (int)Math.ceil((double)wait2/(60*60)) + " hours.)";
+                    String msg = "";
+                    for(String line : lines)
                     {
-                        String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
-                        String newline = lines[lines.length-2].split("\\(")[0] +
-                                "(ends in " + (int)Math.ceil((double)wait2/(60*60)) + " hours.)";
-                        String msg = "";
-                        for(String line : lines)
-                        {
-                            if(line.equals(lines[lines.length-2]))
-                                msg += newline;
-                            else
-                                msg += line;
-                            if(!line.equals(lines[lines.length-1]))
-                                msg += "\n";
-                        }
-                        this.msgEvent.getMessage().editMessage(msg).queue();
-                    }
-                    catch( Exception e )
-                    {
-                        Main.handleException( e, this.msgEvent);
+                        if(line.equals(lines[lines.length-2]))
+                            msg += newline;
+                        else
+                            msg += line;
+                        if(!line.equals(lines[lines.length-1]))
+                            msg += "\n";
                     }
 
+                    Main.editMsg( msg, this.msgEvent.getMessage() );
+
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                            + LocalTime.now().getSecond() + "]" + " [ID: " + this.eID + "] Sleeping for " + wait +" seconds.\n");
+                            + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
+                            "] Sleeping for " + wait + " seconds.\n");
                     Thread.sleep(wait * 1000);        // sleep until the event starts
                     wait = 60*60;                     // set wait to one hour
                     wait2 -= 60*60;                   // decrement wait1 by one hour
                 }
 
                 // announce that the event is ending
-                if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
-                        guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).isEmpty())
-                    guild.getPublicChannel().sendMessage( endMsg ).queue();
-                else
-                    guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
-                            .sendMessage( endMsg ).queue();
+                Main.sendAnnounce( endMsg, guild );
             }
 
             // if an interrupt is received, quit operation
@@ -341,41 +327,36 @@ public class EventEntryParser
                 if( this.eRepeat == 1 )
                 {
                     // generate the event entry message
-                    String msg = EventEntryParser.generate( this.eTitle, this.eStart, this.eEnd, this.eComments, this.eRepeat, this.eDate.withDayOfYear(this.eDate.getDayOfYear()+1) );
+                    String msg = EventEntryParser.generate(
+                            this.eTitle,
+                            this.eStart,
+                            this.eEnd,
+                            this.eComments,
+                            this.eRepeat,
+                            this.eDate.plusDays(1),
+                            this.eID
+                    );
 
-                    try
-                    {
-                        this.msgEvent.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0).sendMessage(msg).queue();
-                    }
-                    catch( PermissionException e )
-                    {
-                        Main.handleException( e, this.msgEvent );
-                    }
+                    Main.sendMsg( msg, this.msgEvent.getChannel() );
                 }
                 else if( this.eRepeat == 2 )
                 {
                     // generate the event entry message
-                    String msg = EventEntryParser.generate( this.eTitle, this.eStart, this.eEnd, this.eComments, this.eRepeat, this.eDate.withDayOfYear(this.eDate.getDayOfYear()+7) );
+                    String msg = EventEntryParser.generate(
+                            this.eTitle,
+                            this.eStart,
+                            this.eEnd,
+                            this.eComments,
+                            this.eRepeat,
+                            this.eDate.plusDays(7),
+                            this.eID
+                    );
 
-                    try
-                    {
-                        this.msgEvent.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0).sendMessage(msg).queue();
-                    }
-                    catch( PermissionException e )
-                    {
-                        Main.handleException( e, this.msgEvent );
-                    }
+                    Main.sendMsg( msg, this.msgEvent.getChannel() );
                 }
 
                 // delete the old entry
-                try
-                {
-                    this.msgEvent.getMessage().deleteMessage().queue();
-                }
-                catch( PermissionException e )
-                {
-                    Main.handleException( e, this.msgEvent );
-                }
+                Main.deleteMsg( this.msgEvent.getMessage() );
             }
         }
     }
