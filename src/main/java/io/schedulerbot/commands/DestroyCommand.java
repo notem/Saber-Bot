@@ -24,7 +24,7 @@ public class DestroyCommand implements Command
         Integer entryID = Integer.decode( "0x" + args[0] );
 
         // check if the entry exists
-        if( !Main.schedule.containsKey(entryID) )
+        if( !Main.entriesGlobal.containsKey(entryID) )
         {
             String msg = "There is no event entry with ID " + entryID + ".\"";
             Main.sendMsg( msg, event.getChannel() );
@@ -32,26 +32,26 @@ public class DestroyCommand implements Command
         }
 
         // create the announcement message strings
-        Guild guild = Main.schedule.get(entryID).msgEvent.getGuild();
-        String cancelMsg = "@everyone The event **" + Main.schedule.get(entryID).eTitle
+        Guild guild = Main.entriesGlobal.get(entryID).msgEvent.getGuild();
+        String cancelMsg = "@everyone The event **" + Main.entriesGlobal.get(entryID).eTitle
                 + "** has been cancelled.";
-        String earlyMsg = "@everyone The event **" + Main.schedule.get(entryID).eTitle
+        String earlyMsg = "@everyone The event **" + Main.entriesGlobal.get(entryID).eTitle
                 + "** has ended early.";
 
         // convert the start time into an integer as seconds since 00:00
-        Integer startH = Integer.parseInt(Main.schedule.get(entryID).eStart.split(":")[0]);
-        Integer startM = Integer.parseInt(Main.schedule.get(entryID).eStart.split(":")[1]);
+        Integer startH = Integer.parseInt(Main.entriesGlobal.get(entryID).eStart.split(":")[0]);
+        Integer startM = Integer.parseInt(Main.entriesGlobal.get(entryID).eStart.split(":")[1]);
         Integer start = startH*60*60 + startM*60;
 
-        // interrupt the schedule thread, causing the message to be deleted and the thread killed.
-        Main.schedule.get(entryID).thread.interrupt();
+        // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
+        Main.entriesGlobal.get(entryID).thread.interrupt();
 
         // compare the current time to the start time
         LocalTime now = LocalTime.now();
         Integer dif = start - (now.getHour()*60*60 + now.getMinute()*60 + now.getSecond());
 
         // if the difference is less than 0 the event was ended early
-        if(dif < 0 && Main.schedule.get(entryID).eDate.equals(LocalDate.now()))
+        if(dif < 0 && Main.entriesGlobal.get(entryID).eDate.equals(LocalDate.now()))
             Main.sendAnnounce( earlyMsg, guild );
 
         // otherwise event was canceled before it began

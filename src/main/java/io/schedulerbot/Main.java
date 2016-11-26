@@ -8,12 +8,11 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -24,8 +23,8 @@ public class Main {
 
     public static JDA jda;     // the JDA bot object
     private static HashMap<String, Command> commands = new HashMap<String, Command>();  // mapping of keywords to commands
-    public static HashMap<Integer, EventEntryParser.EventEntry> schedule =
-            new HashMap<Integer, EventEntryParser.EventEntry>();
+    public static HashMap<Integer, EventEntryParser.EventEntry> entriesGlobal = new HashMap<Integer, EventEntryParser.EventEntry>();
+    public static HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<String, ArrayList<Integer>>();
 
     public static final CommandParser commandParser = new CommandParser();     // parser object used by MessageListener
     public static final EventEntryParser eventEntryParser = new EventEntryParser();
@@ -90,10 +89,19 @@ public class Main {
      * Called when bot receives a message in EVENT_CHAN from itself
      * @param se the EventEntry object containing an active thread
      */
-    public static void handleEventEntry(EventEntryParser.EventEntry se)
+    public static void handleEventEntry(EventEntryParser.EventEntry se, String guildId)
     {
         // put the EventEntry thread into a HashMap by ID
-        schedule.put(se.eID, se);
+        entriesGlobal.put(se.eID, se);
+
+        if( !entriesByGuild.containsKey( guildId ) )
+        {
+            ArrayList<Integer> entries = new ArrayList<Integer>();
+            entries.add(se.eID);
+            entriesByGuild.put( guildId, entries );
+        }
+        else
+            entriesByGuild.get( guildId ).add( se.eID );
     }
 
     /**
@@ -106,6 +114,14 @@ public class Main {
         String err = "[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
                 + LocalTime.now().getSecond() + "]" + e.getLocalizedMessage();
         System.out.print( err );
+    }
+
+    public static void removeEntry( Integer eId, String guildId )
+    {
+        entriesByGuild.get( guildId ).remove( eId );
+
+        if( entriesByGuild.get( guildId ).isEmpty() )
+            entriesByGuild.remove( guildId );
     }
 
     /**
@@ -121,7 +137,7 @@ public class Main {
         else
             ID = oldID;
 
-        while( schedule.containsKey( ID ) )
+        while( entriesGlobal.containsKey( ID ) )
         {
             ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
         }

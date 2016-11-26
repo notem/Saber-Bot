@@ -27,6 +27,15 @@ public class CreateCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
+        if( Main.entriesByGuild.get( event.getGuild().getId() ).size() >= BotConfig.MAX_ENTRIES
+                || BotConfig.MAX_ENTRIES < 0)
+        {
+            String msg = "Your guild already has the maximum allowed amount of event entries."
+                    +" No more entries may be add until old entries are destroyed.  Sorry. :(";
+            Main.sendMsg( msg, event.getChannel() );
+            return;
+        }
+
         String eTitle = "";
         String eStart = "00:00";    // initialized just in case verify failed it's duty
         String eEnd = "00:00";      //

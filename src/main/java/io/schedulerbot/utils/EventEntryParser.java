@@ -19,7 +19,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
  * a EventEntry worker thread.  A EventEntry thread lives for the length of two sleep calls.
  * The first timer measures the time until the event starts (causes an announce when reached).
  * The second timer measures the time from the event start until the event ends (causes another announce).
- * The bot clears the event from the schedule at the end of the thread's life.
+ * The bot clears the event from the entriesGlobal at the end of the thread's life.
  */
 public class EventEntryParser
 {
@@ -222,12 +222,19 @@ public class EventEntryParser
             // run the main operation of the thread
             try
             {
+                // sleep until the day of the event starts
                 Integer wait;
                 while( !this.eDate.equals(LocalDate.now()) )
                 {
-                    Integer days = Math.toIntExact(DAYS.between(LocalDate.now(), eDate));
+                    int days = (int) DAYS.between(LocalDate.now(), eDate);
                     String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
-                    String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + days + " days.)";
+
+                    String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
+                    if( days < 1)
+                        newline += "tomorrow.)";
+                    else
+                        newline += "in " + days + " days.)";
+
                     String msg = "";
                     for(String line : lines)
                     {
@@ -245,15 +252,23 @@ public class EventEntryParser
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
                             + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
                             "] Sleeping for " + wait + " seconds.\n");
+
                     Thread.sleep(wait * 1000);
                 }
 
+                // sleep until the start time
                 wait = wait1 - (int)(Math.floor( ((double)wait1)/(60*60) )*60*60);
                 wait1 = (int)Math.ceil(((double)wait1)/(60*60))*60*60;
                 while( wait1 != 0 )
                 {
                     String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
-                    String newline = lines[lines.length-2].split("\\(")[0] + "(begins in " + wait1/(60*60) + " hours.)";
+                    int hoursTil = (int)Math.ceil((double)wait2/(60*60));
+                    String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
+                    if( hoursTil < 1)
+                        newline += "within the hour.)";
+                    else
+                        newline += "in " + hoursTil + " hours.)";
+
                     String msg = "";
                     for(String line : lines)
                     {
@@ -283,13 +298,20 @@ public class EventEntryParser
                     guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
                             .sendMessage( startMsg ).queue();
 
+                // sleep until event end time
                 wait = wait2 - (int)(Math.floor( ((double)wait2)/(60*60) )*60*60);
                 wait2 = (int) Math.ceil( ((double)wait2)/(60*60) )*60*60;
                 while( wait2 != 0 )
                 {
                     String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                    int hoursTil = (int)Math.ceil((double)wait2/(60*60));
                     String newline = lines[lines.length-2].split("\\(")[0] +
-                            "(ends in " + (int)Math.ceil((double)wait2/(60*60)) + " hours.)";
+                            "(ends ";
+                    if( hoursTil < 1)
+                        newline += "within one hour.)";
+                    else
+                        newline += "in " + hoursTil + " hours.)";
+
                     String msg = "";
                     for(String line : lines)
                     {
@@ -306,6 +328,7 @@ public class EventEntryParser
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
                             + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
                             "] Sleeping for " + wait + " seconds.\n");
+
                     Thread.sleep(wait * 1000);        // sleep until the event starts
                     wait = 60*60;                     // set wait to one hour
                     wait2 -= 60*60;                   // decrement wait1 by one hour
@@ -353,11 +376,14 @@ public class EventEntryParser
                 return;
             }
 
-            // always remove the entry from schedule and delete the message
+            // always remove the entry from entriesGlobal and delete the message
             finally
             {
-                // remove the thread from the schedule
-                Main.schedule.remove(this.eID);
+                // remove the thread from the entriesGlobal
+                Main.entriesGlobal.remove(this.eID);
+
+                // remove entry from guild
+                Main.removeEntry( this.eID, this.msgEvent.getGuild().getId() );
 
                 // delete the old entry
                 Main.deleteMsg( this.msgEvent.getMessage() );

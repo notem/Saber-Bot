@@ -3,6 +3,7 @@ package io.schedulerbot.utils;
 import io.schedulerbot.Main;
 
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -19,8 +20,9 @@ public class MessageListener extends ListenerAdapter
     public void onMessageReceived( MessageReceivedEvent event )
     {
         String content = event.getMessage().getContent();   // the raw string the user sent
-        String user = event.getAuthor().getId();            // the ID of the user
+        String userId = event.getAuthor().getId();            // the ID of the user
         String origin = event.getChannel().getName();       // the name of the originating text channel
+        String guildId = event.getGuild().getId();
 
         // bot listens for all messages with PREFIX and originating from CONTROL_CHAN channel
         if( content.startsWith(BotConfig.PREFIX) &&
@@ -28,9 +30,9 @@ public class MessageListener extends ListenerAdapter
             Main.handleCommand( Main.commandParser.parse(content, event) );
 
         // bot also listens on EVENT_CHAN for it's own messages
-        if( user.equals( Main.jda.getSelfUser().getId() ) &&
+        if( userId.equals( Main.jda.getSelfUser().getId() ) &&
                 origin.equals(BotConfig.EVENT_CHAN)) {
-            Main.handleEventEntry(Main.eventEntryParser.parse(content, event));
+            Main.handleEventEntry(Main.eventEntryParser.parse(content, event), guildId);
         }
     }
 

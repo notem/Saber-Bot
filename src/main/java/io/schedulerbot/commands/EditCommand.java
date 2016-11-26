@@ -26,8 +26,8 @@ public class EditCommand implements Command
         Integer entryID = Integer.decode( "0x" + args[0] );
 
         // check if the entry exists
-        if( !Main.schedule.containsKey(entryID) ||
-                !Main.schedule.get(entryID).msgEvent.getGuild().getId().equals(event.getGuild().getId()) )
+        if( !Main.entriesGlobal.containsKey(entryID) ||
+                !Main.entriesGlobal.get(entryID).msgEvent.getGuild().getId().equals(event.getGuild().getId()) )
         {
             String msg = "There is no event entry with ID " +
                     Integer.toHexString(entryID) + ".";
@@ -35,12 +35,12 @@ public class EditCommand implements Command
             return;
         }
 
-        String title = Main.schedule.get(entryID).eTitle;
-        ArrayList<String> comments = Main.schedule.get(entryID).eComments;
-        String start = Main.schedule.get(entryID).eStart;
-        String end = Main.schedule.get(entryID).eEnd;
-        int repeat = Main.schedule.get(entryID).eRepeat;
-        LocalDate date = Main.schedule.get(entryID).eDate;
+        String title = Main.entriesGlobal.get(entryID).eTitle;
+        ArrayList<String> comments = Main.entriesGlobal.get(entryID).eComments;
+        String start = Main.entriesGlobal.get(entryID).eStart;
+        String end = Main.entriesGlobal.get(entryID).eEnd;
+        int repeat = Main.entriesGlobal.get(entryID).eRepeat;
+        LocalDate date = Main.entriesGlobal.get(entryID).eDate;
 
         switch( args[1] )
         {
@@ -111,8 +111,8 @@ public class EditCommand implements Command
                 break;
         }
 
-        // interrupt the schedule thread, causing the message to be deleted and the thread killed.
-        Main.schedule.get(entryID).thread.interrupt();
+        // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
+        Main.entriesGlobal.get(entryID).thread.interrupt();
 
         // generate the new event entry message
         String msg = EventEntryParser.generate( title, start, end, comments, repeat, date, entryID );
