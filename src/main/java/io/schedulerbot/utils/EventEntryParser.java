@@ -210,6 +210,10 @@ public class EventEntryParser
             Integer wait1 = start - nowInSeconds;
             Integer wait2 = end - start;
 
+            if( wait1 < 0 )
+            {
+                wait1 += 24 * 60 * 60;
+            }
             if( wait2 < 0 )
             {
                 wait2 += 24 * 60 * 60;
@@ -237,11 +241,11 @@ public class EventEntryParser
 
                     Main.editMsg( msg, this.msgEvent.getMessage() );
 
-                    wait = LocalTime.MIDNIGHT.toSecondOfDay() - LocalTime.now().toSecondOfDay();
+                    wait = 24*60*60 - LocalTime.now().toSecondOfDay();
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
                             + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
                             "] Sleeping for " + wait + " seconds.\n");
-                    Thread.sleep(wait);
+                    Thread.sleep(wait * 1000);
                 }
 
                 wait = wait1 - (int)(Math.floor( ((double)wait1)/(60*60) )*60*60);
@@ -309,19 +313,6 @@ public class EventEntryParser
 
                 // announce that the event is ending
                 Main.sendAnnounce( endMsg, guild );
-            }
-
-            // if an interrupt is received, quit operation
-            catch(InterruptedException e)
-            {
-                return;
-            }
-
-            // always remove the entry from schedule and delete the message
-            finally
-            {
-                // remove the thread from the schedule
-                Main.schedule.remove(this.eID);
 
                 // if the event entry is scheduled to repeat, must be handled with now
                 if( this.eRepeat == 1 )
@@ -354,6 +345,19 @@ public class EventEntryParser
 
                     Main.sendMsg( msg, this.msgEvent.getChannel() );
                 }
+            }
+
+            // if an interrupt is received, quit operation
+            catch(InterruptedException e)
+            {
+                return;
+            }
+
+            // always remove the entry from schedule and delete the message
+            finally
+            {
+                // remove the thread from the schedule
+                Main.schedule.remove(this.eID);
 
                 // delete the old entry
                 Main.deleteMsg( this.msgEvent.getMessage() );

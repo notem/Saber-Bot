@@ -1,6 +1,7 @@
 package io.schedulerbot.commands;
 
 import io.schedulerbot.Main;
+import io.schedulerbot.utils.BotConfig;
 import io.schedulerbot.utils.EventEntryParser;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -25,9 +26,11 @@ public class EditCommand implements Command
         Integer entryID = Integer.decode( "0x" + args[0] );
 
         // check if the entry exists
-        if( !Main.schedule.containsKey(entryID) )
+        if( !Main.schedule.containsKey(entryID) ||
+                !Main.schedule.get(entryID).msgEvent.getGuild().getId().equals(event.getGuild().getId()) )
         {
-            String msg = "There is no event entry with ID " + entryID + ".";
+            String msg = "There is no event entry with ID " +
+                    Integer.toHexString(entryID) + ".";
             event.getChannel().sendMessage( msg ).queue();
             return;
         }
@@ -114,6 +117,6 @@ public class EditCommand implements Command
         // generate the new event entry message
         String msg = EventEntryParser.generate( title, start, end, comments, repeat, date, entryID );
 
-        Main.sendMsg( msg, event.getChannel() );
+        Main.sendMsg( msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0) );
     }
 }

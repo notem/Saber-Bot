@@ -4,6 +4,7 @@ import io.schedulerbot.Main;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
@@ -49,12 +50,12 @@ public class DestroyCommand implements Command
         LocalTime now = LocalTime.now();
         Integer dif = start - (now.getHour()*60*60 + now.getMinute()*60 + now.getSecond());
 
-        // if the difference is greater than 0 the event was canceled before it began
-        if(dif >= 0)
-            Main.sendAnnounce( cancelMsg, guild );
-
         // if the difference is less than 0 the event was ended early
-        else if(dif < 0)
+        if(dif < 0 && Main.schedule.get(entryID).eDate.equals(LocalDate.now()))
             Main.sendAnnounce( earlyMsg, guild );
+
+        // otherwise event was canceled before it began
+        else
+            Main.sendAnnounce( cancelMsg, guild );
     }
 }
