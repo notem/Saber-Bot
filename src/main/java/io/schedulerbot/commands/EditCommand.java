@@ -58,14 +58,18 @@ public class EditCommand implements Command
                 }
                 else if( args[2].equals("remove"))
                 {
-                    String comment = "";
-                    for( int i = 3; i < args.length; i++ )
+                    if( args[3].charAt(0)=='\"' )
                     {
-                        comment += args[i].replace("\"", "");
-                        if (!(i == args.length - 1))
-                            comment += " ";
+                        String comment = "";
+                        for (int i = 3; i < args.length; i++) {
+                            comment += args[i].replace("\"", "");
+                            if (!(i == args.length - 1))
+                                comment += " ";
+                        }
+                        comments.remove(comment);
                     }
-                    comments.remove( comment );
+                    else if( Integer.parseInt(args[3]) <= comments.size() )
+                        comments.remove( Integer.parseInt(args[3])-1 );
                 }
                 break;
 
@@ -112,11 +116,15 @@ public class EditCommand implements Command
         }
 
         // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
-        Main.entriesGlobal.get(entryID).thread.interrupt();
+        Thread t = Main.entriesGlobal.get(entryID).thread;
+        while(t.isAlive())
+        { t.interrupt(); }
+
+        System.out.printf("%b",Main.entriesGlobal.containsKey(entryID));
 
         // generate the new event entry message
-        String msg = EventEntryParser.generate( title, start, end, comments, repeat, date, entryID );
+        String msg = EventEntryParser.generate(title, start, end, comments, repeat, date, entryID);
 
-        Main.sendMsg( msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0) );
+        Main.sendMsg(msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0));
     }
 }

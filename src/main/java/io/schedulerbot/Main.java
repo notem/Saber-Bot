@@ -23,7 +23,7 @@ public class Main {
 
     public static JDA jda;     // the JDA bot object
     private static HashMap<String, Command> commands = new HashMap<String, Command>();  // mapping of keywords to commands
-    public static HashMap<Integer, EventEntryParser.EventEntry> entriesGlobal = new HashMap<Integer, EventEntryParser.EventEntry>();
+    public static final HashMap<Integer, EventEntryParser.EventEntry> entriesGlobal = new HashMap<Integer, EventEntryParser.EventEntry>();
     public static HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<String, ArrayList<Integer>>();
 
     public static final CommandParser commandParser = new CommandParser();     // parser object used by MessageListener
@@ -116,31 +116,30 @@ public class Main {
         System.out.print( err );
     }
 
-    public static void removeEntry( Integer eId, String guildId )
+    public static void removeId( Integer eId, String guildId )
     {
         entriesByGuild.get( guildId ).remove( eId );
 
         if( entriesByGuild.get( guildId ).isEmpty() )
             entriesByGuild.remove( guildId );
+
+        entriesGlobal.remove( eId );
     }
 
-    /**
-     *
-     * @param oldID
-     * @return
-     */
-    public static Integer newID( Integer oldID )
+    public static Integer newId( Integer oldID )
     {
         Integer ID;
         if( oldID==null )
             ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
         else
             ID = oldID;
+        System.out.printf("%d;", ID);
 
         while( entriesGlobal.containsKey( ID ) )
         {
             ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
         }
+        System.out.printf("%d:",ID);
 
         return ID;
     }

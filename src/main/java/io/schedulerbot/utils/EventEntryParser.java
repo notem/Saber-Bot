@@ -117,7 +117,7 @@ public class EventEntryParser
         // the 'actual' first line (and last line) define format
         String msg = "```Markdown\n";
 
-        eID = Main.newID( eID ); // generate an ID for the entry
+        eID = Main.newId( eID ); // generate an ID for the entry
         String firstLine = "# " + eTitle + "\n";
 
         String secondLine = "< " + eDate.getMonth() + " " + eDate.getDayOfMonth() + ", "
@@ -382,11 +382,8 @@ public class EventEntryParser
             // always remove the entry from entriesGlobal and delete the message
             finally
             {
-                 // remove entry from guild
-                Main.removeEntry( this.eID, this.eMsg.getGuild().getId() );
-
-                // remove the thread from the entriesGlobal
-                Main.entriesGlobal.remove(this.eID);
+               // remove entry
+                Main.removeId(this.eID, this.eMsg.getGuild().getId());
 
                // delete the old entry
                 Main.deleteMsg( this.eMsg );
