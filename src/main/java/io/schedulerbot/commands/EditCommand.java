@@ -120,8 +120,6 @@ public class EditCommand implements Command
         while(t.isAlive())
         { t.interrupt(); }
 
-        System.out.printf("%b",Main.entriesGlobal.containsKey(entryID));
-
         // generate the new event entry message
         String msg = EventEntryParser.generate(title, start, end, comments, repeat, date, entryID);
 

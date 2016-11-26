@@ -224,7 +224,7 @@ public class EventEntryParser
             {
                 // sleep until the day of the event starts or if the event starts in less than 24 hours
                 Integer wait;
-                while( !this.eDate.equals(LocalDate.now()) && wait1>(24*60*60) )
+                while( !this.eDate.equals(LocalDate.now()) && (wait1>(24*60*60) || wait1<0) )
                 {
                     int days = (int) DAYS.between(LocalDate.now(), eDate);
                     String[] lines = this.eMsg.getRawContent().split("\n");
@@ -262,7 +262,7 @@ public class EventEntryParser
                 // sleep until the start time
                 wait = wait1 - (int)(Math.floor( ((double)wait1)/(60*60) )*60*60);
                 wait1 = (int)Math.ceil(((double)wait1)/(60*60))*60*60;
-                while( wait1 != 0 )
+                while( wait1 > 0 )
                 {
                     String[] lines = this.eMsg.getRawContent().split("\n");
                     int hoursTil = (int)Math.ceil((double)wait1/(60*60));
@@ -304,13 +304,13 @@ public class EventEntryParser
                 // sleep until event end time
                 wait = wait2 - (int)(Math.floor( ((double)wait2)/(60*60) )*60*60);
                 wait2 = (int) Math.ceil( ((double)wait2)/(60*60) )*60*60;
-                while( wait2 != 0 )
+                while( wait2 > 0 )
                 {
                     String[] lines = this.eMsg.getRawContent().split("\n");
                     int hoursTil = (int)Math.ceil((double)wait2/(60*60));
                     String newline = lines[lines.length-2].split("\\(")[0] +
                             "(ends ";
-                    if( hoursTil < 1)
+                    if( hoursTil <= 1)
                         newline += "within one hour.)";
                     else
                         newline += "in " + hoursTil + " hours.)";

@@ -6,8 +6,8 @@ package io.schedulerbot.utils;
  */
 public class BotConfig
 {
-    public static String TOKEN = "MjUwODAxNjAzNjMwNTk2MTAw.CxaJqw.IPLbPDoRhVBZhZyQ9JjmoKvsskE" ;     // your bot's token
-    //public static String TOKEN = "MjUxODQ0MDgzMTM0MzY1Njk3.CxpsKA.QQl9q3sZD2ipQlt10huDU5HjFfI" ;     // your bot's token
+    //public static String TOKEN = "MjUwODAxNjAzNjMwNTk2MTAw.CxaJqw.IPLbPDoRhVBZhZyQ9JjmoKvsskE" ;     // your bot's token
+    public static String TOKEN = "MjUxODQ0MDgzMTM0MzY1Njk3.CxpsKA.QQl9q3sZD2ipQlt10huDU5HjFfI" ;     // your bot's token
 
     public static String PREFIX = "!";                  // prefix bot should respond to
 
@@ -16,7 +16,7 @@ public class BotConfig
 
     public static String EVENT_CHAN = "event_schedule"; // the channel in which bot manages scheduled events
 
-    public static String CONTROL_CHAN = "bot_control";// the channel where bot listens for commands, if set
+    public static String CONTROL_CHAN = "saber_control";// the channel where bot listens for commands, if set
                                                         // to an empty string bot listens everywhere
 
     public static int MAX_ENTRIES = -1;                 // determines the maximum amount of event event entries

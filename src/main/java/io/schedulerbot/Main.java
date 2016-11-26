@@ -133,13 +133,11 @@ public class Main {
             ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
         else
             ID = oldID;
-        System.out.printf("%d;", ID);
 
         while( entriesGlobal.containsKey( ID ) )
         {
             ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
         }
-        System.out.printf("%d:",ID);
 
         return ID;
     }
