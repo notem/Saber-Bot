@@ -27,7 +27,7 @@ public class EditCommand implements Command
 
         // check if the entry exists
         if( !Main.entriesGlobal.containsKey(entryID) ||
-                !Main.entriesGlobal.get(entryID).msgEvent.getGuild().getId().equals(event.getGuild().getId()) )
+                !Main.entriesGlobal.get(entryID).eMsg.getGuild().getId().equals(event.getGuild().getId()) )
         {
             String msg = "There is no event entry with ID " +
                     Integer.toHexString(entryID) + ".";

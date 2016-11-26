@@ -2,7 +2,7 @@ package io.schedulerbot.utils;
 
 import io.schedulerbot.Main;
 import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.entities.Message;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,12 +26,12 @@ public class EventEntryParser
     /**
      * Parses a the content of a EventEntry MessageReceivedEvent into a EventEntry worker thread.
      *
-     * @param raw raw content of the message
-     * @param event the event object
      * @return EventEntry worker thread
      */
-    public EventEntry parse(String raw, MessageReceivedEvent event)
+    public EventEntry parse( Message msg )
     {
+        String raw = msg.getRawContent();
+
         String eTitle;
         String eStart;
         String eEnd;
@@ -79,8 +79,9 @@ public class EventEntryParser
 
         // the third line is empty space,     \\
 
-        // lines four through n-2 are comments \\
-        for(int c = 4; c < lines.length-3; c++ )
+        // lines four through n-2 are comments,
+        // iterate every two to catch the new line \\
+        for(int c = 4; c < lines.length-3; c+=2 )
             eComments.add(lines[c]);
 
         // line n-1 is an empty space \\
@@ -91,7 +92,7 @@ public class EventEntryParser
         ); // can throw away the minutes til timer
 
 
-        return new EventEntry( eTitle, eStart, eEnd, eComments, eID, event, eRepeat, eDate );
+        return new EventEntry( eTitle, eStart, eEnd, eComments, eID, msg, eRepeat, eDate );
     }
 
 
@@ -131,15 +132,14 @@ public class EventEntryParser
         msg += firstLine + secondLine;
 
         // create an empty 'gap' line if there exists comments
-        if( !eComments.isEmpty() )
-            msg += "\n";
+        msg += "\n";
 
-        // insert each comment line into the message
+        // insert each comment line with a gap line
         for( String comment : eComments )
-            msg += comment + "\n";
+            msg += comment + "\n\n";
 
         // add the final ID and time til line
-        msg += "\n[ID: " + Integer.toHexString(eID) + "](begins in " + "xx" + " hours.)\n";
+        msg += "[ID: " + Integer.toHexString(eID) + "](begins in " + "xx" + " hours.)\n";
         // cap the code block
         msg += "```";
 
@@ -150,7 +150,8 @@ public class EventEntryParser
     /**
      * the EventEntry worker thread subclass
      */
-    public class EventEntry implements Runnable {
+    public class EventEntry implements Runnable
+    {
 
         public String eTitle;                   // the title/name of the event
         public String eStart;                   // the time in (24h) when the event starts
@@ -159,7 +160,7 @@ public class EventEntryParser
         public Integer eID;                     // 16 bit identifier
         public int eRepeat;                      // 1 is daily, 2 is weekly, 0 is not at all
         public LocalDate eDate;
-        public MessageReceivedEvent msgEvent;
+        public Message eMsg;
 
         public Thread thread;
 
@@ -170,16 +171,15 @@ public class EventEntryParser
          * @param eEnd time of day the event ends (Integer)
          * @param eComments the descriptive text of the event (String)
          * @param eID the ID of the event (Integer)
-         * @param msgEvent the discord message object (MessageReceivedEvent)
          */
-        public EventEntry(String eName, String eStart, String eEnd, ArrayList<String> eComments, Integer eID, MessageReceivedEvent msgEvent, int eRepeat, LocalDate eDate)
+        public EventEntry(String eName, String eStart, String eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat, LocalDate eDate)
         {
             this.eTitle = eName;
             this.eStart = eStart;
             this.eEnd = eEnd;
             this.eComments = eComments;
             this.eID = eID;
-            this.msgEvent = msgEvent;
+            this.eMsg = eMsg;
             this.eRepeat = eRepeat;
             this.eDate = eDate;
 
@@ -191,7 +191,7 @@ public class EventEntryParser
         public void run()
         {
             // create the announcement message strings
-            Guild guild = this.msgEvent.getGuild();
+            Guild guild = this.eMsg.getGuild();
             String startMsg = "@everyone The event **" + this.eTitle + "** has begun!";
             String endMsg = "@everyone The event **" + this.eTitle + "** has ended.";
 
@@ -227,7 +227,7 @@ public class EventEntryParser
                 while( !this.eDate.equals(LocalDate.now()) && wait1>(24*60*60) )
                 {
                     int days = (int) DAYS.between(LocalDate.now(), eDate);
-                    String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                    String[] lines = this.eMsg.getRawContent().split("\n");
 
                     String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
                     if( days <= 1)
@@ -246,7 +246,7 @@ public class EventEntryParser
                             msg += "\n";
                     }
 
-                    Main.editMsg( msg, this.msgEvent.getMessage() );
+                    Main.editMsg( msg, this.eMsg );
 
                     wait = 24*60*60 - LocalTime.now().toSecondOfDay();
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
@@ -264,7 +264,7 @@ public class EventEntryParser
                 wait1 = (int)Math.ceil(((double)wait1)/(60*60))*60*60;
                 while( wait1 != 0 )
                 {
-                    String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                    String[] lines = this.eMsg.getRawContent().split("\n");
                     int hoursTil = (int)Math.ceil((double)wait1/(60*60));
                     String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
                     if( hoursTil <= 1)
@@ -283,7 +283,7 @@ public class EventEntryParser
                             msg += "\n";
                     }
 
-                    Main.editMsg( msg, this.msgEvent.getMessage() );
+                    Main.editMsg( msg, this.eMsg );
 
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
                             + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
@@ -306,7 +306,7 @@ public class EventEntryParser
                 wait2 = (int) Math.ceil( ((double)wait2)/(60*60) )*60*60;
                 while( wait2 != 0 )
                 {
-                    String[] lines = this.msgEvent.getMessage().getRawContent().split("\n");
+                    String[] lines = this.eMsg.getRawContent().split("\n");
                     int hoursTil = (int)Math.ceil((double)wait2/(60*60));
                     String newline = lines[lines.length-2].split("\\(")[0] +
                             "(ends ";
@@ -326,7 +326,7 @@ public class EventEntryParser
                             msg += "\n";
                     }
 
-                    Main.editMsg( msg, this.msgEvent.getMessage() );
+                    Main.editMsg( msg, this.eMsg );
 
                     System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
                             + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
@@ -354,7 +354,7 @@ public class EventEntryParser
                             this.eID
                     );
 
-                    Main.sendMsg( msg, this.msgEvent.getChannel() );
+                    Main.sendMsg( msg, this.eMsg.getChannel() );
                 }
                 else if( this.eRepeat == 2 )
                 {
@@ -369,7 +369,7 @@ public class EventEntryParser
                             this.eID
                     );
 
-                    Main.sendMsg( msg, this.msgEvent.getChannel() );
+                    Main.sendMsg( msg, this.eMsg.getChannel() );
                 }
             }
 
@@ -382,14 +382,14 @@ public class EventEntryParser
             // always remove the entry from entriesGlobal and delete the message
             finally
             {
+                 // remove entry from guild
+                Main.removeEntry( this.eID, this.eMsg.getGuild().getId() );
+
                 // remove the thread from the entriesGlobal
                 Main.entriesGlobal.remove(this.eID);
 
-                // remove entry from guild
-                Main.removeEntry( this.eID, this.msgEvent.getGuild().getId() );
-
-                // delete the old entry
-                Main.deleteMsg( this.msgEvent.getMessage() );
+               // delete the old entry
+                Main.deleteMsg( this.eMsg );
             }
         }
     }

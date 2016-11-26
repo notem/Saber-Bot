@@ -32,7 +32,7 @@ public class DestroyCommand implements Command
         }
 
         // create the announcement message strings
-        Guild guild = Main.entriesGlobal.get(entryID).msgEvent.getGuild();
+        Guild guild = Main.entriesGlobal.get(entryID).eMsg.getGuild();
         String cancelMsg = "@everyone The event **" + Main.entriesGlobal.get(entryID).eTitle
                 + "** has been cancelled.";
         String earlyMsg = "@everyone The event **" + Main.entriesGlobal.get(entryID).eTitle
