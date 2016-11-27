@@ -1,7 +1,8 @@
-package io.schedulerbot.commands;
+package io.schedulerbot.commands.general;
 
-import io.schedulerbot.Main;
+import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.BotConfig;
+import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 /**
@@ -42,6 +43,6 @@ public class AnnounceCommand implements Command
         for( String str : args )
            msg += " " + str;
 
-        Main.sendAnnounce( msg, event.getGuild() );
+        MessageUtilities.sendAnnounce( msg, event.getGuild() );
     }
 }

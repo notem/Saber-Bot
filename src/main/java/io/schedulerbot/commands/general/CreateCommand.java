@@ -1,8 +1,10 @@
-package io.schedulerbot.commands;
+package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
+import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.BotConfig;
-import io.schedulerbot.utils.EventEntryParser;
+import io.schedulerbot.utils.Scheduler;
+import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
@@ -43,27 +45,27 @@ public class CreateCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
-        // TODO do some actually verification
+        // TODO
         return true;
     }
 
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        if( Main.entriesByGuild.containsKey( event.getGuild().getId() )
-                && Main.entriesByGuild.get( event.getGuild().getId() ).size() >= BotConfig.MAX_ENTRIES
-                && BotConfig.MAX_ENTRIES > 0)
+        ArrayList<Integer> entries = Main.getEntriesByGuild( event.getGuild().getId() );
+
+        if( entries != null && entries.size() >= BotConfig.MAX_ENTRIES && BotConfig.MAX_ENTRIES > 0)
         {
             String msg = "Your guild already has the maximum allowed amount of event entries."
                     +" No more entries may be added until old entries are destroyed.";
-            Main.sendMsg( msg, event.getChannel() );
+            MessageUtilities.sendMsg( msg, event.getChannel() );
             return;
         }
 
         String eTitle = "";
         String eStart = "00:00";    // initialized just in case verify failed it's duty
         String eEnd = "00:00";      //
-        ArrayList<String> eComments = new ArrayList<String>();
+        ArrayList<String> eComments = new ArrayList<>();
         int eRepeat = 0;             // default is 0 (no repeat)
         LocalDate eDate = LocalDate.now();
 
@@ -157,8 +159,8 @@ public class CreateCommand implements Command
             eDate = eDate.plusDays(1);
 
         // generate the event entry message
-        String msg = EventEntryParser.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate, null );
+        String msg = Scheduler.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate, null );
 
-        Main.sendMsg( msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0) );
+        MessageUtilities.sendMsg( msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0) );
     }
 }

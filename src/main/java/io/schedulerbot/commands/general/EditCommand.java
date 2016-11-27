@@ -1,8 +1,11 @@
-package io.schedulerbot.commands;
+package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
+import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.BotConfig;
-import io.schedulerbot.utils.EventEntryParser;
+import io.schedulerbot.utils.EventEntry;
+import io.schedulerbot.utils.Scheduler;
+import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
@@ -36,7 +39,7 @@ public class EditCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
-        // TODO actual verification of input
+        // TODO
         return true;
     }
 
@@ -44,24 +47,23 @@ public class EditCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         // parse argument into the event entry's ID
-        Integer entryID = Integer.decode( "0x" + args[0] );
+        Integer entryId = Integer.decode( "0x" + args[0] );
 
         // check if the entry exists
-        if( !Main.entriesGlobal.containsKey(entryID) ||
-                !Main.entriesGlobal.get(entryID).eMsg.getGuild().getId().equals(event.getGuild().getId()) )
+        EventEntry entry = Main.getEventEntry( entryId );
+        if( entry == null  || entry.eMsg.getGuild().getId().equals(event.getGuild().getId()) )
         {
-            String msg = "There is no event entry with ID " +
-                    Integer.toHexString(entryID) + ".";
+            String msg = "There is no event entry with ID " + Integer.toHexString(entryId) + ".";
             event.getChannel().sendMessage( msg ).queue();
             return;
         }
 
-        String title = Main.entriesGlobal.get(entryID).eTitle;
-        ArrayList<String> comments = Main.entriesGlobal.get(entryID).eComments;
-        String start = Main.entriesGlobal.get(entryID).eStart;
-        String end = Main.entriesGlobal.get(entryID).eEnd;
-        int repeat = Main.entriesGlobal.get(entryID).eRepeat;
-        LocalDate date = Main.entriesGlobal.get(entryID).eDate;
+        String title = entry.eTitle;
+        ArrayList<String> comments = entry.eComments;
+        String start = entry.eStart;
+        String end = entry.eEnd;
+        int repeat = entry.eRepeat;
+        LocalDate date = entry.eDate;
 
         switch( args[1] )
         {
@@ -137,13 +139,13 @@ public class EditCommand implements Command
         }
 
         // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
-        Thread t = Main.entriesGlobal.get(entryID).thread;
+        Thread t = entry.thread;
         while(t.isAlive())
         { t.interrupt(); }
 
         // generate the new event entry message
-        String msg = EventEntryParser.generate(title, start, end, comments, repeat, date, entryID);
+        String msg = Scheduler.generate(title, start, end, comments, repeat, date, entryId);
 
-        Main.sendMsg(msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0));
+        MessageUtilities.sendMsg(msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0));
     }
 }

@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -47,11 +48,11 @@ public class MessageListener extends ListenerAdapter
         }
 
         // bot also listens on EVENT_CHAN for it's own messages
-        else if( userId.equals( Main.jda.getSelfUser().getId() ) &&
+        else if( userId.equals( Main.getBotSelfUser().getId() ) &&
                 origin.equals(BotConfig.EVENT_CHAN))
         {
             String guildId = event.getGuild().getId();
-            Main.handleEventEntry( Main.eventEntryParser.parse(event.getMessage()), guildId);
+            Main.handleEventEntry( Main.scheduler.parse(event.getMessage()), guildId);
         }
     }
 
@@ -64,7 +65,7 @@ public class MessageListener extends ListenerAdapter
 
         for( Guild guild : event.getJDA().getGuilds())
         {
-            Main.sendAnnounce( msg, guild );
+            MessageUtilities.sendAnnounce( msg, guild );
 
             // create a message history object
             MessageHistory history = guild.getTextChannelsByName( BotConfig.EVENT_CHAN, false ).get(0).getHistory();
@@ -74,19 +75,21 @@ public class MessageListener extends ListenerAdapter
             {
                 String reloadMsg;
                 for( Message eMsg : l )
-                    if( eMsg.getAuthor().getId().equals(Main.jda.getSelfUser().getId()) )
-                        Main.handleEventEntry( Main.eventEntryParser.parse( eMsg ), guild.getId() );
-                if( Main.entriesByGuild.containsKey( guild.getId() ) )
+                    if( eMsg.getAuthor().getId().equals(Main.getBotSelfUser().getId()) )
+                        Main.handleEventEntry( Main.scheduler.parse( eMsg ), guild.getId() );
+
+                ArrayList<Integer> entries = Main.getEntriesByGuild( guild.getId() );
+                if( entries != null )
                 {
                     reloadMsg = "There ";
-                    if( Main.entriesByGuild.get(guild.getId()).size()>1 )
-                        reloadMsg += "are " + Main.entriesByGuild.get(guild.getId()).size() + " events on the schedule.";
+                    if( entries.size()>1 )
+                        reloadMsg += "are " + entries.size() + " events on the schedule.";
                     else
                         reloadMsg += "is a single event on the schedule.";
                 }
                 else
                     reloadMsg = "There are no events on the schedule.";
-                Main.sendAnnounce( reloadMsg, guild );
+                MessageUtilities.sendAnnounce( reloadMsg, guild );
             };
 
             // retrieve history and have the consumer act on it

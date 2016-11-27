@@ -4,10 +4,20 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 /**
  * file: Command.java
+ *
  * Interface to be implemented by all bot commands
  */
 public interface Command
 {
+
+    /**
+     * the function which retrieves the help text for the command
+     * @param brief true - return the brief help text, false - return the full help text
+     * @return String, the description and operation of the command
+     */
+    String help( boolean brief );
+
+
     /**
      * used to verify that the argument string for the invoking argument
      * is properly formed
@@ -15,7 +25,7 @@ public interface Command
      * @param event the originating event
      * @return true if arguments are properly formed, false otherwise
      */
-    public boolean verify(String[] args, MessageReceivedEvent event);
+    boolean verify(String[] args, MessageReceivedEvent event);
 
 
     /**
@@ -23,13 +33,5 @@ public interface Command
      * @param args an array of arguments provided with the commands (excludes the invoking argument)
      * @param event the originating event object
      */
-    public void action(String[] args, MessageReceivedEvent event);
-
-
-    /**
-     * the function which retrieves the help text for the command
-     * @param brief true - return the brief help text, false - return the full help text
-     * @return String, the description and operation of the command
-     */
-    public String help( boolean brief );
+    void action(String[] args, MessageReceivedEvent event);
 }
