@@ -42,7 +42,7 @@ public class HelpCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         // send the bot intro with a brief list of commands to the user
-        if(args.length > 1)
+        if(args.length < 1)
         {
             String commandsBrief = "";
             for( Command cmd : Main.commands.values() )

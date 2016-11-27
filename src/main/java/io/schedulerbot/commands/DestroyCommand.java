@@ -12,9 +12,11 @@ import java.time.LocalTime;
  */
 public class DestroyCommand implements Command
 {
-    private static final String USAGE_EXTENDED = "";
+    private static final String USAGE_EXTENDED = "\nCalling **!destroy <ID>** will end the event with <ID>" +
+            " prematurely.\nEx: **!destroy 084c**";
+
     private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "destroy** - Removes an entry from " +
-            BotConfig.EVENT_CHAN + ", sending an even ended early or canceled announcement.";
+            BotConfig.EVENT_CHAN + ", sending an event ended early or canceled announcement.";
 
     @Override
     public String help(boolean brief)

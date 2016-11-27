@@ -20,9 +20,10 @@ import java.util.HashMap;
 public class Main {
 
     public static JDA jda;     // the JDA bot object
-    public static HashMap<String, Command> commands = new HashMap<String, Command>();  // mapping of keywords to commands
+    public static HashMap<String, Command> commands = new HashMap<>();  // mapping of keywords to commands
+    public static HashMap<String, Command> adminCommands = new HashMap<>();
     public static final HashMap<Integer, EventEntryParser.EventEntry> entriesGlobal = new HashMap<Integer, EventEntryParser.EventEntry>();
-    public static HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<String, ArrayList<Integer>>();
+    public static HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();
 
     public static final CommandParser commandParser = new CommandParser();     // parser object used by MessageListener
     public static final EventEntryParser eventEntryParser = new EventEntryParser();
@@ -72,14 +73,46 @@ public class Main {
             else
             {
                 String msg = "Invalid arguments for: \"" + BotConfig.PREFIX + cc.invoke +"\"";
-                cc.event.getChannel().sendMessage( msg ).queue();
+                sendMsg( msg, cc.event.getChannel() );
             }
         }
         // else the invoking command is invalid
         else
         {
             String msg = "Invalid command: \"" + BotConfig.PREFIX + cc.invoke + "\"";
-            cc.event.getChannel().sendMessage( msg ).queue();
+            sendMsg( msg, cc.event.getChannel() );
+        }
+    }
+
+    public static void handlePrivateCommand(CommandParser.CommandContainer cc)
+    {
+        if(cc.invoke.equals("help"))
+        {
+            boolean valid = commands.get("help").verify(cc.args, cc.event);
+
+            // do command action if valid arguments
+            if(valid)
+                commands.get("help").action(cc.args, cc.event);
+                // otherwise send error message
+            else
+            {
+                String msg = "Invalid arguments for: \"" + BotConfig.PREFIX + "help\"";
+                sendPrivateMsg( msg, cc.event.getAuthor() );
+            }
+        }
+        // for admin commands
+        else if(adminCommands.containsKey(cc.invoke))
+        {
+            boolean valid = commands.get(cc.invoke).verify(cc.args, cc.event);
+
+            // do command action if valid arguments
+            if (valid)
+                commands.get(cc.invoke).action(cc.args, cc.event);
+            else
+            {
+                String msg = "Invalid arguments for: \"" + BotConfig.PREFIX + "help\"";
+                sendPrivateMsg( msg, cc.event.getAuthor() );
+            }
         }
     }
 

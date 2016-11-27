@@ -12,7 +12,14 @@ import java.util.ArrayList;
  */
 public class EditCommand implements Command
 {
-    private static final String USAGE_EXTENDED = "";
+    private static final String USAGE_EXTENDED = "\nThe entry's title, start time, start date, end time, comments," +
+            " and repeat may be reconfigured with this command using the form **!edit <ID> <option> <arguments>**\n The" +
+            " possible arguments are **title \"NEW TITLE\"**, **start HH:mm**, **end HH:mm**, **date MM/dd**, " +
+            "**repeat no**/**daily**/**weekly**, and **comment add \"COMMENT\"** (or **comment remove**). When " +
+            "removing a comment, either the comment copied verbatim (within quotations) or the comment number needs" +
+            " to be supplied.\n\nEx1: **!edit 3fa0 comment add \"Attendance is mandatory\"**\nEx2: **!edit 0abf " +
+            "start 06:15**\nEx3: **!edit 80c0 comment remove 1**";
+
     private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "edit** - Modifies an event entry, either" +
             " changing settings or adding/removing comment fields.";
 
