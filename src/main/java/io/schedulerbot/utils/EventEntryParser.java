@@ -261,6 +261,8 @@ public class EventEntryParser
 
                 // sleep until the start time
                 wait = wait1 - (int)(Math.floor( ((double)wait1)/(60*60) )*60*60);
+                if(wait==0)
+                { wait = 60*60; }
                 wait1 = (int)Math.ceil(((double)wait1)/(60*60))*60*60;
                 while( wait1 > 0 )
                 {
@@ -303,6 +305,8 @@ public class EventEntryParser
 
                 // sleep until event end time
                 wait = wait2 - (int)(Math.floor( ((double)wait2)/(60*60) )*60*60);
+                if(wait==0)
+                { wait = 60*60; }
                 wait2 = (int) Math.ceil( ((double)wait2)/(60*60) )*60*60;
                 while( wait2 > 0 )
                 {

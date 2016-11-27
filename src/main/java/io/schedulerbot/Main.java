@@ -6,10 +6,8 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -135,18 +133,6 @@ public class Main {
             entriesByGuild.get( guildId ).add( se.eID );
     }
 
-    /**
-     *
-     * @param e
-     * @param event
-     */
-    public static void handleException( Exception e, Event event )
-    {
-        String err = "[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                + LocalTime.now().getSecond() + "]" + e.getLocalizedMessage();
-        System.out.print( err );
-    }
-
     public static void removeId( Integer eId, String guildId )
     {
         entriesByGuild.get( guildId ).remove( eId );
@@ -184,10 +170,8 @@ public class Main {
         {
             chan.sendMessage(msg).queue();
         }
-        catch (Exception e)
-        {
-            Main.handleException(e, null);
-        }
+        catch (Exception ignored)
+        { }
     }
 
     public static void sendPrivateMsg( String msg, User user )
@@ -197,10 +181,8 @@ public class Main {
             user.openPrivateChannel();
             sendMsg( msg, user.getPrivateChannel() );
         }
-        catch( Exception e )
-        {
-
-        }
+        catch( Exception ignored)
+        { }
     }
 
     public static void sendAnnounce( String msg, Guild guild )
@@ -219,10 +201,8 @@ public class Main {
         {
             msg.editMessage(msgStr).queue();
         }
-        catch( Exception e )
-        {
-            return;
-        }
+        catch( Exception ignored)
+        { }
     }
 
     /**
@@ -235,9 +215,7 @@ public class Main {
         {
             msg.deleteMessage().queue();
         }
-        catch( PermissionException e )
-        {
-            Main.handleException( e, null );
-        }
+        catch( PermissionException ignored)
+        { }
     }
 }

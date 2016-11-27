@@ -17,16 +17,17 @@ import java.util.ArrayList;
  */
 public class CreateCommand implements Command
 {
-    private static final String USAGE_EXTENDED = "Event entries can be initialized using the form **!create " +
-            "\"TITLE\" <Start> <End> <Optional Arguments>**. Entries MUST be initialized with a title, a start " +
+    private static final String USAGE_EXTENDED = "\nEvent entries can be initialized using the form **!create " +
+            "\"TITLE\" <Start> <End> <Optional>**. Entries MUST be initialized with a title, a start " +
             "time, and an end time. Start and end times should be of form HH:mm. Entries can optionally be " +
             "configured with comments, repeat, and a start date. Adding **repeat no**/**daily**/**weekly** to " +
             "**<Optional>** will configure repeat; default behavior is no repeat. Adding **date MM/dd** to " +
             "**<Optional>** will configure the start date; default behavior is to use the current date or the " +
             "next day depending on if the current time is greater than the start time. Comments may be added by" +
             " adding **\"YOUR COMMENT\"** in **<Optional>**; any number of comments may be added in **<Optional>" +
-            "**.\nEx. **!create \"Weekly Raid Event\" 19:00 22:00 repeat weekly \"Healers and tanks always in " +
-            "demand.\" \"PM our raid captain with your role and level if attending\"**";
+            "**.\n\nEx1. **!create \"Party in the Guild Hall\" 19:00 02:00**\nEx2. **!create \"Weekly Raid Event\"" +
+            " 19:00 22:00 repeat weekly \"Healers and tanks always in demand.\" \"PM our raid captain with your " +
+            "role and level if attending.\"**";
 
     private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "create** - Generates a new event entry" +
             " in #" + BotConfig.EVENT_CHAN + ".";
