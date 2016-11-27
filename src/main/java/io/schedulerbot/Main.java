@@ -5,9 +5,7 @@ import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 
@@ -22,7 +20,7 @@ import java.util.HashMap;
 public class Main {
 
     public static JDA jda;     // the JDA bot object
-    private static HashMap<String, Command> commands = new HashMap<String, Command>();  // mapping of keywords to commands
+    public static HashMap<String, Command> commands = new HashMap<String, Command>();  // mapping of keywords to commands
     public static final HashMap<Integer, EventEntryParser.EventEntry> entriesGlobal = new HashMap<Integer, EventEntryParser.EventEntry>();
     public static HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<String, ArrayList<Integer>>();
 
@@ -156,6 +154,19 @@ public class Main {
         catch (Exception e)
         {
             Main.handleException(e, null);
+        }
+    }
+
+    public static void sendPrivateMsg( String msg, User user )
+    {
+        try
+        {
+            user.openPrivateChannel();
+            sendMsg( msg, user.getPrivateChannel() );
+        }
+        catch( Exception e )
+        {
+
         }
     }
 

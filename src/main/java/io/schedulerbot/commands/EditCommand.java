@@ -12,6 +12,20 @@ import java.util.ArrayList;
  */
 public class EditCommand implements Command
 {
+    private static final String USAGE_EXTENDED = "";
+    private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "edit** - Modifies an event entry, either" +
+            " changing settings or adding/removing comment fields.";
+
+    @Override
+    public String help(boolean brief)
+    {
+        if( brief )
+            return USAGE_BRIEF;
+        else
+            return USAGE_BRIEF + "\n" + USAGE_EXTENDED;
+    }
+
+
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {

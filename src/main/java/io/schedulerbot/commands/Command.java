@@ -26,5 +26,10 @@ public interface Command
     public void action(String[] args, MessageReceivedEvent event);
 
 
-    //public String help();
+    /**
+     * the function which retrieves the help text for the command
+     * @param brief true - return the brief help text, false - return the full help text
+     * @return String, the description and operation of the command
+     */
+    public String help( boolean brief );
 }

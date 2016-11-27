@@ -17,6 +17,18 @@ import java.util.ArrayList;
  */
 public class CreateCommand implements Command
 {
+    private static final String USAGE_EXTENDED = "";
+    private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "create** - Generates a new event entry" +
+            " in #" + BotConfig.EVENT_CHAN + ".";
+
+    @Override
+    public String help(boolean brief)
+    {
+        if( brief )
+            return USAGE_BRIEF;
+        else
+            return USAGE_BRIEF + "\n" + USAGE_EXTENDED;
+    }
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {

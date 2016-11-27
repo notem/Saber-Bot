@@ -3,7 +3,6 @@ package io.schedulerbot.commands;
 import io.schedulerbot.Main;
 import io.schedulerbot.utils.BotConfig;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
 
 /**
  * file: HelpCommand.java
@@ -14,46 +13,51 @@ import net.dv8tion.jda.core.exceptions.PermissionException;
 public class HelpCommand implements Command
 {
 
-    private final String USAGE = ""
-            + "List of available commands:\n"
-            + "\t" + BotConfig.PREFIX
-            + "help\t:\tSends a private help message to the user who invoked the command.\n"
-            + "\t" + BotConfig.PREFIX
-            + "create <event> [args]\t:\t[NOT IMPLEMENTED]\n"
-            + "\t" + BotConfig.PREFIX
-            + "edit <event> [args]\t:\t[NOT IMPLEMENTED]\n"
-            + "\t" + BotConfig.PREFIX
-            + "announce <msg>\t:\tSends a message to " + BotConfig.ANNOUNCE_CHAN + ".\n";
+    private final String INTRO = "I am **" + Main.jda.getSelfUser().getName() + "**, the task scheduling discord bot." +
+            " I can provide your discord with basic event schedule management.  Invite me to your discord and set up " +
+            "my appropriate channels to get started.\n\n";
+
+    private static final String USAGE_EXTENDED = "\nTo get detailed information concerning the usage of any of these" +
+            " commands use the command **!help <command>** where the prefix for <command> is stripped off. " +
+            "Ex. **!help create**";
+
+    private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "help** - Messages the user help messages.";
+
+    @Override
+    public String help(boolean brief)
+    {
+        if( brief )
+            return USAGE_BRIEF;
+        else
+            return USAGE_BRIEF + "\n" + USAGE_EXTENDED;
+    }
 
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
-        // trailing arguments are irrelevant in the instance of this command
         return true;
     }
 
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        // send the help USAGE message to the user
-        try
+        // send the bot intro with a brief list of commands to the user
+        if(args.length > 1)
         {
-            event.getAuthor().openPrivateChannel().queue();
-            event.getAuthor().getPrivateChannel().sendMessage(USAGE).queue();
+            String commandsBrief = "";
+            for( Command cmd : Main.commands.values() )
+                commandsBrief += cmd.help( true ) + "\n";
+
+            Main.sendPrivateMsg( INTRO + "__**Available commands**__\n" +
+                    commandsBrief + USAGE_EXTENDED, event.getAuthor() );
         }
-        catch( Exception e )
+        // otherwise read search the commands for the first arg
+        else
         {
-            Main.handleException( e, event );
+            String helpMsg = Main.commands.get( args[0] ).help( false );
+            Main.sendPrivateMsg( helpMsg, event.getAuthor() );
         }
-        // and attempt to delete the original help command from chat
-        try
-        {
-            event.getMessage().deleteMessage().queue();
-        }
-        // catch Permission exceptions (private channel or not assigned permissions in public channel)
-        catch( PermissionException e )
-        {
-            Main.handleException( e, event );
-        }
+
+        Main.deleteMsg( event.getMessage() );
     }
 }

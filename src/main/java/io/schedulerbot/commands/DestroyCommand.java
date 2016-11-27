@@ -1,6 +1,7 @@
 package io.schedulerbot.commands;
 
 import io.schedulerbot.Main;
+import io.schedulerbot.utils.BotConfig;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -11,6 +12,19 @@ import java.time.LocalTime;
  */
 public class DestroyCommand implements Command
 {
+    private static final String USAGE_EXTENDED = "";
+    private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "destroy** - Removes an entry from " +
+            BotConfig.EVENT_CHAN + ", sending an even ended early or canceled announcement.";
+
+    @Override
+    public String help(boolean brief)
+    {
+        if( brief )
+            return USAGE_BRIEF;
+        else
+            return USAGE_BRIEF + "\n" + USAGE_EXTENDED;
+    }
+
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
