@@ -18,7 +18,7 @@ public class BotConfig
 
     public static String EVENT_CHAN = "event_schedule"; // the channel in which bot manages scheduled events
 
-    //public static String CONTROL_CHAN = "saber_control";// the channel where bot listens for commands, if set
+    public static String CONTROL_CHAN = "bot_control";// the channel where bot listens for commands, if set
                                                         // to an empty string bot listens everywhere
 
     public static int MAX_ENTRIES = -1;                 // determines the maximum amount of event event entries
