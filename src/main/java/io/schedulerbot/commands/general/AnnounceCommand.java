@@ -12,7 +12,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  */
 public class AnnounceCommand implements Command
 {
-    private static final String USAGE_EXTENDED = "\nThe command with form **!announce \"YOUR MESSAGE HERE\"** " +
+    private static final String USAGE_EXTENDED = "\nThe command with form **!announce YOUR MESSAGE HERE** " +
             "will echo YOUR MESSAGE HERE verbatim to the announce channel. Functionality is will likely be " +
             "extended in the future.";
 

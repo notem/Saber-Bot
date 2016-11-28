@@ -2,14 +2,12 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.utils.BotConfig;
-import io.schedulerbot.utils.EventEntry;
-import io.schedulerbot.utils.Scheduler;
-import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  */
@@ -39,7 +37,82 @@ public class EditCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
-        // TODO
+        if( args.length < 3 )
+            return false;
+
+        // check first arg
+        if( !VerifyUtilities.verifyHex(args[0]) )
+            return false;
+
+        // check later args
+        switch( args[1].toLowerCase() )
+        {
+            case "comment":
+                if( args[2].equals("add") )
+                {
+                    String[] comment = Arrays.copyOfRange( args, 3, args.length );
+                    if(!VerifyUtilities.verifyString(comment))
+                        return false;
+                }
+                else if( args[2].equals("remove"))
+                {
+                    if( Character.isDigit(args[3].charAt(0)) )
+                    {
+                        try
+                        {
+                            Integer.parseInt( args[3] );
+                        }
+                        catch( Exception e )
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        String[] comment = Arrays.copyOfRange( args, 3, args.length );
+                        if(!VerifyUtilities.verifyString(comment))
+                            return false;
+                    }
+                }
+                else
+                    return false;
+                break;
+
+            case "start":
+                if(args.length > 3)
+                    return false;
+                if( !VerifyUtilities.verifyTime( args[2] ) )
+                    return false;
+                break;
+
+            case "end":
+                if(args.length > 3)
+                    return false;
+                if( !VerifyUtilities.verifyTime( args[2] ) )
+                    return false;
+                break;
+
+            case "title":
+                String[] comment = Arrays.copyOfRange( args, 2, args.length );
+                if(!VerifyUtilities.verifyString(comment))
+                    return false;
+                break;
+
+            case "date":
+                if(args.length > 3)
+                    return false;
+                if( !VerifyUtilities.verifyDate( args[2] ) )
+                    return false;
+                break;
+
+            case "repeat":
+                if(args.length > 3)
+                    return false;
+                if( !VerifyUtilities.verifyRepeat(args[2]) )
+                    return false;
+                break;
+        }
+
         return true;
     }
 
@@ -51,7 +124,7 @@ public class EditCommand implements Command
 
         // check if the entry exists
         EventEntry entry = Main.getEventEntry( entryId );
-        if( entry == null  || entry.eMsg.getGuild().getId().equals(event.getGuild().getId()) )
+        if( entry == null  || !entry.eMsg.getGuild().getId().equals(event.getGuild().getId()) )
         {
             String msg = "There is no event entry with ID " + Integer.toHexString(entryId) + ".";
             event.getChannel().sendMessage( msg ).queue();

@@ -41,7 +41,8 @@ public class HelpCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
-        // TODO
+        if(args.length>1)
+            return false;
         return true;
     }
 

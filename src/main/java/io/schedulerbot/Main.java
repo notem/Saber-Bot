@@ -1,10 +1,7 @@
 package io.schedulerbot;
 
-import io.schedulerbot.commands.*;
-import io.schedulerbot.commands.admin.GlobalAnnounceCommand;
-import io.schedulerbot.commands.admin.QueryCommand;
-import io.schedulerbot.commands.admin.RebootCommand;
-import io.schedulerbot.commands.admin.ShutdownCommand;
+import io.schedulerbot.commands.Command;
+import io.schedulerbot.commands.admin.*;
 import io.schedulerbot.commands.general.*;
 import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.AccountType;
@@ -65,12 +62,14 @@ public class Main {
         commands.put("create", new CreateCommand());
         commands.put("destroy", new DestroyCommand());
         commands.put("edit", new EditCommand());
+        //commands.put("version", new VersionCommand());
+        //commands.put("setup", new SetupCommand());
 
         // add administrator commands with their lookup name
-        adminCommands.put("gannounce", new GlobalAnnounceCommand());
-        adminCommands.put("reboot", new RebootCommand());
-        adminCommands.put("shutdown", new ShutdownCommand());
-        adminCommands.put("query", new QueryCommand());
+        //adminCommands.put("gannounce", new GlobalAnnounceCommand());
+        //adminCommands.put("reboot", new RebootCommand());
+        //adminCommands.put("shutdown", new ShutdownCommand());
+        //adminCommands.put("query", new QueryCommand());
     }
 
     /**

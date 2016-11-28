@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
- * the EventEntry worker thread subclass
+ * the EventEntry worker thread, gets created by the Scheduler
  */
 public class EventEntry implements Runnable
 {
@@ -241,11 +241,9 @@ public class EventEntry implements Runnable
             }
         }
 
-        // if an interrupt is received, quit operation
-        catch(InterruptedException e)
-        {
-            return;
-        }
+        // if an interrupt is received, quit early
+        catch(InterruptedException ignored)
+        { }
 
         // always remove the entry from entriesGlobal and delete the message
         finally

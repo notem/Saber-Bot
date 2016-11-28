@@ -5,11 +5,13 @@ import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.BotConfig;
 import io.schedulerbot.utils.Scheduler;
 import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * file: CreateCommand.java
@@ -45,7 +47,81 @@ public class CreateCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
-        // TODO
+        if( args.length < 3 )
+            return false;
+
+        // check title
+        int index = 0;
+        if( !(args[index].startsWith("\"") && args[index].endsWith("\"")) )
+        {
+            for (index = 1; index < args.length - 1; index++)
+                if (args[index].endsWith("\""))
+                    break;
+
+            if( !VerifyUtilities.verifyString( Arrays.copyOfRange( args, 0, index+1 )))
+                return false;
+        }
+
+        // check that there are enough args remaining for start and end
+        if( args.length - 1  < index + 2 )
+            return false;
+
+        // check start
+        if( !VerifyUtilities.verifyTime( args[index+1] ) )
+            return false;
+
+        // check end
+        if( !VerifyUtilities.verifyTime( args[index+2] ) )
+            return false;
+
+        // check remaining args
+        if( args.length - 1 > index + 2 )
+        {
+            String[] argsRemaining = Arrays.copyOfRange(args, index+3, args.length);
+
+            index = 0;
+            boolean commentFlag = false;
+            int comments = 0;
+            boolean repeatFlag = false;
+            boolean dateFlag = false;
+
+            for (String arg : argsRemaining)
+            {
+                if(commentFlag&&arg.endsWith("\""))
+                {
+                    comments++;
+                    if (!VerifyUtilities.verifyString(Arrays.copyOfRange(argsRemaining, index - comments, index+1)))
+                        return false;
+                    commentFlag = false;
+                    comments = 0;
+                }
+                else if (dateFlag)
+                {
+                    if (!VerifyUtilities.verifyDate(arg))
+                        return false;
+                    dateFlag = false;
+                }
+                else if (repeatFlag)
+                {
+                    if (!VerifyUtilities.verifyRepeat(arg))
+                        return false;
+                    repeatFlag = false;
+                }
+                else if (commentFlag)
+                    comments++;
+                else
+                {
+                    if (arg.startsWith("\""))
+                        commentFlag = true;
+                    else if (arg.equals("repeat"))
+                        repeatFlag = true;
+                    else if (arg.equals("date"))
+                        dateFlag = true;
+                }
+                index++;
+            }
+        }
+
         return true;
     }
 

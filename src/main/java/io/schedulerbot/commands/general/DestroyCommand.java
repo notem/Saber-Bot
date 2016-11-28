@@ -33,7 +33,16 @@ public class DestroyCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
-        // TODO
+        if(args.length>1 || args.length==0)
+            return false;
+        try
+        {
+            Integer.decode("0x"+args[0]);
+        }
+        catch( Exception e )
+        {
+            return false;
+        }
         return true;
     }
 
