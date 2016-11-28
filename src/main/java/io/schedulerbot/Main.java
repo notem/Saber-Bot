@@ -7,6 +7,7 @@ import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.SelfUser;
 
 import java.util.ArrayList;
@@ -51,6 +52,24 @@ public class Main {
                     .buildBlocking();
             // enable reconnect
             jda.setAutoReconnect(true);
+
+            // set the bot's 'game' message
+            jda.getPresence().setGame(new Game() {
+                @Override
+                public String getName() {
+                    return "pm me " + BotConfig.PREFIX + "help";
+                }
+
+                @Override
+                public String getUrl() {
+                    return "";
+                }
+
+                @Override
+                public GameType getType() {
+                    return GameType.DEFAULT;
+                }
+            });
         }
         // if bot fails to initialize and start
         catch( Exception e )
