@@ -88,7 +88,7 @@ public class EventEntry implements Runnable
         {
             // sleep until the day of the event starts or if the event starts in less than 24 hours
             Integer wait;
-            while( !this.eDate.equals(LocalDate.now()) || (wait1>(24*60*60) || wait1<0) )
+            while( !this.eDate.equals(LocalDate.now()) || wait1>(24*60*60) || wait1<0 )
             {
                 int days = (int) DAYS.between(LocalDate.now(), eDate);
                 String[] lines = this.eMsg.getRawContent().split("\n");
