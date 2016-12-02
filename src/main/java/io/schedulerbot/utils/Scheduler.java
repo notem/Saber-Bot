@@ -92,6 +92,19 @@ public class Scheduler
         ); // can throw away the minutes til timer
 
 
+
+        // a bit of post processing
+        int dateCompare = LocalDate.now().compareTo( eDate );
+        int timeCompare = LocalTime.now().compareTo( eStart );
+        if( dateCompare < 0 ) // if schedule's date is less then now
+        {
+            eDate.plusYears( 1 );
+         }
+        if( dateCompare == 0 && timeCompare < 0 )    // if the schedule's time is less then now
+        {
+            eDate.plusYears( 1 );
+        }
+
         return new EventEntry( eTitle, eStart, eEnd, eComments, eID, msg, eRepeat, eDate );
     }
 

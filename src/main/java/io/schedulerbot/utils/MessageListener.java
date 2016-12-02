@@ -30,13 +30,15 @@ public class MessageListener extends ListenerAdapter
         String origin = event.getChannel().getName();       // the name of the originating text channel
 
         // if the message was received private
-        if( event.isFromType(ChannelType.PRIVATE) &&
-                (content.startsWith(BotConfig.PREFIX) ||
-                content.startsWith(BotConfig.ADMIN_PREFIX)))
+        if( event.isFromType(ChannelType.PRIVATE) )
         {
-            if( content.startsWith(BotConfig.PREFIX))
+            if( content.startsWith(BotConfig.PREFIX + "help"))
             {
-                Main.handlePrivateCommand(Main.commandParser.parse(content, event));
+                Main.handleGeneralCommand(Main.commandParser.parse(content, event));
+            }
+            else if( content.startsWith(BotConfig.ADMIN_PREFIX) )
+            {
+                Main.handleAdminCommand(Main.commandParser.parse(content, event));
             }
         }
 
@@ -44,7 +46,7 @@ public class MessageListener extends ListenerAdapter
         else if( content.startsWith(BotConfig.PREFIX) &&
                 (origin.equals(BotConfig.CONTROL_CHAN) || BotConfig.CONTROL_CHAN.isEmpty()))
         {
-            Main.handleCommand(Main.commandParser.parse(content, event));
+            Main.handleGeneralCommand(Main.commandParser.parse(content, event));
         }
 
         // bot also listens on EVENT_CHAN for it's own messages

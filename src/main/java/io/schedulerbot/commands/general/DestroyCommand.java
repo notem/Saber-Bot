@@ -5,18 +5,21 @@ import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.BotConfig;
 import io.schedulerbot.utils.EventEntry;
 import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 
 /**
  */
 public class DestroyCommand implements Command
 {
     private static final String USAGE_EXTENDED = "\nCalling **!destroy <ID>** will end the event with <ID>" +
-            " prematurely.\nEx: **!destroy 084c**";
+            " prematurely. If **all** is used instead of the event ID, all scheduled events will be destroyed." +
+            "\nEx1: **!destroy 084c**\nEx2: **!destroy all**";
 
     private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "destroy** - Removes an entry from " +
             BotConfig.EVENT_CHAN + ", sending an event ended early or canceled announcement.";
@@ -35,11 +38,11 @@ public class DestroyCommand implements Command
     {
         if(args.length>1 || args.length==0)
             return false;
-        try
+        if( args[0].equals("all") )
         {
-            Integer.decode("0x"+args[0]);
+            return true;
         }
-        catch( Exception e )
+        if( !VerifyUtilities.verifyHex( args[0] ) )
         {
             return false;
         }
@@ -49,43 +52,59 @@ public class DestroyCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        // parse argument into the event entry's ID
-        Integer entryId = Integer.decode( "0x" + args[0] );
+        Guild guild = event.getGuild();
+        ArrayList<Integer> entries;
 
-        EventEntry entry = Main.getEventEntry( entryId );
-        // check if the entry exists
-        if( entry == null )
+        if( args[0].equals("all") )
         {
-            String msg = "There is no event entry with ID " + args[0] + ".\"";
-            MessageUtilities.sendMsg( msg, event.getChannel() );
-            return;
+            entries = Main.getEntriesByGuild( guild.getId() );
+            if( entries == null )
+            {
+                MessageUtilities.sendMsg(
+                        "Your guild has no entries on the schedule.",
+                        event.getChannel()
+                );
+                return;
+            }
+        }
+        else
+        {
+            entries = new ArrayList<Integer>();
+            Integer entryId = Integer.decode( "0x" + args[0] );
+            entries.add( entryId );
         }
 
-        // create the announcement message strings
-        Guild guild = entry.eMsg.getGuild();
-        String cancelMsg = "@everyone The event **" + entry.eTitle
-                + "** has been cancelled.";
-        String earlyMsg = "@everyone The event **" + entry.eTitle
-                + "** has ended early.";
 
-        // convert the start time into an integer as seconds since 00:00
-        Integer startH = Integer.parseInt(entry.eStart.split(":")[0]);
-        Integer startM = Integer.parseInt(entry.eStart.split(":")[1]);
-        Integer start = startH*60*60 + startM*60;
+        for( Integer eId : entries )
+        {
+            EventEntry entry = Main.getEventEntry( eId );
+            if( entry != null )
+            {
+                // create the announcement message strings
+                String cancelMsg = "@everyone The event **" + entry.eTitle
+                        + "** has been cancelled.";
+                String earlyMsg = "@everyone The event **" + entry.eTitle
+                        + "** has ended early.";
 
-        // compare the current time to the start time
-        LocalTime now = LocalTime.now();
-        Integer dif = start - (now.getHour()*60*60 + now.getMinute()*60 + now.getSecond());
+                // compare the current time to the start time
+                int dif = entry.eStart.toSecondOfDay() - LocalTime.now().toSecondOfDay();
 
-        // if the difference is less than 0 the event was ended early
-        if(dif < 0 && entry.eDate.equals(LocalDate.now()))
-            MessageUtilities.sendAnnounce( earlyMsg, guild );
+                // if the difference is less than 0 the event was ended early
+                if (dif < 0 && entry.eDate.equals(LocalDate.now()))
+                    MessageUtilities.sendAnnounce(earlyMsg, guild);
 
-        // otherwise event was canceled before it began
-        else
-            MessageUtilities.sendAnnounce( cancelMsg, guild );
+                    // otherwise event was canceled before it began
+                else
+                    MessageUtilities.sendAnnounce(cancelMsg, guild);
 
-        // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
-        entry.thread.interrupt();
+                // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
+                entry.thread.interrupt();
+            }
+            else
+            {
+                String msg = "There is no event entry with ID " + args[0] + ".\"";
+                MessageUtilities.sendMsg( msg, event.getChannel() );
+            }
+        }
     }
 }

@@ -59,7 +59,8 @@ public class EventEntry implements Runnable
         String endMsg = "@everyone The event **" + this.eTitle + "** has ended.";
 
         // convert the times into integers representing the time in seconds
-        int timeTilStart = ((this.eDate.getDayOfYear()-LocalDate.now().getDayOfYear())*24*60*60)
+        int timeTilStart = (((this.eDate.getYear() - LocalDate.now().getYear())*365*24*60*60)
+                + (this.eDate.getDayOfYear()-LocalDate.now().getDayOfYear())*24*60*60)
                 + this.eStart.toSecondOfDay() - LocalTime.now().toSecondOfDay();
 
         int timeTilEnd = this.eEnd.toSecondOfDay() - this.eStart.toSecondOfDay();
@@ -106,14 +107,13 @@ public class EventEntry implements Runnable
                         "] Sleeping for " + wait + " seconds.\n");
 
                 Thread.sleep(wait * 1000);
-                timeTilStart -= 24*60*60;
+                timeTilStart -= wait;
             }
 
             // sleep until the start time
             wait = timeTilStart - (int)(Math.floor( ((double)timeTilStart)/(60*60) )*60*60);
             if(wait==0)
             { wait = 60*60; }
-            timeTilStart = (int)Math.ceil(((double)timeTilStart)/(60*60))*60*60;
             while( timeTilStart > 0 )
             {
                 String[] lines = this.eMsg.getRawContent().split("\n");
@@ -141,8 +141,8 @@ public class EventEntry implements Runnable
                         + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
                         "] Sleeping for " + wait + " seconds.\n");
                 Thread.sleep(wait * 1000);        // sleep until the event starts
+                timeTilStart -= wait;                   // decrement wait1 by one hour
                 wait = 60*60;                     // set wait to one hour
-                timeTilStart -= 60*60;                   // decrement wait1 by one hour
             }
 
             // announce that the event is beginning

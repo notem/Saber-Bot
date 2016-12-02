@@ -88,7 +88,7 @@ public class Main {
         //adminCommands.put("gannounce", new GlobalAnnounceCommand());
         //adminCommands.put("reboot", new RebootCommand());
         //adminCommands.put("shutdown", new ShutdownCommand());
-        //adminCommands.put("query", new QueryCommand());
+        adminCommands.put("query", new QueryCommand());
     }
 
     /**
@@ -97,7 +97,7 @@ public class Main {
      *
      * @param cc CommandContainer object containing parsed input tokens
      */
-    public static void handleCommand(CommandParser.CommandContainer cc)
+    public static void handleGeneralCommand(CommandParser.CommandContainer cc)
     {
         // if the invoking command appears in commands
         if(commands.containsKey(cc.invoke))
@@ -128,25 +128,10 @@ public class Main {
      *
      * @param cc CommandContainer, the object that holds necessary items to call a command
      */
-    public static void handlePrivateCommand(CommandParser.CommandContainer cc)
+    public static void handleAdminCommand(CommandParser.CommandContainer cc)
     {
-        // for help command
-        if(cc.invoke.equals("help"))
-        {
-            boolean valid = commands.get("help").verify(cc.args, cc.event);
-
-            // do command action if valid arguments
-            if(valid)
-                commands.get("help").action(cc.args, cc.event);
-                // otherwise send error message
-            else
-            {
-                String msg = "Invalid arguments for: \"" + BotConfig.ADMIN_PREFIX + cc.invoke + "\"";
-                MessageUtilities.sendPrivateMsg( msg, cc.event.getAuthor() );
-            }
-        }
         // for admin commands
-        else if(adminCommands.containsKey(cc.invoke))
+        if(adminCommands.containsKey(cc.invoke))
         {
             boolean valid = adminCommands.get(cc.invoke).verify(cc.args, cc.event);
 

@@ -214,8 +214,8 @@ public class EditCommand implements Command
 
         // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
         Thread t = entry.thread;
-        while(t.isAlive())
-        { t.interrupt(); }
+        while(t.isAlive())      // this is a really terrible solution I feel
+        { t.interrupt(); }      // however, it does stop operation until the thread is killed
 
         // generate the new event entry message
         String msg = Scheduler.generate(title, start, end, comments, repeat, date, entryId);
