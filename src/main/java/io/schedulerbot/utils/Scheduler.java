@@ -98,11 +98,11 @@ public class Scheduler
         int timeCompare = eStart.compareTo(LocalTime.now());
         if( dateCompare < 0 ) // if schedule's date is less then now
         {
-            eDate.plusYears( 1 );
+            eDate = eDate.plusYears( 1 );
          }
         if( dateCompare == 0 && timeCompare < 0 )    // if the schedule's time is less then now
         {
-            eDate.plusYears( 1 );
+            eDate = eDate.plusYears( 1 );
         }
 
         return new EventEntry( eTitle, eStart, eEnd, eComments, eID, msg, eRepeat, eDate );
