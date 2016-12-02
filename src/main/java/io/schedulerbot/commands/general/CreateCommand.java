@@ -171,12 +171,18 @@ public class CreateCommand implements Command
             else if(!flag2)
             {
                 flag2 = true;
-                eStart = LocalTime.parse(arg);
+                if( arg.equals("24:00") )
+                    eStart = LocalTime.MIDNIGHT;
+                else
+                    eStart = LocalTime.parse(arg);
             }
             else if(!flag3)
             {
                 flag3 = true;
-                eEnd = LocalTime.parse(arg);
+                if( arg.equals("24:00") )
+                    eEnd = LocalTime.MIDNIGHT;
+                else
+                    eEnd = LocalTime.parse(arg);
             }
             else
             {

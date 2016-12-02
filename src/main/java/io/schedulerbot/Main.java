@@ -24,14 +24,14 @@ public class Main {
     private static JDA jda;
 
     // hash tables of commands and admin commands
-    private static HashMap<String, Command> commands = new HashMap<>();
-    private static HashMap<String, Command> adminCommands = new HashMap<>();
+    private static final HashMap<String, Command> commands = new HashMap<>();
+    private static final HashMap<String, Command> adminCommands = new HashMap<>();
 
     // hash table containing ALL currently active event entry threads
-    private static HashMap<Integer, EventEntry> entriesGlobal = new HashMap<>();
+    private static final HashMap<Integer, EventEntry> entriesGlobal = new HashMap<>();
 
     // hash table which associates guilds with a list of the Id's of their active event entry threads
-    private static HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();
+    private static final HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();
 
     // parsers to read and analyze commands and event entries
     public static final CommandParser commandParser = new CommandParser();
@@ -54,19 +54,23 @@ public class Main {
             jda.setAutoReconnect(true);
 
             // set the bot's 'game' message
-            jda.getPresence().setGame(new Game() {
+            jda.getPresence().setGame(new Game()
+            {
                 @Override
-                public String getName() {
-                    return "pm me " + BotConfig.PREFIX + "help";
+                public String getName()
+                {
+                    return "pm me " + BotConfig.PREFIX + "help or " + BotConfig.PREFIX + "setup";
                 }
 
                 @Override
-                public String getUrl() {
+                public String getUrl()
+                {
                     return "";
                 }
 
                 @Override
-                public GameType getType() {
+                public GameType getType()
+                {
                     return GameType.DEFAULT;
                 }
             });
@@ -82,7 +86,7 @@ public class Main {
         commands.put("destroy", new DestroyCommand());
         commands.put("edit", new EditCommand());
         //commands.put("version", new VersionCommand());
-        //commands.put("setup", new SetupCommand());
+        commands.put("setup", new SetupCommand());
 
         // add administrator commands with their lookup name
         //adminCommands.put("gannounce", new GlobalAnnounceCommand());
@@ -174,14 +178,20 @@ public class Main {
      * @param eId the event entry Id number
      * @param gId the guild String Id
      */
-    public static void removeId( Integer eId, String gId )
-    {
-        entriesByGuild.get( gId ).remove( eId );
+    public static void removeId( Integer eId, String gId ) {
+        // lock to the guild's entry table
+        synchronized (entriesByGuild.get(gId))
+        {
+            entriesByGuild.get(gId).remove(eId);
 
-        if( entriesByGuild.get( gId ).isEmpty() )
-            entriesByGuild.remove( gId );
-
-        entriesGlobal.remove( eId );
+            if (entriesByGuild.get(gId).isEmpty())
+                entriesByGuild.remove(gId);
+        }
+        // lock to the global entry table
+        synchronized (entriesGlobal)
+        {
+            entriesGlobal.remove(eId);
+        }
     }
 
     /**
@@ -194,18 +204,23 @@ public class Main {
      */
     public static Integer newId( Integer oldId )
     {
-        Integer ID;
-        if( oldId==null )
-            ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
-        else
-            ID = oldId;
-
-        while( entriesGlobal.containsKey( ID ) )
+        // lock to the global entry table
+        synchronized (entriesGlobal)
         {
-            ID = (int) Math.ceil( Math.random() * (Math.pow(2,16) - 1) );
-        }
+            Integer ID;
+            if (oldId == null)
+                ID = (int) Math.ceil(Math.random() * (Math.pow(2, 16) - 1));
+            else
+                ID = oldId;
 
-        return ID;
+            while (entriesGlobal.containsKey(ID))
+            {
+                ID = (int) Math.ceil(Math.random() * (Math.pow(2, 16) - 1));
+            }
+
+
+            return ID;
+        }
     }
 
     /**

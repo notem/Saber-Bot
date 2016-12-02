@@ -32,7 +32,7 @@ public class MessageListener extends ListenerAdapter
         // if the message was received private
         if( event.isFromType(ChannelType.PRIVATE) )
         {
-            if( content.startsWith(BotConfig.PREFIX + "help"))
+            if( content.startsWith(BotConfig.PREFIX + "help") || content.startsWith(BotConfig.PREFIX + "setup") )
             {
                 Main.handleGeneralCommand(Main.commandParser.parse(content, event));
             }

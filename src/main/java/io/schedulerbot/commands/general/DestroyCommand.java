@@ -74,37 +74,43 @@ public class DestroyCommand implements Command
             entries.add( entryId );
         }
 
-
-        for( Integer eId : entries )
+        Runnable destroyGuildEntries = () ->
         {
-            EventEntry entry = Main.getEventEntry( eId );
-            if( entry != null )
+            synchronized (entries)
             {
-                // create the announcement message strings
-                String cancelMsg = "@everyone The event **" + entry.eTitle
-                        + "** has been cancelled.";
-                String earlyMsg = "@everyone The event **" + entry.eTitle
-                        + "** has ended early.";
+                for (Integer eId : entries)
+                {
+                    EventEntry entry = Main.getEventEntry(eId);
+                    if (entry != null) {
+                        // create the announcement message strings
+                        String cancelMsg = "@everyone The event **" + entry.eTitle
+                                + "** has been cancelled.";
+                        String earlyMsg = "@everyone The event **" + entry.eTitle
+                                + "** has ended early.";
 
-                // compare the current time to the start time
-                int dif = entry.eStart.toSecondOfDay() - LocalTime.now().toSecondOfDay();
+                        // compare the current time to the start time
+                        int dif = entry.eStart.toSecondOfDay() - LocalTime.now().toSecondOfDay();
 
-                // if the difference is less than 0 the event was ended early
-                if (dif < 0 && entry.eDate.equals(LocalDate.now()))
-                    MessageUtilities.sendAnnounce(earlyMsg, guild);
+                        // if the difference is less than 0 the event was ended early
+                        if (dif < 0 && entry.eDate.equals(LocalDate.now()))
+                            MessageUtilities.sendAnnounce(earlyMsg, guild);
 
-                    // otherwise event was canceled before it began
-                else
-                    MessageUtilities.sendAnnounce(cancelMsg, guild);
+                            // otherwise event was canceled before it began
+                        else
+                            MessageUtilities.sendAnnounce(cancelMsg, guild);
 
-                // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
-                entry.thread.interrupt();
+                        // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
+                        entry.thread.interrupt();
+                    }
+                    else
+                    {
+                        String msg = "There is no event entry with ID " + args[0] + ".\"";
+                        MessageUtilities.sendMsg(msg, event.getChannel());
+                    }
+                }
             }
-            else
-            {
-                String msg = "There is no event entry with ID " + args[0] + ".\"";
-                MessageUtilities.sendMsg( msg, event.getChannel() );
-            }
-        }
+        };
+
+        new Thread(destroyGuildEntries).start();
     }
 }

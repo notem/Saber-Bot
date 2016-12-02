@@ -105,6 +105,7 @@ public class Scheduler
             eDate = eDate.plusYears( 1 );
         }
 
+        // create a new thread
         return new EventEntry( eTitle, eStart, eEnd, eComments, eID, msg, eRepeat, eDate );
     }
 

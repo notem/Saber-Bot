@@ -11,7 +11,7 @@ public class BotConfig
 
     public static String PREFIX = "!";                  // prefix bot should respond to
 
-    public static String ADMIN_PREFIX = "&!";           // prefix for admin commands
+    public static String ADMIN_PREFIX = "&&!";           // prefix for admin commands
 
     public static String ANNOUNCE_CHAN = "announce";    // the channel name where bot announces events too
                                                         // if ANNOUNCE_CHAN is empty, defaults to default channel

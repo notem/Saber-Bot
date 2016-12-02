@@ -171,11 +171,17 @@ public class EditCommand implements Command
                 break;
 
             case "start":
-                start = LocalTime.parse(args[2]);
+                if( args[2].equals("24:00") )
+                    start = LocalTime.MIDNIGHT;
+                else
+                    start = LocalTime.parse(args[2]);
                 break;
 
             case "end":
-                end = LocalTime.parse(args[2]);
+                if( args[2].equals("24:00") )
+                    end = LocalTime.MIDNIGHT;
+                else
+                    end = LocalTime.parse(args[2]);
                 break;
 
             case "title":
