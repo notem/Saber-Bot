@@ -6,6 +6,7 @@ import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -133,8 +134,8 @@ public class EditCommand implements Command
 
         String title = entry.eTitle;
         ArrayList<String> comments = entry.eComments;
-        String start = entry.eStart;
-        String end = entry.eEnd;
+        LocalTime start = entry.eStart;
+        LocalTime end = entry.eEnd;
         int repeat = entry.eRepeat;
         LocalDate date = entry.eDate;
 
@@ -170,11 +171,11 @@ public class EditCommand implements Command
                 break;
 
             case "start":
-                start = args[2];
+                start = LocalTime.parse(args[2]);
                 break;
 
             case "end":
-                end = args[2];
+                end = LocalTime.parse(args[2]);
                 break;
 
             case "title":

@@ -139,8 +139,8 @@ public class CreateCommand implements Command
         }
 
         String eTitle = "";
-        String eStart = "00:00";    // initialized just in case verify failed it's duty
-        String eEnd = "00:00";      //
+        LocalTime eStart = LocalTime.now().plusMinutes(1);    // initialized just in case verify failed it's duty
+        LocalTime eEnd = LocalTime.MIDNIGHT;      //
         ArrayList<String> eComments = new ArrayList<>();
         int eRepeat = 0;             // default is 0 (no repeat)
         LocalDate eDate = LocalDate.now();
@@ -171,12 +171,12 @@ public class CreateCommand implements Command
             else if(!flag2)
             {
                 flag2 = true;
-                eStart = arg;
+                eStart = LocalTime.parse(arg);
             }
             else if(!flag3)
             {
                 flag3 = true;
-                eEnd = arg;
+                eEnd = LocalTime.parse(arg);
             }
             else
             {
@@ -229,10 +229,6 @@ public class CreateCommand implements Command
                     buffComment += " ";
             }
         }
-
-        if( (Integer.parseInt(eStart.split(":")[0])*60+Integer.parseInt(eStart.split(":")[1])
-                < LocalTime.now().getHour()*60+LocalTime.now().getMinute()) && LocalDate.now().equals(eDate) )
-            eDate = eDate.plusDays(1);
 
         // generate the event entry message
         String msg = Scheduler.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate, null );

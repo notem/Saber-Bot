@@ -4,6 +4,7 @@ import io.schedulerbot.Main;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.Month;
 import java.util.ArrayList;
 
@@ -31,8 +32,8 @@ public class Scheduler
         String raw = msg.getRawContent();
 
         String eTitle;
-        String eStart;
-        String eEnd;
+        LocalTime eStart;
+        LocalTime eEnd;
         ArrayList<String> eComments = new ArrayList<String>();
         Integer eID;
         int eRepeat = 0;
@@ -70,8 +71,9 @@ public class Scheduler
                 eRepeat = 2;
         }
 
-        eStart = start_end_timezone[0];
-        eEnd = start_end_timezone[1].split(" ")[0];
+        eStart = LocalTime.parse( start_end_timezone[0] );
+        eEnd = LocalTime.parse( start_end_timezone[1].split(" ")[0] );
+
         String timezone = start_end_timezone[1].split(" ")[1];
 
 
@@ -108,8 +110,8 @@ public class Scheduler
      */
     public static String generate(
             String eTitle,
-            String eStart,
-            String eEnd,
+            LocalTime eStart,
+            LocalTime eEnd,
             ArrayList<String> eComments,
             int eRepeat,
             LocalDate eDate,
