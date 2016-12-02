@@ -15,7 +15,11 @@ public class CommandParser
     CommandContainer parse(String raw, MessageReceivedEvent e)
     {
         /// trim off the prefix
-        String trimmed = raw.replaceFirst(BotConfig.PREFIX, "");
+        String trimmed;
+        if( raw.startsWith( BotConfig.ADMIN_PREFIX ))
+            trimmed = raw.replaceFirst(BotConfig.ADMIN_PREFIX, "");
+        else
+            trimmed = raw.replaceFirst(BotConfig.PREFIX, "");
 
         // split the trimmed string into arguments
         String[] splitTrimmed = trimmed.split(" ");
