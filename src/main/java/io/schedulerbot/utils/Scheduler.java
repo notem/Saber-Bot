@@ -94,8 +94,8 @@ public class Scheduler
 
 
         // a bit of post processing
-        int dateCompare = LocalDate.now().compareTo( eDate );
-        int timeCompare = LocalTime.now().compareTo( eStart );
+        int dateCompare = eDate.compareTo(LocalDate.now());
+        int timeCompare = eStart.compareTo(LocalTime.now());
         if( dateCompare < 0 ) // if schedule's date is less then now
         {
             eDate.plusYears( 1 );
