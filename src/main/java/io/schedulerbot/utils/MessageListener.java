@@ -3,9 +3,7 @@ package io.schedulerbot.utils;
 import io.schedulerbot.Main;
 
 import net.dv8tion.jda.core.MessageHistory;
-import net.dv8tion.jda.core.entities.ChannelType;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -69,33 +67,34 @@ public class MessageListener extends ListenerAdapter
         {
             MessageUtilities.sendAnnounce( msg, guild );
 
-            // create a message history object
-            MessageHistory history = guild.getTextChannelsByName( BotConfig.EVENT_CHAN, false ).get(0).getHistory();
+            List<TextChannel> chan = guild.getTextChannelsByName( BotConfig.EVENT_CHAN, false );
+            if( !chan.isEmpty() ) {
+                // create a message history object
+                MessageHistory history = chan.get(0).getHistory();
 
-            // create a consumer
-            Consumer<List<Message>> cons = (l) ->
-            {
-                String reloadMsg;
-                for( Message eMsg : l )
-                    if( eMsg.getAuthor().getId().equals(Main.getBotSelfUser().getId()) )
-                        Main.handleEventEntry( Main.scheduler.parse( eMsg ), guild.getId() );
-
-                ArrayList<Integer> entries = Main.getEntriesByGuild( guild.getId() );
-                if( entries != null )
+                // create a consumer
+                Consumer<List<Message>> cons = (l) ->
                 {
-                    reloadMsg = "There ";
-                    if( entries.size()>1 )
-                        reloadMsg += "are " + entries.size() + " events on the schedule.";
-                    else
-                        reloadMsg += "is a single event on the schedule.";
-                }
-                else
-                    reloadMsg = "There are no events on the schedule.";
-                MessageUtilities.sendAnnounce( reloadMsg, guild );
-            };
+                    String reloadMsg;
+                    for (Message eMsg : l)
+                        if (eMsg.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
+                            Main.handleEventEntry(Main.scheduler.parse(eMsg), guild.getId());
 
-            // retrieve history and have the consumer act on it
-            history.retrievePast( 50 ).queue( cons );
+                    ArrayList<Integer> entries = Main.getEntriesByGuild(guild.getId());
+                    if (entries != null) {
+                        reloadMsg = "There ";
+                        if (entries.size() > 1)
+                            reloadMsg += "are " + entries.size() + " events on the schedule.";
+                        else
+                            reloadMsg += "is a single event on the schedule.";
+                    } else
+                        reloadMsg = "There are no events on the schedule.";
+                    MessageUtilities.sendAnnounce(reloadMsg, guild);
+                };
+
+                // retrieve history and have the consumer act on it
+                history.retrievePast(50).queue(cons);
+            }
         }
     }
 }
