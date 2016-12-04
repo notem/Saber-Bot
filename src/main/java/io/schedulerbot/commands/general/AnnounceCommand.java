@@ -43,6 +43,6 @@ public class AnnounceCommand implements Command
         for( String str : args )
            msg += " " + str;
 
-        MessageUtilities.sendAnnounce( msg, event.getGuild() );
+        MessageUtilities.sendAnnounce( msg, event.getGuild(), null );
     }
 }

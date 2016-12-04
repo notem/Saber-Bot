@@ -100,7 +100,7 @@ public class EventEntry implements Runnable
                         msg += "\n";
                 }
 
-                MessageUtilities.editMsg( msg, this.eMsg );
+                MessageUtilities.editMsg( msg, this.eMsg, null );
 
                 System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
                         + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
@@ -112,8 +112,9 @@ public class EventEntry implements Runnable
 
             // sleep until the start time
             wait = timeTilStart - (int)(Math.floor( ((double)timeTilStart)/(60*60) )*60*60);
-            if(wait==0)
+            if( (wait==0) && (timeTilStart!=0) )
             { wait = 60*60; }
+
             while( timeTilStart > 0 )
             {
                 String[] lines = this.eMsg.getRawContent().split("\n");
@@ -135,7 +136,7 @@ public class EventEntry implements Runnable
                         msg += "\n";
                 }
 
-                MessageUtilities.editMsg( msg, this.eMsg );
+                MessageUtilities.editMsg( msg, this.eMsg, null );
 
                 System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
                         + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
@@ -155,9 +156,9 @@ public class EventEntry implements Runnable
 
             // sleep until event end time
             wait = timeTilEnd - (int)(Math.floor( ((double)timeTilEnd)/(60*60) )*60*60);
-            if(wait==0)
+            if( (wait==0) && (timeTilEnd!=0) )
             { wait = 60*60; }
-            timeTilEnd = (int) Math.ceil( ((double)timeTilEnd)/(60*60) )*60*60;
+
             while( timeTilEnd > 0 )
             {
                 String[] lines = this.eMsg.getRawContent().split("\n");
@@ -179,19 +180,19 @@ public class EventEntry implements Runnable
                         msg += "\n";
                 }
 
-                MessageUtilities.editMsg( msg, this.eMsg );
+                MessageUtilities.editMsg( msg, this.eMsg, null );
 
                 System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
                         + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
                         "] Sleeping for " + wait + " seconds.\n");
 
                 Thread.sleep(wait * 1000);        // sleep until the event starts
+                timeTilEnd -= wait;                   // decrement wait1 by one hour
                 wait = 60*60;                     // set wait to one hour
-                timeTilEnd -= 60*60;                   // decrement wait1 by one hour
             }
 
             // announce that the event is ending
-            MessageUtilities.sendAnnounce( endMsg, guild );
+            MessageUtilities.sendAnnounce( endMsg, guild, null );
 
             if( this.eRepeat == 0 )
             {
@@ -199,7 +200,7 @@ public class EventEntry implements Runnable
                 Main.removeId(this.eID, this.eMsg.getGuild().getId());
 
                 // delete the old entry
-                MessageUtilities.deleteMsg( this.eMsg );
+                MessageUtilities.deleteMsg( this.eMsg, null );
             }
 
             // if the event entry is scheduled to repeat, must be handled with now
@@ -216,14 +217,8 @@ public class EventEntry implements Runnable
                         this.eID
                 );
 
-                MessageUtilities.editMsg( msg, this.eMsg );
-                Consumer<Message> task = Main.scheduler::parse;
-                try
-                {
-                    this.eMsg.editMessage(msg).queue(task);
-                }
-                catch( Exception ignored)
-                { }
+                Consumer<Message> parse = Main.scheduler::parse;
+                MessageUtilities.editMsg( msg, this.eMsg, parse );
             }
             else if( this.eRepeat == 2 )
             {
@@ -238,13 +233,8 @@ public class EventEntry implements Runnable
                         this.eID
                 );
 
-                Consumer<Message> task = Main.scheduler::parse;
-                try
-                {
-                    this.eMsg.editMessage(msg).queue(task);
-                }
-                catch( Exception ignored)
-                { }
+                Consumer<Message> parse = Main.scheduler::parse;
+                MessageUtilities.editMsg( msg, this.eMsg, parse );
             }
         }
 

@@ -89,9 +89,7 @@ public class Main {
         commands.put("setup", new SetupCommand());
 
         // add administrator commands with their lookup name
-        //adminCommands.put("gannounce", new GlobalAnnounceCommand());
-        //adminCommands.put("reboot", new RebootCommand());
-        //adminCommands.put("shutdown", new ShutdownCommand());
+        adminCommands.put("gannounce", new GlobalAnnounceCommand());
         adminCommands.put("query", new QueryCommand());
     }
 
@@ -115,14 +113,14 @@ public class Main {
             else
             {
                 String msg = "Invalid arguments for: \"" + BotConfig.PREFIX + cc.invoke +"\"";
-                MessageUtilities.sendMsg( msg, cc.event.getChannel() );
+                MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
             }
         }
         // else the invoking command is invalid
         else
         {
             String msg = "Invalid command: \"" + BotConfig.PREFIX + cc.invoke + "\"";
-            MessageUtilities.sendMsg( msg, cc.event.getChannel() );
+            MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
         }
     }
 
@@ -145,7 +143,7 @@ public class Main {
             else
             {
                 String msg = "Invalid arguments for: \"" + BotConfig.PREFIX + "help\"";
-                MessageUtilities.sendPrivateMsg( msg, cc.event.getAuthor() );
+                MessageUtilities.sendPrivateMsg( msg, cc.event.getAuthor(), null );
             }
         }
     }

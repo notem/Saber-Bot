@@ -24,4 +24,5 @@ public class BotConfig
     public static int MAX_ENTRIES = 15;                 // determines the maximum amount of event event entries
                                                         // any one guild may maintain. Set to a negative values
                                                         // for no limit.
+    public static String ADMIN_ID = "198595412876066817";
 }

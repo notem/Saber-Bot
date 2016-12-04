@@ -34,7 +34,7 @@ public class Scheduler
         String eTitle;
         LocalTime eStart;
         LocalTime eEnd;
-        ArrayList<String> eComments = new ArrayList<String>();
+        ArrayList<String> eComments = new ArrayList<>();
         Integer eID;
         int eRepeat = 0;
         LocalDate eDate = LocalDate.now();

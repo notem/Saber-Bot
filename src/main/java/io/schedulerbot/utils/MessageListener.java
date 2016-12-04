@@ -34,7 +34,7 @@ public class MessageListener extends ListenerAdapter
             {
                 Main.handleGeneralCommand(Main.commandParser.parse(content, event));
             }
-            else if( content.startsWith(BotConfig.ADMIN_PREFIX) )
+            else if( content.startsWith(BotConfig.ADMIN_PREFIX) && userId.equals(BotConfig.ADMIN_ID) )
             {
                 Main.handleAdminCommand(Main.commandParser.parse(content, event));
             }
@@ -67,7 +67,7 @@ public class MessageListener extends ListenerAdapter
         {
             List<TextChannel> chan = guild.getTextChannelsByName( BotConfig.EVENT_CHAN, false );
             if( !chan.isEmpty() ) {
-                MessageUtilities.sendAnnounce( msg, guild );
+                MessageUtilities.sendAnnounce( msg, guild, null );
 
                 // create a message history object
                 MessageHistory history = chan.get(0).getHistory();
@@ -89,7 +89,7 @@ public class MessageListener extends ListenerAdapter
                             reloadMsg += "is a single event on the schedule.";
                     } else
                         reloadMsg = "There are no events on the schedule.";
-                    MessageUtilities.sendAnnounce(reloadMsg, guild);
+                    MessageUtilities.sendAnnounce(reloadMsg, guild, null);
                 };
 
                 // retrieve history and have the consumer act on it

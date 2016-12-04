@@ -20,7 +20,7 @@ public class GlobalAnnounceCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
-        return false;
+        return true;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class GlobalAnnounceCommand implements Command
 
         for( Guild guild : Main.getBotJda().getGuilds() )
         {
-            MessageUtilities.sendAnnounce( msg, guild );
+            MessageUtilities.sendAnnounce( msg, guild, null );
         }
     }
 }

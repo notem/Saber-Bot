@@ -51,34 +51,25 @@ public class EditCommand implements Command
         switch( args[1].toLowerCase() )
         {
             case "comment":
-                if( args[2].equals("add") )
+                switch (args[2])
                 {
-                    String[] comment = Arrays.copyOfRange( args, 3, args.length );
-                    if(!VerifyUtilities.verifyString(comment))
+                    case "add":
+                        if (!VerifyUtilities.verifyString(Arrays.copyOfRange(args, 3, args.length)))
+                            return false;
+                        break;
+                    case "remove":
+                        if(Character.isDigit(args[3].charAt(0)) &&
+                                !VerifyUtilities.verifyInteger(args[3]))
+                            return false;
+                        else
+                        {
+                            if (!VerifyUtilities.verifyString(Arrays.copyOfRange(args, 3, args.length)))
+                                return false;
+                        }
+                        break;
+                    default:
                         return false;
                 }
-                else if( args[2].equals("remove"))
-                {
-                    if( Character.isDigit(args[3].charAt(0)) )
-                    {
-                        try
-                        {
-                            Integer.parseInt( args[3] );
-                        }
-                        catch( Exception e )
-                        {
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        String[] comment = Arrays.copyOfRange( args, 3, args.length );
-                        if(!VerifyUtilities.verifyString(comment))
-                            return false;
-                    }
-                }
-                else
-                    return false;
                 break;
 
             case "start":
@@ -220,20 +211,15 @@ public class EditCommand implements Command
                 break;
         }
 
-        // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
-        Thread t = entry.thread;
-        while(t.isAlive())      // this is a really terrible solution I feel
-        { t.interrupt(); }      // however, it does stop operation until the thread is killed
+        // interrupt the EventEntry thread and remove Id from the maps
+        entry.thread.interrupt();
+        Main.removeId( entryId, entry.eMsg.getGuild().getId() );
 
         // generate the new event entry message
         String msg = Scheduler.generate(title, start, end, comments, repeat, date, entryId);
 
-        Consumer<Message> task = Main.scheduler::parse;
-        try
-        {
-            entry.eMsg.editMessage(msg).queue(task);
-        }
-        catch( Exception ignored)
-        { }
+        // edit the old Message to contain the new event information
+        Consumer<Message> parseUpdate = Main.scheduler::parse;
+        MessageUtilities.editMsg( msg, entry.eMsg, parseUpdate );
     }
 }

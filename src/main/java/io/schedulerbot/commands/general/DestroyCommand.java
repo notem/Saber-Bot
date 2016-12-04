@@ -61,8 +61,7 @@ public class DestroyCommand implements Command
             {
                 MessageUtilities.sendMsg(
                         "Your guild has no entries on the schedule.",
-                        event.getChannel()
-                );
+                        event.getChannel(), null);
                 return;
             }
             ArrayList<Integer> entries = new ArrayList<>();
@@ -83,11 +82,11 @@ public class DestroyCommand implements Command
 
                     // if the difference is less than 0 the event was ended early
                     if (dif < 0 && entry.eDate.equals(LocalDate.now()))
-                        MessageUtilities.sendAnnounce(earlyMsg, guild);
+                        MessageUtilities.sendAnnounce(earlyMsg, guild, null);
 
                         // otherwise event was canceled before it began
                     else
-                        MessageUtilities.sendAnnounce(cancelMsg, guild);
+                        MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
                     // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
                     entry.thread.interrupt();
@@ -96,7 +95,7 @@ public class DestroyCommand implements Command
                     Main.removeId( eId, guild.getId() );
 
                     // delete the old message
-                    MessageUtilities.deleteMsg(entry.eMsg);
+                    MessageUtilities.deleteMsg(entry.eMsg, null);
                 }
             }
         }
@@ -109,7 +108,7 @@ public class DestroyCommand implements Command
             if (entry == null)
             {
                 String msg = "There is no event entry with ID " + args[0] + ".\"";
-                MessageUtilities.sendMsg(msg, event.getChannel());
+                MessageUtilities.sendMsg(msg, event.getChannel(), null);
                 return;
             }
 
@@ -124,11 +123,11 @@ public class DestroyCommand implements Command
 
             // if the difference is less than 0 the event was ended early
             if (dif < 0 && entry.eDate.equals(LocalDate.now()))
-                MessageUtilities.sendAnnounce(earlyMsg, guild);
+                MessageUtilities.sendAnnounce(earlyMsg, guild, null);
 
                 // otherwise event was canceled before it began
             else
-                MessageUtilities.sendAnnounce(cancelMsg, guild);
+                MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
             // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
             entry.thread.interrupt();
@@ -137,7 +136,7 @@ public class DestroyCommand implements Command
             Main.removeId( entryId, guild.getId() );
 
             // delete the old entry
-            MessageUtilities.deleteMsg(entry.eMsg);
+            MessageUtilities.deleteMsg(entry.eMsg, null);
         }
     }
 }

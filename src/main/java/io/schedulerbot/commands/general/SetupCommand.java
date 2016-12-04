@@ -54,6 +54,6 @@ public class SetupCommand implements Command {
                 "permissions on your server and use the command **" + BotConfig.PREFIX + "setup auto** in your " +
                 "default public channel.~~ <- not yet implemented\n\n";
 
-        MessageUtilities.sendPrivateMsg(msg + BOTOATH_LINK, event.getAuthor());
+        MessageUtilities.sendPrivateMsg(msg + BOTOATH_LINK, event.getAuthor(), null);
     }
 }

@@ -100,9 +100,22 @@ public class VerifyUtilities
     public static boolean verifyRepeat( String arg )
     {
         String argLower = arg.toLowerCase();
-        if(arg.equals("no")||arg.equals("weekly")||arg.equals("daily"))
+        if(argLower.equals("no")||argLower.equals("weekly")||argLower.equals("daily"))
             return true;
 
         return false;
+    }
+
+    public static boolean verifyInteger( String arg )
+    {
+        try
+        {
+            Integer.parseInt(arg);
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+        return true;
     }
 }

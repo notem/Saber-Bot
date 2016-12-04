@@ -134,7 +134,7 @@ public class CreateCommand implements Command
         {
             String msg = "Your guild already has the maximum allowed amount of event entries."
                     +" No more entries may be added until old entries are destroyed.";
-            MessageUtilities.sendMsg( msg, event.getChannel() );
+            MessageUtilities.sendMsg( msg, event.getChannel(), null );
             return;
         }
 
@@ -239,6 +239,6 @@ public class CreateCommand implements Command
         // generate the event entry message
         String msg = Scheduler.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate, null );
 
-        MessageUtilities.sendMsg( msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0) );
+        MessageUtilities.sendMsg( msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0), null );
     }
 }

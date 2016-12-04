@@ -59,7 +59,7 @@ public class HelpCommand implements Command
                 commandsBrief += cmd.help( true ) + "\n";
 
             MessageUtilities.sendPrivateMsg( INTRO + "__**Available commands**__\n" +
-                    commandsBrief + USAGE_EXTENDED, event.getAuthor() );
+                    commandsBrief + USAGE_EXTENDED, event.getAuthor(), null );
         }
         // otherwise read search the commands for the first arg
         else
@@ -68,11 +68,11 @@ public class HelpCommand implements Command
             if( cmd != null )
             {
                 String helpMsg = cmd.help(false);
-                MessageUtilities.sendPrivateMsg(helpMsg, event.getAuthor());
+                MessageUtilities.sendPrivateMsg(helpMsg, event.getAuthor(), null);
             }
         }
 
         if( !event.isFromType(ChannelType.PRIVATE) )
-            MessageUtilities.deleteMsg( event.getMessage() );
+            MessageUtilities.deleteMsg( event.getMessage(), null );
     }
 }

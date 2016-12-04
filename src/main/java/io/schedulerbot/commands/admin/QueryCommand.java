@@ -22,6 +22,10 @@ public class QueryCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
+        if( args.length < 2 )
+        {
+            return false;
+        }
         return true;
     }
 
@@ -56,23 +60,28 @@ public class QueryCommand implements Command
                 }
             }
         }
-        if( op == 2 ) {
+        if( op == 2 )
+        {
             EventEntry entry = Main.getEventEntry(Integer.decode("0x" + args[1]));
 
-            if (entry == null) {
+            if (entry == null)
+            {
                 msg = "Entry " + args[1] + " does not exist.";
-            } else {
+            }
+            else
+            {
                 msg = "Entry " + Integer.decode( "0x" + entry.eID ) + " belongs to " +
                         entry.eMsg.getGuild().getName() + "(" + entry.eMsg.getGuild().getId() + ")" + ".\n" +
                         "\t\tTitle = '" + entry.eTitle + "'\n\t\tDate = '" + entry.eDate + "'\n\t\tStart = '" +
                         entry.eStart + "'\n\t\tEnd = '" + entry.eEnd + "'\n\t\tRepeat = '" + entry.eRepeat + "'\n" +
                         "\t\tZone = '" + "EST" + "'\n\t\tComments = ";
-                for (String comment : entry.eComments) {
+                for (String comment : entry.eComments)
+                {
                     msg += "\"" + comment + "\"\n\t\t\t";
                 }
             }
         }
 
-        MessageUtilities.sendPrivateMsg( msg, event.getAuthor() );
+        MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );
     }
 }
