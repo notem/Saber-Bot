@@ -65,10 +65,10 @@ public class MessageListener extends ListenerAdapter
 
         for( Guild guild : event.getJDA().getGuilds())
         {
-            MessageUtilities.sendAnnounce( msg, guild );
-
             List<TextChannel> chan = guild.getTextChannelsByName( BotConfig.EVENT_CHAN, false );
             if( !chan.isEmpty() ) {
+                MessageUtilities.sendAnnounce( msg, guild );
+
                 // create a message history object
                 MessageHistory history = chan.get(0).getHistory();
 
