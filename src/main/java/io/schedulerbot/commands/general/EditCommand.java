@@ -226,6 +226,6 @@ public class EditCommand implements Command
         // generate the new event entry message
         String msg = Scheduler.generate(title, start, end, comments, repeat, date, entryId);
 
-        MessageUtilities.sendMsg(msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0));
+        MessageUtilities.editMsg(msg, event.getMessage());
     }
 }

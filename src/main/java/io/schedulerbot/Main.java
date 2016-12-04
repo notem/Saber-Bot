@@ -269,6 +269,13 @@ public class Main {
         return jda.getSelfUser();
     }
 
+
+    public static JDA getBotJda()
+    {
+        return jda;
+    }
+
+
     /**
      * gets all commands available to general users
      *

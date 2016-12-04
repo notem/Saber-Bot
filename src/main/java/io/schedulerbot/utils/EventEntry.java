@@ -15,7 +15,6 @@ import static java.time.temporal.ChronoUnit.DAYS;
  */
 public class EventEntry implements Runnable
 {
-
     public String eTitle;                   // the title/name of the event
     public LocalTime eStart;                   // the time in (24h) when the event starts
     public LocalTime eEnd;                     // the ending time in 24h form
@@ -193,6 +192,15 @@ public class EventEntry implements Runnable
             // announce that the event is ending
             MessageUtilities.sendAnnounce( endMsg, guild );
 
+            if( this.eRepeat == 0 )
+            {
+                // remove entry
+                Main.removeId(this.eID, this.eMsg.getGuild().getId());
+
+                // delete the old entry
+                MessageUtilities.deleteMsg( this.eMsg );
+            }
+
             // if the event entry is scheduled to repeat, must be handled with now
             if( this.eRepeat == 1 )
             {
@@ -207,7 +215,7 @@ public class EventEntry implements Runnable
                         this.eID
                 );
 
-                MessageUtilities.sendMsg( msg, this.eMsg.getChannel() );
+                MessageUtilities.editMsg( msg, this.eMsg );
             }
             else if( this.eRepeat == 2 )
             {
@@ -222,21 +230,17 @@ public class EventEntry implements Runnable
                         this.eID
                 );
 
-                MessageUtilities.sendMsg( msg, this.eMsg.getChannel() );
+                MessageUtilities.editMsg( msg, this.eMsg );
             }
         }
 
         // if an interrupt is received, quit early
         catch(InterruptedException ignored)
-        { }
-
-        // always remove the entry from entriesGlobal and delete the message
-        finally
         {
-           // remove entry
+            // remove entry
             Main.removeId(this.eID, this.eMsg.getGuild().getId());
 
-           // delete the old entry
+            // delete the old entry
             MessageUtilities.deleteMsg( this.eMsg );
         }
     }
