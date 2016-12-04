@@ -24,10 +24,10 @@ public class MessageListener extends ListenerAdapter
     public void onMessageReceived(MessageReceivedEvent event)
     {
         String content = event.getMessage().getContent();   // the raw string the user sent
-        String userId = event.getAuthor().getId();            // the ID of the user
+        String userId = event.getAuthor().getId();          // the ID of the user
         String origin = event.getChannel().getName();       // the name of the originating text channel
 
-        // if the message was received private
+        // if the message was received private, it's either an admin command or a help/setup command
         if( event.isFromType(ChannelType.PRIVATE) )
         {
             if( content.startsWith(BotConfig.PREFIX + "help") || content.startsWith(BotConfig.PREFIX + "setup") )
@@ -47,22 +47,29 @@ public class MessageListener extends ListenerAdapter
             Main.handleGeneralCommand(Main.commandParser.parse(content, event));
         }
 
-        // bot also listens on EVENT_CHAN for it's own messages
-        else if( userId.equals( Main.getBotSelfUser().getId() ) &&
-                origin.equals(BotConfig.EVENT_CHAN))
+        // bot also listens on EVENT_CHAN messages
+        else if(origin.equals(BotConfig.EVENT_CHAN))
         {
-            String guildId = event.getGuild().getId();
-            Main.handleEventEntry( Main.scheduler.parse(event.getMessage()), guildId);
+            // if it is it's own message, parse it into a thread
+            if( userId.equals( Main.getBotSelfUser().getId() ) )
+            {
+                String guildId = event.getGuild().getId();
+                Main.handleEventEntry( Main.scheduler.parse(event.getMessage()), guildId);
+            }
+            // otherwise, attempt to delete the message
+            else
+            {
+                MessageUtilities.deleteMsg( event.getMessage(), null );
+            }
         }
     }
 
     @Override
     public void onReady( ReadyEvent event )
     {
-
-        // announces to all attached discord servers that the bot is alive
         String msg = event.getJDA().getSelfUser().getName() + " reporting for duty! Reloading the event entries. . .";
 
+        // announces to all attached discord servers with EVENT_CHAN configured that the bot is alive
         for( Guild guild : event.getJDA().getGuilds())
         {
             List<TextChannel> chan = guild.getTextChannelsByName( BotConfig.EVENT_CHAN, false );
