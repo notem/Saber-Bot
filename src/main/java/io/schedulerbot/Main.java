@@ -178,20 +178,13 @@ public class Main {
      * @param eId the event entry Id number
      * @param gId the guild String Id
      */
-    public static void removeId( Integer eId, String gId ) {
-        // lock to the guild's entry table
-        synchronized (entriesByGuild.get(gId))
-        {
+    public static void removeId( Integer eId, String gId )
+    {
             entriesByGuild.get(gId).remove(eId);
 
             if (entriesByGuild.get(gId).isEmpty())
                 entriesByGuild.remove(gId);
-        }
-        // lock to the global entry table
-        synchronized (entriesGlobal)
-        {
             entriesGlobal.remove(eId);
-        }
     }
 
     /**
@@ -204,9 +197,6 @@ public class Main {
      */
     public static Integer newId( Integer oldId )
     {
-        // lock to the global entry table
-        synchronized (entriesGlobal)
-        {
             Integer ID;
             if (oldId == null)
                 ID = (int) Math.ceil(Math.random() * (Math.pow(2, 16) - 1));
@@ -220,7 +210,6 @@ public class Main {
 
 
             return ID;
-        }
     }
 
     /**

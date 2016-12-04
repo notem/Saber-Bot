@@ -3,12 +3,14 @@ package io.schedulerbot.commands.general;
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.*;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 /**
  */
@@ -226,6 +228,12 @@ public class EditCommand implements Command
         // generate the new event entry message
         String msg = Scheduler.generate(title, start, end, comments, repeat, date, entryId);
 
-        MessageUtilities.editMsg(msg, event.getMessage());
+        Consumer<Message> task = Main.scheduler::parse;
+        try
+        {
+            entry.eMsg.editMessage(msg).queue(task);
+        }
+        catch( Exception ignored)
+        { }
     }
 }

@@ -7,6 +7,7 @@ import net.dv8tion.jda.core.entities.Message;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -216,6 +217,13 @@ public class EventEntry implements Runnable
                 );
 
                 MessageUtilities.editMsg( msg, this.eMsg );
+                Consumer<Message> task = Main.scheduler::parse;
+                try
+                {
+                    this.eMsg.editMessage(msg).queue(task);
+                }
+                catch( Exception ignored)
+                { }
             }
             else if( this.eRepeat == 2 )
             {
@@ -230,18 +238,18 @@ public class EventEntry implements Runnable
                         this.eID
                 );
 
-                MessageUtilities.editMsg( msg, this.eMsg );
+                Consumer<Message> task = Main.scheduler::parse;
+                try
+                {
+                    this.eMsg.editMessage(msg).queue(task);
+                }
+                catch( Exception ignored)
+                { }
             }
         }
 
         // if an interrupt is received, quit early
         catch(InterruptedException ignored)
-        {
-            // remove entry
-            Main.removeId(this.eID, this.eMsg.getGuild().getId());
-
-            // delete the old entry
-            MessageUtilities.deleteMsg( this.eMsg );
-        }
+        { }
     }
 }

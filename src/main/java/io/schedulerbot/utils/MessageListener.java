@@ -63,9 +63,9 @@ public class MessageListener extends ListenerAdapter
     {
 
         // announces to all attached discord servers that the bot is alive
-        String msg = Main.getBotSelfUser().getName() + " reporting for duty! Reloading the event entries. . .";
+        String msg = event.getJDA().getSelfUser().getName() + " reporting for duty! Reloading the event entries. . .";
 
-        for( Guild guild : Main.getBotJda().getGuilds())
+        for( Guild guild : event.getJDA().getGuilds())
         {
             MessageUtilities.sendAnnounce( msg, guild );
 
@@ -96,7 +96,6 @@ public class MessageListener extends ListenerAdapter
 
             // retrieve history and have the consumer act on it
             history.retrievePast( 50 ).queue( cons );
-
         }
     }
 }

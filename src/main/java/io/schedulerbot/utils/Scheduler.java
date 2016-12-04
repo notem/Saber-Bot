@@ -27,7 +27,7 @@ public class Scheduler
      *
      * @return EventEntry worker thread
      */
-    EventEntry parse(Message msg)
+    public EventEntry parse(Message msg)
     {
         String raw = msg.getRawContent();
 
