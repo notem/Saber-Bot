@@ -6,8 +6,8 @@ package io.schedulerbot.utils;
  */
 public class BotConfig
 {
-    //public static String TOKEN = "MjUwODAxNjAzNjMwNTk2MTAw.CxaJqw.IPLbPDoRhVBZhZyQ9JjmoKvsskE" ;     // your bot's token
-    public static String TOKEN = "MjUxODQ0MDgzMTM0MzY1Njk3.CxpsKA.QQl9q3sZD2ipQlt10huDU5HjFfI" ;     // your bot's token
+    public static String TOKEN = "MjUwODAxNjAzNjMwNTk2MTAw.CxaJqw.IPLbPDoRhVBZhZyQ9JjmoKvsskE" ;     // your bot's token
+    //public static String TOKEN = "MjUxODQ0MDgzMTM0MzY1Njk3.CxpsKA.QQl9q3sZD2ipQlt10huDU5HjFfI" ;     // your bot's token
 
     public static String PREFIX = "!";                  // prefix bot should respond to
 
