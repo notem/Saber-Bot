@@ -18,7 +18,9 @@ import java.util.HashMap;
  *  file: Main.java
  *  main class. initializes the bot
  */
-public class Main {
+public class Main
+{
+    public static final Object lock = new Object();
 
     // the bot's JDA object
     private static JDA jda;
@@ -28,10 +30,10 @@ public class Main {
     private static final HashMap<String, Command> adminCommands = new HashMap<>();
 
     // hash table containing ALL currently active event entry threads
-    private static final HashMap<Integer, EventEntry> entriesGlobal = new HashMap<>();
+    public static final HashMap<Integer, EventEntry> entriesGlobal = new HashMap<>();
 
     // hash table which associates guilds with a list of the Id's of their active event entry threads
-    private static final HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();
+    public static final HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();
 
     // parsers to read and analyze commands and event entries
     public static final CommandParser commandParser = new CommandParser();
@@ -85,7 +87,6 @@ public class Main {
         commands.put("create", new CreateCommand());
         commands.put("destroy", new DestroyCommand());
         commands.put("edit", new EditCommand());
-        //commands.put("version", new VersionCommand());
         commands.put("setup", new SetupCommand());
 
         // add administrator commands with their lookup name
@@ -156,6 +157,8 @@ public class Main {
      */
     public static void handleEventEntry(EventEntry se, String guildId)
     {
+        se.adjustTimer();
+
         // put the EventEntry thread into a HashMap by ID
         entriesGlobal.put(se.eID, se);
 

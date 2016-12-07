@@ -1,5 +1,6 @@
 package io.schedulerbot.utils;
 
+
 import io.schedulerbot.Main;
 import net.dv8tion.jda.core.entities.Message;
 
@@ -17,8 +18,10 @@ import java.util.ArrayList;
  * The second timer measures the time from the event start until the event ends (causes another announce).
  * The bot clears the event from the entriesGlobal at the end of the thread's life.
  */
-public class Scheduler
+public class Scheduler implements Runnable
 {
+    public Thread thread;
+
     /**
      * Parses a the content of a EventEntry MessageReceivedEvent into a EventEntry worker thread.
      * parse()'s analogous partner method is generate() which generates the content that parse
@@ -162,5 +165,71 @@ public class Scheduler
         msg += "```";
 
         return msg;
+    }
+
+
+    public Scheduler()
+    {
+        this.thread = new Thread(this);
+        this.thread.start();
+    }
+
+
+    public void run()
+    {
+        try
+        {
+            while( true )
+            {
+                synchronized( Main.lock )
+                {
+                    Main.entriesGlobal.forEach(this::handleEntry);
+                }
+                System.out.printf("Scheduler sleeping for a minute.\n");
+                Thread.sleep( 60 * 1000 );
+            }
+        }
+        catch(InterruptedException ignored)
+        { }
+    }
+
+
+    private void handleEntry( Integer eId, EventEntry entry )
+    {
+        LocalDate now = LocalDate.now();
+        LocalTime moment = LocalTime.now();
+        if( !entry.startFlag )
+        {
+            if( now.compareTo(entry.eDate) > 0)
+            {
+                // something odd happened, destroy entry
+                entry.destroy();
+            }
+            else if( now.compareTo(entry.eDate) == 0 &&
+                    ( moment.compareTo(entry.eStart) >= 0 ) )
+            {
+                // start event
+                entry.start();
+                entry.adjustTimer();
+            }
+            else
+            {
+                // adjust the 'time until' displayed timer
+                entry.adjustTimer();
+            }
+        }
+        else
+        {
+            if( moment.compareTo(entry.eEnd) >= 0 )
+            {
+                // end event
+                entry.end();
+            }
+            else
+            {
+                // adjust the 'time until' displayed timer
+                entry.adjustTimer();
+            }
+        }
     }
 }

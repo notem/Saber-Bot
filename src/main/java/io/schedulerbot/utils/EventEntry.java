@@ -14,7 +14,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 /**
  * the EventEntry worker thread, gets created by the Scheduler
  */
-public class EventEntry implements Runnable
+public class EventEntry
 {
     public String eTitle;                   // the title/name of the event
     public LocalTime eStart;                   // the time in (24h) when the event starts
@@ -25,7 +25,7 @@ public class EventEntry implements Runnable
     public LocalDate eDate;
     public Message eMsg;
 
-    public Thread thread;
+    public boolean startFlag;
 
     /**
      * Thread constructor
@@ -46,18 +46,94 @@ public class EventEntry implements Runnable
         this.eRepeat = eRepeat;
         this.eDate = eDate;
 
-        this.thread = new Thread( this,  eName );
-        this.thread.start();
+        this.startFlag = false;
     }
 
-    @Override
-    public void run()
+
+    public void start()
     {
-        // create the announcement message strings
         Guild guild = this.eMsg.getGuild();
         String startMsg = "@everyone The event **" + this.eTitle + "** has begun!";
+
+        if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
+                guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).isEmpty())
+            guild.getPublicChannel().sendMessage( startMsg ).queue();
+        else
+            guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
+                    .sendMessage( startMsg ).queue();
+
+        this.startFlag = true;
+    }
+
+    public void end()
+    {
+        Guild guild = this.eMsg.getGuild();
         String endMsg = "@everyone The event **" + this.eTitle + "** has ended.";
 
+        // announce that the event is ending
+        MessageUtilities.sendAnnounce( endMsg, guild, null );
+
+        if( this.eRepeat == 0 )
+        {
+            this.destroy();
+        }
+
+        // if the event entry is scheduled to repeat, must be handled with now
+        if( this.eRepeat == 1 )
+        {
+            // generate the event entry message
+            String msg = Scheduler.generate(
+                    this.eTitle,
+                    this.eStart,
+                    this.eEnd,
+                    this.eComments,
+                    this.eRepeat,
+                    this.eDate.plusDays(1),
+                    this.eID
+            );
+
+            Consumer<Message> parse = Main.scheduler::parse;
+            MessageUtilities.editMsg( msg, this.eMsg, parse );
+        }
+        else if( this.eRepeat == 2 )
+        {
+            // generate the event entry message
+            String msg = Scheduler.generate(
+                    this.eTitle,
+                    this.eStart,
+                    this.eEnd,
+                    this.eComments,
+                    this.eRepeat,
+                    this.eDate.plusDays(7),
+                    this.eID
+            );
+
+            Consumer<Message> parse = Main.scheduler::parse;
+            MessageUtilities.editMsg(msg, this.eMsg, parse);
+        }
+    }
+
+    public void destroy()
+    {
+        Runnable destroy = () ->
+        {
+            synchronized( Main.lock )
+            {
+                // remove entry
+                Main.removeId(this.eID, this.eMsg.getGuild().getId());
+            }
+
+            // delete the old entry
+            MessageUtilities.deleteMsg( this.eMsg, null );
+        };
+
+        Thread t = new Thread(destroy);
+        t.start();
+    }
+
+
+    public void adjustTimer()
+    {
         // convert the times into integers representing the time in seconds
         int timeTilStart = (((this.eDate.getYear() - LocalDate.now().getYear())*365*24*60*60)
                 + (this.eDate.getDayOfYear()-LocalDate.now().getDayOfYear())*24*60*60)
@@ -67,179 +143,127 @@ public class EventEntry implements Runnable
         if( timeTilEnd < 0 )
         { timeTilEnd += 24*60*60; }
 
-        int wait = timeTilStart;
+       String[] lines = this.eMsg.getRawContent().split("\n");
 
-        // run the main operation of the thread
-        try
-        {
-            // sleep until the day of the event starts or if the event starts in less than 24 hours
-            while( timeTilStart > 24*60*60 )
-            {
-                if( timeTilStart < 2*24*60*60 )
-                    wait = timeTilStart - 24*60*60;
-                else
-                    wait = 24*60*60 - LocalTime.now().toSecondOfDay();
+       if( !startFlag )
+       {
+           if( timeTilStart < 60 * 30 )
+           {
+               int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
+               String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
+               if( minutesTil <= 1)
+                   newline += "in a minute.)";
+               else
+                   newline += "in " + minutesTil + " minutes.)";
 
-                int days = (int) DAYS.between(LocalDate.now(), eDate);
-                String[] lines = this.eMsg.getRawContent().split("\n");
+               String msg = "";
+               for(String line : lines)
+               {
+                   if(line.equals(lines[lines.length-2]))
+                       msg += newline;
+                   else
+                       msg += line;
+                   if(!line.equals(lines[lines.length-1]))
+                       msg += "\n";
+               }
 
-                String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
-                if( days <= 1)
-                    newline += "tomorrow.)";
-                else
-                    newline += "in " + days + " days.)";
+               MessageUtilities.editMsg( msg, this.eMsg, null );
+           }
+           else if( timeTilStart < 24 * 60 * 60 )
+           {
+               int hoursTil = (int)Math.ceil((double)timeTilStart/(60*60));
+               String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
+               if( hoursTil <= 1)
+                   newline += "within the hour.)";
+               else
+                   newline += "in " + hoursTil + " hours.)";
 
-                String msg = "";
-                for(String line : lines)
-                {
-                    if(line.equals(lines[lines.length-2]))
-                        msg += newline;
-                    else
-                        msg += line;
-                    if(!line.equals(lines[lines.length-1]))
-                        msg += "\n";
-                }
+               String msg = "";
+               for(String line : lines)
+               {
+                   if(line.equals(lines[lines.length-2]))
+                       msg += newline;
+                   else
+                       msg += line;
+                   if(!line.equals(lines[lines.length-1]))
+                       msg += "\n";
+               }
 
-                MessageUtilities.editMsg( msg, this.eMsg, null );
+               MessageUtilities.editMsg( msg, this.eMsg, null );
+           }
 
-                System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                        + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
-                        "] Sleeping for " + wait + " seconds.\n");
+           else
+           {
+               int daysTil = (int) DAYS.between(LocalDate.now(), eDate);
 
-                Thread.sleep(wait * 1000);
-                timeTilStart -= wait;
-            }
+               String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
+               if( daysTil <= 1)
+                   newline += "tomorrow.)";
+               else
+                   newline += "in " + daysTil + " days.)";
 
-            // sleep until the start time
-            wait = timeTilStart - (int)(Math.floor( ((double)timeTilStart)/(60*60) )*60*60);
-            if( (wait==0) && (timeTilStart!=0) )
-            { wait = 60*60; }
+               String msg = "";
+               for(String line : lines)
+               {
+                   if(line.equals(lines[lines.length-2]))
+                       msg += newline;
+                   else
+                       msg += line;
+                   if(!line.equals(lines[lines.length-1]))
+                       msg += "\n";
+               }
 
-            while( timeTilStart > 0 )
-            {
-                String[] lines = this.eMsg.getRawContent().split("\n");
-                int hoursTil = (int)Math.ceil((double)timeTilStart/(60*60));
-                String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
-                if( hoursTil <= 1)
-                    newline += "within the hour.)";
-                else
-                    newline += "in " + hoursTil + " hours.)";
+               MessageUtilities.editMsg( msg, this.eMsg, null );
 
-                String msg = "";
-                for(String line : lines)
-                {
-                    if(line.equals(lines[lines.length-2]))
-                        msg += newline;
-                    else
-                        msg += line;
-                    if(!line.equals(lines[lines.length-1]))
-                        msg += "\n";
-                }
+           }
+       }
+       else
+       {
+           if( timeTilEnd < 30*60 )
+           {
+               int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
+               String newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
+               if( minutesTil <= 1)
+                   newline += "in a minute.)";
+               else
+                   newline += "in " + minutesTil + " minutes.)";
 
-                MessageUtilities.editMsg( msg, this.eMsg, null );
+               String msg = "";
+               for(String line : lines)
+               {
+                   if(line.equals(lines[lines.length-2]))
+                       msg += newline;
+                   else
+                       msg += line;
+                   if(!line.equals(lines[lines.length-1]))
+                       msg += "\n";
+               }
 
-                System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                        + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
-                        "] Sleeping for " + wait + " seconds.\n");
-                Thread.sleep(wait * 1000);        // sleep until the event starts
-                timeTilStart -= wait;                   // decrement wait1 by one hour
-                wait = 60*60;                     // set wait to one hour
-            }
+               MessageUtilities.editMsg( msg, this.eMsg, null );
+           }
 
-            // announce that the event is beginning
-            if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
-                    guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).isEmpty())
-                guild.getPublicChannel().sendMessage( startMsg ).queue();
-            else
-                guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
-                        .sendMessage( startMsg ).queue();
+           else
+           {
+               int hoursTil = (int)Math.ceil((double)timeTilEnd/(60*60));
+               String newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
+               if( hoursTil <= 1)
+                   newline += "within one hour.)";
+               else
+                   newline += "in " + hoursTil + " hours.)";
 
-            // sleep until event end time
-            wait = timeTilEnd - (int)(Math.floor( ((double)timeTilEnd)/(60*60) )*60*60);
-            if( (wait==0) && (timeTilEnd!=0) )
-            { wait = 60*60; }
+               String msg = "";
+               for(String line : lines)
+               {
+                   if(line.equals(lines[lines.length-2]))
+                       msg += newline;
+                   else
+                       msg += line;
+                   if(!line.equals(lines[lines.length-1]))
+                       msg += "\n";
+               }
 
-            while( timeTilEnd > 0 )
-            {
-                String[] lines = this.eMsg.getRawContent().split("\n");
-                int hoursTil = (int)Math.ceil((double)timeTilEnd/(60*60));
-                String newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
-                if( hoursTil <= 1)
-                    newline += "within one hour.)";
-                else
-                    newline += "in " + hoursTil + " hours.)";
-
-                String msg = "";
-                for(String line : lines)
-                {
-                    if(line.equals(lines[lines.length-2]))
-                        msg += newline;
-                    else
-                        msg += line;
-                    if(!line.equals(lines[lines.length-1]))
-                        msg += "\n";
-                }
-
-                MessageUtilities.editMsg( msg, this.eMsg, null );
-
-                System.out.printf("[" + LocalTime.now().getHour() + ":" + LocalTime.now().getMinute() + ":"
-                        + LocalTime.now().getSecond() + "]" + " [ID: " + Integer.toHexString(this.eID) +
-                        "] Sleeping for " + wait + " seconds.\n");
-
-                Thread.sleep(wait * 1000);        // sleep until the event starts
-                timeTilEnd -= wait;                   // decrement wait1 by one hour
-                wait = 60*60;                     // set wait to one hour
-            }
-
-            // announce that the event is ending
-            MessageUtilities.sendAnnounce( endMsg, guild, null );
-
-            if( this.eRepeat == 0 )
-            {
-                // remove entry
-                Main.removeId(this.eID, this.eMsg.getGuild().getId());
-
-                // delete the old entry
-                MessageUtilities.deleteMsg( this.eMsg, null );
-            }
-
-            // if the event entry is scheduled to repeat, must be handled with now
-            if( this.eRepeat == 1 )
-            {
-                // generate the event entry message
-                String msg = Scheduler.generate(
-                        this.eTitle,
-                        this.eStart,
-                        this.eEnd,
-                        this.eComments,
-                        this.eRepeat,
-                        this.eDate.plusDays(1),
-                        this.eID
-                );
-
-                Consumer<Message> parse = Main.scheduler::parse;
-                MessageUtilities.editMsg( msg, this.eMsg, parse );
-            }
-            else if( this.eRepeat == 2 )
-            {
-                // generate the event entry message
-                String msg = Scheduler.generate(
-                        this.eTitle,
-                        this.eStart,
-                        this.eEnd,
-                        this.eComments,
-                        this.eRepeat,
-                        this.eDate.plusDays(7),
-                        this.eID
-                );
-
-                Consumer<Message> parse = Main.scheduler::parse;
-                MessageUtilities.editMsg( msg, this.eMsg, parse );
-            }
-        }
-
-        // if an interrupt is received, quit early
-        catch(InterruptedException ignored)
-        { }
+               MessageUtilities.editMsg( msg, this.eMsg, null );
+           }
+       }
     }
 }

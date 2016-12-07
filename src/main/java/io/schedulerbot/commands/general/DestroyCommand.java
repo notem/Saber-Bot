@@ -88,9 +88,6 @@ public class DestroyCommand implements Command
                     else
                         MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
-                    // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
-                    entry.thread.interrupt();
-
                     // remove the entry from global
                     Main.removeId( eId, guild.getId() );
 
@@ -128,9 +125,6 @@ public class DestroyCommand implements Command
                 // otherwise event was canceled before it began
             else
                 MessageUtilities.sendAnnounce(cancelMsg, guild, null);
-
-            // interrupt the entriesGlobal thread, causing the message to be deleted and the thread killed.
-            entry.thread.interrupt();
 
             // remove the entry from global
             Main.removeId( entryId, guild.getId() );
