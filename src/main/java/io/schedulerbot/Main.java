@@ -3,6 +3,7 @@ package io.schedulerbot;
 import io.schedulerbot.commands.Command;
 import io.schedulerbot.commands.admin.*;
 import io.schedulerbot.commands.general.*;
+import io.schedulerbot.core.*;
 import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  *  file: Main.java
- *  main class. initializes the bot
+ *  initializes and maintains the bot
  */
 public class Main
 {
@@ -33,7 +34,7 @@ public class Main
     private static final HashMap<String, Command> adminCommands = new HashMap<>();
 
     // hash table containing ALL currently active event entry threads
-    private static final HashMap<Integer, EventEntry> entriesGlobal = new HashMap<>();
+    private static final HashMap<Integer, ScheduleEntry> entriesGlobal = new HashMap<>();
 
     // hash table which associates guilds with a list of the Id's of their active event entry threads
     private static final HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();
@@ -87,7 +88,9 @@ public class Main
         }
         // if bot fails to initialize and start
         catch( Exception e )
-        { e.printStackTrace(); }
+        {
+            __out.printOut( Main.class, e.getMessage() );
+        }
 
         // add bot commands with their lookup name
         commands.put("help", new HelpCommand());
@@ -122,9 +125,7 @@ public class Main
             // do command action if valid arguments
             if(valid)
             {
-                commandExec.submit( () -> {
-                    commands.get(cc.invoke).action(cc.args, cc.event);
-                });
+                commandExec.submit( () -> commands.get(cc.invoke).action(cc.args, cc.event));
             }
             // otherwise send error message
             else
@@ -157,9 +158,7 @@ public class Main
             // do command action if valid arguments
             if (valid)
             {
-                commandExec.submit( () -> {
-                    adminCommands.get(cc.invoke).action(cc.args, cc.event);
-                });
+                commandExec.submit( () -> adminCommands.get(cc.invoke).action(cc.args, cc.event));
             }
             else
             {
@@ -172,12 +171,12 @@ public class Main
     /**
      * Called when bot receives a message in EVENT_CHAN from itself
      *
-     * @param se the EventEntry object containing an active thread
+     * @param se the ScheduleEntry object containing an active thread
      * @param guildId the Id string of the guild to which the entry belongs
      */
-    public static void handleEventEntry(EventEntry se, String guildId)
+    public static void handleScheduleEntry(ScheduleEntry se, String guildId)
     {
-        // put the EventEntry thread into a HashMap by ID
+        // put the ScheduleEntry thread into a HashMap by ID
         entriesGlobal.put(se.eID, se);
 
         if( !entriesByGuild.containsKey( guildId ) )
@@ -191,92 +190,64 @@ public class Main
 
         // adjusts the displayed time til timer (since a proper once is not set at creation)
         se.adjustTimer();
-        __out.printOut( Main.class.getClass(), "Added entry #" + Integer.decode( "0x" + se.eID ) + " from guild #" + guildId + " to hashmaps." );
     }
 
-    /**
-     * removes an entry Id from the entriesByGuild and entriesGlobal hashmaps
-     * this should only be called when an event entry thread is dieing
-     *
-     * @param eId the event entry Id number
-     * @param gId the guild String Id
-     */
+
     public static void removeId( Integer eId, String gId )
     {
+        // remove entry from guild map
         entriesByGuild.get(gId).remove(eId);
 
+        // also remove the guild from the map if they have no entries
         if (entriesByGuild.get(gId).isEmpty())
             entriesByGuild.remove(gId);
+
+        // remove entry from global map
         entriesGlobal.remove(eId);
-        __out.printOut( Main.class.getClass(), "Removed entry #" + Integer.decode( "0x" + eId ) + " from guild #" + gId + " to hashmaps." );
     }
 
-    /**
-     * generates a new unique Id number for an event entry.
-     * the function may be passed a specific Id, for which it will check it's availability
-     * and return the Id number for reuse if available
-     *
-     * @param oldId the Id value of the previous iteration of the entry, null if no last iteration
-     * @return the newly generate Id number to assign to an entry
-     */
+
     public static Integer newId( Integer oldId )
     {
-            Integer ID;
-            if (oldId == null)
-                ID = (int) Math.ceil(Math.random() * (Math.pow(2, 16) - 1));
-            else
-                ID = oldId;
-
-            while (entriesGlobal.containsKey(ID))
-            {
-                ID = (int) Math.ceil(Math.random() * (Math.pow(2, 16) - 1));
-            }
-
-
-            return ID;
-    }
-
-    /**
-     * retrieves an event entry if it exists
-     *
-     * @param eId the event entry Id number
-     * @return event entry
-     */
-    public static EventEntry getEventEntry(Integer eId)
-    {
-        if( entriesGlobal.containsKey(eId) )
-        {
-            return entriesGlobal.get(eId);
-        }
+        // try first to use the requested Id
+        Integer ID;
+        if (oldId == null)
+            ID = (int) Math.ceil(Math.random() * (Math.pow(2, 16) - 1));
         else
+            ID = oldId;
+
+        // if the Id is in use, generate a new one until a free one is found
+        while (entriesGlobal.containsKey(ID))
         {
-            return null;
+            ID = (int) Math.ceil(Math.random() * (Math.pow(2, 16) - 1));
         }
+
+        return ID;
     }
 
-    /**
-     * retrieves the array list of entry Id belong to a guild
-     *
-     * @param gId the guild Id as a string
-     * @return array list of event entry Id integers
-     */
+
+    public static ScheduleEntry getEventEntry(Integer eId)
+    {
+        // check if entry exists, if so return it
+        if( entriesGlobal.containsKey(eId) )
+            return entriesGlobal.get(eId);
+
+        else    // otherwise return null
+            return null;
+    }
+
+
     public static ArrayList<Integer> getEntriesByGuild( String gId )
     {
+        // check if guild exists in map, if so return their entries
         if( entriesByGuild.containsKey(gId) )
-        {
             return entriesByGuild.get(gId);
-        }
-        else
-        {
+
+        else        // otherwise return null
             return null;
-        }
     }
 
-    /**
-     * get this bot's self user object
-     *
-     * @return the bot's SelfUser object
-     */
+
     public static SelfUser getBotSelfUser()
     {
         return jda.getSelfUser();
@@ -289,32 +260,19 @@ public class Main
     }
 
 
-    /**
-     * gets all commands available to general users
-     *
-     * @return a collection of all available commands
-     */
     public static Collection<Command> getCommands()
     {
         return commands.values();
     }
 
 
-    /**
-     * retrieves a Command by it's invoking string, if it exists
-     *
-     * @param invoke String that invokes a command
-     * @return Command that is invoke by invoke, or null if no Command
-     */
     public static Command getCommand( String invoke )
     {
+        // check if command exists, if so return it
         if( commands.containsKey(invoke) )
-        {
             return commands.get(invoke);
-        }
-        else
-        {
+
+        else    // otherwise return null
             return null;
-        }
     }
 }

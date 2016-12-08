@@ -1,18 +1,23 @@
-package io.schedulerbot.utils;
+package io.schedulerbot.core;
 
 import io.schedulerbot.Main;
+import io.schedulerbot.utils.__out;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 
 /**
+ * Used by the Main scheduler timer, a new thread is executed every minute.
+ * processes all entries in the entry maps, checking the start/end time and updating the
+ * "time until" display timers.
+ * additional threads are spawned to carry out tasks
  */
 public class ScheduleChecker implements Runnable
 {
-    private Collection<EventEntry> entries;
+    private Collection<ScheduleEntry> entries;
 
-    public ScheduleChecker(HashMap<Integer, EventEntry> entries)
+    public ScheduleChecker(HashMap<Integer, ScheduleEntry> entries)
     {
         this.entries = entries.values();
     }
@@ -28,11 +33,11 @@ public class ScheduleChecker implements Runnable
         }
         catch( Exception e )
         {
-            __out.printOut( this.getClass(), "Dump: " + Arrays.toString(e.getSuppressed()));
+            __out.printOut( this.getClass(), "ERROR: " + Arrays.toString(e.getSuppressed()));
         }
     }
 
-    private void checkEntry(EventEntry entry)
+    private void checkEntry(ScheduleEntry entry)
     {
         LocalDate now = LocalDate.now();
         LocalTime moment = LocalTime.now();

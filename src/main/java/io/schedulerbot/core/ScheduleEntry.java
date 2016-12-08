@@ -1,6 +1,7 @@
-package io.schedulerbot.utils;
+package io.schedulerbot.core;
 
 import io.schedulerbot.Main;
+import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 
@@ -11,30 +12,27 @@ import java.util.ArrayList;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
- * the EventEntry worker thread, gets created by the ScheduleParser
+ * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
+ * start and end functions are to be triggered upon the scheduled starting time and ending time.
+ * adjustTimer is used to update the displayed 'time until' timer
  */
-public class EventEntry
+public class ScheduleEntry
 {
-    public String eTitle;                   // the title/name of the event
-    public LocalTime eStart;                   // the time in (24h) when the event starts
-    public LocalTime eEnd;                     // the ending time in 24h form
-    public ArrayList<String> eComments;     // ArrayList of strings that make up the desc
-    public Integer eID;                     // 16 bit identifier
+    public String eTitle;                    // the title/name of the event
+    public LocalTime eStart;                 // the time in (24h) when the event starts
+    public LocalTime eEnd;                   // the ending time in 24h form
+    public ArrayList<String> eComments;      // ArrayList of strings that make up the desc
+    public Integer eID;                      // 16 bit identifier
     public int eRepeat;                      // 1 is daily, 2 is weekly, 0 is not at all
-    public LocalDate eDate;
-    public Message eMsg;
+    public LocalDate eDate;                  // the date in which the event begins
+    public Message eMsg;                     // reference to the discord message shedule entry
 
-    public boolean startFlag;
+    public boolean startFlag;               // flagged true when the start time has been reached
 
     /**
      * Thread constructor
-     * @param eName name of the event (String)
-     * @param eStart time of day the event starts (Integer)
-     * @param eEnd time of day the event ends (Integer)
-     * @param eComments the descriptive text of the event (String)
-     * @param eID the ID of the event (Integer)
      */
-    public EventEntry(String eName, LocalTime eStart, LocalTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat, LocalDate eDate)
+    public ScheduleEntry(String eName, LocalTime eStart, LocalTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat, LocalDate eDate)
     {
         this.eTitle = eName;
         this.eStart = eStart;
@@ -47,6 +45,7 @@ public class EventEntry
 
         this.startFlag = false;
     }
+
 
     public void start()
     {
@@ -88,7 +87,7 @@ public class EventEntry
                     this.eID
             );
 
-            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.handleEventEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
+            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.handleScheduleEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
         }
         else if( this.eRepeat == 2 )
         {
@@ -103,7 +102,7 @@ public class EventEntry
                     this.eID
             );
 
-            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.handleEventEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
+            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.handleScheduleEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
         }
     }
 

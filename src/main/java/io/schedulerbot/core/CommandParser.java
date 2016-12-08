@@ -1,18 +1,18 @@
-package io.schedulerbot.utils;
+package io.schedulerbot.core;
 
+import io.schedulerbot.utils.BotConfig;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
 /**
- * file: CommandParser.java
  * used to create a CommandContainer object which contains the parsed tokens of the user input
  * along with the originating event object
  */
 public class CommandParser
 {
-    CommandContainer parse(String raw, MessageReceivedEvent e)
+    public CommandContainer parse(String raw, MessageReceivedEvent e)
     {
         /// trim off the prefix
         String trimmed;

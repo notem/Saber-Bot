@@ -1,7 +1,9 @@
-package io.schedulerbot.utils;
+package io.schedulerbot.core;
 
 import io.schedulerbot.Main;
 
+import io.schedulerbot.utils.BotConfig;
+import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.MessageHistory;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -13,9 +15,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- *  file: MessageListener.java
- *  the Listener object that gets attached to the JDAbot
- *  when an event is received, this object calls it's related on... function.
+ * Servers three purposes:
+ * 1) listens for command messages on private and bot channels
+ * 2) listens for new schedule entries
+ * 3) recovers after shutdown by parsing the schedule when bot is ready
  */
 public class MessageListener extends ListenerAdapter
 {
@@ -53,7 +56,7 @@ public class MessageListener extends ListenerAdapter
             if (userId.equals(Main.getBotSelfUser().getId()))
             {
                 String guildId = event.getGuild().getId();
-                Main.handleEventEntry(Main.scheduleParser.parse(event.getMessage()), guildId);
+                Main.handleScheduleEntry(Main.scheduleParser.parse(event.getMessage()), guildId);
             }
             // otherwise, attempt to delete the message
             else
@@ -85,7 +88,7 @@ public class MessageListener extends ListenerAdapter
                     for (Message eMsg : l)
                     {
                         if (eMsg.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
-                            Main.handleEventEntry(Main.scheduleParser.parse(eMsg), guild.getId());
+                            Main.handleScheduleEntry(Main.scheduleParser.parse(eMsg), guild.getId());
                     }
 
                     ArrayList<Integer> entries = Main.getEntriesByGuild(guild.getId());

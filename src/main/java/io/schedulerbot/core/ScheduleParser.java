@@ -1,4 +1,4 @@
-package io.schedulerbot.utils;
+package io.schedulerbot.core;
 
 
 import io.schedulerbot.Main;
@@ -10,11 +10,12 @@ import java.time.Month;
 import java.util.ArrayList;
 
 /**
- *
+ *  This class is responsible for both parsing a discord message containing information that creates a ScheduleEvent,
+ *  as well as is responsible for generating the message that is to be used as the parsable discord schedule entry
  */
 public class ScheduleParser
 {
-    public EventEntry parse(Message msg)
+    public ScheduleEntry parse(Message msg)
     {
         String raw = msg.getRawContent();
 
@@ -93,7 +94,7 @@ public class ScheduleParser
         }
 
         // create a new thread
-        return new EventEntry( eTitle, eStart, eEnd, eComments, eID, msg, eRepeat, eDate );
+        return new ScheduleEntry( eTitle, eStart, eEnd, eComments, eID, msg, eRepeat, eDate );
     }
 
 

@@ -2,15 +2,15 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
+import io.schedulerbot.core.ScheduleEntry;
+import io.schedulerbot.core.ScheduleParser;
 import io.schedulerbot.utils.*;
-import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.function.Consumer;
 
 /**
  */
@@ -117,7 +117,7 @@ public class EditCommand implements Command
         Integer entryId = Integer.decode( "0x" + args[0] );
 
         // check if the entry exists
-        EventEntry entry = Main.getEventEntry( entryId );
+        ScheduleEntry entry = Main.getEventEntry( entryId );
         if( entry == null  || !entry.eMsg.getGuild().getId().equals(event.getGuild().getId()) )
         {
             String msg = "There is no event entry with ID " + Integer.toHexString(entryId) + ".";
@@ -221,7 +221,7 @@ public class EditCommand implements Command
         String msg = ScheduleParser.generate(title, start, end, comments, repeat, date, entryId);
 
         // edit the old Message to contain the new event information
-        MessageUtilities.editMsg(msg, entry.eMsg, (m) -> Main.handleEventEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
+        MessageUtilities.editMsg(msg, entry.eMsg, (m) -> Main.handleScheduleEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
 
     }
 }

@@ -2,7 +2,7 @@ package io.schedulerbot.commands.admin;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.utils.EventEntry;
+import io.schedulerbot.core.ScheduleEntry;
 import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -62,7 +62,7 @@ public class QueryCommand implements Command
         }
         if( op == 2 )
         {
-            EventEntry entry = Main.getEventEntry(Integer.decode("0x" + args[1]));
+            ScheduleEntry entry = Main.getEventEntry(Integer.decode("0x" + args[1]));
 
             if (entry == null)
             {

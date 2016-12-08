@@ -8,6 +8,8 @@ import java.util.function.Consumer;
 
 /**
  * A collection of method wrappers for sending different types of messages to specific channels
+ * Consumer may be passed into functions to operate on the result of the RestAction, exceptions
+ * are caught and printed to stdout
  */
 public class MessageUtilities
 {

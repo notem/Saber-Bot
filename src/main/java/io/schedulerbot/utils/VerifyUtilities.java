@@ -3,6 +3,8 @@ package io.schedulerbot.utils;
 import java.time.Month;
 
 /**
+ * static methods frequently used in the verify() methods used by classes implementing the
+ * Command interface.
  */
 public class VerifyUtilities
 {

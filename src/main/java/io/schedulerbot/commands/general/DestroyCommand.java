@@ -3,7 +3,7 @@ package io.schedulerbot.commands.general;
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.BotConfig;
-import io.schedulerbot.utils.EventEntry;
+import io.schedulerbot.core.ScheduleEntry;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.entities.Guild;
@@ -68,7 +68,7 @@ public class DestroyCommand implements Command
             entries.addAll( ent );
             for (Integer eId : entries)
             {
-                EventEntry entry = Main.getEventEntry(eId);
+                ScheduleEntry entry = Main.getEventEntry(eId);
                 if (entry != null)
                 {
                     // create the announcement message strings
@@ -100,7 +100,7 @@ public class DestroyCommand implements Command
         else
         {
             Integer entryId = Integer.decode("0x" + args[0]);
-            EventEntry entry = Main.getEventEntry(entryId);
+            ScheduleEntry entry = Main.getEventEntry(entryId);
 
             if (entry == null)
             {

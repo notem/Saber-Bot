@@ -3,7 +3,7 @@ package io.schedulerbot.commands.general;
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.BotConfig;
-import io.schedulerbot.utils.ScheduleParser;
+import io.schedulerbot.core.ScheduleParser;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -14,10 +14,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * file: CreateCommand.java
- *
- * CreateCommand places a new event on the EVENT_CHAN text channel
- * Note that the actual EventEntry thread has not yet been created.
+ * CreateCommand places a new entry message on the discord schedule channel
+ * a ScheduleEntry is not created until the message sent by this command is parsed by
+ * the listener
  */
 public class CreateCommand implements Command
 {

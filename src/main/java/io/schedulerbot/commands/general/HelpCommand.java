@@ -10,8 +10,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import java.util.Collection;
 
 /**
- * file: HelpCommand.java
- *
  * the command which causes the bot to message the event's parent user with
  * the bot operation command list/guide. Attempts to remove the '!help' message
  * if the message does not originate from a private channel

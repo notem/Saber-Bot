@@ -1,7 +1,6 @@
 package io.schedulerbot.utils;
 
 /**
- * file: BotConfig.java
  * contains configurable variables for the bot
  */
 public class BotConfig
