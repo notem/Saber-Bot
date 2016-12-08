@@ -28,67 +28,69 @@ public class MessageListener extends ListenerAdapter
         String origin = event.getChannel().getName();       // the name of the originating text channel
 
         // if the message was received private, it's either an admin command or a help/setup command
-        if( event.isFromType(ChannelType.PRIVATE) )
+        if (event.isFromType(ChannelType.PRIVATE))
         {
-            if( content.startsWith(BotConfig.PREFIX + "help") || content.startsWith(BotConfig.PREFIX + "setup") )
+            if (content.startsWith(BotConfig.PREFIX + "help") || content.startsWith(BotConfig.PREFIX + "setup"))
             {
                 Main.handleGeneralCommand(Main.commandParser.parse(content, event));
-            }
-            else if( content.startsWith(BotConfig.ADMIN_PREFIX) && userId.equals(BotConfig.ADMIN_ID) )
+            } else if (content.startsWith(BotConfig.ADMIN_PREFIX) && userId.equals(BotConfig.ADMIN_ID))
             {
                 Main.handleAdminCommand(Main.commandParser.parse(content, event));
             }
         }
 
         // bot listens for all messages with PREFIX and originating from CONTROL_CHAN channel
-        else if( content.startsWith(BotConfig.PREFIX) &&
+        else if (content.startsWith(BotConfig.PREFIX) &&
                 (origin.equals(BotConfig.CONTROL_CHAN) || BotConfig.CONTROL_CHAN.isEmpty()))
         {
             Main.handleGeneralCommand(Main.commandParser.parse(content, event));
         }
 
         // bot also listens on EVENT_CHAN messages
-        else if(origin.equals(BotConfig.EVENT_CHAN))
+        else if (origin.equals(BotConfig.EVENT_CHAN))
         {
             // if it is it's own message, parse it into a thread
-            if( userId.equals( Main.getBotSelfUser().getId() ) )
+            if (userId.equals(Main.getBotSelfUser().getId()))
             {
                 String guildId = event.getGuild().getId();
-                Main.handleEventEntry( Main.scheduler.parse(event.getMessage()), guildId);
+                Main.handleEventEntry(Main.scheduleParser.parse(event.getMessage()), guildId);
             }
             // otherwise, attempt to delete the message
             else
             {
-                MessageUtilities.deleteMsg( event.getMessage(), null );
+                MessageUtilities.deleteMsg(event.getMessage(), null);
             }
         }
     }
 
     @Override
-    public void onReady( ReadyEvent event )
+    public void onReady(ReadyEvent event)
     {
         String msg = event.getJDA().getSelfUser().getName() + " reporting for duty! Reloading the event entries. . .";
 
         // announces to all attached discord servers with EVENT_CHAN configured that the bot is alive
-        for( Guild guild : event.getJDA().getGuilds())
+        for (Guild guild : event.getJDA().getGuilds())
         {
-            List<TextChannel> chan = guild.getTextChannelsByName( BotConfig.EVENT_CHAN, false );
-            if( !chan.isEmpty() ) {
-                MessageUtilities.sendAnnounce( msg, guild, null );
+            List<TextChannel> chan = guild.getTextChannelsByName(BotConfig.EVENT_CHAN, false);
+            if (!chan.isEmpty())
+            {
+                MessageUtilities.sendAnnounce(msg, guild, null);
 
                 // create a message history object
                 MessageHistory history = chan.get(0).getHistory();
 
                 // create a consumer
-                Consumer<List<Message>> cons = (l) ->
-                {
+                Consumer<List<Message>> cons = (l) -> {
                     String reloadMsg;
                     for (Message eMsg : l)
+                    {
                         if (eMsg.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
-                            Main.handleEventEntry(Main.scheduler.parse(eMsg), guild.getId());
+                            Main.handleEventEntry(Main.scheduleParser.parse(eMsg), guild.getId());
+                    }
 
                     ArrayList<Integer> entries = Main.getEntriesByGuild(guild.getId());
-                    if (entries != null) {
+                    if (entries != null)
+                    {
                         reloadMsg = "There ";
                         if (entries.size() > 1)
                             reloadMsg += "are " + entries.size() + " events on the schedule.";
@@ -100,7 +102,7 @@ public class MessageListener extends ListenerAdapter
                 };
 
                 // retrieve history and have the consumer act on it
-                history.retrievePast(50).queue(cons);
+                history.retrievePast((BotConfig.MAX_ENTRIES>=0) ? BotConfig.MAX_ENTRIES:50).queue(cons);
             }
         }
     }

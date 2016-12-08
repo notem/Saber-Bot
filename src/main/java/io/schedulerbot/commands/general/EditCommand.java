@@ -211,15 +211,17 @@ public class EditCommand implements Command
                 break;
         }
 
-        // interrupt the EventEntry thread and remove Id from the maps
-        entry.thread.interrupt();
-        Main.removeId( entryId, entry.eMsg.getGuild().getId() );
+        synchronized( Main.scheduleLock )
+        {
+            // remove Id from the maps
+            Main.removeId(entryId, entry.eMsg.getGuild().getId());
+        }
 
         // generate the new event entry message
-        String msg = Scheduler.generate(title, start, end, comments, repeat, date, entryId);
+        String msg = ScheduleParser.generate(title, start, end, comments, repeat, date, entryId);
 
         // edit the old Message to contain the new event information
-        Consumer<Message> parseUpdate = Main.scheduler::parse;
-        MessageUtilities.editMsg( msg, entry.eMsg, parseUpdate );
+        MessageUtilities.editMsg(msg, entry.eMsg, (m) -> Main.handleEventEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
+
     }
 }

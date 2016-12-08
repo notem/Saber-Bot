@@ -3,7 +3,7 @@ package io.schedulerbot.commands.general;
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.BotConfig;
-import io.schedulerbot.utils.Scheduler;
+import io.schedulerbot.utils.ScheduleParser;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -237,7 +237,7 @@ public class CreateCommand implements Command
         }
 
         // generate the event entry message
-        String msg = Scheduler.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate, null );
+        String msg = ScheduleParser.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate, null );
 
         MessageUtilities.sendMsg( msg, event.getGuild().getTextChannelsByName(BotConfig.EVENT_CHAN, false).get(0), null );
     }

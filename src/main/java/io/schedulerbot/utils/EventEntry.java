@@ -7,12 +7,11 @@ import net.dv8tion.jda.core.entities.Message;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.function.Consumer;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
- * the EventEntry worker thread, gets created by the Scheduler
+ * the EventEntry worker thread, gets created by the ScheduleParser
  */
 public class EventEntry
 {
@@ -49,18 +48,12 @@ public class EventEntry
         this.startFlag = false;
     }
 
-
     public void start()
     {
         Guild guild = this.eMsg.getGuild();
         String startMsg = "@everyone The event **" + this.eTitle + "** has begun!";
 
-        if(BotConfig.ANNOUNCE_CHAN.isEmpty() ||
-                guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).isEmpty())
-            guild.getPublicChannel().sendMessage( startMsg ).queue();
-        else
-            guild.getTextChannelsByName(BotConfig.ANNOUNCE_CHAN, false).get(0)
-                    .sendMessage( startMsg ).queue();
+        MessageUtilities.sendAnnounce( startMsg, guild, null );
 
         this.startFlag = true;
     }
@@ -73,6 +66,9 @@ public class EventEntry
         // announce that the event is ending
         MessageUtilities.sendAnnounce( endMsg, guild, null );
 
+        // return eId to the pool
+        Main.removeId(this.eID, this.eMsg.getGuild().getId());
+
         if( this.eRepeat == 0 )
         {
             this.destroy();
@@ -82,7 +78,7 @@ public class EventEntry
         if( this.eRepeat == 1 )
         {
             // generate the event entry message
-            String msg = Scheduler.generate(
+            String msg = ScheduleParser.generate(
                     this.eTitle,
                     this.eStart,
                     this.eEnd,
@@ -92,13 +88,12 @@ public class EventEntry
                     this.eID
             );
 
-            Consumer<Message> parse = Main.scheduler::parse;
-            MessageUtilities.editMsg( msg, this.eMsg, parse );
+            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.handleEventEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
         }
         else if( this.eRepeat == 2 )
         {
             // generate the event entry message
-            String msg = Scheduler.generate(
+            String msg = ScheduleParser.generate(
                     this.eTitle,
                     this.eStart,
                     this.eEnd,
@@ -108,27 +103,14 @@ public class EventEntry
                     this.eID
             );
 
-            Consumer<Message> parse = Main.scheduler::parse;
-            MessageUtilities.editMsg(msg, this.eMsg, parse);
+            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.handleEventEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
         }
     }
 
     public void destroy()
     {
-        Runnable destroy = () ->
-        {
-            synchronized( Main.lock )
-            {
-                // remove entry
-                Main.removeId(this.eID, this.eMsg.getGuild().getId());
-            }
-
-            // delete the old entry
-            MessageUtilities.deleteMsg( this.eMsg, null );
-        };
-
-        Thread t = new Thread(destroy);
-        t.start();
+        // delete the old entry
+        MessageUtilities.deleteMsg( this.eMsg, null );
     }
 
 

@@ -10,9 +10,14 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.SelfUser;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  *  file: Main.java
@@ -20,8 +25,6 @@ import java.util.HashMap;
  */
 public class Main
 {
-    public static final Object lock = new Object();
-
     // the bot's JDA object
     private static JDA jda;
 
@@ -30,19 +33,24 @@ public class Main
     private static final HashMap<String, Command> adminCommands = new HashMap<>();
 
     // hash table containing ALL currently active event entry threads
-    public static final HashMap<Integer, EventEntry> entriesGlobal = new HashMap<>();
+    private static final HashMap<Integer, EventEntry> entriesGlobal = new HashMap<>();
 
     // hash table which associates guilds with a list of the Id's of their active event entry threads
-    public static final HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();
+    private static final HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();
 
     // parsers to read and analyze commands and event entries
     public static final CommandParser commandParser = new CommandParser();
-    public static final Scheduler scheduler = new Scheduler();
+    public static final ScheduleParser scheduleParser = new ScheduleParser();
 
-    /**
-     * main starts the bot
-     * @param args unused
-     */
+    // executor service which runs the SchedulerChecker thread ever minute
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    public static final Object scheduleLock = new Object();     // lock when modifying entry maps
+
+    // cached thread pools for command and schedule threads; seemed fun, tell me if it's worse then I think
+    public static final ExecutorService scheduleExec = Executors.newCachedThreadPool();
+    private static final ExecutorService commandExec = Executors.newCachedThreadPool();
+
+
     public static void main( String[] args )
     {
         try
@@ -92,6 +100,10 @@ public class Main
         // add administrator commands with their lookup name
         adminCommands.put("gannounce", new GlobalAnnounceCommand());
         adminCommands.put("query", new QueryCommand());
+
+        // start the scheduler
+        scheduler.scheduleAtFixedRate( new ScheduleChecker( entriesGlobal ),
+                60 - (LocalTime.now().toSecondOfDay()%60), 60, TimeUnit.SECONDS );
     }
 
     /**
@@ -109,7 +121,11 @@ public class Main
 
             // do command action if valid arguments
             if(valid)
-                commands.get(cc.invoke).action(cc.args, cc.event);
+            {
+                commandExec.submit( () -> {
+                    commands.get(cc.invoke).action(cc.args, cc.event);
+                });
+            }
             // otherwise send error message
             else
             {
@@ -140,7 +156,11 @@ public class Main
 
             // do command action if valid arguments
             if (valid)
-                adminCommands.get(cc.invoke).action(cc.args, cc.event);
+            {
+                commandExec.submit( () -> {
+                    adminCommands.get(cc.invoke).action(cc.args, cc.event);
+                });
+            }
             else
             {
                 String msg = "Invalid arguments for: \"" + BotConfig.PREFIX + "help\"";
@@ -157,8 +177,6 @@ public class Main
      */
     public static void handleEventEntry(EventEntry se, String guildId)
     {
-        se.adjustTimer();
-
         // put the EventEntry thread into a HashMap by ID
         entriesGlobal.put(se.eID, se);
 
@@ -170,6 +188,10 @@ public class Main
         }
         else
             entriesByGuild.get( guildId ).add( se.eID );
+
+        // adjusts the displayed time til timer (since a proper once is not set at creation)
+        se.adjustTimer();
+        __out.printOut( Main.class.getClass(), "Added entry #" + Integer.decode( "0x" + se.eID ) + " from guild #" + guildId + " to hashmaps." );
     }
 
     /**
@@ -181,11 +203,12 @@ public class Main
      */
     public static void removeId( Integer eId, String gId )
     {
-            entriesByGuild.get(gId).remove(eId);
+        entriesByGuild.get(gId).remove(eId);
 
-            if (entriesByGuild.get(gId).isEmpty())
-                entriesByGuild.remove(gId);
-            entriesGlobal.remove(eId);
+        if (entriesByGuild.get(gId).isEmpty())
+            entriesByGuild.remove(gId);
+        entriesGlobal.remove(eId);
+        __out.printOut( Main.class.getClass(), "Removed entry #" + Integer.decode( "0x" + eId ) + " from guild #" + gId + " to hashmaps." );
     }
 
     /**
@@ -275,6 +298,7 @@ public class Main
     {
         return commands.values();
     }
+
 
     /**
      * retrieves a Command by it's invoking string, if it exists

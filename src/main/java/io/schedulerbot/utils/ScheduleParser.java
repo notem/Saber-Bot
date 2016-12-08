@@ -10,26 +10,10 @@ import java.time.Month;
 import java.util.ArrayList;
 
 /**
- * file: Scheduler.java
  *
- * Scheduler parses a MessageReceivedEvent sent by the bot in response to 'create' commands into
- * a EventEntry worker thread.  A EventEntry thread lives for the length of two sleep calls.
- * The first timer measures the time until the event starts (causes an announce when reached).
- * The second timer measures the time from the event start until the event ends (causes another announce).
- * The bot clears the event from the entriesGlobal at the end of the thread's life.
  */
-public class Scheduler implements Runnable
+public class ScheduleParser
 {
-    public Thread thread;
-
-    /**
-     * Parses a the content of a EventEntry MessageReceivedEvent into a EventEntry worker thread.
-     * parse()'s analogous partner method is generate() which generates the content that parse
-     * will parse.  When parse() is modified, generate() must be modified in like to remain consistent,
-     * and vice-versa.
-     *
-     * @return EventEntry worker thread
-     */
     public EventEntry parse(Message msg)
     {
         String raw = msg.getRawContent();
@@ -113,27 +97,8 @@ public class Scheduler implements Runnable
     }
 
 
-    /**
-     * generates an event entry message
-     *
-     * @param eTitle the event entry title
-     * @param eStart the event entry start time
-     * @param eEnd the event entry end time
-     * @param eComments an array of comment strings for the entry
-     * @param eRepeat integer determining if repeat: 0-no 1-daily 2-weekly
-     * @param eDate the date in which the event should start
-     * @param eId the Id number to assign to the event entry
-     * @return a String representing the raw content of a EventEntry Message
-     */
-    public static String generate(
-            String eTitle,
-            LocalTime eStart,
-            LocalTime eEnd,
-            ArrayList<String> eComments,
-            int eRepeat,
-            LocalDate eDate,
-            Integer eId
-    )
+    public static String generate(String eTitle, LocalTime eStart, LocalTime eEnd, ArrayList<String> eComments,
+                                  int eRepeat, LocalDate eDate, Integer eId)
     {
         // the 'actual' first line (and last line) define format
         String msg = "```Markdown\n";
@@ -160,76 +125,10 @@ public class Scheduler implements Runnable
             msg += comment + "\n\n";
 
         // add the final ID and time til line
-        msg += "[ID: " + Integer.toHexString(eId) + "](begins in " + "xx" + " hours.)\n";
+        msg += "[ID: " + Integer.toHexString(eId) + "](begins in)\n";
         // cap the code block
         msg += "```";
 
         return msg;
-    }
-
-
-    public Scheduler()
-    {
-        this.thread = new Thread(this);
-        this.thread.start();
-    }
-
-
-    public void run()
-    {
-        try
-        {
-            while( true )
-            {
-                synchronized( Main.lock )
-                {
-                    Main.entriesGlobal.forEach(this::handleEntry);
-                }
-                System.out.printf("Scheduler sleeping for a minute.\n");
-                Thread.sleep( 60 * 1000 );
-            }
-        }
-        catch(InterruptedException ignored)
-        { }
-    }
-
-
-    private void handleEntry( Integer eId, EventEntry entry )
-    {
-        LocalDate now = LocalDate.now();
-        LocalTime moment = LocalTime.now();
-        if( !entry.startFlag )
-        {
-            if( now.compareTo(entry.eDate) > 0)
-            {
-                // something odd happened, destroy entry
-                entry.destroy();
-            }
-            else if( now.compareTo(entry.eDate) == 0 &&
-                    ( moment.compareTo(entry.eStart) >= 0 ) )
-            {
-                // start event
-                entry.start();
-                entry.adjustTimer();
-            }
-            else
-            {
-                // adjust the 'time until' displayed timer
-                entry.adjustTimer();
-            }
-        }
-        else
-        {
-            if( moment.compareTo(entry.eEnd) >= 0 )
-            {
-                // end event
-                entry.end();
-            }
-            else
-            {
-                // adjust the 'time until' displayed timer
-                entry.adjustTimer();
-            }
-        }
     }
 }

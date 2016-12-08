@@ -4,8 +4,6 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.exceptions.PermissionException;
-
 import java.util.function.Consumer;
 
 /**
@@ -27,8 +25,10 @@ public class MessageUtilities
         {
             chan.sendMessage(content).queue( action );
         }
-        catch (Exception ignored)
-        { }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
     }
 
     /**
@@ -45,8 +45,10 @@ public class MessageUtilities
             user.openPrivateChannel();
             sendMsg( content, user.getPrivateChannel(), action );
         }
-        catch( Exception ignored)
-        { }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
     }
 
     /**
@@ -90,8 +92,10 @@ public class MessageUtilities
         {
             msg.editMessage(content).queue( action );
         }
-        catch( Exception ignored)
-        { }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
     }
 
     /**
@@ -106,7 +110,9 @@ public class MessageUtilities
         {
             msg.deleteMessage().queue( action );
         }
-        catch( PermissionException ignored)
-        { }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
     }
 }
