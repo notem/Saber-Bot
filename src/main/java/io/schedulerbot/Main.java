@@ -11,6 +11,7 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.SelfUser;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,7 +22,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- *  file: Main.java
  *  initializes and maintains the bot
  */
 public class Main
@@ -45,11 +45,15 @@ public class Main
 
     // executor service which runs the SchedulerChecker thread ever minute
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    public static final Object scheduleLock = new Object();     // lock when modifying entry maps
+    private static final Object scheduleLock = new Object();     // lock when modifying entry maps
 
     // cached thread pools for command and schedule threads; seemed fun, tell me if it's worse then I think
     public static final ExecutorService scheduleExec = Executors.newCachedThreadPool();
     private static final ExecutorService commandExec = Executors.newCachedThreadPool();
+
+    // buffers which hold collections of references to ScheduleEntries
+    private static final Collection<ScheduleEntry> coarseTimerBuff = new ArrayList<>();
+    private static final Collection<ScheduleEntry> fineTimerBuff = new ArrayList<>();
 
 
     public static void main( String[] args )
@@ -90,6 +94,7 @@ public class Main
         catch( Exception e )
         {
             __out.printOut( Main.class, e.getMessage() );
+            return;
         }
 
         // add bot commands with their lookup name
@@ -104,8 +109,16 @@ public class Main
         adminCommands.put("gannounce", new GlobalAnnounceCommand());
         adminCommands.put("query", new QueryCommand());
 
-        // start the scheduler
-        scheduler.scheduleAtFixedRate( new ScheduleChecker( entriesGlobal ),
+        // create timers
+
+        // 12 h timer
+        scheduler.scheduleAtFixedRate( new ScheduleChecker( entriesGlobal.values() , 2 ),
+                0, 12*60*60, TimeUnit.SECONDS);
+        // 30 min timer
+        scheduler.scheduleAtFixedRate( new ScheduleChecker(coarseTimerBuff, 1 ),
+                1, 60*30, TimeUnit.SECONDS);
+        // 1 min timer
+        scheduler.scheduleAtFixedRate( new ScheduleChecker(fineTimerBuff, 0 ),
                 60 - (LocalTime.now().toSecondOfDay()%60), 60, TimeUnit.SECONDS );
     }
 
@@ -190,6 +203,11 @@ public class Main
 
         // adjusts the displayed time til timer (since a proper once is not set at creation)
         se.adjustTimer();
+        LocalDate now = LocalDate.now();
+        if( se.eDate.equals(now) && se.eStart.toSecondOfDay() - LocalTime.now().toSecondOfDay() < 60*60)
+            fineTimerBuff.add( se );
+        else if( se.eDate.isEqual(now) || se.eDate.isEqual(now.plusDays(1)) )
+            coarseTimerBuff.add( se );
     }
 
 
@@ -274,5 +292,22 @@ public class Main
 
         else    // otherwise return null
             return null;
+    }
+
+    public static Object getScheduleLock()
+    {
+        return scheduleLock;
+    }
+
+
+    public static Collection<ScheduleEntry> getCoarseTimerBuff()
+    {
+        return coarseTimerBuff;
+    }
+
+
+    public static Collection<ScheduleEntry> getFineTimerBuff()
+    {
+        return fineTimerBuff;
     }
 }

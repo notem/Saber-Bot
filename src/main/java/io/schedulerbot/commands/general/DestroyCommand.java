@@ -88,8 +88,13 @@ public class DestroyCommand implements Command
                     else
                         MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
-                    // remove the entry from global
-                    Main.removeId( eId, guild.getId() );
+                    synchronized( Main.getScheduleLock() )
+                    {
+                        // remove the entry from global
+                        Main.removeId(eId, guild.getId());
+                        Main.getFineTimerBuff().remove( entry );
+                        Main.getCoarseTimerBuff().remove( entry );
+                    }
 
                     // delete the old message
                     MessageUtilities.deleteMsg(entry.eMsg, null);
@@ -126,11 +131,17 @@ public class DestroyCommand implements Command
             else
                 MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
-            // remove the entry from global
-            Main.removeId( entryId, guild.getId() );
+            synchronized( Main.getScheduleLock() )
+            {
+                // remove the entry from global
+                Main.removeId(entryId, guild.getId());
+                Main.getFineTimerBuff().remove( entry );
+                Main.getCoarseTimerBuff().remove( entry );
+            }
 
             // delete the old entry
             MessageUtilities.deleteMsg(entry.eMsg, null);
+
         }
     }
 }

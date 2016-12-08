@@ -70,7 +70,7 @@ public class QueryCommand implements Command
             }
             else
             {
-                msg = "Entry " + Integer.decode( "0x" + entry.eID ) + " belongs to " +
+                msg = "Entry " + Integer.toHexString( entry.eID ) + " belongs to " +
                         entry.eMsg.getGuild().getName() + "(" + entry.eMsg.getGuild().getId() + ")" + ".\n" +
                         "\t\tTitle = '" + entry.eTitle + "'\n\t\tDate = '" + entry.eDate + "'\n\t\tStart = '" +
                         entry.eStart + "'\n\t\tEnd = '" + entry.eEnd + "'\n\t\tRepeat = '" + entry.eRepeat + "'\n" +

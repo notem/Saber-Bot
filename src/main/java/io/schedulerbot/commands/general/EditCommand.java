@@ -211,10 +211,12 @@ public class EditCommand implements Command
                 break;
         }
 
-        synchronized( Main.scheduleLock )
+        synchronized( Main.getScheduleLock() )
         {
             // remove Id from the maps
             Main.removeId(entryId, entry.eMsg.getGuild().getId());
+            Main.getFineTimerBuff().remove( entry );
+            Main.getCoarseTimerBuff().remove( entry );
         }
 
         // generate the new event entry message
