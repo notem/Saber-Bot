@@ -1,6 +1,6 @@
 package io.schedulerbot.core;
 
-import io.schedulerbot.utils.BotConfig;
+import io.schedulerbot.Main;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.util.ArrayList;
@@ -16,10 +16,10 @@ public class CommandParser
     {
         /// trim off the prefix
         String trimmed;
-        if( raw.startsWith( BotConfig.ADMIN_PREFIX ))
-            trimmed = raw.replaceFirst(BotConfig.ADMIN_PREFIX, "");
+        if( raw.startsWith( Main.getSettings().getAdminPrefix() ))
+            trimmed = raw.replaceFirst(Main.getSettings().getAdminPrefix(), "");
         else
-            trimmed = raw.replaceFirst(BotConfig.PREFIX, "");
+            trimmed = raw.replaceFirst( Main.getSettings().getCommandPrefix(), "");
 
         // split the trimmed string into arguments
         String[] splitTrimmed = trimmed.split(" ");
@@ -46,10 +46,7 @@ public class CommandParser
         public final MessageReceivedEvent event;    // the originating event
 
         // constructor for CommandContainer
-        CommandContainer(
-                String invoke,
-                String[] args,
-                MessageReceivedEvent e)
+        CommandContainer(String invoke, String[] args, MessageReceivedEvent e)
         {
             this.invoke = invoke;
             this.args = args;

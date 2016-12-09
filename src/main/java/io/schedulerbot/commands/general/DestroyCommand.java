@@ -2,7 +2,6 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.utils.BotConfig;
 import io.schedulerbot.core.ScheduleEntry;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
@@ -17,12 +16,15 @@ import java.util.ArrayList;
  */
 public class DestroyCommand implements Command
 {
+    private static String prefix = Main.getSettings().getCommandPrefix();
+    private static String scheduleChan = Main.getSettings().getScheduleChan();
+
     private static final String USAGE_EXTENDED = "\nCalling **!destroy <ID>** will end the event with <ID>" +
             " prematurely. If **all** is used instead of the event ID, all scheduled events will be destroyed." +
             "\nEx1: **!destroy 084c**\nEx2: **!destroy all**";
 
-    private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "destroy** - Removes an entry from " +
-            BotConfig.EVENT_CHAN + ", sending an event ended early or canceled announcement.";
+    private static final String USAGE_BRIEF = "**" + prefix + "destroy** - Removes an entry from " +
+            scheduleChan + ", sending an event ended early or canceled announcement.";
 
     @Override
     public String help(boolean brief)
@@ -88,6 +90,7 @@ public class DestroyCommand implements Command
                     else
                         MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
+                    // lock around schedule
                     synchronized( Main.getScheduleLock() )
                     {
                         // remove the entry from global

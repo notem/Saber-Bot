@@ -23,47 +23,48 @@ import java.util.concurrent.TimeUnit;
 
 /**
  *  initializes and maintains the bot
+ *  main maintains the entry maps as well as the command and schedule thread pools
  */
 public class Main
 {
-    // the bot's JDA object
-    private static JDA jda;
+    public static JDA jda;                  // api
+    public static BotSettings settings;     // global config settings
 
-    // hash tables of commands and admin commands
-    private static final HashMap<String, Command> commands = new HashMap<>();
-    private static final HashMap<String, Command> adminCommands = new HashMap<>();
+    public static final CommandParser commandParser = new CommandParser();      // parses command strings into containers
+    public static final ScheduleParser scheduleParser = new ScheduleParser();   // parses message strings into entry objects
 
-    // hash table containing ALL currently active event entry threads
-    private static final HashMap<Integer, ScheduleEntry> entriesGlobal = new HashMap<>();
+    private static HashMap<String, Command> commands = new HashMap<>();         // maps Command to invoke string
+    private static HashMap<String, Command> adminCommands = new HashMap<>();    // ^^ but for admin commands
 
-    // hash table which associates guilds with a list of the Id's of their active event entry threads
-    private static final HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();
+    private static HashMap<Integer, ScheduleEntry> entriesGlobal = new HashMap<>();         // maps id to entry
+    private static HashMap<String, ArrayList<Integer>> entriesByGuild = new HashMap<>();    // maps guild to ids
 
-    // parsers to read and analyze commands and event entries
-    public static final CommandParser commandParser = new CommandParser();
-    public static final ScheduleParser scheduleParser = new ScheduleParser();
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);  // one thread for timers to share
+    private static final Object scheduleLock = new Object();                        // lock when modifying entry maps
 
-    // executor service which runs the SchedulerChecker thread ever minute
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private static final Object scheduleLock = new Object();     // lock when modifying entry maps
+    public static final ExecutorService scheduleExec = Executors.newCachedThreadPool(); // thread pool for schedule tasks
+    private static final ExecutorService commandExec = Executors.newCachedThreadPool(); // thread pool for running commands
 
-    // cached thread pools for command and schedule threads; seemed fun, tell me if it's worse then I think
-    public static final ExecutorService scheduleExec = Executors.newCachedThreadPool();
-    private static final ExecutorService commandExec = Executors.newCachedThreadPool();
-
-    // buffers which hold collections of references to ScheduleEntries
-    private static final Collection<ScheduleEntry> coarseTimerBuff = new ArrayList<>();
-    private static final Collection<ScheduleEntry> fineTimerBuff = new ArrayList<>();
+    private static Collection<ScheduleEntry> coarseTimerBuff = new ArrayList<>(); // holds entries where 1h < start < 24h
+    private static Collection<ScheduleEntry> fineTimerBuff = new ArrayList<>();   // holds entries where now < start < 1h
 
 
     public static void main( String[] args )
     {
         try
         {
+            settings = BotSettings.init();
+            if( settings == null )
+            {
+                __out.printOut(Main.class, "Created a new java properties file. Add your " +
+                        "bot token to the file and restart the bot.\n");
+                return;
+            }
+
             // build bot
             jda = new JDABuilder(AccountType.BOT)
                     .addListener(new MessageListener()) // attach listener
-                    .setToken(BotConfig.TOKEN)          // set token
+                    .setToken(settings.getToken())          // set token
                     .buildBlocking();
             // enable reconnect
             jda.setAutoReconnect(true);
@@ -74,7 +75,7 @@ public class Main
                 @Override
                 public String getName()
                 {
-                    return "pm me " + BotConfig.PREFIX + "help or " + BotConfig.PREFIX + "setup";
+                    return "pm me " + settings.getCommandPrefix() + "help or " + settings.getCommandPrefix() + "setup";
                 }
 
                 @Override
@@ -143,14 +144,14 @@ public class Main
             // otherwise send error message
             else
             {
-                String msg = "Invalid arguments for: \"" + BotConfig.PREFIX + cc.invoke +"\"";
+                String msg = "Invalid arguments for: \"" + settings.getCommandPrefix() + cc.invoke +"\"";
                 MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
             }
         }
         // else the invoking command is invalid
         else
         {
-            String msg = "Invalid command: \"" + BotConfig.PREFIX + cc.invoke + "\"";
+            String msg = "Invalid command: \"" + settings.getCommandPrefix() + cc.invoke + "\"";
             MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
         }
     }
@@ -172,11 +173,6 @@ public class Main
             if (valid)
             {
                 commandExec.submit( () -> adminCommands.get(cc.invoke).action(cc.args, cc.event));
-            }
-            else
-            {
-                String msg = "Invalid arguments for: \"" + BotConfig.PREFIX + "help\"";
-                MessageUtilities.sendPrivateMsg( msg, cc.event.getAuthor(), null );
             }
         }
     }
@@ -210,7 +206,6 @@ public class Main
             coarseTimerBuff.add( se );
     }
 
-
     public static void removeId( Integer eId, String gId )
     {
         // remove entry from guild map
@@ -223,7 +218,6 @@ public class Main
         // remove entry from global map
         entriesGlobal.remove(eId);
     }
-
 
     public static Integer newId( Integer oldId )
     {
@@ -243,7 +237,6 @@ public class Main
         return ID;
     }
 
-
     public static ScheduleEntry getEventEntry(Integer eId)
     {
         // check if entry exists, if so return it
@@ -253,7 +246,6 @@ public class Main
         else    // otherwise return null
             return null;
     }
-
 
     public static ArrayList<Integer> getEntriesByGuild( String gId )
     {
@@ -265,24 +257,20 @@ public class Main
             return null;
     }
 
-
     public static SelfUser getBotSelfUser()
     {
         return jda.getSelfUser();
     }
-
 
     public static JDA getBotJda()
     {
         return jda;
     }
 
-
     public static Collection<Command> getCommands()
     {
         return commands.values();
     }
-
 
     public static Command getCommand( String invoke )
     {
@@ -299,15 +287,18 @@ public class Main
         return scheduleLock;
     }
 
-
     public static Collection<ScheduleEntry> getCoarseTimerBuff()
     {
         return coarseTimerBuff;
     }
 
-
     public static Collection<ScheduleEntry> getFineTimerBuff()
     {
         return fineTimerBuff;
+    }
+
+    public static BotSettings getSettings()
+    {
+        return settings;
     }
 }

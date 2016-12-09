@@ -1,7 +1,7 @@
 package io.schedulerbot.commands.general;
 
+import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.utils.BotConfig;
 import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -12,12 +12,15 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  */
 public class AnnounceCommand implements Command
 {
+    private static String prefix = Main.getSettings().getCommandPrefix();
+    private static String announceChan = Main.getSettings().getAnnounceChan();
+
     private static final String USAGE_EXTENDED = "\nThe command with form **!announce YOUR MESSAGE HERE** " +
             "will echo YOUR MESSAGE HERE verbatim to the announce channel. Functionality is will likely be " +
             "extended in the future.";
 
-    private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "announce** - Send out an announcement" +
-            " message to #" + BotConfig.ANNOUNCE_CHAN + ", or to your guild's default public channel.";
+    private static final String USAGE_BRIEF = "**" + prefix + "announce** - Send out an announcement" +
+            " message to #" + announceChan + ", or to your guild's default public channel.";
 
     @Override
     public String help(boolean brief)

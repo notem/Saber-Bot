@@ -2,7 +2,6 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.utils.BotConfig;
 import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -16,6 +15,7 @@ import java.util.Collection;
  */
 public class HelpCommand implements Command
 {
+    private static String prefix = Main.getSettings().getCommandPrefix();
 
     private final String INTRO = "I am **" + Main.getBotSelfUser().getName() + "**, the task scheduling discord bot." +
             " I can provide your discord with basic event schedule management.  Invite me to your discord and set up " +
@@ -25,7 +25,7 @@ public class HelpCommand implements Command
             " commands use the command **!help <command>** where the prefix for <command> is stripped off. " +
             "Ex. **!help create**";
 
-    private static final String USAGE_BRIEF = "**" + BotConfig.PREFIX + "help** - Messages the user help messages.";
+    private static final String USAGE_BRIEF = "**" + prefix + "help** - Messages the user help messages.";
 
     @Override
     public String help(boolean brief)
