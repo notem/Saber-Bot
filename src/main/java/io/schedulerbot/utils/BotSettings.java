@@ -26,18 +26,14 @@ public class BotSettings
         try
         {
             input = new FileInputStream("./" + FILENAME);
-            if (input == null)
-            {
-                generateFile();
-                return null;
-            }
 
             //load a properties file from class path, inside static method
             bc.properties.load(input);
         }
         catch (IOException ex)
         {
-            ex.printStackTrace();
+            generateFile();
+            return null;
         }
         finally
         {
