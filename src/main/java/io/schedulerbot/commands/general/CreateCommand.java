@@ -2,13 +2,15 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.core.ScheduleParser;
+import io.schedulerbot.core.ScheduleEntryParser;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -130,7 +132,7 @@ public class CreateCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        ArrayList<Integer> entries = Main.getEntriesByGuild( event.getGuild().getId() );
+        ArrayList<Integer> entries = Main.scheduleManager.getEntriesByGuild( event.getGuild().getId() );
 
         if( entries != null && entries.size() >= maxEntries && maxEntries > 0)
         {
@@ -142,9 +144,9 @@ public class CreateCommand implements Command
 
         String eTitle = "";
         LocalTime eStart = LocalTime.now().plusMinutes(1);    // initialized just in case verify failed it's duty
-        LocalTime eEnd = LocalTime.MIDNIGHT;      //
-        ArrayList<String> eComments = new ArrayList<>();
-        int eRepeat = 0;             // default is 0 (no repeat)
+        LocalTime eEnd = LocalTime.MIDNIGHT;                  //
+        ArrayList<String> eComments = new ArrayList<>();      //
+        int eRepeat = 0;                                      // default is 0 (no repeat)
         LocalDate eDate = LocalDate.now();
 
         String buffComment = "";    // String to generate comments strings to place in eComments
@@ -238,8 +240,11 @@ public class CreateCommand implements Command
             }
         }
 
+        ZonedDateTime s = ZonedDateTime.of( eDate, eStart, ZoneId.systemDefault() );
+        ZonedDateTime e = ZonedDateTime.of( eDate, eEnd, ZoneId.systemDefault() );
+
         // generate the event entry message
-        String msg = ScheduleParser.generate( eTitle, eStart, eEnd, eComments, eRepeat, eDate, null );
+        String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, null );
 
         MessageUtilities.sendMsg( msg,
                 event.getGuild().getTextChannelsByName(scheduleChan, false).get(0), null );

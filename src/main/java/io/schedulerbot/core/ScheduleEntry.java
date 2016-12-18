@@ -5,11 +5,11 @@ import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
  * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
@@ -19,20 +19,18 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public class ScheduleEntry
 {
     public String eTitle;                    // the title/name of the event
-    public LocalTime eStart;                 // the time in (24h) when the event starts
-    public LocalTime eEnd;                   // the ending time in 24h form
+    public ZonedDateTime eStart;             // the time when the event starts
+    public ZonedDateTime eEnd;               // the ending time
     public ArrayList<String> eComments;      // ArrayList of strings that make up the desc
     public Integer eID;                      // 16 bit identifier
     public int eRepeat;                      // 1 is daily, 2 is weekly, 0 is not at all
-    public LocalDate eDate;                  // the date in which the event begins
     public Message eMsg;                     // reference to the discord message shedule entry
 
     public boolean startFlag;               // flagged true when the start time has been reached
 
-    /**
-     * Thread constructor
-     */
-    public ScheduleEntry(String eName, LocalTime eStart, LocalTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat, LocalDate eDate)
+    private ScheduleManager scheduleManager = Main.scheduleManager;
+
+    public ScheduleEntry(String eName, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat )
     {
         this.eTitle = eName;
         this.eStart = eStart;
@@ -41,7 +39,6 @@ public class ScheduleEntry
         this.eID = eID;
         this.eMsg = eMsg;
         this.eRepeat = eRepeat;
-        this.eDate = eDate;
 
         this.startFlag = false;
     }
@@ -66,7 +63,7 @@ public class ScheduleEntry
         MessageUtilities.sendAnnounce( endMsg, guild, null );
 
         // return eId to the pool
-        Main.removeId(this.eID, this.eMsg.getGuild().getId());
+        scheduleManager.removeId(this.eID);
 
         if( this.eRepeat == 0 )
         {
@@ -77,32 +74,30 @@ public class ScheduleEntry
         if( this.eRepeat == 1 )
         {
             // generate the event entry message
-            String msg = ScheduleParser.generate(
+            String msg = ScheduleEntryParser.generate(
                     this.eTitle,
-                    this.eStart,
-                    this.eEnd,
+                    this.eStart.plusDays(1),
+                    this.eEnd.plusDays(1),
                     this.eComments,
                     this.eRepeat,
-                    this.eDate.plusDays(1),
                     this.eID
             );
 
-            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.handleScheduleEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
+            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.scheduleManager.addEntry(m));
         }
         else if( this.eRepeat == 2 )
         {
             // generate the event entry message
-            String msg = ScheduleParser.generate(
+            String msg = ScheduleEntryParser.generate(
                     this.eTitle,
-                    this.eStart,
-                    this.eEnd,
+                    this.eStart.plusDays(7),
+                    this.eEnd.plusDays(7),
                     this.eComments,
                     this.eRepeat,
-                    this.eDate.plusDays(7),
                     this.eID
             );
 
-            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.handleScheduleEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
+            MessageUtilities.editMsg(msg, this.eMsg, (m) -> scheduleManager.addEntry(m));
         }
     }
 
@@ -116,13 +111,8 @@ public class ScheduleEntry
     public void adjustTimer()
     {
         // convert the times into integers representing the time in seconds
-        int timeTilStart = (((this.eDate.getYear() - LocalDate.now().getYear())*365*24*60*60)
-                + (this.eDate.getDayOfYear()-LocalDate.now().getDayOfYear())*24*60*60)
-                + this.eStart.toSecondOfDay() - LocalTime.now().toSecondOfDay();
-
-        int timeTilEnd = this.eEnd.toSecondOfDay() - this.eStart.toSecondOfDay();
-        if( timeTilEnd < 0 )
-        { timeTilEnd += 24*60*60; }
+        long timeTilStart = ZonedDateTime.now(this.eStart.getZone()).until(this.eStart, SECONDS);
+        long timeTilEnd = this.eStart.until(this.eEnd, SECONDS);
 
        String[] lines = this.eMsg.getRawContent().split("\n");
 
@@ -175,7 +165,7 @@ public class ScheduleEntry
 
            else
            {
-               int daysTil = (int) DAYS.between(LocalDate.now(), eDate);
+               int daysTil = (int) DAYS.between(ZonedDateTime.now(this.eStart.getZone()), eStart);
 
                String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
                if( daysTil <= 1)

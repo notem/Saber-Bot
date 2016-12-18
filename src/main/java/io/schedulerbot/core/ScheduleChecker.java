@@ -3,9 +3,10 @@ package io.schedulerbot.core;
 import io.schedulerbot.Main;
 import io.schedulerbot.utils.__out;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.*;
+
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
  * Used by the Main scheduler timer, a new thread is executed every minute.
@@ -17,6 +18,7 @@ public class ScheduleChecker implements Runnable
 {
     private Collection<ScheduleEntry> entries;
     private int level;
+    private ScheduleManager scheduleManager = Main.scheduleManager;
 
     public ScheduleChecker(Collection<ScheduleEntry> entries, int level)
     {
@@ -28,20 +30,20 @@ public class ScheduleChecker implements Runnable
     {
         try
         {
-            synchronized( Main.getScheduleLock() )
+            synchronized( scheduleManager.getScheduleLock() )
             {
                 __out.printOut( this.getClass(), "Checking schedule at level " + level + ". . .");
                 if( level == 0 )
                 {
                     ArrayList<ScheduleEntry> removeQueue = new ArrayList<>();
                     this.entries.forEach((entry) -> fineCheck(entry, removeQueue));
-                    Main.getFineTimerBuff().removeAll( removeQueue );
+                    scheduleManager.getFineTimerBuff().removeAll( removeQueue );
                 }
                 else if( level == 1 )
                 {
                     ArrayList<ScheduleEntry> removeQueue = new ArrayList<>();
                     this.entries.forEach((entry) -> coarseCheck(entry, removeQueue));
-                    Main.getCoarseTimerBuff().removeAll( removeQueue );
+                    scheduleManager.getCoarseTimerBuff().removeAll( removeQueue );
                 }
                 else if( level == 2 )
                 {
@@ -52,19 +54,19 @@ public class ScheduleChecker implements Runnable
         }
         catch( Exception e )
         {
-            __out.printOut( this.getClass(), "ERROR: " + Arrays.toString(e.getSuppressed()));
+            e.printStackTrace();
         }
     }
 
     private void fineCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
-        LocalTime moment = LocalTime.now();
+        ZonedDateTime now = ZonedDateTime.now();
         if (!entry.startFlag)
         {
-            if ( moment.compareTo(entry.eStart) >= 0 )
+            if ( now.compareTo(entry.eStart) >= 0 )
             {
-                Main.scheduleExec.submit( () -> {
+                ScheduleManager.scheduleExec.submit( () -> {
                     // start event
                     entry.start();
                     entry.adjustTimer();
@@ -73,17 +75,17 @@ public class ScheduleChecker implements Runnable
             else
             {
                 // adjust the 'time until' displayed timer
-                Main.scheduleExec.submit(entry::adjustTimer);
+                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
             }
         }
         else
         {
             if (entry.eStart.isBefore(entry.eEnd)?
-                    entry.eEnd.toSecondOfDay()-moment.toSecondOfDay()<=0:
-                    (entry.eEnd.toSecondOfDay()-moment.toSecondOfDay()<=0 && entry.eStart.isBefore(moment)) )
+                    entry.eEnd.until(ZonedDateTime.now(), SECONDS)<=0:
+                    (entry.eEnd.until(ZonedDateTime.now(), SECONDS)<=0 && entry.eStart.isBefore(now)) )
             {
-                Main.scheduleExec.submit( () -> {
-                    synchronized( Main.getScheduleLock() )
+                ScheduleManager.scheduleExec.submit( () -> {
+                    synchronized( scheduleManager.getScheduleLock() )
                     {
                         // end event
                         entry.end();
@@ -94,7 +96,7 @@ public class ScheduleChecker implements Runnable
             else
             {
                 // adjust the 'time until' displayed timer
-                Main.scheduleExec.submit(entry::adjustTimer);
+                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
             }
         }
     }
@@ -102,48 +104,47 @@ public class ScheduleChecker implements Runnable
     private void veryCoarseCheck(ScheduleEntry entry)
     {
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
-        LocalTime moment = LocalTime.now();
-        LocalDate now = LocalDate.now();
+        ZonedDateTime now = ZonedDateTime.now();
         if (!entry.startFlag)
         {
-            if( now.compareTo( entry.eDate ) > 0 )
+            if( now.getDayOfYear() > entry.eStart.getDayOfYear() )
             {
-                Main.scheduleExec.submit( () -> {
-                    synchronized( Main.getScheduleLock() )
+                ScheduleManager.scheduleExec.submit( () -> {
+                    synchronized( scheduleManager.getScheduleLock() )
                     {
                         // a rogue entry, destroy it
                         entry.destroy();
                     }
                 });
             }
-            else if( entry.eDate.isEqual(now) && entry.eStart.toSecondOfDay() - moment.toSecondOfDay() < 60*60 )
+            else if( entry.eStart.isEqual(now) && entry.eStart.toEpochSecond() - now.toEpochSecond() < 60*60 )
             {
-                if( !Main.getFineTimerBuff().contains( entry ) )
+                if( !scheduleManager.getFineTimerBuff().contains( entry ) )
                 {
                     // if entry begins within an hour, add to the fineTimerBuff if not already there
-                    Main.getFineTimerBuff().add(entry);
+                    scheduleManager.getFineTimerBuff().add(entry);
                 }
             }
-            else if( entry.eDate.isEqual(now) || entry.eDate.isEqual(now.plusDays(1)) )
+            else if( entry.eStart.isEqual(now) || entry.eStart.isEqual(now.plusDays(1)) )
             {
-                if( !Main.getCoarseTimerBuff().contains( entry ) )
+                if( !scheduleManager.getCoarseTimerBuff().contains( entry ) )
                 {
                     // if entry begins within today or tomorrow, add to the coarseTimerBuff if not already there
-                    Main.getCoarseTimerBuff().add(entry);
+                    scheduleManager.getCoarseTimerBuff().add(entry);
                 }
             }
             else
             {
                 // adjust the 'time until' displayed timer
-                Main.scheduleExec.submit(entry::adjustTimer);
+                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
             }
         }
         else
         {
-            if( !Main.getFineTimerBuff().contains( entry ) )
+            if( !scheduleManager.getFineTimerBuff().contains( entry ) )
             {
                 // if the entry already started, add to fineTimerBuff if not already there
-                Main.getFineTimerBuff().add( entry );
+                scheduleManager.getFineTimerBuff().add( entry );
             }
         }
     }
@@ -151,27 +152,27 @@ public class ScheduleChecker implements Runnable
     private void coarseCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
-        Integer timeTil = entry.eStart.toSecondOfDay() - LocalTime.now().toSecondOfDay();
+        long timeTil = entry.eStart.toEpochSecond() - ZonedDateTime.now().toEpochSecond();
         if (!entry.startFlag)
         {
-            if( ((LocalDate.now().compareTo(entry.eDate)==0)?timeTil:timeTil+60*60*24) < 60*60 )
+            if( ((ZonedDateTime.now().compareTo(entry.eStart)==0)?timeTil:timeTil+60*60*24) < 60*60 )
             {
-                if( !Main.getFineTimerBuff().contains( entry ) )
+                if( !scheduleManager.getFineTimerBuff().contains( entry ) )
                 {
                     // if entry begins within an hour, add to the fineTimerBuff if not already there
-                    Main.getFineTimerBuff().add(entry);
+                    scheduleManager.getFineTimerBuff().add(entry);
                     removeQueue.add( entry );       // queue it for removal from buffer
                 }
             }
             else
             {
                 // adjust the 'time until' displayed timer
-                Main.scheduleExec.submit(entry::adjustTimer);
+                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
             }
         }
         else
         {
-            Main.scheduleExec.submit(entry::adjustTimer);
+            ScheduleManager.scheduleExec.submit(entry::adjustTimer);
         }
     }
 }

@@ -3,12 +3,13 @@ package io.schedulerbot.commands.general;
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
 import io.schedulerbot.core.ScheduleEntry;
-import io.schedulerbot.core.ScheduleParser;
+import io.schedulerbot.core.ScheduleManager;
+import io.schedulerbot.core.ScheduleEntryParser;
 import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -28,6 +29,8 @@ public class EditCommand implements Command
 
     private static final String USAGE_BRIEF = "**" + prefix + "edit** - Modifies an event entry, either" +
             " changing settings or adding/removing comment fields.";
+
+    private ScheduleManager scheduleManager = Main.scheduleManager;
 
     @Override
     public String help(boolean brief)
@@ -119,7 +122,7 @@ public class EditCommand implements Command
         Integer entryId = Integer.decode( "0x" + args[0] );
 
         // check if the entry exists
-        ScheduleEntry entry = Main.getEventEntry( entryId );
+        ScheduleEntry entry = scheduleManager.getEntry( entryId );
         if( entry == null  || !entry.eMsg.getGuild().getId().equals(event.getGuild().getId()) )
         {
             String msg = "There is no event entry with ID " + Integer.toHexString(entryId) + ".";
@@ -129,10 +132,10 @@ public class EditCommand implements Command
 
         String title = entry.eTitle;
         ArrayList<String> comments = entry.eComments;
-        LocalTime start = entry.eStart;
-        LocalTime end = entry.eEnd;
+        ZonedDateTime start = entry.eStart;
+        ZonedDateTime end = entry.eEnd;
         int repeat = entry.eRepeat;
-        LocalDate date = entry.eDate;
+        LocalDate date = LocalDate.now();
 
         switch( args[1] )
         {
@@ -164,7 +167,7 @@ public class EditCommand implements Command
                         comments.remove( Integer.parseInt(args[3])-1 );
                 }
                 break;
-
+/**
             case "start":
                 if( args[2].equals("24:00") )       // if the user inputs 24:00
                     start = LocalTime.MIDNIGHT;     // convert to 00:00
@@ -178,7 +181,7 @@ public class EditCommand implements Command
                 else
                     end = LocalTime.parse(args[2]);
                 break;
-
+*/
             case "title":
                 title = "";
                 for( int i = 2; i < args.length; i++ )
@@ -213,20 +216,12 @@ public class EditCommand implements Command
                 break;
         }
 
-        // lock around schedule
-        synchronized( Main.getScheduleLock() )
+        synchronized( scheduleManager.getScheduleLock() )
         {
-            // remove Id from the maps
-            Main.removeId(entryId, entry.eMsg.getGuild().getId());
-            Main.getFineTimerBuff().remove( entry );
-            Main.getCoarseTimerBuff().remove( entry );
+            scheduleManager.removeEntry(entryId);
         }
 
-        // generate the new event entry message
-        String msg = ScheduleParser.generate(title, start, end, comments, repeat, date, entryId);
-
-        // edit the old Message to contain the new event information
-        MessageUtilities.editMsg(msg, entry.eMsg, (m) -> Main.handleScheduleEntry(Main.scheduleParser.parse(m),m.getGuild().getId()));
-
+        String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId);
+        MessageUtilities.editMsg(msg, entry.eMsg, (m) -> scheduleManager.addEntry(m));
     }
 }

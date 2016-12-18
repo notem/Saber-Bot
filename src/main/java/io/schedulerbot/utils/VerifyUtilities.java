@@ -1,6 +1,14 @@
 package io.schedulerbot.utils;
 
+import io.schedulerbot.Main;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.TextChannel;
+
 import java.time.Month;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * static methods frequently used in the verify() methods used by classes implementing the
@@ -119,5 +127,33 @@ public class VerifyUtilities
             return false;
         }
         return true;
+    }
+
+    public static boolean verifyScheduleChannel( Guild guild )
+    {
+        List<TextChannel> chans = guild.getTextChannelsByName( Main.getSettings().getScheduleChan(), false );
+        if( chans == null )
+        {
+            return false;
+        }
+
+        Member botAsMember = null;
+        String botId = Main.getBotSelfUser().getId();
+        for(Member member : guild.getMembers())
+        {
+            if( member.getUser().getId().equals(botId) )
+                botAsMember = member;
+        }
+        if( botAsMember == null )
+        {
+            // should get here, but just in case it were null. . .
+            return false;
+        }
+
+        List<Permission> perms = Arrays.asList(
+                Permission.MESSAGE_HISTORY, Permission.MESSAGE_READ,
+                Permission.MESSAGE_WRITE, Permission.MESSAGE_MANAGE
+        );
+        return botAsMember.hasPermission( chans.get(0), perms );
     }
 }

@@ -2,7 +2,9 @@ package io.schedulerbot.commands.admin;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
+import io.schedulerbot.core.GuildSettingsManager;
 import io.schedulerbot.core.ScheduleEntry;
+import io.schedulerbot.core.ScheduleManager;
 import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -12,6 +14,8 @@ import java.util.ArrayList;
  */
 public class QueryCommand implements Command
 {
+    private static ScheduleManager scheduleManager = Main.scheduleManager;
+    private static GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
 
     @Override
     public String help(boolean brief)
@@ -48,7 +52,7 @@ public class QueryCommand implements Command
         }
         if( op == 1 )
         {
-            ArrayList<Integer> entries = Main.getEntriesByGuild( args[1] );
+            ArrayList<Integer> entries = scheduleManager.getEntriesByGuild( args[1] );
             if( entries == null )
                 msg = "Guild " + args[1] + " has no entries.";
             else
@@ -62,7 +66,7 @@ public class QueryCommand implements Command
         }
         if( op == 2 )
         {
-            ScheduleEntry entry = Main.getEventEntry(Integer.decode("0x" + args[1]));
+            ScheduleEntry entry = scheduleManager.getEntry(Integer.decode("0x" + args[1]));
 
             if (entry == null)
             {
@@ -72,9 +76,12 @@ public class QueryCommand implements Command
             {
                 msg = "Entry " + Integer.toHexString( entry.eID ) + " belongs to " +
                         entry.eMsg.getGuild().getName() + "(" + entry.eMsg.getGuild().getId() + ")" + ".\n" +
-                        "\t\tTitle = '" + entry.eTitle + "'\n\t\tDate = '" + entry.eDate + "'\n\t\tStart = '" +
-                        entry.eStart + "'\n\t\tEnd = '" + entry.eEnd + "'\n\t\tRepeat = '" + entry.eRepeat + "'\n" +
-                        "\t\tZone = '" + "EST" + "'\n\t\tComments = ";
+                        "\t\tTitle = '" + entry.eTitle + "'\n" +
+                        "\t\tStart = " + entry.eStart + "'\n" +
+                        "\t\tEnd = '" + entry.eEnd + "'\n" +
+                        "\t\tRepeat = '" + entry.eRepeat + "'\n" +
+                        "\t\tZone = '" + "EST" + "'\n" +
+                        "\t\tComments = ";
                 for (String comment : entry.eComments)
                 {
                     msg += "\"" + comment + "\"\n\t\t\t";

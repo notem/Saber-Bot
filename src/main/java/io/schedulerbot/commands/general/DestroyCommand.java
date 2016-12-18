@@ -3,6 +3,7 @@ package io.schedulerbot.commands.general;
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
 import io.schedulerbot.core.ScheduleEntry;
+import io.schedulerbot.core.ScheduleManager;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.entities.Guild;
@@ -10,7 +11,11 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
+
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
  */
@@ -25,6 +30,8 @@ public class DestroyCommand implements Command
 
     private static final String USAGE_BRIEF = "**" + prefix + "destroy** - Removes an entry from " +
             scheduleChan + ", sending an event ended early or canceled announcement.";
+
+    private ScheduleManager scheduleManager = Main.scheduleManager;
 
     @Override
     public String help(boolean brief)
@@ -58,7 +65,7 @@ public class DestroyCommand implements Command
 
         if( args[0].equals("all") )
         {
-            ArrayList<Integer> ent = Main.getEntriesByGuild( guild.getId() );
+            ArrayList<Integer> ent = scheduleManager.getEntriesByGuild( guild.getId() );
             if( ent == null )
             {
                 MessageUtilities.sendMsg(
@@ -70,7 +77,7 @@ public class DestroyCommand implements Command
             entries.addAll( ent );
             for (Integer eId : entries)
             {
-                ScheduleEntry entry = Main.getEventEntry(eId);
+                ScheduleEntry entry = scheduleManager.getEntry(eId);
                 if (entry != null)
                 {
                     // create the announcement message strings
@@ -80,23 +87,19 @@ public class DestroyCommand implements Command
                             + "** has ended early.";
 
                     // compare the current time to the start time
-                    int dif = entry.eStart.toSecondOfDay() - LocalTime.now().toSecondOfDay();
+                    long dif = entry.eStart.until(ZonedDateTime.now(), SECONDS);
 
                     // if the difference is less than 0 the event was ended early
-                    if (dif < 0 && entry.eDate.equals(LocalDate.now()))
+                    if (dif < 24*60*60)
                         MessageUtilities.sendAnnounce(earlyMsg, guild, null);
 
                         // otherwise event was canceled before it began
                     else
                         MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
-                    // lock around schedule
-                    synchronized( Main.getScheduleLock() )
+                    synchronized( scheduleManager.getScheduleLock() )
                     {
-                        // remove the entry from global
-                        Main.removeId(eId, guild.getId());
-                        Main.getFineTimerBuff().remove( entry );
-                        Main.getCoarseTimerBuff().remove( entry );
+                        scheduleManager.removeEntry(eId);
                     }
 
                     // delete the old message
@@ -108,7 +111,7 @@ public class DestroyCommand implements Command
         else
         {
             Integer entryId = Integer.decode("0x" + args[0]);
-            ScheduleEntry entry = Main.getEventEntry(entryId);
+            ScheduleEntry entry = scheduleManager.getEntry(entryId);
 
             if (entry == null)
             {
@@ -124,22 +127,19 @@ public class DestroyCommand implements Command
                     + "** has ended early.";
 
             // compare the current time to the start time
-            int dif = entry.eStart.toSecondOfDay() - LocalTime.now().toSecondOfDay();
+            long dif = entry.eStart.until(ZonedDateTime.now(), SECONDS);
 
             // if the difference is less than 0 the event was ended early
-            if (dif < 0 && entry.eDate.equals(LocalDate.now()))
+            if (dif < 24*60*60)
                 MessageUtilities.sendAnnounce(earlyMsg, guild, null);
 
                 // otherwise event was canceled before it began
             else
                 MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
-            synchronized( Main.getScheduleLock() )
+            synchronized( scheduleManager.getScheduleLock() )
             {
-                // remove the entry from global
-                Main.removeId(entryId, guild.getId());
-                Main.getFineTimerBuff().remove( entry );
-                Main.getCoarseTimerBuff().remove( entry );
+                scheduleManager.removeEntry(entryId);
             }
 
             // delete the old entry

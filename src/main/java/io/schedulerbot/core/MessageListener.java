@@ -3,6 +3,7 @@ package io.schedulerbot.core;
 import io.schedulerbot.Main;
 
 import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.MessageHistory;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -29,6 +30,9 @@ public class MessageListener extends ListenerAdapter
     private String controlChan = Main.getSettings().getControlChan();
     private String scheduleChan = Main.getSettings().getScheduleChan();
 
+    private ScheduleManager scheduleManager = Main.scheduleManager;
+    private GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
     {
@@ -42,25 +46,38 @@ public class MessageListener extends ListenerAdapter
             if (content.startsWith(prefix + "help") || content.startsWith(prefix + "setup"))
             {
                 Main.handleGeneralCommand(Main.commandParser.parse(content, event));
+                return;
             }
             else if (content.startsWith(adminPrefix) && userId.equals(adminId))
             {
                 Main.handleAdminCommand(Main.commandParser.parse(content, event));
+                return;
             }
         }
 
-        else if (origin.equals(controlChan) && content.startsWith(prefix))
+        // if main schedule channel is not setup give up
+        if( !VerifyUtilities.verifyScheduleChannel( event.getGuild() ) )
         {
-            Main.handleGeneralCommand(Main.commandParser.parse(content, event));
+           return;
         }
 
-        else if (origin.equals(scheduleChan))
+        if (origin.equals(controlChan) && content.startsWith(prefix))
+        {
+            guildSettingsManager.checkGuild( event.getGuild() );
+            Main.handleGeneralCommand(Main.commandParser.parse(content, event));
+            return;
+        }
+
+        if (origin.equals(scheduleChan))
         {
             // if it is it's own message, parse it into a thread
             if (userId.equals(Main.getBotSelfUser().getId()))
             {
-                String guildId = event.getGuild().getId();
-                Main.handleScheduleEntry(Main.scheduleParser.parse(event.getMessage()), guildId);
+                if( !event.getMessage().getRawContent().startsWith("```java") )
+                {
+                    scheduleManager.addEntry(event.getMessage());
+                    guildSettingsManager.sendSettingsMsg( event.getGuild() );
+                }
             }
             // otherwise, attempt to delete the message
             else
@@ -89,13 +106,20 @@ public class MessageListener extends ListenerAdapter
                 // create a consumer
                 Consumer<List<Message>> cons = (l) -> {
                     String reloadMsg;
-                    for (Message eMsg : l)
+                    for (Message message : l)
                     {
-                        if (eMsg.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
-                            Main.handleScheduleEntry(Main.scheduleParser.parse(eMsg), guild.getId());
+                        if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
+                        {
+                            if (message.getRawContent().startsWith("```java"))
+                                guildSettingsManager.loadSettings( message );
+                            else
+                                scheduleManager.addEntry(message);
+                        }
+                        else
+                            MessageUtilities.deleteMsg( message, null );
                     }
 
-                    ArrayList<Integer> entries = Main.getEntriesByGuild(guild.getId());
+                    ArrayList<Integer> entries = scheduleManager.getEntriesByGuild(guild.getId());
                     if (entries != null)
                     {
                         reloadMsg = "There ";
@@ -103,7 +127,8 @@ public class MessageListener extends ListenerAdapter
                             reloadMsg += "are " + entries.size() + " events on the schedule.";
                         else
                             reloadMsg += "is a single event on the schedule.";
-                    } else
+                    }
+                    else
                         reloadMsg = "There are no events on the schedule.";
                     MessageUtilities.sendAnnounce(reloadMsg, guild, null);
                 };

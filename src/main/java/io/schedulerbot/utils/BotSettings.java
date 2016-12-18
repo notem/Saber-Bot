@@ -15,6 +15,14 @@ public class BotSettings
     private static final String DEFAULT_COMMAND_PREFIX = "saber: ";
     private static final String DEFAULT_ADMIN_COMMAND_PREFIX = ".";
 
+    private static final String DEFAULT_CONTROL_CHAN = "saber_control";
+    private static final String DEFAULT_ANNOUNCE_CHAN = "announce";
+    private static final String DEFAULT_SCHEDULE_CHAN = "event_schedule";
+
+    private static final String DEFAULT_TIME_ZONE = "America/New_York";
+    private static final String DEFAULT_CLOCK_FORMAT = "24";
+    private static final String DEFAULT_ANNOUNCE_FORMAT = "@everyone The event %t has %a.";
+
     private Properties properties;
 
     public static BotSettings init()
@@ -66,9 +74,12 @@ public class BotSettings
             p.setProperty("max_entries", DEFAULT_MAX_ENTRIES);
             p.setProperty("command_prefix", DEFAULT_COMMAND_PREFIX);
             p.setProperty("admin_command_prefix", DEFAULT_ADMIN_COMMAND_PREFIX);
-            p.setProperty("chan_schedule", "event_schedule");
-            p.setProperty("chan_control", "saber_control");
-            p.setProperty("chan_announce","announce");
+            p.setProperty("chan_schedule", DEFAULT_SCHEDULE_CHAN);
+            p.setProperty("chan_control", DEFAULT_CONTROL_CHAN);
+            p.setProperty("chan_announce", DEFAULT_ANNOUNCE_CHAN);
+            p.setProperty("clock_format", DEFAULT_CLOCK_FORMAT);
+            p.setProperty("time_zone", DEFAULT_TIME_ZONE);
+            p.setProperty("announce_msg_format", DEFAULT_ANNOUNCE_FORMAT);
 
             // save properties to project root folder
             p.store(output, null);
@@ -130,5 +141,20 @@ public class BotSettings
     public String getControlChan()
     {
         return this.properties.getProperty("chan_control");
+    }
+
+    public String getAnnounceFormat()
+    {
+        return this.properties.getProperty("announce_msg_format");
+    }
+
+    public String getClockFormat()
+    {
+        return this.properties.getProperty("clock_format");
+    }
+
+    public String getTimeZone()
+    {
+        return this.properties.getProperty("time_zone");
     }
 }
