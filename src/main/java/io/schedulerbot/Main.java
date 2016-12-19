@@ -99,6 +99,7 @@ public class Main
         // add administrator commands with their lookup name
         adminCommands.put("gannounce", new GlobalAnnounceCommand());
         adminCommands.put("query", new QueryCommand());
+        adminCommands.put("update_all", new UpdateAllCommand());
 
         scheduleManager.startTimers();
     }
