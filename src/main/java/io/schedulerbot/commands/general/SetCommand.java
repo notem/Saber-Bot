@@ -13,9 +13,9 @@ public class SetCommand implements Command
 {
     private GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
 
-    private static final String USAGE_EXTENDED = "";
+    private static final String USAGE_EXTENDED = "**!set [option] [new configuration]**";
 
-    private static final String USAGE_BRIEF = "";
+    private static final String USAGE_BRIEF = "Used to set guild-wide schedule settings.";
 
     @Override
     public String help(boolean brief)
