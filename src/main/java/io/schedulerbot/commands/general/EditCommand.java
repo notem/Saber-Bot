@@ -216,7 +216,10 @@ public class EditCommand implements Command
                 break;
         }
 
-        scheduleManager.removeEntry(entryId);
+        synchronized( scheduleManager.getScheduleLock() )
+        {
+            scheduleManager.removeEntry(entryId);
+        }
 
         String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId);
         MessageUtilities.editMsg(msg, entry.eMsg, (m) -> scheduleManager.addEntry(m));
