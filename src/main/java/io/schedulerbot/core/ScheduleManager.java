@@ -142,6 +142,11 @@ public class ScheduleManager
             return null;
     }
 
+    public Collection<ScheduleEntry> getAllEntries()
+    {
+        return entriesGlobal.values();
+    }
+
     public Object getScheduleLock()
     {
         return scheduleLock;
