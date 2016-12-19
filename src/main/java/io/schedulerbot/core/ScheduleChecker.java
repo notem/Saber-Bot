@@ -66,9 +66,7 @@ public class ScheduleChecker implements Runnable
         {
             if ( now.until(entry.eStart, SECONDS) <= 0 )
             {
-                ScheduleManager.scheduleExec.submit( () -> {
-                        entry.start();
-                });
+                ScheduleManager.scheduleExec.submit(entry::start);
             }
             else
             {

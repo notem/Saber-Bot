@@ -118,6 +118,8 @@ public class MessageListener extends ListenerAdapter
                             MessageUtilities.deleteMsg( message, null );
                     }
 
+                    guildSettingsManager.checkGuild(guild);
+
                     MessageUtilities.sendAnnounce(msg, guild, null);
 
                     ArrayList<Integer> entries = scheduleManager.getEntriesByGuild(guild.getId());

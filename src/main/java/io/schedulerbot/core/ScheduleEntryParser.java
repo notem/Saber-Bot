@@ -35,39 +35,81 @@ public class ScheduleEntryParser
             // the first line is the title \\
             eTitle = lines[1].replaceFirst("# ", "");
 
-            // the second line is the date and time \\
-            LocalDate date;
-            LocalTime timeStart;
-            LocalTime timeEnd;
-
             try
             {
-                date = LocalDate.parse(lines[2].split(" from ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
-                timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern("< H:mm >"));
-                timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern("< H:mm >"));
+                // the second line is the date and time \\
+                LocalDate date;
+                LocalTime timeStart;
+                LocalTime timeEnd;
+
+                try
+                {
+                    date = LocalDate.parse(lines[2].split(" from ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                    timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern("< H:mm >"));
+                    timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern("< H:mm >"));
+                } catch (Exception ignored)
+                {
+                    date = LocalDate.parse(lines[2].split(" at ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                    LocalTime time = LocalTime.parse(lines[2].split(" at ")[1], DateTimeFormatter.ofPattern("< H:mm >"));
+                    timeStart = time;
+                    timeEnd = time;
+                }
+
+                ZoneId zone = Main.guildSettingsManager.getGuildTimeZone(msg.getGuild().getId());
+
+                eStart = ZonedDateTime.of(date, timeStart, zone);
+                eEnd = ZonedDateTime.of(date, timeEnd, zone);
+
+                if (eStart.isBefore(ZonedDateTime.now()))
+                {
+                    eStart = eStart.plusDays(1);
+                    eEnd = eEnd.plusDays(1);
+                }
+                if (eEnd.isBefore(eStart))
+                {
+                    eEnd = eEnd.plusDays(1);
+                }
             }
-            catch(Exception ignored)
+            catch (Exception e )
             {
-                date = LocalDate.parse(lines[2].split(" at ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
-                LocalTime time = LocalTime.parse(lines[2].split(" at ")[1], DateTimeFormatter.ofPattern("< H:mm >"));
-                timeStart = time;
-                timeEnd = time;
+                // the second line is the date and time \\
+                String[] secondLine = lines[2].replace("< ","").split(" >");
+                String[] date_time_repeat = secondLine[0].split(", ");
+
+                String date = date_time_repeat[0];
+                LocalDate dat = LocalDate.now().withMonth(Month.valueOf(date.split(" ")[0].toUpperCase()).getValue());
+                dat = dat.withDayOfMonth(Integer.parseInt(date.split(" ")[1]));
+
+                String[] start_end_timezone = date_time_repeat[1].split(" - ");
+
+                if( date_time_repeat.length == 3 )
+                {
+                    String repeat = date_time_repeat[2].replaceFirst("repeats ", "");
+                    if( repeat.equals("daily") )
+                        eRepeat = 1;
+                    else if( repeat.equals("weekly") )
+                        eRepeat = 2;
+                }
+
+                LocalTime etart = LocalTime.parse( start_end_timezone[0] );
+                LocalTime end = LocalTime.parse( start_end_timezone[1].split(" ")[0] );
+
+                ZoneId zone = ZoneId.of("America/New_York");
+
+                eStart = ZonedDateTime.of(dat, etart, zone);
+                eEnd = ZonedDateTime.of(dat, end, zone);
+
+                if (eStart.isBefore(ZonedDateTime.now()))
+                {
+                    eStart = eStart.plusDays(1);
+                    eEnd = eEnd.plusDays(1);
+                }
+                if (eEnd.isBefore(eStart))
+                {
+                    eEnd = eEnd.plusDays(1);
+                }
             }
 
-            ZoneId zone = Main.guildSettingsManager.getGuildTimeZone( msg.getGuild().getId() );
-
-            eStart = ZonedDateTime.of(date, timeStart, zone);
-            eEnd = ZonedDateTime.of(date, timeEnd, zone);
-
-            if( eStart.isBefore(ZonedDateTime.now()) )
-            {
-                eStart = eStart.plusDays(1);
-                eEnd = eEnd.plusDays(1);
-            }
-            if( eEnd.isBefore(eStart) )
-            {
-                eEnd = eEnd.plusDays(1);
-            }
 
             // the third line is empty space,     \\
 
@@ -82,7 +124,7 @@ public class ScheduleEntryParser
             // of form: "[ID: XXXX](TIME TIL) repeats xxx\n"
             eID = Integer.decode("0x" + lines[lines.length - 2].replace("[ID: ", "").split("]")[0]);
             String[] tmp = lines[lines.length - 2].split("\\)");
-            String repeat = tmp.length>1 ? tmp[1] : "no repeat";
+            String repeat = tmp.length>1 ? tmp[1] : "";
             switch( repeat )
             {
                 case " repeats daily" :
@@ -92,7 +134,6 @@ public class ScheduleEntryParser
                     eRepeat = 2;
                     break;
                 default:
-                    eRepeat = 0;
                     break;
             }
 
@@ -102,6 +143,7 @@ public class ScheduleEntryParser
         }
         catch( Exception e )
         {
+            e.printStackTrace();
             MessageUtilities.deleteMsg( msg, null );
             return null;
         }

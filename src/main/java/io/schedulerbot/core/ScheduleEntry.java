@@ -97,7 +97,7 @@ public class ScheduleEntry
                     this.eID
             );
 
-            MessageUtilities.editMsg(msg, this.eMsg, (m) -> Main.scheduleManager.addEntry(m));
+            MessageUtilities.editMsg(msg, this.eMsg, Main.scheduleManager::addEntry);
         }
         else if( this.eRepeat == 2 )
         {
@@ -111,7 +111,7 @@ public class ScheduleEntry
                     this.eID
             );
 
-            MessageUtilities.editMsg(msg, this.eMsg, (m) -> scheduleManager.addEntry(m));
+            MessageUtilities.editMsg(msg, this.eMsg, scheduleManager::addEntry);
         }
     }
 
