@@ -135,7 +135,6 @@ public class EditCommand implements Command
         ZonedDateTime start = entry.eStart;
         ZonedDateTime end = entry.eEnd;
         int repeat = entry.eRepeat;
-        LocalDate date = LocalDate.now();
 
         switch( args[1] )
         {
@@ -167,21 +166,33 @@ public class EditCommand implements Command
                         comments.remove( Integer.parseInt(args[3])-1 );
                 }
                 break;
-/**
+
             case "start":
                 if( args[2].equals("24:00") )       // if the user inputs 24:00
-                    start = LocalTime.MIDNIGHT;     // convert to 00:00
+                {
+                    start = end.withHour(0);
+                    start = end.withMinute(0);
+                }
                 else
-                    start = LocalTime.parse(args[2]);
+                {
+                    start = end.withHour(Integer.parseInt(args[2].split(":")[0]));
+                    start = end.withMinute(Integer.parseInt(args[2].split(":")[1]));
+                }
                 break;
 
             case "end":
                 if( args[2].equals("24:00") )       // if the user inputs 24:00
-                    end = LocalTime.MIDNIGHT;       // convert to 00:00
+                {
+                    end = end.withHour(0);
+                    end = end.withMinute(0);
+                }
                 else
-                    end = LocalTime.parse(args[2]);
+                {
+                    end = end.withHour(Integer.parseInt(args[2].split(":")[0]));
+                    end = end.withMinute(Integer.parseInt(args[2].split(":")[1]));
+                }
                 break;
-*/
+
             case "title":
                 title = "";
                 for( int i = 2; i < args.length; i++ )
@@ -193,15 +204,14 @@ public class EditCommand implements Command
                 break;
 
             case "date":
-                if( args[2].toLowerCase().equals("today") )
-                        date = LocalDate.now();
-                    else if( args[2].toLowerCase().equals("tomorrow") )
-                        date = LocalDate.now().plusDays( 1 );
-                    else if( Character.isDigit(args[2].charAt(0)) )
-                    {
-                        date = date.withMonth(Integer.parseInt(args[2].split("/")[0]));
-                        date = date.withDayOfMonth(Integer.parseInt(args[2].split("/")[1]));
-                    }
+                start = start.withMonth(Integer.parseInt(args[2].split("/")[0]));
+                start = start.withDayOfMonth(Integer.parseInt(args[2].split("/")[1]));
+                end = end.withMonth(Integer.parseInt(args[2].split("/")[0]));
+                end = end.withDayOfMonth(Integer.parseInt(args[2].split("/")[1]));
+                if( end.isBefore(start) )
+                {
+                    end.plusDays(1);
+                }
                 break;
 
             case "repeat":

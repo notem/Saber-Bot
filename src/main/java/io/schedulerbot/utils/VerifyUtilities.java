@@ -50,9 +50,6 @@ public class VerifyUtilities
 
     public static boolean verifyDate( String arg )
     {
-        if( arg.toLowerCase().equals("tomorrow") || arg.toLowerCase().equals("today") )
-            return true;
-
         String[] date = arg.split("/");
         if(date.length != 2)
             return false;
@@ -132,7 +129,7 @@ public class VerifyUtilities
     public static boolean verifyScheduleChannel( Guild guild )
     {
         List<TextChannel> chans = guild.getTextChannelsByName( Main.getSettings().getScheduleChan(), false );
-        if( chans == null )
+        if( chans == null || chans.isEmpty() )
         {
             return false;
         }

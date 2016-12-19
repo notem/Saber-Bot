@@ -120,7 +120,15 @@ public class MessageListener extends ListenerAdapter
 
                     guildSettingsManager.checkGuild(guild);
 
-                    MessageUtilities.sendAnnounce(msg, guild, null);
+                    MessageUtilities.sendAnnounce(msg, guild, (message)->{
+                        try
+                        {
+                            Thread.sleep(1000*4);
+                        }
+                        catch( Exception ignored )
+                        { }
+                        MessageUtilities.deleteMsg( message, null );
+                    });
 
                     ArrayList<Integer> entries = scheduleManager.getEntriesByGuild(guild.getId());
                     if (entries != null)
@@ -133,7 +141,15 @@ public class MessageListener extends ListenerAdapter
                     }
                     else
                         reloadMsg = "There are no events on the schedule.";
-                    MessageUtilities.sendAnnounce(reloadMsg, guild, null);
+                    MessageUtilities.sendAnnounce(reloadMsg, guild, (message)->{
+                        try
+                        {
+                            Thread.sleep(1000*4);
+                        }
+                        catch( Exception ignored )
+                        { }
+                        MessageUtilities.deleteMsg( message, null );
+                    });
                 };
 
                 // retrieve history and have the consumer act on it
