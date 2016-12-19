@@ -137,10 +137,7 @@ public class DestroyCommand implements Command
             else
                 MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
-            synchronized( scheduleManager.getScheduleLock() )
-            {
-                scheduleManager.removeEntry(entryId);
-            }
+            scheduleManager.removeEntry(entryId);
 
             // delete the old entry
             MessageUtilities.deleteMsg(entry.eMsg, null);

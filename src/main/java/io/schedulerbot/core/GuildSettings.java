@@ -31,7 +31,8 @@ public class GuildSettings
 
     public GuildSettings( Message msg )
     {
-        String[] options = msg.getRawContent().replaceFirst( "```java\nSetting | ", "").replace("\n```","").split(" | ");
+        String trimmed = msg.getRawContent().replace("```java\n","").replace("\n```","");
+        String[] options = trimmed.split(" \\| ");
 
         for( String option : options )
         {

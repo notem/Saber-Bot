@@ -1,7 +1,9 @@
 package io.schedulerbot.core;
 
 import io.schedulerbot.Main;
+import io.schedulerbot.utils.AnnounceFormatParser;
 import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.utils.__out;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 
@@ -28,7 +30,6 @@ public class ScheduleEntry
 
     public boolean startFlag;               // flagged true when the start time has been reached
 
-    private ScheduleManager scheduleManager = Main.scheduleManager;
 
     public ScheduleEntry(String eName, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat )
     {
@@ -46,28 +47,41 @@ public class ScheduleEntry
 
     public void start()
     {
+        if( this.eStart.equals(this.eEnd) )
+        {
+            this.end();
+            return;
+        }
+
+        GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+
         Guild guild = this.eMsg.getGuild();
-        String startMsg = "@everyone The event **" + this.eTitle + "** has begun!";
+        String startMsg = AnnounceFormatParser.parse( guildSettingsManager.getGuildAnnounceFormat(guild.getId()), this );
 
         MessageUtilities.sendAnnounce( startMsg, guild, null );
 
         this.startFlag = true;
+        this.adjustTimer();
     }
 
     public void end()
     {
-        Guild guild = this.eMsg.getGuild();
-        String endMsg = "@everyone The event **" + this.eTitle + "** has ended.";
+        ScheduleManager scheduleManager = Main.scheduleManager;
+        GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
 
-        // announce that the event is ending
+        Guild guild = this.eMsg.getGuild();
+        String endMsg = AnnounceFormatParser.parse( guildSettingsManager.getGuildAnnounceFormat(guild.getId()), this );
+
         MessageUtilities.sendAnnounce( endMsg, guild, null );
 
-        // return eId to the pool
-        scheduleManager.removeId(this.eID);
+        synchronized( scheduleManager.getScheduleLock() )
+        {
+            scheduleManager.removeEntry(this.eID);
+        }
 
         if( this.eRepeat == 0 )
         {
-            this.destroy();
+            MessageUtilities.deleteMsg( this.eMsg, null );
         }
 
         // if the event entry is scheduled to repeat, must be handled with now
@@ -100,13 +114,6 @@ public class ScheduleEntry
             MessageUtilities.editMsg(msg, this.eMsg, (m) -> scheduleManager.addEntry(m));
         }
     }
-
-    public void destroy()
-    {
-        // delete the old entry
-        MessageUtilities.deleteMsg( this.eMsg, null );
-    }
-
 
     public void adjustTimer()
     {

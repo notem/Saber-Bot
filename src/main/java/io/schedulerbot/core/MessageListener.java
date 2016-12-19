@@ -98,7 +98,6 @@ public class MessageListener extends ListenerAdapter
             List<TextChannel> chan = guild.getTextChannelsByName(scheduleChan, false);
             if (!chan.isEmpty())
             {
-                MessageUtilities.sendAnnounce(msg, guild, null);
 
                 // create a message history object
                 MessageHistory history = chan.get(0).getHistory();
@@ -118,6 +117,8 @@ public class MessageListener extends ListenerAdapter
                         else
                             MessageUtilities.deleteMsg( message, null );
                     }
+
+                    MessageUtilities.sendAnnounce(msg, guild, null);
 
                     ArrayList<Integer> entries = scheduleManager.getEntriesByGuild(guild.getId());
                     if (entries != null)

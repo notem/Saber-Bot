@@ -1,6 +1,7 @@
 package io.schedulerbot.utils;
 
 import io.schedulerbot.Main;
+import io.schedulerbot.core.GuildSettingsManager;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
@@ -63,20 +64,16 @@ public class MessageUtilities
      */
     public static void sendAnnounce(String content, Guild guild, Consumer<Message> action )
     {
-        String chan = Main.settings.getAnnounceChan();
-        if(guild.getTextChannelsByName(chan, false).isEmpty())
-        {
-            // send no message if the channel does not have the event channel configured
-            return;
-        }
-        // otherwise, if the announcement channel is empty in botconfig, or the guild did not
-        // setup an announcement channel. Send the message to their public channel
-        if(chan.isEmpty() || guild.getTextChannelsByName(chan, false).isEmpty())
+        GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+        guildSettingsManager.checkGuild( guild );
+
+        String chan = guildSettingsManager.getGuildAnnounceChan(guild.getId());
+
+        if(chan.isEmpty())
         {
             sendMsg(content, guild.getPublicChannel(), action);
         }
-        // otherwise send to the first announcement channel in the list
-        else
+        else if(!guild.getTextChannelsByName(chan, false).isEmpty())
         {
             sendMsg(content, guild.getTextChannelsByName(chan, false).get(0), action);
         }

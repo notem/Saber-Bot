@@ -36,10 +36,23 @@ public class ScheduleEntryParser
             eTitle = lines[1].replaceFirst("# ", "");
 
             // the second line is the date and time \\
-            // of form: "< DATE > from < START > to < END >\n"
-            LocalDate date = LocalDate.parse(lines[2].split(" from ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
-            LocalTime timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern("< H:mm >"));
-            LocalTime timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern("< H:mm >"));
+            LocalDate date;
+            LocalTime timeStart;
+            LocalTime timeEnd;
+
+            try
+            {
+                date = LocalDate.parse(lines[2].split(" from ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern("< H:mm >"));
+                timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern("< H:mm >"));
+            }
+            catch(Exception ignored)
+            {
+                date = LocalDate.parse(lines[2].split(" at ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                LocalTime time = LocalTime.parse(lines[2].split(" at ")[1], DateTimeFormatter.ofPattern("< H:mm >"));
+                timeStart = time;
+                timeEnd = time;
+            }
 
             ZoneId zone = Main.guildSettingsManager.getGuildTimeZone( msg.getGuild().getId() );
 
@@ -48,12 +61,12 @@ public class ScheduleEntryParser
 
             if( eStart.isBefore(ZonedDateTime.now()) )
             {
-                eStart = eStart.plusYears(1);
-                eEnd = eEnd.plusYears(1);
+                eStart = eStart.plusDays(1);
+                eEnd = eEnd.plusDays(1);
             }
             if( eEnd.isBefore(eStart) )
             {
-                eEnd = eEnd.plusYears(1);
+                eEnd = eEnd.plusDays(1);
             }
 
             // the third line is empty space,     \\
@@ -105,9 +118,16 @@ public class ScheduleEntryParser
         String firstLine = "# " + eTitle + "\n";
 
         // of form: "< DATE > from < START > to < END >\n"
-        String secondLine = eStart.format(DateTimeFormatter.ofPattern("< MMMM d >")) + " from " +
-                eStart.format(DateTimeFormatter.ofPattern("< H:mm >")) + " to " +
-                eEnd.format(DateTimeFormatter.ofPattern("< H:mm >")) + "\n";
+        String secondLine = eStart.format(DateTimeFormatter.ofPattern("< MMMM d >"));
+        if( eStart.equals(eEnd) )
+        {
+            secondLine += " at " + eStart.format(DateTimeFormatter.ofPattern("< H:mm >")) + "\n";
+        }
+        else
+        {
+            secondLine += " from " + eStart.format(DateTimeFormatter.ofPattern("< H:mm >")) +
+                    " to " + eEnd.format(DateTimeFormatter.ofPattern("< H:mm >")) + "\n";
+        }
 
         msg += firstLine + secondLine;
 

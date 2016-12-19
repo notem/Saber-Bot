@@ -60,42 +60,30 @@ public class ScheduleChecker implements Runnable
 
     private void fineCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
-        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
         ZonedDateTime now = ZonedDateTime.now();
+        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + ". Starting in " + now.until(entry.eStart, SECONDS) + ": ending in " + now.until(entry.eEnd,SECONDS) );
         if (!entry.startFlag)
         {
-            if ( now.compareTo(entry.eStart) >= 0 )
+            if ( now.until(entry.eStart, SECONDS) <= 0 )
             {
                 ScheduleManager.scheduleExec.submit( () -> {
-                    // start event
-                    entry.start();
-                    entry.adjustTimer();
+                        entry.start();
                 });
             }
             else
             {
-                // adjust the 'time until' displayed timer
                 ScheduleManager.scheduleExec.submit(entry::adjustTimer);
             }
         }
         else
         {
-            if (entry.eStart.isBefore(entry.eEnd)?
-                    entry.eEnd.until(ZonedDateTime.now(), SECONDS)<=0:
-                    (entry.eEnd.until(ZonedDateTime.now(), SECONDS)<=0 && entry.eStart.isBefore(now)) )
+            if ( now.until(entry.eEnd, SECONDS) <= 0 )
             {
-                ScheduleManager.scheduleExec.submit( () -> {
-                    synchronized( scheduleManager.getScheduleLock() )
-                    {
-                        // end event
-                        entry.end();
-                    }
-                });
+                ScheduleManager.scheduleExec.submit(entry::end);
                 removeQueue.add( entry );
             }
             else
             {
-                // adjust the 'time until' displayed timer
                 ScheduleManager.scheduleExec.submit(entry::adjustTimer);
             }
         }
@@ -107,35 +95,22 @@ public class ScheduleChecker implements Runnable
         ZonedDateTime now = ZonedDateTime.now();
         if (!entry.startFlag)
         {
-            if( now.getDayOfYear() > entry.eStart.getDayOfYear() )
-            {
-                ScheduleManager.scheduleExec.submit( () -> {
-                    synchronized( scheduleManager.getScheduleLock() )
-                    {
-                        // a rogue entry, destroy it
-                        entry.destroy();
-                    }
-                });
-            }
-            else if( entry.eStart.isEqual(now) && entry.eStart.toEpochSecond() - now.toEpochSecond() < 60*60 )
+            if( now.until(entry.eStart, SECONDS) < 60*60 )
             {
                 if( !scheduleManager.getFineTimerBuff().contains( entry ) )
                 {
-                    // if entry begins within an hour, add to the fineTimerBuff if not already there
                     scheduleManager.getFineTimerBuff().add(entry);
                 }
             }
-            else if( entry.eStart.isEqual(now) || entry.eStart.isEqual(now.plusDays(1)) )
+            else if( now.until(entry.eStart, SECONDS) < 32*60*60 )
             {
                 if( !scheduleManager.getCoarseTimerBuff().contains( entry ) )
                 {
-                    // if entry begins within today or tomorrow, add to the coarseTimerBuff if not already there
                     scheduleManager.getCoarseTimerBuff().add(entry);
                 }
             }
             else
             {
-                // adjust the 'time until' displayed timer
                 ScheduleManager.scheduleExec.submit(entry::adjustTimer);
             }
         }
@@ -143,7 +118,6 @@ public class ScheduleChecker implements Runnable
         {
             if( !scheduleManager.getFineTimerBuff().contains( entry ) )
             {
-                // if the entry already started, add to fineTimerBuff if not already there
                 scheduleManager.getFineTimerBuff().add( entry );
             }
         }
@@ -152,21 +126,19 @@ public class ScheduleChecker implements Runnable
     private void coarseCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
-        long timeTil = entry.eStart.toEpochSecond() - ZonedDateTime.now().toEpochSecond();
+        ZonedDateTime now = ZonedDateTime.now();
         if (!entry.startFlag)
         {
-            if( ((ZonedDateTime.now().compareTo(entry.eStart)==0)?timeTil:timeTil+60*60*24) < 60*60 )
+            if( now.until(entry.eStart, SECONDS) < 60*60 )
             {
                 if( !scheduleManager.getFineTimerBuff().contains( entry ) )
                 {
-                    // if entry begins within an hour, add to the fineTimerBuff if not already there
                     scheduleManager.getFineTimerBuff().add(entry);
                     removeQueue.add( entry );       // queue it for removal from buffer
                 }
             }
             else
             {
-                // adjust the 'time until' displayed timer
                 ScheduleManager.scheduleExec.submit(entry::adjustTimer);
             }
         }

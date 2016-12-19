@@ -94,6 +94,7 @@ public class Main
         commands.put("destroy", new DestroyCommand());
         commands.put("edit", new EditCommand());
         commands.put("setup", new SetupCommand());
+        commands.put("set", new SetCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put("gannounce", new GlobalAnnounceCommand());

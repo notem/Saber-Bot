@@ -1,6 +1,5 @@
 package io.schedulerbot.core;
 
-import io.schedulerbot.utils.__out;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.time.LocalTime;

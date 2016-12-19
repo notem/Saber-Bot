@@ -57,4 +57,27 @@ public class GuildSettingsManager
         return settingsByGuild.get(gId).timeZone;
     }
 
+    public void setGuildAnnounceChan( String gId, String chan )
+    {
+        settingsByGuild.get(gId).announceChannel = chan;
+        settingsByGuild.get(gId).reloadSettingsMsg();
+    }
+
+    public void setGuildAnnounceFormat( String gId, String format )
+    {
+        settingsByGuild.get(gId).announceFormat = format;
+        settingsByGuild.get(gId).reloadSettingsMsg();
+    }
+
+    public void setGuildClockFormat( String gId, String clock )
+    {
+        settingsByGuild.get(gId).announceFormat = clock;
+        settingsByGuild.get(gId).reloadSettingsMsg();
+    }
+
+    public void setGuildTimeZone( String gId, ZoneId zone )
+    {
+        settingsByGuild.get(gId).timeZone = zone;
+        settingsByGuild.get(gId).reloadSettingsMsg();
+    }
 }
