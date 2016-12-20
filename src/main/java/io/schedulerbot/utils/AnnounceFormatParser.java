@@ -13,34 +13,39 @@ public class AnnounceFormatParser
         for( int i = 0; i < format.length(); i++ )
         {
             char ch = format.charAt(i);
-            if( ch == '%' && i+1 != format.length() )
+            if( ch == '%' && i+1 < format.length() )
             {
-                __out.printOut(AnnounceFormatParser.class, announceMsg);
                 i++;
                 ch = format.charAt(i);
+
                 switch( ch )
                 {
                     case 'c' :
-                        if( i+1 != format.length() )
+                        if( i+1 < format.length() )
                         {
                             ch = format.charAt(i+1);
                             if( Character.isDigit( ch ) )
                             {
+                                int x = Integer.parseInt("" + ch);
                                 i++;
-                                announceMsg += entry.eComments.get(Integer.parseInt("" + ch)+1);
+                                if(entry.eComments.size()>=x && x!='0')
+                                {
+                                    announceMsg += entry.eComments.get(x-1);
+                                }
                             }
                         }
                         break;
 
                     case 'a' :
+                        if( entry.eStart.equals(entry.eEnd) )
+                            break;
+
                         if( !entry.startFlag )
-                        {
-                            announceMsg += "begun";
-                        }
+                            announceMsg += "begins";
+
                         else
-                        {
-                            announceMsg += "ended";
-                        }
+                            announceMsg += "ends";
+
                         break;
 
                     case 't' :

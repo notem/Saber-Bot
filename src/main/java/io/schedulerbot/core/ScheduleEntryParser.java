@@ -113,7 +113,7 @@ public class ScheduleEntryParser
         // the 'actual' first line (and last line) define format
         String msg = "```Markdown\n";
 
-        eId = Main.scheduleManager.newId( eId ); // generate an ID for the entry
+        if( eId == null) eId = Main.scheduleManager.newId( eId ); // generate an ID for the entry
         String firstLine = "# " + eTitle + "\n";
 
         // of form: "< DATE > from < START > to < END >\n"

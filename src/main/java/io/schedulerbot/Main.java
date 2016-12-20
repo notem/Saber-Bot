@@ -95,11 +95,13 @@ public class Main
         commands.put("edit", new EditCommand());
         commands.put("setup", new SetupCommand());
         commands.put("set", new SetCommand());
+        commands.put("timezones", new TimeZonesCommand());
 
         // add administrator commands with their lookup name
-        adminCommands.put("gannounce", new GlobalAnnounceCommand());
+        adminCommands.put("global_announce", new GlobalAnnounceCommand());
         adminCommands.put("query", new QueryCommand());
         adminCommands.put("update_all", new UpdateAllCommand());
+        adminCommands.put("stats", new StatsCommand());
 
         scheduleManager.startTimers();
     }

@@ -1,5 +1,7 @@
 package io.schedulerbot.core;
 
+import io.schedulerbot.Main;
+import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.time.LocalTime;
@@ -12,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  */
@@ -104,6 +107,13 @@ public class ScheduleManager
         this.getCoarseTimerBuff().remove( se );
     }
 
+    public void reloadEntry( Integer eId )
+    {
+        ScheduleEntry se = getEntry( eId );
+        String msg = ScheduleEntryParser.generate(se.eTitle,se.eStart,se.eEnd,se.eComments,se.eRepeat,se.eID);
+        MessageUtilities.editMsg( msg, se.eMsg, this::addEntry);
+    }
+
     public Integer newId( Integer oldId )
     {
         // try first to use the requested Id
@@ -132,11 +142,14 @@ public class ScheduleManager
             return null;
     }
 
-    public ArrayList<Integer> getEntriesByGuild( String gId )
+    public ArrayList<ScheduleEntry> getEntriesByGuild( String gId )
     {
         // check if guild exists in map, if so return their entries
         if( entriesByGuild.containsKey(gId) )
-            return entriesByGuild.get(gId);
+        {
+            return entriesByGuild.get(gId).stream().map(
+                    (id) -> entriesGlobal.get(id)).collect(Collectors.toCollection(ArrayList::new));
+        }
 
         else        // otherwise return null
             return null;

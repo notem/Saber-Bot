@@ -53,6 +53,7 @@ public class MessageListener extends ListenerAdapter
                 Main.handleAdminCommand(Main.commandParser.parse(content, event));
                 return;
             }
+            return;
         }
 
         // if main schedule channel is not setup give up
@@ -90,9 +91,7 @@ public class MessageListener extends ListenerAdapter
     @Override
     public void onReady(ReadyEvent event)
     {
-        String msg = event.getJDA().getSelfUser().getName() + " reporting for duty! Reloading the event entries. . .";
-
-        // announces to all attached discord servers with EVENT_CHAN configured that the bot is alive
+        // loads schedules and settings for every connected guild
         for (Guild guild : event.getJDA().getGuilds())
         {
             List<TextChannel> chan = guild.getTextChannelsByName(scheduleChan, false);
@@ -104,7 +103,6 @@ public class MessageListener extends ListenerAdapter
 
                 // create a consumer
                 Consumer<List<Message>> cons = (l) -> {
-                    String reloadMsg;
                     for (Message message : l)
                     {
                         if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
@@ -119,37 +117,6 @@ public class MessageListener extends ListenerAdapter
                     }
 
                     guildSettingsManager.checkGuild(guild);
-
-                    MessageUtilities.sendAnnounce(msg, guild, (message)->{
-                        try
-                        {
-                            Thread.sleep(1000*4);
-                        }
-                        catch( Exception ignored )
-                        { }
-                        MessageUtilities.deleteMsg( message, null );
-                    });
-
-                    ArrayList<Integer> entries = scheduleManager.getEntriesByGuild(guild.getId());
-                    if (entries != null)
-                    {
-                        reloadMsg = "There ";
-                        if (entries.size() > 1)
-                            reloadMsg += "are " + entries.size() + " events on the schedule.";
-                        else
-                            reloadMsg += "is a single event on the schedule.";
-                    }
-                    else
-                        reloadMsg = "There are no events on the schedule.";
-                    MessageUtilities.sendAnnounce(reloadMsg, guild, (message)->{
-                        try
-                        {
-                            Thread.sleep(1000*4);
-                        }
-                        catch( Exception ignored )
-                        { }
-                        MessageUtilities.deleteMsg( message, null );
-                    });
                 };
 
                 // retrieve history and have the consumer act on it
