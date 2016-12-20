@@ -115,6 +115,21 @@ public class ScheduleEntry
         }
     }
 
+    private String genRepeat()
+    {
+        String msg = "";
+        switch( eRepeat )
+        {
+            case 1:
+                msg += "repeats daily";
+                break;
+            case 2:
+                msg += "repeats weekly";
+                break;
+        }
+        return msg;
+    }
+
     public void adjustTimer()
     {
         // convert the times into integers representing the time in seconds
@@ -138,12 +153,14 @@ public class ScheduleEntry
                for(String line : lines)
                {
                    if(line.equals(lines[lines.length-2]))
-                       msg += newline;
+                       msg += newline + " " + this.genRepeat();
                    else
                        msg += line;
                    if(!line.equals(lines[lines.length-1]))
                        msg += "\n";
                }
+
+
 
                MessageUtilities.editMsg( msg, this.eMsg, null );
            }
@@ -160,7 +177,7 @@ public class ScheduleEntry
                for(String line : lines)
                {
                    if(line.equals(lines[lines.length-2]))
-                       msg += newline;
+                       msg += newline + " " + this.genRepeat();
                    else
                        msg += line;
                    if(!line.equals(lines[lines.length-1]))
@@ -184,7 +201,7 @@ public class ScheduleEntry
                for(String line : lines)
                {
                    if(line.equals(lines[lines.length-2]))
-                       msg += newline;
+                       msg += newline + " " + this.genRepeat();
                    else
                        msg += line;
                    if(!line.equals(lines[lines.length-1]))
@@ -210,7 +227,7 @@ public class ScheduleEntry
                for(String line : lines)
                {
                    if(line.equals(lines[lines.length-2]))
-                       msg += newline;
+                       msg += newline + " " + this.genRepeat();
                    else
                        msg += line;
                    if(!line.equals(lines[lines.length-1]))
@@ -233,7 +250,7 @@ public class ScheduleEntry
                for(String line : lines)
                {
                    if(line.equals(lines[lines.length-2]))
-                       msg += newline;
+                       msg += newline + " " + this.genRepeat();
                    else
                        msg += line;
                    if(!line.equals(lines[lines.length-1]))

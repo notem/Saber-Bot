@@ -35,8 +35,6 @@ public class ScheduleEntryParser
             // the first line is the title \\
             eTitle = lines[1].replaceFirst("# ", "");
 
-            try
-            {
                 // the second line is the date and time \\
                 LocalDate date;
                 LocalTime timeStart;
@@ -69,47 +67,6 @@ public class ScheduleEntryParser
                 {
                     eEnd = eEnd.plusDays(1);
                 }
-            }
-            catch (Exception e )
-            {
-                // the second line is the date and time \\
-                String[] secondLine = lines[2].replace("< ","").split(" >");
-                String[] date_time_repeat = secondLine[0].split(", ");
-
-                String date = date_time_repeat[0];
-                LocalDate dat = LocalDate.now().withMonth(Month.valueOf(date.split(" ")[0].toUpperCase()).getValue());
-                dat = dat.withDayOfMonth(Integer.parseInt(date.split(" ")[1]));
-
-                String[] start_end_timezone = date_time_repeat[1].split(" - ");
-
-                if( date_time_repeat.length == 3 )
-                {
-                    String repeat = date_time_repeat[2].replaceFirst("repeats ", "");
-                    if( repeat.equals("daily") )
-                        eRepeat = 1;
-                    else if( repeat.equals("weekly") )
-                        eRepeat = 2;
-                }
-
-                LocalTime etart = LocalTime.parse( start_end_timezone[0] );
-                LocalTime end = LocalTime.parse( start_end_timezone[1].split(" ")[0] );
-
-                ZoneId zone = ZoneId.of("America/New_York");
-
-                eStart = ZonedDateTime.of(dat, etart, zone);
-                eEnd = ZonedDateTime.of(dat, end, zone);
-
-                if (eStart.isBefore(ZonedDateTime.now()))
-                {
-                    eStart = eStart.plusDays(1);
-                    eEnd = eEnd.plusDays(1);
-                }
-                if (eEnd.isBefore(eStart))
-                {
-                    eEnd = eEnd.plusDays(1);
-                }
-            }
-
 
             // the third line is empty space,     \\
 
