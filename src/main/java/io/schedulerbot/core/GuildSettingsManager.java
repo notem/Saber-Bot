@@ -71,7 +71,7 @@ public class GuildSettingsManager
 
     public void setGuildClockFormat( String gId, String clock )
     {
-        settingsByGuild.get(gId).announceFormat = clock;
+        settingsByGuild.get(gId).clockFormat = clock;
         settingsByGuild.get(gId).reloadSettingsMsg();
     }
 

@@ -2,6 +2,7 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
+import io.schedulerbot.core.ScheduleEntry;
 import io.schedulerbot.core.ScheduleEntryParser;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
@@ -132,7 +133,7 @@ public class CreateCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        ArrayList<Integer> entries = Main.scheduleManager.getEntriesByGuild( event.getGuild().getId() );
+        ArrayList<ScheduleEntry> entries = Main.scheduleManager.getEntriesByGuild( event.getGuild().getId() );
 
         if( entries != null && entries.size() >= maxEntries && maxEntries > 0)
         {
@@ -244,7 +245,7 @@ public class CreateCommand implements Command
         ZonedDateTime e = ZonedDateTime.of( eDate, eEnd, ZoneId.systemDefault() );
 
         // generate the event entry message
-        String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, null );
+        String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, null, event.getGuild().getId() );
 
         MessageUtilities.sendMsg( msg,
                 event.getGuild().getTextChannelsByName(scheduleChan, false).get(0), null );

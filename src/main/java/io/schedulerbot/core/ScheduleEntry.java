@@ -94,7 +94,8 @@ public class ScheduleEntry
                     this.eEnd.plusDays(1),
                     this.eComments,
                     this.eRepeat,
-                    this.eID
+                    this.eID,
+                    this.eMsg.getGuild().getId()
             );
 
             MessageUtilities.editMsg(msg, this.eMsg, Main.scheduleManager::addEntry);
@@ -108,7 +109,8 @@ public class ScheduleEntry
                     this.eEnd.plusDays(7),
                     this.eComments,
                     this.eRepeat,
-                    this.eID
+                    this.eID,
+                    this.eMsg.getGuild().getId()
             );
 
             MessageUtilities.editMsg(msg, this.eMsg, scheduleManager::addEntry);

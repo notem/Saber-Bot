@@ -110,7 +110,7 @@ public class ScheduleManager
     public void reloadEntry( Integer eId )
     {
         ScheduleEntry se = getEntry( eId );
-        String msg = ScheduleEntryParser.generate(se.eTitle,se.eStart,se.eEnd,se.eComments,se.eRepeat,se.eID);
+        String msg = ScheduleEntryParser.generate(se.eTitle,se.eStart,se.eEnd,se.eComments,se.eRepeat,se.eID,se.eMsg.getGuild().getId());
         MessageUtilities.editMsg( msg, se.eMsg, this::addEntry);
     }
 

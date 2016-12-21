@@ -28,7 +28,7 @@ public class UpdateAllCommand implements Command
     {
         for( ScheduleEntry se : Main.scheduleManager.getAllEntries() )
         {
-            String msg = ScheduleEntryParser.generate(se.eTitle, se.eStart, se.eEnd, se.eComments, se.eRepeat, se.eID );
+            String msg = ScheduleEntryParser.generate(se.eTitle, se.eStart, se.eEnd, se.eComments, se.eRepeat, se.eID, se.eMsg.getGuild().getId() );
             MessageUtilities.editMsg( msg, se.eMsg, null );
         }
     }

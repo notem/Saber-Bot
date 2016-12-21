@@ -65,7 +65,7 @@ public class DestroyCommand implements Command
 
         if( args[0].equals("all") )
         {
-            ArrayList<Integer> ent = scheduleManager.getEntriesByGuild( guild.getId() );
+            ArrayList<ScheduleEntry> ent = scheduleManager.getEntriesByGuild( guild.getId() );
             if( ent == null )
             {
                 MessageUtilities.sendMsg(
@@ -73,11 +73,10 @@ public class DestroyCommand implements Command
                         event.getChannel(), null);
                 return;
             }
-            ArrayList<Integer> entries = new ArrayList<>();
+            ArrayList<ScheduleEntry> entries = new ArrayList<>();
             entries.addAll( ent );
-            for (Integer eId : entries)
+            for (ScheduleEntry entry : entries)
             {
-                ScheduleEntry entry = scheduleManager.getEntry(eId);
                 if (entry != null)
                 {
                     // create the announcement message strings
@@ -99,7 +98,7 @@ public class DestroyCommand implements Command
 
                     synchronized( scheduleManager.getScheduleLock() )
                     {
-                        scheduleManager.removeEntry(eId);
+                        scheduleManager.removeEntry(entry.eID);
                     }
 
                     // delete the old message

@@ -43,6 +43,28 @@ public class SetCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
+        if( args.length < 2 )
+        {
+            return false;
+        }
+        switch( args[0] )
+        {
+            case "msg" :
+                break;
+
+            case "chan" :
+                break;
+
+            case "zone" :
+                if( ZoneId.of(args[1].replace("\"","")) == null )
+                    return false;
+                break;
+
+            case "clock" :
+                if( !args[1].replace("\"","").equals("24") && !args[1].replace("\"","").equals("12"))
+                    return false;
+                break;
+        }
         return true;
     }
 
@@ -90,6 +112,10 @@ public class SetCommand implements Command
 
             case "clock" :
                 guildSettingsManager.setGuildClockFormat( event.getGuild().getId(), args[1].replace("\"","") );
+                for( ScheduleEntry se : Main.scheduleManager.getEntriesByGuild(event.getGuild().getId()) )
+                {
+                    Main.scheduleManager.reloadEntry(se.eID);
+                }
                 break;
         }
 

@@ -3,6 +3,7 @@ package io.schedulerbot.commands.admin;
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.utils.__out;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -34,6 +35,7 @@ public class GlobalAnnounceCommand implements Command
 
         for( Guild guild : Main.getBotJda().getGuilds() )
         {
+            __out.printOut(this.getClass(),"sending announce to " + guild.getName());
             MessageUtilities.sendAnnounce( msg, guild, null );
         }
     }

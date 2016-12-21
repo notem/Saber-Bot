@@ -28,6 +28,13 @@ public class ScheduleEntryParser
             Integer eID;
             int eRepeat = 0;
 
+
+            String timeFormatter;
+            if( Main.guildSettingsManager.getGuildClockFormat(msg.getGuild().getId()).equals("24") )
+                timeFormatter = "< H:mm >";
+            else
+                timeFormatter = "< h:mm a >";
+
             // split into lines
             String[] lines = raw.split("\n");
 
@@ -43,12 +50,12 @@ public class ScheduleEntryParser
                 try
                 {
                     date = LocalDate.parse(lines[2].split(" from ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
-                    timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern("< H:mm >"));
-                    timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern("< H:mm >"));
+                    timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern(timeFormatter));
+                    timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern(timeFormatter));
                 } catch (Exception ignored)
                 {
                     date = LocalDate.parse(lines[2].split(" at ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
-                    LocalTime time = LocalTime.parse(lines[2].split(" at ")[1], DateTimeFormatter.ofPattern("< H:mm >"));
+                    LocalTime time = LocalTime.parse(lines[2].split(" at ")[1], DateTimeFormatter.ofPattern(timeFormatter));
                     timeStart = time;
                     timeEnd = time;
                 }
@@ -108,24 +115,30 @@ public class ScheduleEntryParser
 
 
     public static String generate(String eTitle, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments,
-                                  int eRepeat, Integer eId)
+                                  int eRepeat, Integer eId, String gId)
     {
+        String timeFormatter;
+        if( Main.guildSettingsManager.getGuildClockFormat(gId).equals("24") )
+            timeFormatter = "< H:mm >";
+        else
+            timeFormatter = "< h:mm a >";
+
         // the 'actual' first line (and last line) define format
         String msg = "```Markdown\n";
 
-        if( eId == null) eId = Main.scheduleManager.newId( eId ); // generate an ID for the entry
+        if( eId == null) eId = Main.scheduleManager.newId( null ); // generate an ID for the entry
         String firstLine = "# " + eTitle + "\n";
 
         // of form: "< DATE > from < START > to < END >\n"
         String secondLine = eStart.format(DateTimeFormatter.ofPattern("< MMMM d >"));
         if( eStart.equals(eEnd) )
         {
-            secondLine += " at " + eStart.format(DateTimeFormatter.ofPattern("< H:mm >")) + "\n";
+            secondLine += " at " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
         else
         {
-            secondLine += " from " + eStart.format(DateTimeFormatter.ofPattern("< H:mm >")) +
-                    " to " + eEnd.format(DateTimeFormatter.ofPattern("< H:mm >")) + "\n";
+            secondLine += " from " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                    " to " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
 
         msg += firstLine + secondLine;

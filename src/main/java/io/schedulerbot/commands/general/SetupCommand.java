@@ -65,7 +65,7 @@ public class SetupCommand implements Command
 
                 "And that's it. The default timezone used is " + Main.getSettings().getTimeZone() + ", if you wish " +
                 "to change any of the provided defaults (which can be found in the events channel) use the " +
-                prefix + "set command.";
+                prefix + "set command.\n\n";
 
         MessageUtilities.sendPrivateMsg(msg + BOTOATH_LINK, event.getAuthor(), null);
     }
