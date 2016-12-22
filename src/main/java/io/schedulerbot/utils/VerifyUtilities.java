@@ -27,15 +27,13 @@ public class VerifyUtilities
                 return false;
             if( !verifyInteger( start[0] ) )
                 return false;
-            if (Integer.parseInt(start[0]) > 24)
+            if (Integer.parseInt(start[0]) > 12 || Integer.parseInt(start[0]) == 0)
                 return false;
             if (start[1].length() > 2)
                 return false;
             if( !verifyInteger( start[1] ) )
                 return false;
             if (Integer.parseInt(start[1]) > 59)
-                return false;
-            if (Integer.parseInt(start[0]) == 24 && Integer.parseInt(start[1]) != 0)
                 return false;
 
         }
@@ -122,6 +120,9 @@ public class VerifyUtilities
     {
         String argLower = arg.toLowerCase();
         if(argLower.equals("no")||argLower.equals("weekly")||argLower.equals("daily"))
+            return true;
+
+        else if( verifyInteger( arg ) && Integer.parseInt( arg ) <= 2 )
             return true;
 
         return false;

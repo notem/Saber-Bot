@@ -8,7 +8,6 @@ import io.schedulerbot.core.ScheduleEntryParser;
 import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,13 +18,17 @@ public class EditCommand implements Command
 {
     private static String prefix = Main.getSettings().getCommandPrefix();
 
-    private static final String USAGE_EXTENDED = "\nThe entry's title, start time, start date, end time, comments," +
+    private static final String USAGE_EXTENDED = "The entry's title, start time, start date, end time, comments," +
             " and repeat may be reconfigured with this command using the form **!edit <ID> <option> <arguments>**\n The" +
-            " possible arguments are **title \"NEW TITLE\"**, **start HH:mm**, **end HH:mm**, **date MM/dd**, " +
+            " possible arguments are **title \"NEW TITLE\"**, **start h:mm**, **end h:mm**, **date MM/dd**, " +
             "**repeat no**/**daily**/**weekly**, and **comment add \"COMMENT\"** (or **comment remove**). When " +
             "removing a comment, either the comment copied verbatim (within quotations) or the comment number needs" +
-            " to be supplied.\n\nEx1: **!edit 3fa0 comment add \"Attendance is mandatory\"**\nEx2: **!edit 0abf " +
-            "start 06:15**\nEx3: **!edit 80c0 comment remove 1**";
+            " to be supplied.";
+
+    private static final String EXAMPLES = "Ex1: **!edit 3fa0 comment add \"Attendance is mandatory\"**" +
+            "\nEx2: **!edit 0abf start 21:15**" +
+            "\nEx3: **!edit 49af end 2:15pm**" +
+            "\nEx4: **!edit 80c0 comment remove 1**";
 
     private static final String USAGE_BRIEF = "**" + prefix + "edit** - Modifies an event entry, either" +
             " changing settings or adding/removing comment fields.";
@@ -38,9 +41,8 @@ public class EditCommand implements Command
         if( brief )
             return USAGE_BRIEF;
         else
-            return USAGE_BRIEF + "\n" + USAGE_EXTENDED;
+            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
-
 
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
@@ -168,29 +170,11 @@ public class EditCommand implements Command
                 break;
 
             case "start":
-                if( args[2].equals("24:00") )       // if the user inputs 24:00
-                {
-                    start = start.withHour(0);
-                    start = start.withMinute(0);
-                }
-                else
-                {
-                    start = start.withHour(Integer.parseInt(args[2].split(":")[0]));
-                    start = start.withMinute(Integer.parseInt(args[2].split(":")[1]));
-                }
+                start = ParsingUtilities.parseTime( start, args[2] );
                 break;
 
             case "end":
-                if( args[2].equals("24:00") )       // if the user inputs 24:00
-                {
-                    end = end.withHour(0);
-                    end = end.withMinute(0);
-                }
-                else
-                {
-                    end = end.withHour(Integer.parseInt(args[2].split(":")[0]));
-                    end = end.withMinute(Integer.parseInt(args[2].split(":")[1]));
-                }
+                end = ParsingUtilities.parseTime( end, args[2] );
                 break;
 
             case "title":

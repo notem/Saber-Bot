@@ -5,6 +5,7 @@ import io.schedulerbot.commands.Command;
 import io.schedulerbot.core.ScheduleEntry;
 import io.schedulerbot.core.ScheduleEntryParser;
 import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.utils.ParsingUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -26,17 +27,20 @@ public class CreateCommand implements Command
     private static int maxEntries = Main.getSettings().getMaxEntries();
     private static String scheduleChan = Main.getSettings().getScheduleChan();
 
-    private static final String USAGE_EXTENDED = "\nEvent entries can be initialized using the form **" + prefix +
+    private static final String USAGE_EXTENDED = "Event entries can be initialized using the form **" + prefix +
             "create \"TITLE\" <Start> <End> <Optional>**. Entries MUST be initialized with a title, a start " +
-            "time, and an end time. Start and end times should be of form HH:mm. Entries can optionally be " +
+            "time, and an end time. Start and end times should be of form h:mm with optional am/pm appended on " +
+            "the end. Entries can optionally be " +
             "configured with comments, repeat, and a start date. Adding **repeat no**/**daily**/**weekly** to " +
             "**<Optional>** will configure repeat; default behavior is no repeat. Adding **date MM/dd** to " +
             "**<Optional>** will configure the start date; default behavior is to use the current date or the " +
             "next day depending on if the current time is greater than the start time. Comments may be added by" +
             " adding **\"YOUR COMMENT\"** in **<Optional>**; any number of comments may be added in **<Optional>" +
-            "**.\n\nEx1. **!create \"Party in the Guild Hall\" 19:00 02:00**\nEx2. **!create \"Weekly Raid Event\"" +
-            " 19:00 22:00 repeat weekly \"Healers and tanks always in demand.\" \"PM our raid captain with your " +
-            "role and level if attending.\"**";
+            "**.";
+
+    private static final String EXAMPLES = "Ex1. **!create \"Party in the Guild Hall\" 19:00 02:00**" +
+            "\nEx2. **!create \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
+            "demand.\" \"PM our raid captain with your role and level if attending.\"**";
 
     private static final String USAGE_BRIEF = "**" + prefix + "create** - Generates a new event entry" +
             " in #" + scheduleChan + ".";
@@ -47,7 +51,7 @@ public class CreateCommand implements Command
         if( brief )
             return USAGE_BRIEF;
         else
-            return USAGE_BRIEF + "\n" + USAGE_EXTENDED;
+            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
@@ -176,18 +180,12 @@ public class CreateCommand implements Command
             else if(!startFlag)
             {
                 startFlag = true;
-                if( arg.equals("24:00") )
-                    eStart = LocalTime.MIDNIGHT;
-                else
-                    eStart = LocalTime.parse(arg);
+                eStart = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
             }
             else if(!endFlag)
             {
                 endFlag = true;
-                if( arg.equals("24:00") )
-                    eEnd = LocalTime.MIDNIGHT;
-                else
-                    eEnd = LocalTime.parse(arg);
+                eEnd = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
             }
             else
             {
