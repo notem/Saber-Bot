@@ -18,31 +18,45 @@ public class VerifyUtilities
 {
     public static boolean verifyTime(String arg)
     {
-        String[] start = arg.split(":");
-        if(start.length != 2)
-            return false;
-        if(start[0].length()!=2)
-            return false;
-        else
+        if( arg.toUpperCase().endsWith("AM") || arg.toUpperCase().endsWith("PM") )
         {
-            if(!Character.isDigit(start[0].charAt(0)))
+            String[] start = arg.substring(0,arg.length()-2).split(":");
+            if (start.length != 2)
                 return false;
-            if(!Character.isDigit(start[0].charAt(1)))
+            if (start[0].length() > 2)
                 return false;
-            if(Integer.parseInt(start[0])>24)
+            if( !verifyInteger( start[0] ) )
                 return false;
+            if (Integer.parseInt(start[0]) > 24)
+                return false;
+            if (start[1].length() > 2)
+                return false;
+            if( !verifyInteger( start[1] ) )
+                return false;
+            if (Integer.parseInt(start[1]) > 59)
+                return false;
+            if (Integer.parseInt(start[0]) == 24 && Integer.parseInt(start[1]) != 0)
+                return false;
+
         }
-        if(start[1].length()!=2)
-            return false;
         else
         {
-            if(!Character.isDigit(start[1].charAt(0)))
+            String[] start = arg.split(":");
+            if (start.length != 2)
                 return false;
-            if(!Character.isDigit(start[1].charAt(1)))
+            if (start[0].length() > 2)
                 return false;
-            if(Integer.parseInt(start[1])>59)
+            if( !verifyInteger( start[0] ) )
                 return false;
-            if(Integer.parseInt(start[0])==24&&Integer.parseInt(start[1])!=0)
+            if (Integer.parseInt(start[0]) > 24)
+                return false;
+            if (start[1].length() > 2)
+                return false;
+            if( !verifyInteger( start[1] ) )
+                return false;
+            if (Integer.parseInt(start[1]) > 59)
+                return false;
+            if (Integer.parseInt(start[0]) == 24 && Integer.parseInt(start[1]) != 0)
                 return false;
         }
         return true;
