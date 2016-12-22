@@ -72,12 +72,20 @@ public class ScheduleManager
 
         // adjusts the displayed time til timer (since it is not set at creation)
         se.adjustTimer();
+
         // add the entry to buffer
-        long timeTil = ZonedDateTime.now().until(se.eEnd, ChronoUnit.SECONDS);
-        if( timeTil <= 45*60 )
-            fineTimerBuff.add( se );
-        else if( timeTil <= 32*60*60 )
-            coarseTimerBuff.add( se );
+        if( !se.startFlag )
+        {
+            long timeTil = ZonedDateTime.now().until(se.eStart, ChronoUnit.SECONDS);
+            if (timeTil <= 45 * 60)
+                fineTimerBuff.add(se);
+            else if (timeTil <= 32 * 60 * 60)
+                coarseTimerBuff.add(se);
+        }
+        else
+        {
+            fineTimerBuff.add(se);
+        }
     }
 
     public void removeId( Integer eId )

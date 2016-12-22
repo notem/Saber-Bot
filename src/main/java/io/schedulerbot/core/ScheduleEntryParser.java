@@ -87,6 +87,9 @@ public class ScheduleEntryParser
             // the last line contains the ID, minutes til timer, and repeat \\
             // of form: "[ID: XXXX](TIME TIL) repeats xxx\n"
             eID = Integer.decode("0x" + lines[lines.length - 2].replace("[ID: ", "").split("]")[0]);
+
+            boolean started = lines[lines.length - 2].split("\\(")[1].startsWith("ends");
+
             String[] tmp = lines[lines.length - 2].split("\\)");
             String repeat = tmp.length>1 ? tmp[1] : "";
             switch( repeat )
@@ -101,9 +104,8 @@ public class ScheduleEntryParser
                     break;
             }
 
-
             // create a new thread
-            return new ScheduleEntry(eTitle, eStart, eEnd, eComments, eID, msg, eRepeat);
+            return new ScheduleEntry(eTitle, eStart, eEnd, eComments, eID, msg, eRepeat, started);
         }
         catch( Exception e )
         {

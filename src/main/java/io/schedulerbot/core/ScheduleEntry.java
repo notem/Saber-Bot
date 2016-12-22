@@ -31,7 +31,7 @@ public class ScheduleEntry
     public boolean startFlag;               // flagged true when the start time has been reached
 
 
-    public ScheduleEntry(String eName, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat )
+    public ScheduleEntry(String eName, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat, boolean started )
     {
         this.eTitle = eName;
         this.eStart = eStart;
@@ -41,7 +41,7 @@ public class ScheduleEntry
         this.eMsg = eMsg;
         this.eRepeat = eRepeat;
 
-        this.startFlag = false;
+        this.startFlag = started;
     }
 
 
@@ -161,8 +161,6 @@ public class ScheduleEntry
                    if(!line.equals(lines[lines.length-1]))
                        msg += "\n";
                }
-
-
 
                MessageUtilities.editMsg( msg, this.eMsg, null );
            }

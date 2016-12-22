@@ -170,13 +170,13 @@ public class EditCommand implements Command
             case "start":
                 if( args[2].equals("24:00") )       // if the user inputs 24:00
                 {
-                    start = end.withHour(0);
-                    start = end.withMinute(0);
+                    start = start.withHour(0);
+                    start = start.withMinute(0);
                 }
                 else
                 {
-                    start = end.withHour(Integer.parseInt(args[2].split(":")[0]));
-                    start = end.withMinute(Integer.parseInt(args[2].split(":")[1]));
+                    start = start.withHour(Integer.parseInt(args[2].split(":")[0]));
+                    start = start.withMinute(Integer.parseInt(args[2].split(":")[1]));
                 }
                 break;
 
@@ -228,10 +228,10 @@ public class EditCommand implements Command
 
         synchronized( scheduleManager.getScheduleLock() )
         {
-            scheduleManager.removeEntry(entryId);
+            scheduleManager.removeEntry( entryId );
         }
 
         String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, entry.eMsg.getGuild().getId());
-        MessageUtilities.editMsg(msg, entry.eMsg, (m) -> scheduleManager.addEntry(m));
+        MessageUtilities.editMsg(msg, entry.eMsg, scheduleManager::addEntry);
     }
 }

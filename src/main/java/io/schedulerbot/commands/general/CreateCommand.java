@@ -247,7 +247,7 @@ public class CreateCommand implements Command
         // generate the event entry message
         String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, null, event.getGuild().getId() );
 
-        MessageUtilities.sendMsg( msg,
-                event.getGuild().getTextChannelsByName(scheduleChan, false).get(0), null );
+        MessageUtilities.sendMsg( msg, event.getGuild().getTextChannelsByName(scheduleChan, false).get(0),
+                Main.scheduleManager::addEntry);
     }
 }

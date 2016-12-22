@@ -11,15 +11,10 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.SelfUser;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  *  initializes and maintains the bot
@@ -52,7 +47,7 @@ public class Main
 
             // build bot
             jda = new JDABuilder(AccountType.BOT)
-                    .addListener(new MessageListener()) // attach listener
+                    .addListener(new EventListener()) // attach listener
                     .setToken(settings.getToken())          // set token
                     .buildBlocking();
             // enable reconnect

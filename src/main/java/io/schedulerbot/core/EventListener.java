@@ -10,17 +10,15 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Servers three purposes:
+ * Serves two responsibilities:
  * 1) listens for command messages on private and bot channels
- * 2) listens for new schedule entries
- * 3) recovers after shutdown by parsing the schedule when bot is ready
+ * 2) recovers after shutdown by parsing the schedule when bot is ready
  */
-public class MessageListener extends ListenerAdapter
+public class EventListener extends ListenerAdapter
 {
     // store the bot settings to easy reference
     private String prefix = Main.getSettings().getCommandPrefix();
@@ -56,7 +54,7 @@ public class MessageListener extends ListenerAdapter
             return;
         }
 
-        // if main schedule channel is not setup give up
+        // if main schedule channel is not setup go no further
         if( !VerifyUtilities.verifyScheduleChannel( event.getGuild() ) )
         {
            return;
@@ -64,27 +62,23 @@ public class MessageListener extends ListenerAdapter
 
         if (origin.equals(controlChan) && content.startsWith(prefix))
         {
+            // generate settings for the channel if none yet
             guildSettingsManager.checkGuild( event.getGuild() );
+
+            // handle command received
             Main.handleGeneralCommand(Main.commandParser.parse(content, event));
             return;
         }
 
         if (origin.equals(scheduleChan))
         {
-            // if it is it's own message, parse it into a thread
-            if (userId.equals(Main.getBotSelfUser().getId()))
-            {
-                if( !event.getMessage().getRawContent().startsWith("```java") )
-                {
-                    scheduleManager.addEntry(event.getMessage());
-                    guildSettingsManager.sendSettingsMsg( event.getGuild() );
-                }
-            }
-            // otherwise, attempt to delete the message
-            else
-            {
+            // delete other user's messages
+            if (!userId.equals(Main.getBotSelfUser().getId()))
                 MessageUtilities.deleteMsg(event.getMessage(), null);
-            }
+
+            // if it is from myself, resend the guild settings message (so that it is at the bottom)
+            else
+                guildSettingsManager.sendSettingsMsg(event.getGuild());
         }
     }
 
