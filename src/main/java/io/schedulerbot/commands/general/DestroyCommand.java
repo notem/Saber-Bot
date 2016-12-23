@@ -2,18 +2,16 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.core.ScheduleEntry;
-import io.schedulerbot.core.ScheduleManager;
+import io.schedulerbot.core.schedule.ScheduleEntry;
+import io.schedulerbot.core.schedule.ScheduleManager;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.ZonedDateTime;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 
@@ -21,8 +19,8 @@ import static java.time.temporal.ChronoUnit.SECONDS;
  */
 public class DestroyCommand implements Command
 {
-    private static String prefix = Main.getSettings().getCommandPrefix();
-    private static String scheduleChan = Main.getSettings().getScheduleChan();
+    private static String prefix = Main.getBotSettings().getCommandPrefix();
+    private static String scheduleChan = Main.getBotSettings().getScheduleChan();
 
     private static final String USAGE_EXTENDED = "\nCalling **!destroy <ID>** will end the event with <ID>" +
             " prematurely. If **all** is used instead of the event ID, all scheduled events will be destroyed." +
@@ -65,7 +63,7 @@ public class DestroyCommand implements Command
 
         if( args[0].equals("all") )
         {
-            ArrayList<ScheduleEntry> ent = scheduleManager.getEntriesByGuild( guild.getId() );
+            ArrayList<Integer> ent = scheduleManager.getEntriesByGuild( guild.getId() );
             if( ent == null )
             {
                 MessageUtilities.sendMsg(
@@ -73,8 +71,8 @@ public class DestroyCommand implements Command
                         event.getChannel(), null);
                 return;
             }
-            ArrayList<ScheduleEntry> entries = new ArrayList<>();
-            entries.addAll( ent );
+            ArrayList<ScheduleEntry> entries = ent.stream()
+                    .map(id -> scheduleManager.getEntry(id)).collect(Collectors.toCollection(ArrayList::new));
             for (ScheduleEntry entry : entries)
             {
                 if (entry != null)

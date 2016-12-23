@@ -1,4 +1,4 @@
-package io.schedulerbot.core;
+package io.schedulerbot.core.schedule;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.utils.__out;

@@ -1,4 +1,4 @@
-package io.schedulerbot.core;
+package io.schedulerbot.core.settings;
 
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;

@@ -1,6 +1,5 @@
-package io.schedulerbot.core;
+package io.schedulerbot.core.schedule;
 
-import io.schedulerbot.Main;
 import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
 
@@ -150,22 +149,20 @@ public class ScheduleManager
             return null;
     }
 
-    public ArrayList<ScheduleEntry> getEntriesByGuild( String gId )
+    public ArrayList<Integer> getEntriesByGuild( String gId )
     {
         // check if guild exists in map, if so return their entries
         if( entriesByGuild.containsKey(gId) )
-        {
-            return entriesByGuild.get(gId).stream().map(
-                    (id) -> entriesGlobal.get(id)).collect(Collectors.toCollection(ArrayList::new));
-        }
+            return entriesByGuild.get(gId);
 
         else        // otherwise return null
             return null;
     }
 
-    public Collection<ScheduleEntry> getAllEntries()
+    public Collection<Integer> getAllEntries()
     {
-        return entriesGlobal.values();
+        return entriesGlobal.values().stream()
+                .map(entry -> entry.eID).collect(Collectors.toCollection(ArrayList::new));
     }
 
     public Object getScheduleLock()

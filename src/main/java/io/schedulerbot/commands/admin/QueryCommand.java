@@ -2,9 +2,9 @@ package io.schedulerbot.commands.admin;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.core.GuildSettingsManager;
-import io.schedulerbot.core.ScheduleEntry;
-import io.schedulerbot.core.ScheduleManager;
+import io.schedulerbot.core.settings.GuildSettingsManager;
+import io.schedulerbot.core.schedule.ScheduleEntry;
+import io.schedulerbot.core.schedule.ScheduleManager;
 import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -80,7 +80,6 @@ public class QueryCommand implements Command
                         "\t\tStart = " + entry.eStart + "'\n" +
                         "\t\tEnd = '" + entry.eEnd + "'\n" +
                         "\t\tRepeat = '" + entry.eRepeat + "'\n" +
-                        "\t\tZone = '" + "EST" + "'\n" +
                         "\t\tComments = ";
                 for (String comment : entry.eComments)
                 {

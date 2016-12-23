@@ -21,7 +21,7 @@ public class BotSettings
 
     private static final String DEFAULT_TIME_ZONE = "America/New_York";
     private static final String DEFAULT_CLOCK_FORMAT = "24";
-    private static final String DEFAULT_ANNOUNCE_FORMAT = "@everyone The event %t has %a.";
+    private static final String DEFAULT_ANNOUNCE_FORMAT = "@everyone The event **%t** %a.";
 
     private Properties properties;
 

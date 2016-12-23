@@ -1,6 +1,6 @@
 package io.schedulerbot.utils;
 
-import io.schedulerbot.core.ScheduleEntry;
+import io.schedulerbot.core.schedule.ScheduleEntry;
 
 
 /**

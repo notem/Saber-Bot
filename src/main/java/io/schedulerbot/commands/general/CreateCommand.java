@@ -2,8 +2,7 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.core.ScheduleEntry;
-import io.schedulerbot.core.ScheduleEntryParser;
+import io.schedulerbot.core.schedule.ScheduleEntryParser;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.ParsingUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
@@ -23,9 +22,9 @@ import java.util.Arrays;
  */
 public class CreateCommand implements Command
 {
-    private static String prefix = Main.getSettings().getCommandPrefix();
-    private static int maxEntries = Main.getSettings().getMaxEntries();
-    private static String scheduleChan = Main.getSettings().getScheduleChan();
+    private static String prefix = Main.getBotSettings().getCommandPrefix();
+    private static int maxEntries = Main.getBotSettings().getMaxEntries();
+    private static String scheduleChan = Main.getBotSettings().getScheduleChan();
 
     private static final String USAGE_EXTENDED = "Event entries can be initialized using the form **" + prefix +
             "create \"TITLE\" <Start> <End> <Optional>**. Entries MUST be initialized with a title, a start " +
@@ -137,7 +136,7 @@ public class CreateCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        ArrayList<ScheduleEntry> entries = Main.scheduleManager.getEntriesByGuild( event.getGuild().getId() );
+        ArrayList<Integer> entries = Main.scheduleManager.getEntriesByGuild( event.getGuild().getId() );
 
         if( entries != null && entries.size() >= maxEntries && maxEntries > 0)
         {

@@ -143,7 +143,7 @@ public class VerifyUtilities
 
     public static boolean verifyScheduleChannel( Guild guild )
     {
-        List<TextChannel> chans = guild.getTextChannelsByName( Main.getSettings().getScheduleChan(), false );
+        List<TextChannel> chans = guild.getTextChannelsByName( Main.getBotSettings().getScheduleChan(), false );
         if( chans == null || chans.isEmpty() )
         {
             return false;

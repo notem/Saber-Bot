@@ -2,9 +2,9 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.core.ScheduleEntry;
-import io.schedulerbot.core.ScheduleManager;
-import io.schedulerbot.core.ScheduleEntryParser;
+import io.schedulerbot.core.schedule.ScheduleEntry;
+import io.schedulerbot.core.schedule.ScheduleManager;
+import io.schedulerbot.core.schedule.ScheduleEntryParser;
 import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -16,7 +16,7 @@ import java.util.Arrays;
  */
 public class EditCommand implements Command
 {
-    private static String prefix = Main.getSettings().getCommandPrefix();
+    private static String prefix = Main.getBotSettings().getCommandPrefix();
 
     private static final String USAGE_EXTENDED = "The entry's title, start time, start date, end time, comments," +
             " and repeat may be reconfigured with this command using the form **!edit <ID> <option> <arguments>**\n The" +
@@ -31,7 +31,7 @@ public class EditCommand implements Command
             "\nEx4: **!edit 80c0 comment remove 1**";
 
     private static final String USAGE_BRIEF = "**" + prefix + "edit** - Modifies an event entry, either" +
-            " changing settings or adding/removing comment fields.";
+            " changing botSettings or adding/removing comment fields.";
 
     private ScheduleManager scheduleManager = Main.scheduleManager;
 

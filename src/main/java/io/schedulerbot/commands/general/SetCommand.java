@@ -2,10 +2,8 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.core.GuildSettingsManager;
-import io.schedulerbot.core.ScheduleEntry;
-import io.schedulerbot.core.ScheduleEntryParser;
-import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.core.settings.GuildSettingsManager;
+import io.schedulerbot.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.ZoneId;
@@ -16,7 +14,7 @@ public class SetCommand implements Command
 {
     private GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
 
-    private static String invoke = Main.getSettings().getCommandPrefix() + "set";
+    private static String invoke = Main.getBotSettings().getCommandPrefix() + "set";
 
     private static final String USAGE_EXTENDED = "**!set [option] \"new configuration\"**. Options are 'msg' " +
             "(announcement message format), chan (announcement channel), zone (timezone to use), and clock " +
@@ -25,7 +23,7 @@ public class SetCommand implements Command
             " title to be inserted, %c[1-9] will cause the nth comment for the entry to be inserted, %a will insert" +
             " 'begins' or 'ends', and %% will insert %.";
 
-    private static final String USAGE_BRIEF = "**" + invoke + "** - Used to set guild-wide schedule settings.";
+    private static final String USAGE_BRIEF = "**" + invoke + "** - Used to set guild-wide schedule botSettings.";
 
     private static final String EXAMPLES = "Ex1: **" + invoke + " msg \"@here The event %t %a.\"**\n" +
             "Ex2: **" + invoke + " msg \"@everyone %c1\"" +
@@ -102,8 +100,9 @@ public class SetCommand implements Command
             case "zone" :
                 ZoneId zone = ZoneId.of(args[1].replace("\"",""));
                 guildSettingsManager.setGuildTimeZone( event.getGuild().getId(), zone );
-                for( ScheduleEntry se : Main.scheduleManager.getEntriesByGuild(event.getGuild().getId()) )
+                for( Integer id : Main.scheduleManager.getEntriesByGuild(event.getGuild().getId()) )
                 {
+                    ScheduleEntry se = Main.scheduleManager.getEntry( id );
                     se.eStart.withZoneSameLocal( zone );
                     se.eEnd.withZoneSameLocal( zone );
                     Main.scheduleManager.reloadEntry(se.eID);
@@ -112,8 +111,9 @@ public class SetCommand implements Command
 
             case "clock" :
                 guildSettingsManager.setGuildClockFormat( event.getGuild().getId(), args[1].replace("\"","") );
-                for( ScheduleEntry se : Main.scheduleManager.getEntriesByGuild(event.getGuild().getId()) )
+                for( Integer id : Main.scheduleManager.getEntriesByGuild(event.getGuild().getId()) )
                 {
+                    ScheduleEntry se = Main.scheduleManager.getEntry(id);
                     Main.scheduleManager.reloadEntry(se.eID);
                 }
                 break;

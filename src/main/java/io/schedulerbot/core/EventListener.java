@@ -2,6 +2,9 @@ package io.schedulerbot.core;
 
 import io.schedulerbot.Main;
 
+import io.schedulerbot.core.command.CommandHandler;
+import io.schedulerbot.core.schedule.ScheduleManager;
+import io.schedulerbot.core.settings.GuildSettingsManager;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.MessageHistory;
@@ -20,16 +23,17 @@ import java.util.function.Consumer;
  */
 public class EventListener extends ListenerAdapter
 {
-    // store the bot settings to easy reference
-    private String prefix = Main.getSettings().getCommandPrefix();
-    private String adminPrefix = Main.getSettings().getAdminPrefix();
-    private String adminId = Main.getSettings().getAdminId();
-    private int maxEntries = Main.getSettings().getMaxEntries();
-    private String controlChan = Main.getSettings().getControlChan();
-    private String scheduleChan = Main.getSettings().getScheduleChan();
+    // store the bot botSettings to easy reference
+    private String prefix = Main.getBotSettings().getCommandPrefix();
+    private String adminPrefix = Main.getBotSettings().getAdminPrefix();
+    private String adminId = Main.getBotSettings().getAdminId();
+    private int maxEntries = Main.getBotSettings().getMaxEntries();
+    private String controlChan = Main.getBotSettings().getControlChan();
+    private String scheduleChan = Main.getBotSettings().getScheduleChan();
 
     private ScheduleManager scheduleManager = Main.scheduleManager;
     private GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+    private CommandHandler cmdHandler = Main.commandHandler;
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
@@ -43,12 +47,12 @@ public class EventListener extends ListenerAdapter
         {
             if (content.startsWith(prefix + "help") || content.startsWith(prefix + "setup"))
             {
-                Main.handleGeneralCommand(Main.commandParser.parse(content, event));
+                cmdHandler.handleCommand(event, 0);
                 return;
             }
             else if (content.startsWith(adminPrefix) && userId.equals(adminId))
             {
-                Main.handleAdminCommand(Main.commandParser.parse(content, event));
+                cmdHandler.handleCommand(event, 1);
                 return;
             }
             return;
@@ -62,11 +66,11 @@ public class EventListener extends ListenerAdapter
 
         if (origin.equals(controlChan) && content.startsWith(prefix))
         {
-            // generate settings for the channel if none yet
+            // generate botSettings for the channel if none yet
             guildSettingsManager.checkGuild( event.getGuild() );
 
             // handle command received
-            Main.handleGeneralCommand(Main.commandParser.parse(content, event));
+            cmdHandler.handleCommand(event, 0);
             return;
         }
 
@@ -76,7 +80,7 @@ public class EventListener extends ListenerAdapter
             if (!userId.equals(Main.getBotSelfUser().getId()))
                 MessageUtilities.deleteMsg(event.getMessage(), null);
 
-            // if it is from myself, resend the guild settings message (so that it is at the bottom)
+            // if it is from myself, resend the guild botSettings message (so that it is at the bottom)
             else
                 guildSettingsManager.sendSettingsMsg(event.getGuild());
         }
@@ -85,7 +89,7 @@ public class EventListener extends ListenerAdapter
     @Override
     public void onReady(ReadyEvent event)
     {
-        // loads schedules and settings for every connected guild
+        // loads schedules and botSettings for every connected guild
         for (Guild guild : event.getJDA().getGuilds())
         {
             List<TextChannel> chan = guild.getTextChannelsByName(scheduleChan, false);

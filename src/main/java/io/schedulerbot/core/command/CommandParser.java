@@ -1,4 +1,4 @@
-package io.schedulerbot.core;
+package io.schedulerbot.core.command;
 
 import io.schedulerbot.Main;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -12,14 +12,16 @@ import java.util.Collections;
  */
 public class CommandParser
 {
-    public CommandContainer parse(String raw, MessageReceivedEvent e)
+    public CommandContainer parse( MessageReceivedEvent e)
     {
+        String raw = e.getMessage().getRawContent();
+
         /// trim off the prefix
         String trimmed;
-        if( raw.startsWith( Main.getSettings().getAdminPrefix() ))
-            trimmed = raw.replaceFirst(Main.getSettings().getAdminPrefix(), "");
+        if( raw.startsWith( Main.getBotSettings().getAdminPrefix() ))
+            trimmed = raw.replaceFirst(Main.getBotSettings().getAdminPrefix(), "");
         else
-            trimmed = raw.replaceFirst( Main.getSettings().getCommandPrefix(), "");
+            trimmed = raw.replaceFirst( Main.getBotSettings().getCommandPrefix(), "");
 
         // split the trimmed string into arguments
         String[] splitTrimmed = trimmed.split(" ");
@@ -39,11 +41,11 @@ public class CommandParser
     }
 
     /** an object that holds the parsed user input in the MessageReceivedEvent e. **/
-    public class CommandContainer
+    class CommandContainer
     {
-        public final String invoke;         // the first argument in the user's input
-        public final String[] args;         // all arguments after the initial argument
-        public final MessageReceivedEvent event;    // the originating event
+        final String invoke;         // the first argument in the user's input
+        final String[] args;         // all arguments after the initial argument
+        final MessageReceivedEvent event;    // the originating event
 
         // constructor for CommandContainer
         CommandContainer(String invoke, String[] args, MessageReceivedEvent e)

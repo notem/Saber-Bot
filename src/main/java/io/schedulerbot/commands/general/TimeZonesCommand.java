@@ -16,7 +16,7 @@ public class TimeZonesCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String invoke = Main.getSettings().getCommandPrefix() + "timezone";
+        String invoke = Main.getBotSettings().getCommandPrefix() + "timezone";
 
         String USAGE_EXTENDED = "The raw output can be overwhelming. Output can be filtered by providing" +
                 "one argument to the command to filter for all zones which contain the word provided. For both our sakes," +

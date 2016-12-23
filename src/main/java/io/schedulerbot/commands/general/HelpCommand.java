@@ -15,7 +15,7 @@ import java.util.Collection;
  */
 public class HelpCommand implements Command
 {
-    private static String prefix = Main.getSettings().getCommandPrefix();
+    private static String prefix = Main.getBotSettings().getCommandPrefix();
 
     private final String INTRO = "I am **" + Main.getBotSelfUser().getName() + "**, the task scheduling discord bot." +
             " I can provide your discord with basic event schedule management.  Invite me to your discord and set up " +
@@ -47,13 +47,12 @@ public class HelpCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        Collection<Command> commands = Main.getCommands();
+        Collection<Command> commands = Main.commandHandler.getCommands();
 
         // send the bot intro with a brief list of commands to the user
         if(args.length < 1)
         {
-            String commandsBrief = "";
-            for( Command cmd : commands )
+            String commandsBrief = ""; for( Command cmd : commands )
                 commandsBrief += cmd.help( true ) + "\n";
 
             MessageUtilities.sendPrivateMsg( INTRO + "__**Available commands**__\n" +
@@ -62,7 +61,7 @@ public class HelpCommand implements Command
         // otherwise read search the commands for the first arg
         else
         {
-            Command cmd = Main.getCommand( args[0] );
+            Command cmd = Main.commandHandler.getCommand( args[0] );
             if( cmd != null )
             {
                 String helpMsg = cmd.help(false);

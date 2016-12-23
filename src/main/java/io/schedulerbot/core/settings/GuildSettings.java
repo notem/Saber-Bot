@@ -1,4 +1,4 @@
-package io.schedulerbot.core;
+package io.schedulerbot.core.settings;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.utils.MessageUtilities;
@@ -10,26 +10,26 @@ import java.time.ZoneId;
 
 /**
  */
-public class GuildSettings
+class GuildSettings
 {
-    public String announceChannel;
-    public String announceFormat;
-    public ZoneId timeZone;
-    public String clockFormat;
+    String announceChannel;
+    String announceFormat;
+    ZoneId timeZone;
+    String clockFormat;
     private Message msg;
     private Guild guild;
 
-    public GuildSettings( Guild guild )
+    GuildSettings(Guild guild)
     {
-        this.announceChannel = Main.getSettings().getAnnounceChan();
-        this.announceFormat = Main.getSettings().getAnnounceFormat();
-        this.timeZone = ZoneId.of(Main.getSettings().getTimeZone());
-        this.clockFormat = Main.getSettings().getClockFormat();
+        this.announceChannel = Main.getBotSettings().getAnnounceChan();
+        this.announceFormat = Main.getBotSettings().getAnnounceFormat();
+        this.timeZone = ZoneId.of(Main.getBotSettings().getTimeZone());
+        this.clockFormat = Main.getBotSettings().getClockFormat();
 
         this.guild = guild;
     }
 
-    public GuildSettings( Message msg )
+    GuildSettings(Message msg)
     {
         String trimmed = msg.getRawContent().replace("```java\n","").replace("\n```","");
         String[] options = trimmed.split(" \\| ");
@@ -70,11 +70,11 @@ public class GuildSettings
         return msg;
     }
 
-    public void reloadSettingsMsg()
+    void reloadSettingsMsg()
     {
         String msg = this.generateSettingsMsg();
         MessageChannel scheduleChan = this.guild
-                .getTextChannelsByName(Main.getSettings().getScheduleChan(), false).get(0);
+                .getTextChannelsByName(Main.getBotSettings().getScheduleChan(), false).get(0);
         if( scheduleChan == null )
         {
             return;
