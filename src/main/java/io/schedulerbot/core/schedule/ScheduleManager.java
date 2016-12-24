@@ -24,6 +24,7 @@ public class ScheduleManager
 
     private HashMap<Integer, ScheduleEntry> entriesGlobal;         // maps id to entry
     private HashMap<String, ArrayList<Integer>> entriesByGuild;    // maps guild to ids
+    private HashMap<String, ArrayList<Integer>> entriesByChannel;  // maps channel ids to entries
     private Collection<ScheduleEntry> coarseTimerBuff; // holds entries where 1h < start < 24h
     private Collection<ScheduleEntry> fineTimerBuff;   // holds entries where now < start < 1h
 
@@ -60,6 +61,7 @@ public class ScheduleManager
         // put the ScheduleEntry thread into a HashMap by ID
         entriesGlobal.put(se.eID, se);
 
+        // put the id in guild mapping
         if( !entriesByGuild.containsKey( guildId ) )
         {
             ArrayList<Integer> entries = new ArrayList<>();
@@ -68,6 +70,16 @@ public class ScheduleManager
         }
         else
             entriesByGuild.get( guildId ).add( se.eID );
+
+        // put the id in channel mapping
+        if( !entriesByChannel.containsKey( message.getChannel().getId() ))
+        {
+            ArrayList<Integer> entries = new ArrayList<>();
+            entries.add(se.eID);
+            entriesByChannel.put( message.getChannel().getId(), entries );
+        }
+        else
+            entriesByChannel.get( message.getChannel().getId() ).add( se.eID );
 
         // adjusts the displayed time til timer (since it is not set at creation)
         se.adjustTimer();
@@ -92,13 +104,17 @@ public class ScheduleManager
         ScheduleEntry se = this.getEntry( eId );
         if( se == null ) return;
         String gId = se.eMsg.getGuild().getId();
+        String cId = se.eMsg.getChannel().getId();
 
         // remove entry from guild map
         entriesByGuild.get(gId).remove(eId);
-
-        // also remove the guild from the map if they have no entries
         if (entriesByGuild.get(gId).isEmpty())
             entriesByGuild.remove(gId);
+
+        // remove entry from guild map
+        entriesByChannel.get(cId).remove(eId);
+        if (entriesByChannel.get(cId).isEmpty())
+            entriesByGuild.remove(cId);
 
         // remove entry from global map
         entriesGlobal.remove(eId);
@@ -154,6 +170,16 @@ public class ScheduleManager
         // check if guild exists in map, if so return their entries
         if( entriesByGuild.containsKey(gId) )
             return entriesByGuild.get(gId);
+
+        else        // otherwise return null
+            return null;
+    }
+
+    public ArrayList<Integer> getEntriesByChannel( String cId )
+    {
+        // check if guild exists in map, if so return their entries
+        if( entriesByChannel.containsKey(cId) )
+            return entriesByChannel.get(cId);
 
         else        // otherwise return null
             return null;

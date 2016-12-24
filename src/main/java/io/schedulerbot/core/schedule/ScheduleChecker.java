@@ -9,18 +9,18 @@ import java.util.*;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
- * Used by the Main scheduler timer, a new thread is executed every minute.
+ * Used by the Main scheduler timer, a new thread is executed every minute/15minutes/12hours.
  * processes all entries referenced in the collection passed in, checking the start/end time and updating the
  * "time until" display timers.
  * additional threads are spawned to carry out tasks
  */
-public class ScheduleChecker implements Runnable
+class ScheduleChecker implements Runnable
 {
     private Collection<ScheduleEntry> entries;
     private int level;
     private ScheduleManager scheduleManager = Main.scheduleManager;
 
-    public ScheduleChecker(Collection<ScheduleEntry> entries, int level)
+    ScheduleChecker(Collection<ScheduleEntry> entries, int level)
     {
         this.entries = entries;
         this.level = level;
@@ -60,8 +60,20 @@ public class ScheduleChecker implements Runnable
 
     private void fineCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
+        try // check if the message still exists by attempting to view it's contents
+        {
+            entry.eMsg.getContent();
+        }
+        catch( Exception ignored )
+        {
+            scheduleManager.removeEntry( entry.eID );
+            removeQueue.add(entry);
+            return;
+        }
+
         ZonedDateTime now = ZonedDateTime.now();
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + ". Starting in " + now.until(entry.eStart, SECONDS) + ": ending in " + now.until(entry.eEnd,SECONDS) );
+
         if (!entry.startFlag)
         {
             if ( now.until(entry.eStart, SECONDS) <= 0 )
@@ -87,8 +99,54 @@ public class ScheduleChecker implements Runnable
         }
     }
 
+    private void coarseCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
+    {
+        try
+        {
+            entry.eMsg.getContent();
+        }
+        catch( Exception ignored )
+        {
+            scheduleManager.removeEntry( entry.eID );
+            removeQueue.add(entry);
+            return;
+        }
+
+        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
+        ZonedDateTime now = ZonedDateTime.now();
+        if (!entry.startFlag)
+        {
+            if( now.until(entry.eStart, SECONDS) < 60*60 )
+            {
+                if( !scheduleManager.getFineTimerBuff().contains( entry ) )
+                {
+                    scheduleManager.getFineTimerBuff().add(entry);
+                    removeQueue.add( entry );       // queue it for removal from buffer
+                }
+            }
+            else
+            {
+                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
+            }
+        }
+        else
+        {
+            ScheduleManager.scheduleExec.submit(entry::adjustTimer);
+        }
+    }
+
     private void veryCoarseCheck(ScheduleEntry entry)
     {
+        try
+        {
+            entry.eMsg.getContent();
+        }
+        catch( Exception ignored )
+        {
+            scheduleManager.removeEntry( entry.eID );
+            return;
+        }
+
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
         ZonedDateTime now = ZonedDateTime.now();
         if (!entry.startFlag)
@@ -118,31 +176,6 @@ public class ScheduleChecker implements Runnable
             {
                 scheduleManager.getFineTimerBuff().add( entry );
             }
-        }
-    }
-
-    private void coarseCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
-    {
-        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
-        ZonedDateTime now = ZonedDateTime.now();
-        if (!entry.startFlag)
-        {
-            if( now.until(entry.eStart, SECONDS) < 60*60 )
-            {
-                if( !scheduleManager.getFineTimerBuff().contains( entry ) )
-                {
-                    scheduleManager.getFineTimerBuff().add(entry);
-                    removeQueue.add( entry );       // queue it for removal from buffer
-                }
-            }
-            else
-            {
-                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
-            }
-        }
-        else
-        {
-            ScheduleManager.scheduleExec.submit(entry::adjustTimer);
         }
     }
 }

@@ -3,12 +3,14 @@ package io.schedulerbot.core;
 import io.schedulerbot.Main;
 
 import io.schedulerbot.core.command.CommandHandler;
+import io.schedulerbot.core.schedule.ScheduleEntry;
 import io.schedulerbot.core.schedule.ScheduleManager;
 import io.schedulerbot.core.settings.GuildSettingsManager;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.MessageHistory;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
