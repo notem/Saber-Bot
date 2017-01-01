@@ -47,28 +47,27 @@ public class ScheduleEntryParser
                 LocalTime timeStart;
                 LocalTime timeEnd;
 
+            ZoneId zone = Main.guildSettingsManager.getGuildTimeZone( msg.getGuild().getId() );
                 try
                 {
-                    date = LocalDate.parse(lines[2].split(" from ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                    date = LocalDate.parse(lines[2].split(" from ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
                     timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern(timeFormatter));
                     timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern(timeFormatter));
                 } catch (Exception ignored)
                 {
-                    date = LocalDate.parse(lines[2].split(" at ")[0] + LocalDate.now().getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                    date = LocalDate.parse(lines[2].split(" at ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
                     LocalTime time = LocalTime.parse(lines[2].split(" at ")[1], DateTimeFormatter.ofPattern(timeFormatter));
                     timeStart = time;
                     timeEnd = time;
                 }
-
-                ZoneId zone = Main.guildSettingsManager.getGuildTimeZone(msg.getGuild().getId());
 
                 eStart = ZonedDateTime.of(date, timeStart, zone);
                 eEnd = ZonedDateTime.of(date, timeEnd, zone);
 
                 if (eStart.isBefore(ZonedDateTime.now()))
                 {
-                    eStart = eStart.plusDays(1);
-                    eEnd = eEnd.plusDays(1);
+                    eStart = eStart.plusYears(1);
+                    eEnd = eEnd.plusYears(1);
                 }
                 if (eEnd.isBefore(eStart))
                 {
