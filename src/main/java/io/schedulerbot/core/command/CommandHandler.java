@@ -17,11 +17,17 @@ import java.util.concurrent.Executors;
 public class CommandHandler
 {
     private final CommandParser commandParser = new CommandParser();      // parses command strings into containers
-    private HashMap<String, Command> commands = new HashMap<>();         // maps Command to invoke string
-    private HashMap<String, Command> adminCommands = new HashMap<>();    // ^^ but for admin commands
     private final ExecutorService commandExec = Executors.newCachedThreadPool(); // thread pool for running commands
+    private HashMap<String, Command> commands;         // maps Command to invoke string
+    private HashMap<String, Command> adminCommands;    // ^^ but for admin commands
 
     public CommandHandler()
+    {
+        commands = new HashMap<>();
+        adminCommands = new HashMap<>();
+    }
+
+    public void init()
     {
         // add bot commands with their lookup name
         commands.put("help", new HelpCommand());

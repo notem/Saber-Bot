@@ -6,6 +6,7 @@ import io.schedulerbot.core.settings.GuildSettingsManager;
 import io.schedulerbot.core.schedule.ScheduleEntry;
 import io.schedulerbot.core.schedule.ScheduleManager;
 import io.schedulerbot.utils.MessageUtilities;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.util.ArrayList;
@@ -26,10 +27,6 @@ public class QueryCommand implements Command
     @Override
     public boolean verify(String[] args, MessageReceivedEvent event)
     {
-        if( args.length < 2 )
-        {
-            return false;
-        }
         return true;
     }
 
@@ -46,10 +43,20 @@ public class QueryCommand implements Command
             case "entry":
                 op = 2;
                 break;
+            case "finebuf" :
+                op = 3;
+                break;
+            case "coursebuf" :
+                op = 4;
+                break;
+            case "entries" :
+                op = 5;
+                break;
             default:
                 op = 0;
                 break;
         }
+
         if( op == 1 )
         {
             ArrayList<Integer> entries = scheduleManager.getEntriesByGuild( args[1] );
@@ -85,6 +92,45 @@ public class QueryCommand implements Command
                 {
                     msg += "\"" + comment + "\"\n\t\t\t";
                 }
+            }
+        }
+        if( op == 3 )
+        {
+            msg = "**Current contents of the fine timer buffer**\n";
+            for( ScheduleEntry se : Main.scheduleManager.getFineTimerBuff() )
+            {
+                if( msg.length() >= 1900 )
+                {
+                    MessageUtilities.sendPrivateMsg(msg, event.getAuthor(), null);
+                    msg = "**continued**\n";
+                }
+                msg += Integer.toHexString(se.eID) + "\n";
+            }
+        }
+        if( op == 4 )
+        {
+            msg = "**Current contents of the coarse timer buffer**\n";
+            for( ScheduleEntry se : Main.scheduleManager.getCoarseTimerBuff() )
+            {
+                if( msg.length() >= 1900 )
+                {
+                    MessageUtilities.sendPrivateMsg(msg, event.getAuthor(), null);
+                    msg = "**continued**\n";
+                }
+                msg += Integer.toHexString(se.eID) + "\n";
+            }
+        }
+        if( op == 5 )
+        {
+            msg = "**Current contents of the entries map**\n";
+            for( Integer Id : Main.scheduleManager.getAllEntries() )
+            {
+                if( msg.length() >= 1900 )
+                {
+                    MessageUtilities.sendPrivateMsg(msg, event.getAuthor(), null);
+                    msg = "**continued**\n";
+                }
+                msg += Integer.toHexString(Id) + "\n";
             }
         }
 

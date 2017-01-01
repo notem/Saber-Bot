@@ -6,6 +6,8 @@ import io.schedulerbot.core.schedule.ScheduleEntryParser;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.ParsingUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
+import io.schedulerbot.utils.__out;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
@@ -14,6 +16,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 /**
  * CreateCommand places a new entry message on the discord schedule channel
@@ -244,7 +247,8 @@ public class CreateCommand implements Command
         // generate the event entry message
         String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, null, event.getGuild().getId() );
 
-        MessageUtilities.sendMsg( msg, event.getGuild().getTextChannelsByName(scheduleChan, false).get(0),
-                Main.scheduleManager::addEntry);
+        MessageUtilities.sendMsg( msg,
+                event.getGuild().getTextChannelsByName(scheduleChan, false).get(0),
+                Main.scheduleManager::addEntry );
     }
 }

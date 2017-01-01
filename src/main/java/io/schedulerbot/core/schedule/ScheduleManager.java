@@ -33,11 +33,13 @@ public class ScheduleManager
     {
         this.entriesGlobal = new HashMap<>();
         this.entriesByGuild = new HashMap<>();
+        this.entriesByChannel = new HashMap<>();
+
         this.coarseTimerBuff = new ArrayList<>();
         this.fineTimerBuff = new ArrayList<>();
     }
 
-    public void startTimers()
+    public void init()
     {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -125,9 +127,9 @@ public class ScheduleManager
         ScheduleEntry se = this.getEntry( eId );
         if( se == null ) return;
 
-        this.removeId( eId );
         this.getFineTimerBuff().remove( se );
         this.getCoarseTimerBuff().remove( se );
+        this.removeId( eId );
     }
 
     public void reloadEntry( Integer eId )

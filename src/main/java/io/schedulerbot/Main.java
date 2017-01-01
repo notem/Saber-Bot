@@ -73,7 +73,8 @@ public class Main
             return;
         }
 
-        scheduleManager.startTimers();
+        commandHandler.init();
+        scheduleManager.init();
     }
 
     public static SelfUser getBotSelfUser()

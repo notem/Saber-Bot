@@ -60,17 +60,6 @@ class ScheduleChecker implements Runnable
 
     private void fineCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
-        try // check if the message still exists by attempting to view it's contents
-        {
-            entry.eMsg.getContent();
-        }
-        catch( Exception ignored )
-        {
-            scheduleManager.removeEntry( entry.eID );
-            removeQueue.add(entry);
-            return;
-        }
-
         ZonedDateTime now = ZonedDateTime.now();
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + ". Starting in " + now.until(entry.eStart, SECONDS) + ": ending in " + now.until(entry.eEnd,SECONDS) );
 
@@ -101,17 +90,6 @@ class ScheduleChecker implements Runnable
 
     private void coarseCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
-        try
-        {
-            entry.eMsg.getContent();
-        }
-        catch( Exception ignored )
-        {
-            scheduleManager.removeEntry( entry.eID );
-            removeQueue.add(entry);
-            return;
-        }
-
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
         ZonedDateTime now = ZonedDateTime.now();
         if (!entry.startFlag)
@@ -137,16 +115,6 @@ class ScheduleChecker implements Runnable
 
     private void veryCoarseCheck(ScheduleEntry entry)
     {
-        try
-        {
-            entry.eMsg.getContent();
-        }
-        catch( Exception ignored )
-        {
-            scheduleManager.removeEntry( entry.eID );
-            return;
-        }
-
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
         ZonedDateTime now = ZonedDateTime.now();
         if (!entry.startFlag)

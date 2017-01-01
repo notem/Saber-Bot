@@ -90,8 +90,10 @@ public class ScheduleEntry
             // generate the event entry message
             String msg = ScheduleEntryParser.generate(
                     this.eTitle,
-                    this.eStart.plusDays(1),
-                    this.eEnd.plusDays(1),
+                    this.eStart.plusDays(1).isAfter(this.eStart) ?
+                            this.eStart.plusDays(1) : this.eStart.plusDays(1).plusYears(1),
+                    this.eEnd.plusDays(1).isAfter(this.eEnd) ?
+                            this.eEnd.plusDays(1) : this.eEnd.plusDays(1).plusYears(1),
                     this.eComments,
                     this.eRepeat,
                     this.eID,
@@ -105,8 +107,10 @@ public class ScheduleEntry
             // generate the event entry message
             String msg = ScheduleEntryParser.generate(
                     this.eTitle,
-                    this.eStart.plusDays(7),
-                    this.eEnd.plusDays(7),
+                    this.eStart.plusDays(7).isAfter(this.eStart) ?
+                            this.eStart.plusDays(7) : this.eStart.plusDays(7).plusYears(1),
+                    this.eEnd.plusDays(7).isAfter(this.eEnd) ?
+                            this.eEnd.plusDays(7) : this.eEnd.plusDays(1).plusYears(1),
                     this.eComments,
                     this.eRepeat,
                     this.eID,
@@ -134,9 +138,9 @@ public class ScheduleEntry
 
     public void adjustTimer()
     {
-        // convert the times into integers representing the time in seconds
-        long timeTilStart = ZonedDateTime.now(this.eStart.getZone()).until(this.eStart, SECONDS);
-        long timeTilEnd = this.eStart.until(this.eEnd, SECONDS);
+       // convert the times into integers representing the time in seconds
+       long timeTilStart = ZonedDateTime.now(this.eStart.getZone()).until(this.eStart, SECONDS);
+       long timeTilEnd = this.eStart.until(this.eEnd, SECONDS);
 
        String[] lines = this.eMsg.getRawContent().split("\n");
 
@@ -209,7 +213,6 @@ public class ScheduleEntry
                }
 
                MessageUtilities.editMsg( msg, this.eMsg, null );
-
            }
        }
        else
