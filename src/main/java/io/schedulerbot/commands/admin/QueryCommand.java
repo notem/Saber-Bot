@@ -16,7 +16,7 @@ import java.util.ArrayList;
 public class QueryCommand implements Command
 {
     private static ScheduleManager scheduleManager = Main.scheduleManager;
-    private static GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+    //private static GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
 
     @Override
     public String help(boolean brief)
