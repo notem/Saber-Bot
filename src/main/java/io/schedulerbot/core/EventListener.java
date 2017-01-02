@@ -10,6 +10,8 @@ import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.MessageHistory;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.ReadyEvent;
@@ -122,6 +124,49 @@ public class EventListener extends ListenerAdapter
                 // retrieve history and have the consumer act on it
                 history.retrievePast((maxEntries>=0) ? maxEntries*2:50).queue(cons);
             }
+        }
+    }
+
+    @Override
+    public void onGuildJoin( GuildJoinEvent event )
+    {
+        Guild guild = event.getGuild();
+        List<TextChannel> chan = guild.getTextChannelsByName(scheduleChan, false);
+
+        if (!chan.isEmpty())
+        {
+            // create a message history object
+            MessageHistory history = chan.get(0).getHistory();
+
+            // create a consumer
+            Consumer<List<Message>> cons = (l) -> {
+                for (Message message : l)
+                {
+                    if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
+                    {
+                        if (message.getRawContent().startsWith("```java"))
+                            guildSettingsManager.loadSettings( message );
+                        else
+                            scheduleManager.addEntry(message);
+                    }
+                    else
+                        MessageUtilities.deleteMsg( message, null );
+                }
+
+                guildSettingsManager.checkGuild(guild);
+            };
+
+            // retrieve history and have the consumer act on it
+            history.retrievePast((maxEntries>=0) ? maxEntries*2:50).queue(cons);
+        }
+    }
+
+    @Override
+    public void onGuildLeave( GuildLeaveEvent event )
+    {
+        for( Integer id : scheduleManager.getEntriesByGuild( event.getGuild().getId() ) )
+        {
+            scheduleManager.removeId( id );
         }
     }
 }
