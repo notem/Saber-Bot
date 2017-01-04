@@ -56,10 +56,10 @@ public class CreateCommand implements Command
             return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
         if( args.length < 3 )
-            return false;
+            return "Not enough arguments";
 
         // check title
         int index = 0;
@@ -70,20 +70,20 @@ public class CreateCommand implements Command
                     break;
 
             if( !VerifyUtilities.verifyString( Arrays.copyOfRange( args, 0, index+1 )))
-                return false;
+                return "Invalid argument \"" + args[index] + "\"";
         }
 
         // check that there are enough args remaining for start and end
         if( args.length - 1  < index + 2 )
-            return false;
+            return "Invalid argument \"" + args[index] + "\"";
 
         // check start
         if( !VerifyUtilities.verifyTime( args[index+1] ) )
-            return false;
+            return "Invalid argument \"" + args[index] + "\"";
 
         // check end
         if( !VerifyUtilities.verifyTime( args[index+2] ) )
-            return false;
+            return "Invalid argument \"" + args[index] + "\"";
 
         // check remaining args
         if( args.length - 1 > index + 2 )
@@ -102,20 +102,20 @@ public class CreateCommand implements Command
                 {
                     comments++;
                     if (!VerifyUtilities.verifyString(Arrays.copyOfRange(argsRemaining, index - comments, index+1)))
-                        return false;
+                        return "Invalid argument \"" + args[index] + "\"";
                     commentFlag = false;
                     comments = 0;
                 }
                 else if (dateFlag)
                 {
                     if (!VerifyUtilities.verifyDate(arg))
-                        return false;
+                        return "Invalid argument \"" + args[index] + "\"";
                     dateFlag = false;
                 }
                 else if (repeatFlag)
                 {
                     if (!VerifyUtilities.verifyRepeat(arg))
-                        return false;
+                        return "Invalid argument \"" + args[index] + "\"";
                     repeatFlag = false;
                 }
                 else if (commentFlag)
@@ -133,7 +133,7 @@ public class CreateCommand implements Command
             }
         }
 
-        return true;
+        return "";
     }
 
     @Override

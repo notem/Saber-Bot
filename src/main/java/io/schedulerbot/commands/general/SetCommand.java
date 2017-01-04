@@ -39,11 +39,11 @@ public class SetCommand implements Command
     }
 
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
         if( args.length < 2 )
         {
-            return false;
+            return "Not enough arguments";
         }
         switch( args[0] )
         {
@@ -55,15 +55,15 @@ public class SetCommand implements Command
 
             case "zone" :
                 if( ZoneId.of(args[1].replace("\"","")) == null )
-                    return false;
+                    return "Invalid argument \"" + args[1] +  "\"";
                 break;
 
             case "clock" :
                 if( !args[1].replace("\"","").equals("24") && !args[1].replace("\"","").equals("12"))
-                    return false;
+                    return "Invalid argument \"" + args[1] +  "\"";
                 break;
         }
-        return true;
+        return "";
     }
 
     @Override

@@ -65,24 +65,24 @@ public class CommandHandler
         // if the invoking command appears in commands
         if(commands.containsKey(cc.invoke))
         {
-            boolean valid = commands.get(cc.invoke).verify(cc.args, cc.event);
+            String err = commands.get(cc.invoke).verify(cc.args, cc.event);
 
             // do command action if valid arguments
-            if(valid)
+            if(err.equals(""))
             {
                 commandExec.submit( () -> commands.get(cc.invoke).action(cc.args, cc.event));
             }
             // otherwise send error message
             else
             {
-                String msg = "Invalid arguments for: \"" + Main.getBotSettings().getCommandPrefix() + cc.invoke +"\"";
+                String msg = "Error : " + err;
                 MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
             }
         }
         // else the invoking command is invalid
         else
         {
-            String msg = "Invalid command: \"" + Main.getBotSettings().getCommandPrefix() + cc.invoke + "\"";
+            String msg = "Invalid command \"" + Main.getBotSettings().getCommandPrefix() + cc.invoke + "\"";
             MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
         }
     }
@@ -92,10 +92,10 @@ public class CommandHandler
         // for admin commands
         if(adminCommands.containsKey(cc.invoke))
         {
-            boolean valid = adminCommands.get(cc.invoke).verify(cc.args, cc.event);
+            String err = adminCommands.get(cc.invoke).verify(cc.args, cc.event);
 
             // do command action if valid arguments
-            if (valid)
+            if (err.equals(""))
             {
                 commandExec.submit( () -> adminCommands.get(cc.invoke).action(cc.args, cc.event));
             }

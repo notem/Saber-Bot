@@ -37,11 +37,11 @@ public class HelpCommand implements Command
     }
 
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
         if(args.length>1)
-            return false;
-        return true;
+            return "Not enough arguments";
+        return "";
     }
 
     @Override

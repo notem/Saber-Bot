@@ -25,7 +25,7 @@ public interface Command
      * @param event the originating event
      * @return true if arguments are properly formed, false otherwise
      */
-    boolean verify(String[] args, MessageReceivedEvent event);
+    String verify(String[] args, MessageReceivedEvent event);
 
 
     /**

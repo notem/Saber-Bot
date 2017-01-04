@@ -45,14 +45,14 @@ public class EditCommand implements Command
     }
 
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
         if( args.length < 3 )
-            return false;
+            return "Not enough arguments";
 
         // check first arg
         if( !VerifyUtilities.verifyHex(args[0]) )
-            return false;
+            return "ID \"" + args[0] + "\" is not a valid ID value";
 
         // check later args
         switch( args[1].toLowerCase() )
@@ -62,59 +62,59 @@ public class EditCommand implements Command
                 {
                     case "add":
                         if (!VerifyUtilities.verifyString(Arrays.copyOfRange(args, 3, args.length)))
-                            return false;
+                            return "Invalid argument \"" + args[3] + "\"";
                         break;
                     case "remove":
                         if(Character.isDigit(args[3].charAt(0)) &&
                                 !VerifyUtilities.verifyInteger(args[3]))
-                            return false;
+                            return "Invalid argument \"" + args[3] + "\"";
                         else
                         {
                             if (!VerifyUtilities.verifyString(Arrays.copyOfRange(args, 3, args.length)))
-                                return false;
+                                return "Invalid argument \"" + args[3] + "\"";
                         }
                         break;
                     default:
-                        return false;
+                        return "Invalid argument \"" + args[2] + "\"";
                 }
                 break;
 
             case "start":
                 if(args.length > 3)
-                    return false;
+                    return "Not enough arguments";
                 if( !VerifyUtilities.verifyTime( args[2] ) )
-                    return false;
+                    return "Invalid argument \"" + args[2] + "\"";
                 break;
 
             case "end":
                 if(args.length > 3)
-                    return false;
+                    return "Not enough arguments";
                 if( !VerifyUtilities.verifyTime( args[2] ) )
-                    return false;
+                    return "Invalid argument \"" + args[2] + "\"";
                 break;
 
             case "title":
                 String[] comment = Arrays.copyOfRange( args, 2, args.length );
                 if(!VerifyUtilities.verifyString(comment))
-                    return false;
+                    return "Invalid argument \"" + args[2] + "\"";
                 break;
 
             case "date":
                 if(args.length > 3)
-                    return false;
+                    return "Not enough arguments";
                 if( !VerifyUtilities.verifyDate( args[2] ) )
-                    return false;
+                    return "Invalid argument \"" + args[2] + "\"";
                 break;
 
             case "repeat":
                 if(args.length > 3)
-                    return false;
+                    return "Not enough arguments";
                 if( !VerifyUtilities.verifyRepeat(args[2]) )
-                    return false;
+                    return "Invalid argument \"" + args[2] + "\"";
                 break;
         }
 
-        return true;
+        return "";
     }
 
     @Override

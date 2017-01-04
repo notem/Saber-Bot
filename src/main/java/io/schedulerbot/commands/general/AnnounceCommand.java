@@ -32,10 +32,10 @@ public class AnnounceCommand implements Command
     }
 
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
         // can't announce a message that doesn't exist!
-        return args.length > 0;
+        return args.length > 0 ? "" : "Not enough arguments";
     }
 
     @Override

@@ -31,10 +31,9 @@ public class SetupCommand implements Command
     }
 
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
-        // I don't care if you put invalid args
-        return true;
+        return "";
     }
 
     @Override

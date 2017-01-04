@@ -41,19 +41,19 @@ public class DestroyCommand implements Command
     }
 
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
         if(args.length>1 || args.length==0)
-            return false;
+            return "Not enough arguments";
         if( args[0].equals("all") )
         {
-            return true;
+            return "";
         }
         if( !VerifyUtilities.verifyHex( args[0] ) )
         {
-            return false;
+            return "ID \"" + args[0] + "\" is not a value ID value";
         }
-        return true;
+        return "";
     }
 
     @Override
