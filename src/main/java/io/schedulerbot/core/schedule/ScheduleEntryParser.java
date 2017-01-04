@@ -42,42 +42,42 @@ public class ScheduleEntryParser
             // the first line is the title \\
             eTitle = lines[1].replaceFirst("# ", "");
 
-                // the second line is the date and time \\
-                LocalDate date;
-                LocalTime timeStart;
-                LocalTime timeEnd;
+            // the second line is the date and time \\
+            LocalDate date;
+            LocalTime timeStart;
+            LocalTime timeEnd;
 
             ZoneId zone = Main.guildSettingsManager.getGuildTimeZone( msg.getGuild().getId() );
-                try
-                {
-                    date = LocalDate.parse(lines[2].split(" from ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
-                    timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern(timeFormatter));
-                    timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern(timeFormatter));
-                } catch (Exception ignored)
-                {
-                    date = LocalDate.parse(lines[2].split(" at ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
-                    LocalTime time = LocalTime.parse(lines[2].split(" at ")[1], DateTimeFormatter.ofPattern(timeFormatter));
-                    timeStart = time;
-                    timeEnd = time;
-                }
+            try
+            {
+                date = LocalDate.parse(lines[2].split(" from ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern(timeFormatter));
+                timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern(timeFormatter));
+            } catch (Exception ignored)
+            {
+                date = LocalDate.parse(lines[2].split(" at ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                LocalTime time = LocalTime.parse(lines[2].split(" at ")[1], DateTimeFormatter.ofPattern(timeFormatter));
+                timeStart = time;
+                timeEnd = time;
+            }
 
-                eStart = ZonedDateTime.of(date, timeStart, zone);
-                eEnd = ZonedDateTime.of(date, timeEnd, zone);
+            eStart = ZonedDateTime.of(date, timeStart, zone);
+            eEnd = ZonedDateTime.of(date, timeEnd, zone);
 
-                if (eStart.isBefore(ZonedDateTime.now()))
-                {
-                    eStart = eStart.plusYears(1);
-                    eEnd = eEnd.plusYears(1);
-                }
-                if (eEnd.isBefore(eStart))
-                {
-                    eEnd = eEnd.plusDays(1);
-                }
+            if (eStart.isBefore(ZonedDateTime.now()))
+            {
+                eStart = eStart.plusYears(1);
+                eEnd = eEnd.plusYears(1);
+            }
+            if (eEnd.isBefore(eStart))
+            {
+                eEnd = eEnd.plusDays(1);
+            }
 
             // the third line is empty space,     \\
 
-            // lines four through n-2 are comments,
-            // iterate every two to catch the new line \\
+            // lines 4 through n-2 are comments,
+            // iterate every two to avoid the new line padding \\
             for (int c = 4; c < lines.length - 3; c += 2)
                 eComments.add(lines[c]);
 
