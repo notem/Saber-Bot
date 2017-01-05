@@ -3,7 +3,8 @@ package io.schedulerbot;
 import io.schedulerbot.core.*;
 import io.schedulerbot.core.command.CommandHandler;
 import io.schedulerbot.core.schedule.ScheduleManager;
-import io.schedulerbot.core.settings.GuildSettingsManager;
+import io.schedulerbot.core.settings.BotSettings;
+import io.schedulerbot.core.settings.ChannelSettingsManager;
 import io.schedulerbot.utils.*;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -21,7 +22,7 @@ public class Main
     private static BotSettings botSettings;     // global config botSettings
 
     public static final ScheduleManager scheduleManager = new ScheduleManager();
-    public static final GuildSettingsManager guildSettingsManager = new GuildSettingsManager();
+    public static final ChannelSettingsManager CHANNEL_SETTINGS_MANAGER = new ChannelSettingsManager();
     public static final CommandHandler commandHandler = new CommandHandler();
 
     public static void main( String[] args )

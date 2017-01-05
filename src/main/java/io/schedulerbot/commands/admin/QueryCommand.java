@@ -2,11 +2,9 @@ package io.schedulerbot.commands.admin;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.core.settings.GuildSettingsManager;
 import io.schedulerbot.core.schedule.ScheduleEntry;
 import io.schedulerbot.core.schedule.ScheduleManager;
 import io.schedulerbot.utils.MessageUtilities;
-import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.util.ArrayList;
@@ -16,7 +14,7 @@ import java.util.ArrayList;
 public class QueryCommand implements Command
 {
     private static ScheduleManager scheduleManager = Main.scheduleManager;
-    //private static GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+    //private static ChannelSettingsManager CHANNEL_SETTINGS_MANAGER = Main.CHANNEL_SETTINGS_MANAGER;
 
     @Override
     public String help(boolean brief)
@@ -25,9 +23,9 @@ public class QueryCommand implements Command
     }
 
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
-        return true;
+        return "";
     }
 
     @Override

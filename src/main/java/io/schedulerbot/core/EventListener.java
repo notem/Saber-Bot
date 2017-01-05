@@ -3,16 +3,14 @@ package io.schedulerbot.core;
 import io.schedulerbot.Main;
 
 import io.schedulerbot.core.command.CommandHandler;
-import io.schedulerbot.core.schedule.ScheduleEntry;
 import io.schedulerbot.core.schedule.ScheduleManager;
-import io.schedulerbot.core.settings.GuildSettingsManager;
+import io.schedulerbot.core.settings.ChannelSettingsManager;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.MessageHistory;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
-import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -21,9 +19,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Serves two responsibilities:
- * 1) listens for command messages on private and bot channels
- * 2) recovers after shutdown by parsing the schedule when bot is ready
+ * Listens for new messages and performs actions during it's own
+ * startup and join/leave guild events.
  */
 public class EventListener extends ListenerAdapter
 {
@@ -36,7 +33,7 @@ public class EventListener extends ListenerAdapter
     private String scheduleChan = Main.getBotSettings().getScheduleChan();
 
     private ScheduleManager scheduleManager = Main.scheduleManager;
-    private GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+    private ChannelSettingsManager channelSettingsManager = Main.CHANNEL_SETTINGS_MANAGER;
     private CommandHandler cmdHandler = Main.commandHandler;
 
     @Override
@@ -71,7 +68,7 @@ public class EventListener extends ListenerAdapter
         if (origin.equals(controlChan) && content.startsWith(prefix))
         {
             // generate botSettings for the channel if none yet
-            guildSettingsManager.checkGuild( event.getGuild() );
+            channelSettingsManager.checkChannel( event.getChannel() );
 
             // handle command received
             cmdHandler.handleCommand(event, 0);
@@ -86,7 +83,7 @@ public class EventListener extends ListenerAdapter
 
             // if it is from myself, resend the guild botSettings message (so that it is at the bottom)
             else
-                guildSettingsManager.sendSettingsMsg(event.getGuild());
+                channelSettingsManager.sendSettingsMsg(event.getChannel());
         }
     }
 
@@ -99,18 +96,17 @@ public class EventListener extends ListenerAdapter
             List<TextChannel> chan = guild.getTextChannelsByName(scheduleChan, false);
             if (!chan.isEmpty())
             {
-
                 // create a message history object
                 MessageHistory history = chan.get(0).getHistory();
 
-                // create a consumer
+                // ready a consumer to parse the history
                 Consumer<List<Message>> cons = (l) -> {
                     for (Message message : l)
                     {
                         if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
                         {
                             if (message.getRawContent().startsWith("```java"))
-                                guildSettingsManager.loadSettings( message );
+                                channelSettingsManager.loadSettings( message );
                             else
                                 scheduleManager.addEntry(message);
                         }
@@ -118,7 +114,7 @@ public class EventListener extends ListenerAdapter
                             MessageUtilities.deleteMsg( message, null );
                     }
 
-                    guildSettingsManager.checkGuild(guild);
+                    channelSettingsManager.checkChannel(chan.get(0));
                 };
 
                 // retrieve history and have the consumer act on it
@@ -145,7 +141,7 @@ public class EventListener extends ListenerAdapter
                     if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
                     {
                         if (message.getRawContent().startsWith("```java"))
-                            guildSettingsManager.loadSettings( message );
+                            channelSettingsManager.loadSettings( message );
                         else
                             scheduleManager.addEntry(message);
                     }
@@ -153,7 +149,7 @@ public class EventListener extends ListenerAdapter
                         MessageUtilities.deleteMsg( message, null );
                 }
 
-                guildSettingsManager.checkGuild(guild);
+                channelSettingsManager.checkChannel(chan.get(0));
             };
 
             // retrieve history and have the consumer act on it

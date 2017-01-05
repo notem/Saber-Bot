@@ -1,4 +1,4 @@
-package io.schedulerbot.utils;
+package io.schedulerbot.core.settings;
 
 import java.io.*;
 import java.util.Properties;

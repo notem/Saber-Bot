@@ -1,7 +1,7 @@
 package io.schedulerbot.utils;
 
 import io.schedulerbot.Main;
-import io.schedulerbot.core.settings.GuildSettingsManager;
+import io.schedulerbot.core.settings.ChannelSettingsManager;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
@@ -52,30 +52,6 @@ public class MessageUtilities
         catch( Exception e)
         {
             __out.printOut( MessageUtilities.class, e.getMessage() );
-        }
-    }
-
-    /**
-     * sends a message to the announcement channel of a guild
-     *
-     * @param content the message to send
-     * @param guild the guild to send the message to
-     * @param action a non null Consumer will do operations on the results returned
-     */
-    public static void sendAnnounce(String content, Guild guild, Consumer<Message> action )
-    {
-        GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
-        guildSettingsManager.checkGuild( guild );
-
-        String chan = guildSettingsManager.getGuildAnnounceChan(guild.getId());
-
-        if(chan.isEmpty())
-        {
-            sendMsg(content, guild.getPublicChannel(), action);
-        }
-        else if(!guild.getTextChannelsByName(chan, false).isEmpty())
-        {
-            sendMsg(content, guild.getTextChannelsByName(chan, false).get(0), action);
         }
     }
 

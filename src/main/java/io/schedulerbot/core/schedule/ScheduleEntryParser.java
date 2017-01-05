@@ -30,7 +30,7 @@ public class ScheduleEntryParser
 
 
             String timeFormatter;
-            if( Main.guildSettingsManager.getGuildClockFormat(msg.getGuild().getId()).equals("24") )
+            if( Main.CHANNEL_SETTINGS_MANAGER.getClockFormat(msg.getGuild().getId()).equals("24") )
                 timeFormatter = "< H:mm >";
             else
                 timeFormatter = "< h:mm a >";
@@ -47,7 +47,7 @@ public class ScheduleEntryParser
             LocalTime timeStart;
             LocalTime timeEnd;
 
-            ZoneId zone = Main.guildSettingsManager.getGuildTimeZone( msg.getGuild().getId() );
+            ZoneId zone = Main.CHANNEL_SETTINGS_MANAGER.getTimeZone( msg.getGuild().getId() );
             try
             {
                 date = LocalDate.parse(lines[2].split(" from ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
@@ -119,7 +119,7 @@ public class ScheduleEntryParser
                                   int eRepeat, Integer eId, String gId)
     {
         String timeFormatter;
-        if( Main.guildSettingsManager.getGuildClockFormat(gId).equals("24") )
+        if( Main.CHANNEL_SETTINGS_MANAGER.getClockFormat(gId).equals("24") )
             timeFormatter = "< H:mm >";
         else
             timeFormatter = "< h:mm a >";

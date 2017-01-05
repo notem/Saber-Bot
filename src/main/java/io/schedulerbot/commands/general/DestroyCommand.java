@@ -27,7 +27,7 @@ public class DestroyCommand implements Command
             "\nEx1: **!destroy 084c**\nEx2: **!destroy all**";
 
     private static final String USAGE_BRIEF = "**" + prefix + "destroy** - Removes an entry from " +
-            scheduleChan + ", sending an event ended early or canceled announcement.";
+            scheduleChan + ".";
 
     private ScheduleManager scheduleManager = Main.scheduleManager;
 
@@ -77,23 +77,6 @@ public class DestroyCommand implements Command
             {
                 if (entry != null)
                 {
-                    // create the announcement message strings
-                    String cancelMsg = "@everyone The event **" + entry.eTitle
-                            + "** has been cancelled.";
-                    String earlyMsg = "@everyone The event **" + entry.eTitle
-                            + "** has ended early.";
-
-                    // compare the current time to the start time
-                    long dif = entry.eStart.until(ZonedDateTime.now(), SECONDS);
-
-                    // if the difference is less than 0 the event was ended early
-                    if (dif < 24*60*60)
-                        MessageUtilities.sendAnnounce(earlyMsg, guild, null);
-
-                        // otherwise event was canceled before it began
-                    else
-                        MessageUtilities.sendAnnounce(cancelMsg, guild, null);
-
                     synchronized( scheduleManager.getScheduleLock() )
                     {
                         scheduleManager.removeEntry(entry.eID);
@@ -116,23 +99,6 @@ public class DestroyCommand implements Command
                 MessageUtilities.sendMsg(msg, event.getChannel(), null);
                 return;
             }
-
-            // create the announcement message strings
-            String cancelMsg = "@everyone The event **" + entry.eTitle
-                    + "** has been cancelled.";
-            String earlyMsg = "@everyone The event **" + entry.eTitle
-                    + "** has ended early.";
-
-            // compare the current time to the start time
-            long dif = entry.eStart.until(ZonedDateTime.now(), SECONDS);
-
-            // if the difference is less than 0 the event was ended early
-            if (dif < 24*60*60)
-                MessageUtilities.sendAnnounce(earlyMsg, guild, null);
-
-                // otherwise event was canceled before it began
-            else
-                MessageUtilities.sendAnnounce(cancelMsg, guild, null);
 
             synchronized( scheduleManager.getScheduleLock() )
             {

@@ -5,11 +5,14 @@ import io.schedulerbot.commands.Command;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.__out;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+
+import java.util.Collection;
 
 /**
  */
-public class GlobalAnnounceCommand implements Command
+public class GlobalMsgCommand implements Command
 {
 
     @Override
@@ -19,9 +22,9 @@ public class GlobalAnnounceCommand implements Command
     }
 
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
-        return true;
+        return "";
     }
 
     @Override
@@ -36,7 +39,12 @@ public class GlobalAnnounceCommand implements Command
         for( Guild guild : Main.getBotJda().getGuilds() )
         {
             __out.printOut(this.getClass(),"sending announce to " + guild.getName());
-            MessageUtilities.sendAnnounce( msg, guild, null );
+
+            Collection<TextChannel> chans = guild.getTextChannelsByName( Main.getBotSettings().getControlChan(), false );
+            for( TextChannel chan : chans )
+            {
+                MessageUtilities.sendMsg(msg, chan, null);
+            }
         }
     }
 }

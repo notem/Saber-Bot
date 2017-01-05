@@ -18,9 +18,9 @@ public class UpdateAllCommand implements Command
     }
 
     @Override
-    public boolean verify(String[] args, MessageReceivedEvent event)
+    public String verify(String[] args, MessageReceivedEvent event)
     {
-        return true;
+        return "";
     }
 
     @Override

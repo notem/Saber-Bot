@@ -1,14 +1,16 @@
 package io.schedulerbot.core.schedule;
 
 import io.schedulerbot.Main;
-import io.schedulerbot.core.settings.GuildSettingsManager;
+import io.schedulerbot.core.settings.ChannelSettingsManager;
 import io.schedulerbot.utils.AnnounceFormatParser;
 import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -53,12 +55,16 @@ public class ScheduleEntry
             return;
         }
 
-        GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+        ChannelSettingsManager channelSettingsManager = Main.CHANNEL_SETTINGS_MANAGER;
 
         Guild guild = this.eMsg.getGuild();
-        String startMsg = AnnounceFormatParser.parse( guildSettingsManager.getGuildAnnounceFormat(guild.getId()), this );
+        String startMsg = AnnounceFormatParser.parse( channelSettingsManager.getAnnounceFormat(guild.getId()), this );
 
-        MessageUtilities.sendAnnounce( startMsg, guild, null );
+        Collection<TextChannel> chans = guild.getTextChannelsByName(channelSettingsManager.getAnnounceChan(this.eMsg.getChannel().getId()), true);
+        for( TextChannel chan : chans )
+        {
+            MessageUtilities.sendMsg(startMsg, chan, null);
+        }
 
         this.startFlag = true;
         this.adjustTimer();
@@ -67,12 +73,16 @@ public class ScheduleEntry
     public void end()
     {
         ScheduleManager scheduleManager = Main.scheduleManager;
-        GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+        ChannelSettingsManager channelSettingsManager = Main.CHANNEL_SETTINGS_MANAGER;
 
         Guild guild = this.eMsg.getGuild();
-        String endMsg = AnnounceFormatParser.parse( guildSettingsManager.getGuildAnnounceFormat(guild.getId()), this );
+        String endMsg = AnnounceFormatParser.parse( channelSettingsManager.getAnnounceFormat(guild.getId()), this );
 
-        MessageUtilities.sendAnnounce( endMsg, guild, null );
+        Collection<TextChannel> chans = guild.getTextChannelsByName(channelSettingsManager.getAnnounceChan(this.eMsg.getChannel().getId()), true);
+        for( TextChannel chan : chans )
+        {
+            MessageUtilities.sendMsg(endMsg, chan, null);
+        }
 
         synchronized( scheduleManager.getScheduleLock() )
         {

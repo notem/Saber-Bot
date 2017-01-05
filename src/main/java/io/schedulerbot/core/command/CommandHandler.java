@@ -31,7 +31,6 @@ public class CommandHandler
     {
         // add bot commands with their lookup name
         commands.put("help", new HelpCommand());
-        commands.put("announce", new AnnounceCommand());
         commands.put("create", new CreateCommand());
         commands.put("destroy", new DestroyCommand());
         commands.put("edit", new EditCommand());
@@ -40,7 +39,7 @@ public class CommandHandler
         commands.put("timezones", new TimeZonesCommand());
 
         // add administrator commands with their lookup name
-        adminCommands.put("global_announce", new GlobalAnnounceCommand());
+        adminCommands.put("global_announce", new GlobalMsgCommand());
         adminCommands.put("query", new QueryCommand());
         adminCommands.put("update_all", new UpdateAllCommand());
         adminCommands.put("stats", new StatsCommand());

@@ -2,8 +2,9 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
-import io.schedulerbot.core.settings.GuildSettingsManager;
+import io.schedulerbot.core.settings.ChannelSettingsManager;
 import io.schedulerbot.core.schedule.ScheduleEntry;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.ZoneId;
@@ -12,7 +13,7 @@ import java.time.ZoneId;
  */
 public class SetCommand implements Command
 {
-    private GuildSettingsManager guildSettingsManager = Main.guildSettingsManager;
+    private ChannelSettingsManager channelSettingsManager = Main.CHANNEL_SETTINGS_MANAGER;
 
     private static String invoke = Main.getBotSettings().getCommandPrefix() + "set";
 
@@ -41,11 +42,19 @@ public class SetCommand implements Command
     @Override
     public String verify(String[] args, MessageReceivedEvent event)
     {
-        if( args.length < 2 )
+        if( args.length < 3 )
         {
             return "Not enough arguments";
         }
-        switch( args[0] )
+
+        int index = 0;
+        if( event.getGuild().getTextChannelsByName(args[index], true).isEmpty() )
+        {
+            return "No such text channel \"" + args[index] + "\"";
+        }
+        index++;
+
+        switch( args[index] )
         {
             case "msg" :
                 break;
@@ -54,13 +63,13 @@ public class SetCommand implements Command
                 break;
 
             case "zone" :
-                if( ZoneId.of(args[1].replace("\"","")) == null )
-                    return "Invalid argument \"" + args[1] +  "\"";
+                if( ZoneId.of(args[index+1].replace("\"","")) == null )
+                    return "Invalid zone argument \"" + args[index+1] +  "\"";
                 break;
 
             case "clock" :
-                if( !args[1].replace("\"","").equals("24") && !args[1].replace("\"","").equals("12"))
-                    return "Invalid argument \"" + args[1] +  "\"";
+                if( !args[1].replace("\"","").equals("24") && !args[index+1].replace("\"","").equals("12"))
+                    return "Invalid time argument \"" + args[index+1] +  "\"";
                 break;
         }
         return "";
@@ -69,55 +78,62 @@ public class SetCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        switch( args[0] )
+        int index = 0;
+        for( TextChannel scheduleChan : event.getGuild().getTextChannelsByName(args[index], true) )
         {
-            case "msg" :
-                String msg = "";
-                for( int i = 1 ; i<args.length ; i++ )
-                {
-                    msg += args[i].replace("\"","");
-                    if( i+1 != args.length )
+            switch (args[0])
+            {
+                case "msg":
+                    String msg = "";
+                    for (int i = 1; i < args.length; i++)
                     {
-                        msg += " ";
+                        msg += args[i].replace("\"", "");
+                        if (i + 1 != args.length)
+                        {
+                            msg += " ";
+                        }
                     }
-                }
-                guildSettingsManager.setGuildAnnounceFormat( event.getGuild().getId(), msg );
-                break;
+                    channelSettingsManager.setAnnounceFormat(scheduleChan.getId(), msg);
+                    break;
 
-            case "chan" :
-                String chan = "";
-                for( int i = 1 ; i<args.length ; i++ )
-                {
-                    chan += args[i].replace("\"","");
-                    if( i+1 != args.length )
+                case "chan":
+                    String chan = "";
+                    for (int i = 1; i < args.length; i++)
                     {
-                        chan += " ";
+                        chan += args[i].replace("\"", "");
+                        if (i + 1 != args.length)
+                        {
+                            chan += " ";
+                        }
                     }
-                }
-                guildSettingsManager.setGuildAnnounceChan( event.getGuild().getId(), chan );
-                break;
+                    channelSettingsManager.setAnnounceChan(scheduleChan.getId(), chan);
+                    break;
 
-            case "zone" :
-                ZoneId zone = ZoneId.of(args[1].replace("\"",""));
-                guildSettingsManager.setGuildTimeZone( event.getGuild().getId(), zone );
-                for( Integer id : Main.scheduleManager.getEntriesByGuild(event.getGuild().getId()) )
-                {
-                    ScheduleEntry se = Main.scheduleManager.getEntry( id );
-                    se.eStart.withZoneSameLocal( zone );
-                    se.eEnd.withZoneSameLocal( zone );
-                    Main.scheduleManager.reloadEntry(se.eID);
-                }
-                break;
+                case "zone":
+                    ZoneId zone = ZoneId.of(args[1].replace("\"", ""));
+                    channelSettingsManager.setTimeZone(scheduleChan.getId(), zone);
 
-            case "clock" :
-                guildSettingsManager.setGuildClockFormat( event.getGuild().getId(), args[1].replace("\"","") );
-                for( Integer id : Main.scheduleManager.getEntriesByGuild(event.getGuild().getId()) )
-                {
-                    ScheduleEntry se = Main.scheduleManager.getEntry(id);
-                    Main.scheduleManager.reloadEntry(se.eID);
-                }
-                break;
+                    // edit and reload the schedule
+                    for (Integer id : Main.scheduleManager.getEntriesByChannel(scheduleChan.getId()))
+                    {
+                        ScheduleEntry se = Main.scheduleManager.getEntry(id);
+                        se.eStart.withZoneSameLocal(zone);
+                        se.eEnd.withZoneSameLocal(zone);
+                        Main.scheduleManager.reloadEntry(se.eID);
+                    }
+                    break;
+
+                case "clock":
+                    channelSettingsManager.setClockFormat(scheduleChan.getId(), args[1].replace("\"", ""));
+
+                    // reload the schedule
+                    for (Integer id : Main.scheduleManager.getEntriesByChannel(scheduleChan.getId()))
+                    {
+                        ScheduleEntry se = Main.scheduleManager.getEntry(id);
+                        Main.scheduleManager.reloadEntry(se.eID);
+                    }
+                    break;
+            }
         }
-
     }
 }

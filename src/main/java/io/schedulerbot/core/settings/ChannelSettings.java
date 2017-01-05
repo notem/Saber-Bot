@@ -2,6 +2,7 @@ package io.schedulerbot.core.settings;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.utils.MessageUtilities;
+import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
@@ -10,26 +11,25 @@ import java.time.ZoneId;
 
 /**
  */
-class GuildSettings
+class ChannelSettings
 {
     String announceChannel;
     String announceFormat;
     ZoneId timeZone;
     String clockFormat;
     private Message msg;
-    private Guild guild;
 
-    GuildSettings(Guild guild)
+    ChannelSettings(MessageChannel channel)
     {
         this.announceChannel = Main.getBotSettings().getAnnounceChan();
         this.announceFormat = Main.getBotSettings().getAnnounceFormat();
         this.timeZone = ZoneId.of(Main.getBotSettings().getTimeZone());
         this.clockFormat = Main.getBotSettings().getClockFormat();
 
-        this.guild = guild;
+        MessageUtilities.sendMsg( this.generateSettingsMsg(), channel, (message) -> this.msg = message);
     }
 
-    GuildSettings(Message msg)
+    ChannelSettings(Message msg)
     {
         String trimmed = msg.getRawContent().replace("```java\n","").replace("\n```","");
         String[] options = trimmed.split(" \\| ");
@@ -55,7 +55,6 @@ class GuildSettings
         }
 
         this.msg = msg;
-        this.guild = this.msg.getGuild();
     }
 
     private String generateSettingsMsg()
@@ -72,25 +71,15 @@ class GuildSettings
 
     void reloadSettingsMsg()
     {
+        Guild guild = this.msg.getGuild();
         String msg = this.generateSettingsMsg();
-        MessageChannel scheduleChan = this.guild
-                .getTextChannelsByName(Main.getBotSettings().getScheduleChan(), false).get(0);
-        if( scheduleChan == null )
-        {
-            return;
-        }
-        if( this.msg == null )
-        {
-            MessageUtilities.sendMsg( msg, scheduleChan, (message) -> this.msg = message);
-            return;
-        }
-        else
+        MessageChannel scheduleChan = guild.getTextChannelsByName(
+                Main.getBotSettings().getScheduleChan(), false).get(0);
+        if( scheduleChan != null )
         {
             MessageUtilities.deleteMsg(this.msg, (x) ->
                     MessageUtilities.sendMsg(msg, scheduleChan, (message) -> this.msg = message)
             );
-            return;
         }
     }
-
 }
