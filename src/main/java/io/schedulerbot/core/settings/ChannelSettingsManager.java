@@ -1,9 +1,7 @@
 package io.schedulerbot.core.settings;
 
-import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.time.ZoneId;
 import java.util.HashMap;

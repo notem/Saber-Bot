@@ -18,12 +18,13 @@ import net.dv8tion.jda.core.entities.SelfUser;
  */
 public class Main
 {
-    private static JDA jda;                  // api
+    private static JDA jda;                     // api
     private static BotSettings botSettings;     // global config botSettings
 
-    public static final ScheduleManager scheduleManager = new ScheduleManager();
-    public static final ChannelSettingsManager CHANNEL_SETTINGS_MANAGER = new ChannelSettingsManager();
-    public static final CommandHandler commandHandler = new CommandHandler();
+    private static ScheduleManager scheduleManager = new ScheduleManager();
+    private static ChannelSettingsManager channelSettingsManager = new ChannelSettingsManager();
+    private static CommandHandler commandHandler = new CommandHandler();
+
 
     public static void main( String[] args )
     {
@@ -78,6 +79,7 @@ public class Main
         scheduleManager.init();
     }
 
+
     public static SelfUser getBotSelfUser()
     {
         return jda.getSelfUser();
@@ -91,5 +93,20 @@ public class Main
     public static BotSettings getBotSettings()
     {
         return botSettings;
+    }
+
+    public static CommandHandler getCommandHandler()
+    {
+        return commandHandler;
+    }
+
+    public static ScheduleManager getScheduleManager()
+    {
+        return scheduleManager;
+    }
+
+    public static ChannelSettingsManager getChannelSettingsManager()
+    {
+       return channelSettingsManager;
     }
 }

@@ -2,6 +2,7 @@ package io.schedulerbot.core.schedule;
 
 
 import io.schedulerbot.Main;
+import io.schedulerbot.core.settings.ChannelSettingsManager;
 import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
 
@@ -15,7 +16,10 @@ import java.util.ArrayList;
  */
 public class ScheduleEntryParser
 {
-    public static ScheduleEntry parse(Message msg)
+    private static ScheduleManager schedManager = Main.getScheduleManager();
+    private static ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
+
+    static ScheduleEntry parse(Message msg)
     {
         try
         {
@@ -30,7 +34,7 @@ public class ScheduleEntryParser
 
 
             String timeFormatter;
-            if( Main.CHANNEL_SETTINGS_MANAGER.getClockFormat(msg.getGuild().getId()).equals("24") )
+            if( chanSetManager.getClockFormat(msg.getGuild().getId()).equals("24") )
                 timeFormatter = "< H:mm >";
             else
                 timeFormatter = "< h:mm a >";
@@ -47,7 +51,7 @@ public class ScheduleEntryParser
             LocalTime timeStart;
             LocalTime timeEnd;
 
-            ZoneId zone = Main.CHANNEL_SETTINGS_MANAGER.getTimeZone( msg.getGuild().getId() );
+            ZoneId zone = chanSetManager.getTimeZone( msg.getGuild().getId() );
             try
             {
                 date = LocalDate.parse(lines[2].split(" from ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
@@ -119,7 +123,7 @@ public class ScheduleEntryParser
                                   int eRepeat, Integer eId, String gId)
     {
         String timeFormatter;
-        if( Main.CHANNEL_SETTINGS_MANAGER.getClockFormat(gId).equals("24") )
+        if( chanSetManager.getClockFormat(gId).equals("24") )
             timeFormatter = "< H:mm >";
         else
             timeFormatter = "< h:mm a >";
@@ -127,7 +131,7 @@ public class ScheduleEntryParser
         // the 'actual' first line (and last line) define format
         String msg = "```Markdown\n";
 
-        if( eId == null) eId = Main.scheduleManager.newId( null ); // generate an ID for the entry
+        if( eId == null) eId = schedManager.newId( null ); // generate an ID for the entry
         String firstLine = "# " + eTitle + "\n";
 
         // of form: "< DATE > from < START > to < END >\n"

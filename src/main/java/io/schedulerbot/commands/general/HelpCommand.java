@@ -2,6 +2,7 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
+import io.schedulerbot.core.command.CommandHandler;
 import io.schedulerbot.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -15,6 +16,7 @@ import java.util.Collection;
  */
 public class HelpCommand implements Command
 {
+    private static CommandHandler cmdHandler = Main.getCommandHandler();
     private static String prefix = Main.getBotSettings().getCommandPrefix();
 
     private final String INTRO = "I am **" + Main.getBotSelfUser().getName() + "**, the task scheduling discord bot." +
@@ -47,7 +49,7 @@ public class HelpCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        Collection<Command> commands = Main.commandHandler.getCommands();
+        Collection<Command> commands = cmdHandler.getCommands();
 
         // send the bot intro with a brief list of commands to the user
         if(args.length < 1)
@@ -61,7 +63,7 @@ public class HelpCommand implements Command
         // otherwise read search the commands for the first arg
         else
         {
-            Command cmd = Main.commandHandler.getCommand( args[0] );
+            Command cmd = cmdHandler.getCommand( args[0] );
             if( cmd != null )
             {
                 String helpMsg = cmd.help(false);

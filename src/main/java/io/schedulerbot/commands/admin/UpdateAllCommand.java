@@ -26,9 +26,9 @@ public class UpdateAllCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        for( Integer id : Main.scheduleManager.getAllEntries() )
+        for( Integer id : Main.getScheduleManager().getAllEntries() )
         {
-            ScheduleEntry se = Main.scheduleManager.getEntry(id);
+            ScheduleEntry se = Main.getScheduleManager().getEntry(id);
             String msg = ScheduleEntryParser.generate(se.eTitle, se.eStart, se.eEnd, se.eComments, se.eRepeat, se.eID, se.eMsg.getGuild().getId() );
             MessageUtilities.editMsg( msg, se.eMsg, null );
             se.adjustTimer();

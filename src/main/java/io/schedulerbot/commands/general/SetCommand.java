@@ -2,18 +2,21 @@ package io.schedulerbot.commands.general;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
+import io.schedulerbot.core.schedule.ScheduleManager;
 import io.schedulerbot.core.settings.ChannelSettingsManager;
 import io.schedulerbot.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.ZoneId;
+import java.util.Collection;
 
 /**
  */
 public class SetCommand implements Command
 {
-    private ChannelSettingsManager channelSettingsManager = Main.CHANNEL_SETTINGS_MANAGER;
+    private static ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
+    private static ScheduleManager schedManager = Main.getScheduleManager();
 
     private static String invoke = Main.getBotSettings().getCommandPrefix() + "set";
 
@@ -48,10 +51,11 @@ public class SetCommand implements Command
         }
 
         int index = 0;
-        if( event.getGuild().getTextChannelsByName(args[index], true).isEmpty() )
-        {
-            return "No such text channel \"" + args[index] + "\"";
-        }
+        Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(args[index], true);
+        if( chans.isEmpty() )
+            return "Schedule channel \"" + args[index] + "\" does not exist";
+        if( chans.size() > 1 )
+            return "Duplicate schedule channels with name \"" + args[index] + "\"";
         index++;
 
         switch( args[index] )
@@ -79,61 +83,61 @@ public class SetCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         int index = 0;
-        for( TextChannel scheduleChan : event.getGuild().getTextChannelsByName(args[index], true) )
+        TextChannel scheduleChan = event.getGuild().getTextChannelsByName( args[index], true ).get(0);
+        index++;
+
+        switch (args[index++])
         {
-            switch (args[0])
-            {
-                case "msg":
-                    String msg = "";
-                    for (int i = 1; i < args.length; i++)
+            case "msg":
+                String msg = "";
+                for (int i = index; i < args.length; i++)
+                {
+                    msg += args[i].replace("\"", "");
+                    if (i + 1 != args.length)
                     {
-                        msg += args[i].replace("\"", "");
-                        if (i + 1 != args.length)
-                        {
-                            msg += " ";
-                        }
+                        msg += " ";
                     }
-                    channelSettingsManager.setAnnounceFormat(scheduleChan.getId(), msg);
-                    break;
+                }
+                chanSetManager.setAnnounceFormat(scheduleChan.getId(), msg);
+                break;
 
-                case "chan":
-                    String chan = "";
-                    for (int i = 1; i < args.length; i++)
+            case "chan":
+                String chan = "";
+                for (int i = index; i < args.length; i++)
+                {
+                    chan += args[i].replace("\"", "");
+                    if (i + 1 != args.length)
                     {
-                        chan += args[i].replace("\"", "");
-                        if (i + 1 != args.length)
-                        {
-                            chan += " ";
-                        }
+                        chan += " ";
                     }
-                    channelSettingsManager.setAnnounceChan(scheduleChan.getId(), chan);
-                    break;
+                }
+                chanSetManager.setAnnounceChan(scheduleChan.getId(), chan);
+                break;
 
-                case "zone":
-                    ZoneId zone = ZoneId.of(args[1].replace("\"", ""));
-                    channelSettingsManager.setTimeZone(scheduleChan.getId(), zone);
+            case "zone":
+                ZoneId zone = ZoneId.of(args[index].replace("\"", ""));
+                chanSetManager.setTimeZone(scheduleChan.getId(), zone);
 
-                    // edit and reload the schedule
-                    for (Integer id : Main.scheduleManager.getEntriesByChannel(scheduleChan.getId()))
-                    {
-                        ScheduleEntry se = Main.scheduleManager.getEntry(id);
-                        se.eStart.withZoneSameLocal(zone);
-                        se.eEnd.withZoneSameLocal(zone);
-                        Main.scheduleManager.reloadEntry(se.eID);
-                    }
-                    break;
+                // edit and reload the schedule
+                for (Integer id : schedManager.getEntriesByChannel(scheduleChan.getId()))
+                {
+                    ScheduleEntry se = schedManager.getEntry(id);
+                    se.eStart.withZoneSameLocal(zone);
+                    se.eEnd.withZoneSameLocal(zone);
+                    schedManager.reloadEntry(se.eID);
+                }
+                break;
 
-                case "clock":
-                    channelSettingsManager.setClockFormat(scheduleChan.getId(), args[1].replace("\"", ""));
+            case "clock":
+                chanSetManager.setClockFormat(scheduleChan.getId(), args[index].replace("\"", ""));
 
-                    // reload the schedule
-                    for (Integer id : Main.scheduleManager.getEntriesByChannel(scheduleChan.getId()))
-                    {
-                        ScheduleEntry se = Main.scheduleManager.getEntry(id);
-                        Main.scheduleManager.reloadEntry(se.eID);
-                    }
-                    break;
-            }
+                // reload the schedule
+                for (Integer id : schedManager.getEntriesByChannel(scheduleChan.getId()))
+                {
+                    ScheduleEntry se = schedManager.getEntry(id);
+                    schedManager.reloadEntry(se.eID);
+                }
+                break;
         }
     }
 }

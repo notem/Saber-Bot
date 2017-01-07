@@ -18,7 +18,8 @@ class ScheduleChecker implements Runnable
 {
     private Collection<ScheduleEntry> entries;
     private int level;
-    private ScheduleManager scheduleManager = Main.scheduleManager;
+
+    private static ScheduleManager scheduleManager = Main.getScheduleManager();
 
     ScheduleChecker(Collection<ScheduleEntry> entries, int level)
     {

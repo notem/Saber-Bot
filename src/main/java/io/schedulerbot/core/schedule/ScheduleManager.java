@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  */
 public class ScheduleManager
 {
-    public static final ExecutorService scheduleExec = Executors.newCachedThreadPool();     // thread pool for schedule tasks
+    static final ExecutorService scheduleExec = Executors.newCachedThreadPool();     // thread pool for schedule tasks
     private final Object scheduleLock = new Object();                                       // lock when modifying entry maps
 
     private HashMap<Integer, ScheduleEntry> entriesGlobal;         // maps id to entry

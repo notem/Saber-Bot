@@ -2,8 +2,8 @@ package io.schedulerbot.core.schedule;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.core.settings.ChannelSettingsManager;
-import io.schedulerbot.utils.AnnounceFormatParser;
 import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.utils.ParsingUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -32,6 +32,8 @@ public class ScheduleEntry
 
     public boolean startFlag;               // flagged true when the start time has been reached
 
+    private static ScheduleManager schedManager = Main.getScheduleManager();
+    private static ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
 
     public ScheduleEntry(String eName, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat, boolean started )
     {
@@ -55,10 +57,10 @@ public class ScheduleEntry
             return;
         }
 
-        ChannelSettingsManager channelSettingsManager = Main.CHANNEL_SETTINGS_MANAGER;
+        ChannelSettingsManager channelSettingsManager = chanSetManager;
 
         Guild guild = this.eMsg.getGuild();
-        String startMsg = AnnounceFormatParser.parse( channelSettingsManager.getAnnounceFormat(guild.getId()), this );
+        String startMsg = ParsingUtilities.parseMsgFormat( channelSettingsManager.getAnnounceFormat(guild.getId()), this );
 
         Collection<TextChannel> chans = guild.getTextChannelsByName(channelSettingsManager.getAnnounceChan(this.eMsg.getChannel().getId()), true);
         for( TextChannel chan : chans )
@@ -72,11 +74,10 @@ public class ScheduleEntry
 
     public void end()
     {
-        ScheduleManager scheduleManager = Main.scheduleManager;
-        ChannelSettingsManager channelSettingsManager = Main.CHANNEL_SETTINGS_MANAGER;
+        ChannelSettingsManager channelSettingsManager = chanSetManager;
 
         Guild guild = this.eMsg.getGuild();
-        String endMsg = AnnounceFormatParser.parse( channelSettingsManager.getAnnounceFormat(guild.getId()), this );
+        String endMsg = ParsingUtilities.parseMsgFormat( channelSettingsManager.getAnnounceFormat(guild.getId()), this );
 
         Collection<TextChannel> chans = guild.getTextChannelsByName(channelSettingsManager.getAnnounceChan(this.eMsg.getChannel().getId()), true);
         for( TextChannel chan : chans )
@@ -84,9 +85,9 @@ public class ScheduleEntry
             MessageUtilities.sendMsg(endMsg, chan, null);
         }
 
-        synchronized( scheduleManager.getScheduleLock() )
+        synchronized( schedManager.getScheduleLock() )
         {
-            scheduleManager.removeEntry(this.eID);
+            schedManager.removeEntry(this.eID);
         }
 
         if( this.eRepeat == 0 )
@@ -110,7 +111,7 @@ public class ScheduleEntry
                     this.eMsg.getGuild().getId()
             );
 
-            MessageUtilities.editMsg(msg, this.eMsg, Main.scheduleManager::addEntry);
+            MessageUtilities.editMsg(msg, this.eMsg, schedManager::addEntry);
         }
         else if( this.eRepeat == 2 )
         {
@@ -127,7 +128,7 @@ public class ScheduleEntry
                     this.eMsg.getGuild().getId()
             );
 
-            MessageUtilities.editMsg(msg, this.eMsg, scheduleManager::addEntry);
+            MessageUtilities.editMsg(msg, this.eMsg, schedManager::addEntry);
         }
     }
 

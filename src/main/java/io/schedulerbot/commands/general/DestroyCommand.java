@@ -9,11 +9,8 @@ import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
-
-import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
  */
@@ -29,7 +26,7 @@ public class DestroyCommand implements Command
     private static final String USAGE_BRIEF = "**" + prefix + "destroy** - Removes an entry from " +
             scheduleChan + ".";
 
-    private ScheduleManager scheduleManager = Main.scheduleManager;
+    private static ScheduleManager schedManager = Main.getScheduleManager();
 
     @Override
     public String help(boolean brief)
@@ -63,7 +60,7 @@ public class DestroyCommand implements Command
 
         if( args[0].equals("all") )
         {
-            ArrayList<Integer> ent = scheduleManager.getEntriesByGuild( guild.getId() );
+            ArrayList<Integer> ent = schedManager.getEntriesByGuild( guild.getId() );
             if( ent == null )
             {
                 MessageUtilities.sendMsg(
@@ -72,14 +69,14 @@ public class DestroyCommand implements Command
                 return;
             }
             ArrayList<ScheduleEntry> entries = ent.stream()
-                    .map(id -> scheduleManager.getEntry(id)).collect(Collectors.toCollection(ArrayList::new));
+                    .map(id -> schedManager.getEntry(id)).collect(Collectors.toCollection(ArrayList::new));
             for (ScheduleEntry entry : entries)
             {
                 if (entry != null)
                 {
-                    synchronized( scheduleManager.getScheduleLock() )
+                    synchronized( schedManager.getScheduleLock() )
                     {
-                        scheduleManager.removeEntry(entry.eID);
+                        schedManager.removeEntry(entry.eID);
                     }
 
                     // delete the old message
@@ -91,7 +88,7 @@ public class DestroyCommand implements Command
         else
         {
             Integer entryId = Integer.decode("0x" + args[0]);
-            ScheduleEntry entry = scheduleManager.getEntry(entryId);
+            ScheduleEntry entry = schedManager.getEntry(entryId);
 
             if (entry == null)
             {
@@ -100,9 +97,9 @@ public class DestroyCommand implements Command
                 return;
             }
 
-            synchronized( scheduleManager.getScheduleLock() )
+            synchronized( schedManager.getScheduleLock() )
             {
-                scheduleManager.removeEntry(entryId);
+                schedManager.removeEntry(entryId);
             }
 
             // delete the old entry

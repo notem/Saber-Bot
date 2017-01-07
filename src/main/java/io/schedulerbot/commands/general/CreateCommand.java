@@ -3,11 +3,13 @@ package io.schedulerbot.commands.general;
 import io.schedulerbot.Main;
 import io.schedulerbot.commands.Command;
 import io.schedulerbot.core.schedule.ScheduleEntryParser;
+import io.schedulerbot.core.schedule.ScheduleManager;
 import io.schedulerbot.utils.MessageUtilities;
 import io.schedulerbot.utils.ParsingUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import io.schedulerbot.utils.__out;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
@@ -16,6 +18,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.Consumer;
 
 /**
@@ -27,7 +30,7 @@ public class CreateCommand implements Command
 {
     private static String prefix = Main.getBotSettings().getCommandPrefix();
     private static int maxEntries = Main.getBotSettings().getMaxEntries();
-    private static String scheduleChan = Main.getBotSettings().getScheduleChan();
+    private static ScheduleManager schedManager = Main.getScheduleManager();
 
     private static final String USAGE_EXTENDED = "Event entries can be initialized using the form **" + prefix +
             "create \"TITLE\" <Start> <End> <Optional>**. Entries MUST be initialized with a title, a start " +
@@ -45,7 +48,7 @@ public class CreateCommand implements Command
             "demand.\" \"PM our raid captain with your role and level if attending.\"**";
 
     private static final String USAGE_BRIEF = "**" + prefix + "create** - Generates a new event entry" +
-            " in #" + scheduleChan + ".";
+            " and sends it to the specified schedule channel.";
 
     @Override
     public String help(boolean brief)
@@ -58,11 +61,31 @@ public class CreateCommand implements Command
     @Override
     public String verify(String[] args, MessageReceivedEvent event)
     {
-        if( args.length < 3 )
+        if( args.length < 4 )
             return "Not enough arguments";
 
-        // check title
         int index = 0;
+
+        // check channel
+        String channelName = "";
+        if( !(args[index].startsWith("\"") && args[index].endsWith("\"")) )
+        {
+            channelName += args[index].replace("\"", "");
+
+            for (index = 1; index < args.length - 1; index++)
+                if (args[index].endsWith("\""))
+                    break;
+
+            if( !VerifyUtilities.verifyString( Arrays.copyOfRange( args, 0, index+1 )))
+                return "Invalid argument \"" + args[index] + "\"";
+        }
+
+        Collection<TextChannel> chans = event.getGuild().getTextChannelsByName( channelName, true );
+        if( chans.isEmpty() )
+            return "Schedule channel \"" + args[index] + "\" does not exist";
+        index++;
+
+        // check title
         if( !(args[index].startsWith("\"") && args[index].endsWith("\"")) )
         {
             for (index = 1; index < args.length - 1; index++)
@@ -133,31 +156,30 @@ public class CreateCommand implements Command
             }
         }
 
+        ArrayList<Integer> entries = schedManager.getEntriesByGuild( event.getGuild().getId() );
+        if( entries != null && entries.size() >= maxEntries && maxEntries > 0)
+        {
+            return "Your guild has the maximum allowed amount of schedule entries."
+                    +" No more entries may be added until old entries are destroyed.";
+        }
+
         return "";
     }
 
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        ArrayList<Integer> entries = Main.scheduleManager.getEntriesByGuild( event.getGuild().getId() );
-
-        if( entries != null && entries.size() >= maxEntries && maxEntries > 0)
-        {
-            String msg = "Your guild already has the maximum allowed amount of event entries."
-                    +" No more entries may be added until old entries are destroyed.";
-            MessageUtilities.sendMsg( msg, event.getChannel(), null );
-            return;
-        }
-
         String eTitle = "";
         LocalTime eStart = LocalTime.now().plusMinutes(1);    // initialized just in case verify failed it's duty
         LocalTime eEnd = LocalTime.MIDNIGHT;                  //
         ArrayList<String> eComments = new ArrayList<>();      //
         int eRepeat = 0;                                      // default is 0 (no repeat)
-        LocalDate eDate = LocalDate.now();
+        LocalDate eDate = LocalDate.now();                    // initialize date using the current date
+        TextChannel scheduleChan = null;
 
         String buffComment = "";    // String to generate comments strings to place in eComments
 
+        boolean channelFlag = false;
         boolean titleFlag = false;    // true if 'eTitle' has been grabbed from args
         boolean startFlag = false;    // true if 'eStart' has been grabbed from args
         boolean endFlag = false;      // true if 'eEnd' has been grabbed from args
@@ -169,6 +191,18 @@ public class CreateCommand implements Command
 
         for( String arg : args )
         {
+            if(!channelFlag)
+            {
+                String channelName = "";
+                if( arg.endsWith("\"") )
+                {
+                    channelFlag = true;
+                    eTitle += arg.replace("\"", "");
+                    scheduleChan = event.getGuild().getTextChannelsByName(channelName,true).get(0);
+                }
+                else
+                    eTitle += arg.replace("\"", "") + " ";
+            }
             if(!titleFlag)
             {
                 if( arg.endsWith("\"") )
@@ -248,7 +282,7 @@ public class CreateCommand implements Command
         String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, null, event.getGuild().getId() );
 
         MessageUtilities.sendMsg( msg,
-                event.getGuild().getTextChannelsByName(scheduleChan, false).get(0),
-                Main.scheduleManager::addEntry );
+                scheduleChan,
+                schedManager::addEntry );
     }
 }

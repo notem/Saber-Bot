@@ -25,7 +25,7 @@ public class StatsCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         String msg = "**Current Stats**\n";
-        msg += "  Schedule Entries: " + Main.scheduleManager.getAllEntries().size() + "\n";
+        msg += "  Schedule Entries: " + Main.getScheduleManager().getAllEntries().size() + "\n";
         msg += "  Guilds: " + Main.getBotJda().getGuilds().size() + "\n";
 
         MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );

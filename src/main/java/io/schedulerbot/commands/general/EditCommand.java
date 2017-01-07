@@ -33,7 +33,7 @@ public class EditCommand implements Command
     private static final String USAGE_BRIEF = "**" + prefix + "edit** - Modifies an event entry, either" +
             " changing botSettings or adding/removing comment fields.";
 
-    private ScheduleManager scheduleManager = Main.scheduleManager;
+    private static ScheduleManager schedManager = Main.getScheduleManager();
 
     @Override
     public String help(boolean brief)
@@ -120,11 +120,11 @@ public class EditCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        // parse argument into the event entry's ID
+        // parseMsgFormat argument into the event entry's ID
         Integer entryId = Integer.decode( "0x" + args[0] );
 
         // check if the entry exists
-        ScheduleEntry entry = scheduleManager.getEntry( entryId );
+        ScheduleEntry entry = schedManager.getEntry( entryId );
         if( entry == null  || !entry.eMsg.getGuild().getId().equals(event.getGuild().getId()) )
         {
             String msg = "There is no event entry with ID " + Integer.toHexString(entryId) + ".";
@@ -210,12 +210,12 @@ public class EditCommand implements Command
                 break;
         }
 
-        synchronized( scheduleManager.getScheduleLock() )
+        synchronized( schedManager.getScheduleLock() )
         {
-            scheduleManager.removeEntry( entryId );
+            schedManager.removeEntry( entryId );
         }
 
         String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, entry.eMsg.getGuild().getId());
-        MessageUtilities.editMsg(msg, entry.eMsg, scheduleManager::addEntry);
+        MessageUtilities.editMsg(msg, entry.eMsg, schedManager::addEntry);
     }
 }

@@ -1,8 +1,5 @@
 package io.schedulerbot.utils;
 
-import io.schedulerbot.Main;
-import io.schedulerbot.core.settings.ChannelSettingsManager;
-import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.User;

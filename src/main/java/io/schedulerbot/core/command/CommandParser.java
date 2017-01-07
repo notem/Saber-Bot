@@ -10,9 +10,9 @@ import java.util.Collections;
  * used to create a CommandContainer object which contains the parsed tokens of the user input
  * along with the originating event object
  */
-public class CommandParser
+class CommandParser
 {
-    public CommandContainer parse( MessageReceivedEvent e)
+    CommandContainer parse(MessageReceivedEvent e)
     {
         String raw = e.getMessage().getRawContent();
 

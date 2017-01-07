@@ -5,6 +5,7 @@ import io.schedulerbot.commands.Command;
 import io.schedulerbot.core.schedule.ScheduleEntry;
 import io.schedulerbot.core.schedule.ScheduleManager;
 import io.schedulerbot.utils.MessageUtilities;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.ArrayList;
  */
 public class QueryCommand implements Command
 {
-    private static ScheduleManager scheduleManager = Main.scheduleManager;
+    private static ScheduleManager scheduleManager = Main.getScheduleManager();
     //private static ChannelSettingsManager CHANNEL_SETTINGS_MANAGER = Main.CHANNEL_SETTINGS_MANAGER;
 
     @Override
@@ -41,14 +42,17 @@ public class QueryCommand implements Command
             case "entry":
                 op = 2;
                 break;
-            case "finebuf" :
+            case "finebuffer" :
                 op = 3;
                 break;
-            case "coursebuf" :
+            case "coarsebuffer" :
                 op = 4;
                 break;
             case "entries" :
                 op = 5;
+                break;
+            case "guilds" :
+                op = 6;
                 break;
             default:
                 op = 0;
@@ -95,7 +99,7 @@ public class QueryCommand implements Command
         if( op == 3 )
         {
             msg = "**Current contents of the fine timer buffer**\n";
-            for( ScheduleEntry se : Main.scheduleManager.getFineTimerBuff() )
+            for( ScheduleEntry se : scheduleManager.getFineTimerBuff() )
             {
                 if( msg.length() >= 1900 )
                 {
@@ -108,7 +112,7 @@ public class QueryCommand implements Command
         if( op == 4 )
         {
             msg = "**Current contents of the coarse timer buffer**\n";
-            for( ScheduleEntry se : Main.scheduleManager.getCoarseTimerBuff() )
+            for( ScheduleEntry se : scheduleManager.getCoarseTimerBuff() )
             {
                 if( msg.length() >= 1900 )
                 {
@@ -121,7 +125,7 @@ public class QueryCommand implements Command
         if( op == 5 )
         {
             msg = "**Current contents of the entries map**\n";
-            for( Integer Id : Main.scheduleManager.getAllEntries() )
+            for( Integer Id : scheduleManager.getAllEntries() )
             {
                 if( msg.length() >= 1900 )
                 {
@@ -130,6 +134,20 @@ public class QueryCommand implements Command
                 }
                 msg += Integer.toHexString(Id) + "\n";
             }
+        }
+        if( op == 6 )
+        {
+            msg = "**Currently connected guilds**\n";
+            for( Guild guild : Main.getBotJda().getGuilds() )
+            {
+                if( msg.length() >= 1900 )
+                {
+                    MessageUtilities.sendPrivateMsg(msg, event.getAuthor(), null);
+                    msg = "**continued**\n";
+                }
+                msg += guild.getId() + " (" + guild.getName() + ")" + "\n";
+            }
+
         }
 
         MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );

@@ -6,6 +6,7 @@ import io.schedulerbot.core.command.CommandHandler;
 import io.schedulerbot.core.schedule.ScheduleManager;
 import io.schedulerbot.core.settings.ChannelSettingsManager;
 import io.schedulerbot.utils.MessageUtilities;
+import io.schedulerbot.utils.ParsingUtilities;
 import io.schedulerbot.utils.VerifyUtilities;
 import net.dv8tion.jda.core.MessageHistory;
 import net.dv8tion.jda.core.entities.*;
@@ -15,6 +16,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -24,7 +26,7 @@ import java.util.function.Consumer;
  */
 public class EventListener extends ListenerAdapter
 {
-    // store the bot botSettings to easy reference
+    // store the bot botSettings for easy reference
     private String prefix = Main.getBotSettings().getCommandPrefix();
     private String adminPrefix = Main.getBotSettings().getAdminPrefix();
     private String adminId = Main.getBotSettings().getAdminId();
@@ -32,9 +34,9 @@ public class EventListener extends ListenerAdapter
     private String controlChan = Main.getBotSettings().getControlChan();
     private String scheduleChan = Main.getBotSettings().getScheduleChan();
 
-    private ScheduleManager scheduleManager = Main.scheduleManager;
-    private ChannelSettingsManager channelSettingsManager = Main.CHANNEL_SETTINGS_MANAGER;
-    private CommandHandler cmdHandler = Main.commandHandler;
+    private static ScheduleManager scheduleManager = Main.getScheduleManager();
+    private static ChannelSettingsManager channelSettingsManager = Main.getChannelSettingsManager();
+    private static CommandHandler cmdHandler = Main.getCommandHandler();
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
@@ -93,32 +95,36 @@ public class EventListener extends ListenerAdapter
         // loads schedules and botSettings for every connected guild
         for (Guild guild : event.getJDA().getGuilds())
         {
-            List<TextChannel> chan = guild.getTextChannelsByName(scheduleChan, false);
-            if (!chan.isEmpty())
+            Collection<TextChannel> chans = ParsingUtilities.channelsStartsWith( guild, scheduleChan);
+
+            if (!chans.isEmpty())
             {
-                // create a message history object
-                MessageHistory history = chan.get(0).getHistory();
+                // parseMsgFormat the history of each schedule channel
+                for( TextChannel chan : chans )
+                {
+                    MessageHistory history = chan.getHistory();
 
-                // ready a consumer to parse the history
-                Consumer<List<Message>> cons = (l) -> {
-                    for (Message message : l)
+                    // ready a consumer to parseMsgFormat the history
+                    Consumer<List<Message>> cons = (l) ->
                     {
-                        if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
+                        for (Message message : l)
                         {
-                            if (message.getRawContent().startsWith("```java"))
-                                channelSettingsManager.loadSettings( message );
-                            else
-                                scheduleManager.addEntry(message);
+                            if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
+                            {
+                                if (message.getRawContent().startsWith("```java"))
+                                    channelSettingsManager.loadSettings(message);
+                                else
+                                    scheduleManager.addEntry(message);
+                            } else
+                                MessageUtilities.deleteMsg(message, null);
                         }
-                        else
-                            MessageUtilities.deleteMsg( message, null );
-                    }
 
-                    channelSettingsManager.checkChannel(chan.get(0));
-                };
+                        channelSettingsManager.checkChannel(chan);
+                    };
 
-                // retrieve history and have the consumer act on it
-                history.retrievePast((maxEntries>=0) ? maxEntries*2:50).queue(cons);
+                    // retrieve history and have the consumer act on it
+                    history.retrievePast((maxEntries >= 0) ? maxEntries * 2 : 50).queue(cons);
+                }
             }
         }
     }
@@ -127,33 +133,36 @@ public class EventListener extends ListenerAdapter
     public void onGuildJoin( GuildJoinEvent event )
     {
         Guild guild = event.getGuild();
-        List<TextChannel> chan = guild.getTextChannelsByName(scheduleChan, false);
+        Collection<TextChannel> chans = ParsingUtilities.channelsStartsWith( guild, scheduleChan);
 
-        if (!chan.isEmpty())
+        if (!chans.isEmpty())
         {
-            // create a message history object
-            MessageHistory history = chan.get(0).getHistory();
+            for( TextChannel chan : chans )
+            {
+                // create a message history object
+                MessageHistory history = chan.getHistory();
 
-            // create a consumer
-            Consumer<List<Message>> cons = (l) -> {
-                for (Message message : l)
+                // create a consumer
+                Consumer<List<Message>> cons = (l) ->
                 {
-                    if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
+                    for (Message message : l)
                     {
-                        if (message.getRawContent().startsWith("```java"))
-                            channelSettingsManager.loadSettings( message );
-                        else
-                            scheduleManager.addEntry(message);
+                        if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
+                        {
+                            if (message.getRawContent().startsWith("```java"))
+                                channelSettingsManager.loadSettings(message);
+                            else
+                                scheduleManager.addEntry(message);
+                        } else
+                            MessageUtilities.deleteMsg(message, null);
                     }
-                    else
-                        MessageUtilities.deleteMsg( message, null );
-                }
 
-                channelSettingsManager.checkChannel(chan.get(0));
-            };
+                    channelSettingsManager.checkChannel(chan);
+                };
 
-            // retrieve history and have the consumer act on it
-            history.retrievePast((maxEntries>=0) ? maxEntries*2:50).queue(cons);
+                // retrieve history and have the consumer act on it
+                history.retrievePast((maxEntries >= 0) ? maxEntries * 2 : 50).queue(cons);
+            }
         }
     }
 
