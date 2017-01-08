@@ -69,9 +69,6 @@ public class EventListener extends ListenerAdapter
 
         if (origin.equals(controlChan) && content.startsWith(prefix))
         {
-            // generate botSettings for the channel if none yet
-            channelSettingsManager.checkChannel( event.getChannel() );
-
             // handle command received
             cmdHandler.handleCommand(event, 0);
             return;
@@ -115,7 +112,8 @@ public class EventListener extends ListenerAdapter
                                     channelSettingsManager.loadSettings(message);
                                 else
                                     scheduleManager.addEntry(message);
-                            } else
+                            }
+                            else
                                 MessageUtilities.deleteMsg(message, null);
                         }
 

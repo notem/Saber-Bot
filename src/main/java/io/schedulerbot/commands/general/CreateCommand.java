@@ -79,6 +79,10 @@ public class CreateCommand implements Command
             if( !VerifyUtilities.verifyString( Arrays.copyOfRange( args, 0, index+1 )))
                 return "Invalid argument \"" + args[index] + "\"";
         }
+        else
+        {
+            channelName = args[index].replace("\"","");
+        }
 
         Collection<TextChannel> chans = event.getGuild().getTextChannelsByName( channelName, true );
         if( chans.isEmpty() )
@@ -176,6 +180,7 @@ public class CreateCommand implements Command
         int eRepeat = 0;                                      // default is 0 (no repeat)
         LocalDate eDate = LocalDate.now();                    // initialize date using the current date
         TextChannel scheduleChan = null;
+        String channelName = "";
 
         String buffComment = "";    // String to generate comments strings to place in eComments
 
@@ -193,15 +198,17 @@ public class CreateCommand implements Command
         {
             if(!channelFlag)
             {
-                String channelName = "";
-                if( arg.endsWith("\"") )
+                if( arg.startsWith("\"") )
                 {
-                    channelFlag = true;
-                    eTitle += arg.replace("\"", "");
-                    scheduleChan = event.getGuild().getTextChannelsByName(channelName,true).get(0);
+                    channelName += arg.replace("\"", "") + " ";
                 }
                 else
-                    eTitle += arg.replace("\"", "") + " ";
+                {
+                    channelFlag = true;
+                    channelName += arg.replace("\"", "");
+                    scheduleChan = event.getGuild().getTextChannelsByName(channelName,true).get(0);
+                    __out.printOut( this.getClass(), channelName );
+                }
             }
             if(!titleFlag)
             {

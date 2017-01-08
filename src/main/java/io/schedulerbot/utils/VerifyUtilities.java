@@ -7,7 +7,9 @@ import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -143,12 +145,13 @@ public class VerifyUtilities
 
     public static boolean verifyScheduleChannel( Guild guild )
     {
-        List<TextChannel> chans = guild.getTextChannelsByName( Main.getBotSettings().getScheduleChan(), false );
+        Collection<TextChannel> chans = ParsingUtilities.channelsStartsWith(guild, Main.getBotSettings().getScheduleChan());
         if( chans == null || chans.isEmpty() )
         {
             return false;
         }
 
+        // complicated mess to find the bot as a member object, needs to be cleaned
         Member botAsMember = null;
         String botId = Main.getBotSelfUser().getId();
         for(Member member : guild.getMembers())
@@ -156,16 +159,23 @@ public class VerifyUtilities
             if( member.getUser().getId().equals(botId) )
                 botAsMember = member;
         }
-        if( botAsMember == null )
+        if( botAsMember == null ) // shouldn't get here, but just in case it were null. . .
         {
-            // should get here, but just in case it were null. . .
             return false;
         }
 
-        List<Permission> perms = Arrays.asList(
+        List<Permission> perms = Arrays.asList( // required permissions
                 Permission.MESSAGE_HISTORY, Permission.MESSAGE_READ,
                 Permission.MESSAGE_WRITE, Permission.MESSAGE_MANAGE
         );
-        return botAsMember.hasPermission( chans.get(0), perms );
+
+        for( TextChannel chan : chans ) // if any one channel has required permissions
+        {
+            if( botAsMember.hasPermission( chan, perms ) )
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

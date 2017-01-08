@@ -67,7 +67,7 @@ public class CommandHandler
             String err = commands.get(cc.invoke).verify(cc.args, cc.event);
 
             // do command action if valid arguments
-            if(err.equals(""))
+            if(err.isEmpty())
             {
                 commandExec.submit( () -> commands.get(cc.invoke).action(cc.args, cc.event));
             }

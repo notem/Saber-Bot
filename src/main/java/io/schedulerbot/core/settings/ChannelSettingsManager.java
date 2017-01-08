@@ -34,7 +34,7 @@ public class ChannelSettingsManager
 
     public void loadSettings( Message message )
     {
-        settingsByChannel.put( message.getGuild().getId(), new ChannelSettings( message ) );
+        settingsByChannel.put( message.getChannel().getId(), new ChannelSettings( message ) );
     }
 
     public String getAnnounceChan(String gId )

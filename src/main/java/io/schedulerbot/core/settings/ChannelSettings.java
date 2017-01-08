@@ -2,10 +2,8 @@ package io.schedulerbot.core.settings;
 
 import io.schedulerbot.Main;
 import io.schedulerbot.utils.MessageUtilities;
-import net.dv8tion.jda.core.entities.Channel;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
+import io.schedulerbot.utils.__out;
+import net.dv8tion.jda.core.entities.*;
 
 import java.time.ZoneId;
 
@@ -26,7 +24,14 @@ class ChannelSettings
         this.timeZone = ZoneId.of(Main.getBotSettings().getTimeZone());
         this.clockFormat = Main.getBotSettings().getClockFormat();
 
-        MessageUtilities.sendMsg( this.generateSettingsMsg(), channel, (message) -> this.msg = message);
+        try
+        {
+            this.msg = channel.sendMessage(this.generateSettingsMsg()).block();
+        }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
     }
 
     ChannelSettings(Message msg)
@@ -71,10 +76,8 @@ class ChannelSettings
 
     void reloadSettingsMsg()
     {
-        Guild guild = this.msg.getGuild();
+        TextChannel scheduleChan = this.msg.getTextChannel();
         String msg = this.generateSettingsMsg();
-        MessageChannel scheduleChan = guild.getTextChannelsByName(
-                Main.getBotSettings().getScheduleChan(), false).get(0);
         if( scheduleChan != null )
         {
             MessageUtilities.deleteMsg(this.msg, (x) ->

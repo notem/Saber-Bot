@@ -32,6 +32,18 @@ public class MessageUtilities
         }
     }
 
+    public static void sendMsg( String content, MessageChannel chan )
+    {
+        try
+        {
+            chan.sendMessage(content).block();
+        }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
+    }
+
     /**
      * sends a message to a private message channel, opening the channel before use
      *
@@ -82,6 +94,18 @@ public class MessageUtilities
         try
         {
             msg.deleteMessage().queue( action );
+        }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
+    }
+
+    public static void deleteMsg( Message msg )
+    {
+        try
+        {
+            msg.deleteMessage().block();
         }
         catch( Exception e)
         {
