@@ -21,7 +21,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.schedulerbot.Main</mainClass>
+                            <mainClass>ws.nmathe.saber.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
