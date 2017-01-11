@@ -4,10 +4,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.ScheduleEntryParser;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
-import ws.nmathe.saber.utils.MessageUtilities;
-import ws.nmathe.saber.utils.ParsingUtilities;
-import ws.nmathe.saber.utils.VerifyUtilities;
-import ws.nmathe.saber.utils.__out;
+import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -18,6 +15,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * CreateCommand places a new entry message on the discord schedule channel
@@ -26,31 +24,31 @@ import java.util.Collection;
  */
 public class CreateCommand implements Command
 {
-    private static String prefix = Main.getBotSettings().getCommandPrefix();
-    private static int maxEntries = Main.getBotSettings().getMaxEntries();
-    private static ScheduleManager schedManager = Main.getScheduleManager();
-
-    private static final String USAGE_EXTENDED = "Event entries can be initialized using the form **" + prefix +
-            "create \"TITLE\" <Start> <End> <Optional>**. Entries MUST be initialized with a title, a start " +
-            "time, and an end time. Start and end times should be of form h:mm with optional am/pm appended on " +
-            "the end. Entries can optionally be " +
-            "configured with comments, repeat, and a start date. Adding **repeat no**/**daily**/**weekly** to " +
-            "**<Optional>** will configure repeat; default behavior is no repeat. Adding **date MM/dd** to " +
-            "**<Optional>** will configure the start date; default behavior is to use the current date or the " +
-            "next day depending on if the current time is greater than the start time. Comments may be added by" +
-            " adding **\"YOUR COMMENT\"** in **<Optional>**; any number of comments may be added in **<Optional>" +
-            "**.";
-
-    private static final String EXAMPLES = "Ex1. **!create \"Party in the Guild Hall\" 19:00 02:00**" +
-            "\nEx2. **!create \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
-            "demand.\" \"PM our raid captain with your role and level if attending.\"**";
-
-    private static final String USAGE_BRIEF = "**" + prefix + "create** - Generates a new event entry" +
-            " and sends it to the specified schedule channel.";
+    private String prefix = Main.getBotSettings().getCommandPrefix();
+    private int maxEntries = Main.getBotSettings().getMaxEntries();
+    private ScheduleManager schedManager = Main.getScheduleManager();
 
     @Override
     public String help(boolean brief)
     {
+        String USAGE_EXTENDED = "Event entries can be initialized using the form **" + prefix +
+                "create \"TITLE\" <Start> <End> <Optional>**. Entries MUST be initialized with a title, a start " +
+                "time, and an end time. Start and end times should be of form h:mm with optional am/pm appended on " +
+                "the end. Entries can optionally be " +
+                "configured with comments, repeat, and a start date. Adding **repeat no**/**daily**/**weekly** to " +
+                "**<Optional>** will configure repeat; default behavior is no repeat. Adding **date MM/dd** to " +
+                "**<Optional>** will configure the start date; default behavior is to use the current date or the " +
+                "next day depending on if the current time is greater than the start time. Comments may be added by" +
+                " adding **\"YOUR COMMENT\"** in **<Optional>**; any number of comments may be added in **<Optional>" +
+                "**.";
+
+        String EXAMPLES = "Ex1. **!create \"Party in the Guild Hall\" 19:00 02:00**" +
+                "\nEx2. **!create \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
+                "demand.\" \"PM our raid captain with your role and level if attending.\"**";
+
+        String USAGE_BRIEF = "**" + prefix + "create** - Generates a new event entry" +
+                " and sends it to the specified schedule channel.";
+
         if( brief )
             return USAGE_BRIEF;
         else
@@ -59,57 +57,77 @@ public class CreateCommand implements Command
     @Override
     public String verify(String[] args, MessageReceivedEvent event)
     {
-        if( args.length < 4 )
-            return "Not enough arguments";
-
         int index = 0;
 
-        // check channel
-        String channelName = "";
-        if( !(args[index].startsWith("\"") && args[index].endsWith("\"")) )
-        {
-            int temp = index;
-            channelName += args[index].replace("\"", "");
+        if (args.length < 3)
+            return "Not enough arguments";
 
-            for ( ; index < args.length - 1; index++)
+        // check channel
+        String tmp = "";
+        if (args[index].startsWith("\"") && args[index].endsWith("\""))
+        {
+            tmp = args[index].replace("\"", "");
+            index++;
+        }
+        else if (args[index].startsWith("\""))
+        {
+            for (; index < args.length - 1; index++)
+            {
+                tmp += args[index];
                 if (args[index].endsWith("\""))
                     break;
+            }
 
-            if( !VerifyUtilities.verifyString( Arrays.copyOfRange( args, 0, index+1 )))
-                return "Invalid argument \"" + args[temp] + "\"";
+            if( !tmp.endsWith("\"") )
+                return "Invalid argument '" + tmp + "', missing ending \"";
         }
         else
         {
-            channelName = args[index].replace("\"","");
+            return "Invalid argument '" + args[index] + "'";
         }
 
-        Collection<TextChannel> chans = event.getGuild().getTextChannelsByName( channelName, true );
-        if( chans.isEmpty() )
-            return "Schedule channel \"" + args[index] + "\" does not exist";
-        index++;
-
         // check title
-        if( !(args[index].startsWith("\"") && args[index].endsWith("\"")) )
+        if (args[index].startsWith("\"") && args[index].endsWith("\""))
         {
-            for ( ; index < args.length - 1; index++)
+            Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(tmp, true);
+            if (chans.isEmpty())
+                return "Schedule channel '" + tmp + "' does not exist";
+        }
+        else if (args[index].startsWith("\""))
+        {
+            Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(tmp, true);
+            if (chans.isEmpty())
+                return "Schedule channel '" + tmp + "' does not exist";
+
+            tmp = "";
+            for (; index < args.length - 1; index++)
+            {
+                tmp += args[index];
                 if (args[index].endsWith("\""))
                     break;
+            }
 
-            if( !VerifyUtilities.verifyString( Arrays.copyOfRange( args, 0, index+1 )))
-                return "Invalid argument \"" + args[index] + "\"";
+            if( !tmp.endsWith("\"") )
+                return "Invalid argument '" + tmp + "', missing ending \"";
+        }
+        else
+        {
+            Collection<TextChannel> schedChans = GuildUtilities.getValidScheduleChannels(event.getGuild());
+            if( schedChans.size() != 1 )
+                return "Not enough arguments";
         }
 
         // check that there are enough args remaining for start and end
         if( args.length - 1  < index + 2 )
-            return "Invalid argument \"" + args[index] + "\"";
+            return "Not enough arguments";
 
         // check start
         if( !VerifyUtilities.verifyTime( args[index+1] ) )
-            return "Invalid argument \"" + args[index] + "\"";
+            return "Invalid argument '" + args[index+1] + "', expected a start time";
 
         // check end
         if( !VerifyUtilities.verifyTime( args[index+2] ) )
-            return "Invalid argument \"" + args[index] + "\"";
+            return "Invalid argument '" + args[index+2] + "', expected an end time";
 
         // check remaining args
         if( args.length - 1 > index + 2 )
@@ -128,20 +146,20 @@ public class CreateCommand implements Command
                 {
                     comments++;
                     if (!VerifyUtilities.verifyString(Arrays.copyOfRange(argsRemaining, index - comments, index+1)))
-                        return "Invalid argument \"" + args[index] + "\"";
+                        return "Invalid argument '" + args[index] + "', expected a comment";
                     commentFlag = false;
                     comments = 0;
                 }
                 else if (dateFlag)
                 {
                     if (!VerifyUtilities.verifyDate(arg))
-                        return "Invalid argument \"" + args[index] + "\"";
+                        return "Invalid argument '" + args[index] + "', expected a date";
                     dateFlag = false;
                 }
                 else if (repeatFlag)
                 {
                     if (!VerifyUtilities.verifyRepeat(arg))
-                        return "Invalid argument \"" + args[index] + "\"";
+                        return "Invalid argument '" + args[index] + "', expected a repeat option";
                     repeatFlag = false;
                 }
                 else if (commentFlag)
@@ -178,7 +196,7 @@ public class CreateCommand implements Command
         ArrayList<String> eComments = new ArrayList<>();      //
         int eRepeat = 0;                                      // default is 0 (no repeat)
         LocalDate eDate = LocalDate.now();                    // initialize date using the current date
-        TextChannel scheduleChan = null;
+        TextChannel scheduleChan = GuildUtilities.getValidScheduleChannels(event.getGuild()).get(0);
         String channelName = "";
 
         String buffComment = "";    // String to generate comments strings to place in eComments
@@ -201,8 +219,12 @@ public class CreateCommand implements Command
                 {
                     channelFlag = true;
                     channelName += arg.replace("\"", "");
-                    scheduleChan = event.getGuild().getTextChannelsByName(channelName,true).get(0);
-                    __out.printOut(this.getClass(), arg);
+                    List<TextChannel> chans = event.getGuild().getTextChannelsByName(channelName,true);
+                    if( chans.isEmpty() )
+                    {
+                        titleFlag = true;
+                        eTitle = channelName;
+                    }
                 }
                 else
                 {
@@ -215,7 +237,6 @@ public class CreateCommand implements Command
                 {
                     titleFlag = true;
                     eTitle += arg.replace("\"", "");
-                    __out.printOut(this.getClass(), arg);
                 }
                 else
                     eTitle += arg.replace("\"", "") + " ";
@@ -224,13 +245,11 @@ public class CreateCommand implements Command
             {
                 startFlag = true;
                 eStart = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
-                __out.printOut(this.getClass(), "3");
             }
             else if(!endFlag)
             {
                 endFlag = true;
                 eEnd = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
-                __out.printOut(this.getClass(), "4");
             }
             else
             {
@@ -283,11 +302,8 @@ public class CreateCommand implements Command
                     buffComment += " ";
             }
         }
-        __out.printOut(this.getClass(), "5");
-
         ZonedDateTime s = ZonedDateTime.of( eDate, eStart, ZoneId.systemDefault() );
         ZonedDateTime e = ZonedDateTime.of( eDate, eEnd, ZoneId.systemDefault() );
-        __out.printOut(this.getClass(), "6");
 
         // generate the event entry message
         String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, null, scheduleChan.getId() );

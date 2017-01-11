@@ -12,7 +12,6 @@ import java.util.Set;
  */
 public class TimeZonesCommand implements Command
 {
-
     @Override
     public String help(boolean brief)
     {

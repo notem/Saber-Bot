@@ -19,7 +19,7 @@ class ScheduleChecker implements Runnable
     private Collection<ScheduleEntry> entries;
     private int level;
 
-    private static ScheduleManager scheduleManager = Main.getScheduleManager();
+    private ScheduleManager schedManager = Main.getScheduleManager();
 
     ScheduleChecker(Collection<ScheduleEntry> entries, int level)
     {
@@ -31,20 +31,20 @@ class ScheduleChecker implements Runnable
     {
         try
         {
-            synchronized( scheduleManager.getScheduleLock() )
+            synchronized( schedManager.getScheduleLock() )
             {
                 __out.printOut( this.getClass(), "Checking schedule at level " + level + ". . .");
                 if( level == 0 )
                 {
                     ArrayList<ScheduleEntry> removeQueue = new ArrayList<>();
                     this.entries.forEach((entry) -> fineCheck(entry, removeQueue));
-                    scheduleManager.getFineTimerBuff().removeAll( removeQueue );
+                    schedManager.getFineTimerBuff().removeAll( removeQueue );
                 }
                 else if( level == 1 )
                 {
                     ArrayList<ScheduleEntry> removeQueue = new ArrayList<>();
                     this.entries.forEach((entry) -> coarseCheck(entry, removeQueue));
-                    scheduleManager.getCoarseTimerBuff().removeAll( removeQueue );
+                    schedManager.getCoarseTimerBuff().removeAll( removeQueue );
                 }
                 else if( level == 2 )
                 {
@@ -68,23 +68,23 @@ class ScheduleChecker implements Runnable
         {
             if ( now.until(entry.eStart, SECONDS) <= 0 )
             {
-                ScheduleManager.scheduleExec.submit(entry::start);
+                schedManager.getExecutor().submit(entry::start);
             }
             else
             {
-                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
+                schedManager.getExecutor().submit(entry::adjustTimer);
             }
         }
         else
         {
             if ( now.until(entry.eEnd, SECONDS) <= 0 )
             {
-                ScheduleManager.scheduleExec.submit(entry::end);
+                schedManager.getExecutor().submit(entry::end);
                 removeQueue.add( entry );
             }
             else
             {
-                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
+                schedManager.getExecutor().submit(entry::adjustTimer);
             }
         }
     }
@@ -97,20 +97,20 @@ class ScheduleChecker implements Runnable
         {
             if( now.until(entry.eStart, SECONDS) < 60*60 )
             {
-                if( !scheduleManager.getFineTimerBuff().contains( entry ) )
+                if( !schedManager.getFineTimerBuff().contains( entry ) )
                 {
-                    scheduleManager.getFineTimerBuff().add(entry);
+                    schedManager.getFineTimerBuff().add(entry);
                     removeQueue.add( entry );       // queue it for removal from buffer
                 }
             }
             else
             {
-                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
+                schedManager.getExecutor().submit(entry::adjustTimer);
             }
         }
         else
         {
-            ScheduleManager.scheduleExec.submit(entry::adjustTimer);
+            schedManager.getExecutor().submit(entry::adjustTimer);
         }
     }
 
@@ -122,28 +122,28 @@ class ScheduleChecker implements Runnable
         {
             if( now.until(entry.eStart, SECONDS) < 60*60 )
             {
-                if( !scheduleManager.getFineTimerBuff().contains( entry ) )
+                if( !schedManager.getFineTimerBuff().contains( entry ) )
                 {
-                    scheduleManager.getFineTimerBuff().add(entry);
+                    schedManager.getFineTimerBuff().add(entry);
                 }
             }
             else if( now.until(entry.eStart, SECONDS) < 32*60*60 )
             {
-                if( !scheduleManager.getCoarseTimerBuff().contains( entry ) )
+                if( !schedManager.getCoarseTimerBuff().contains( entry ) )
                 {
-                    scheduleManager.getCoarseTimerBuff().add(entry);
+                    schedManager.getCoarseTimerBuff().add(entry);
                 }
             }
             else
             {
-                ScheduleManager.scheduleExec.submit(entry::adjustTimer);
+                schedManager.getExecutor().submit(entry::adjustTimer);
             }
         }
         else
         {
-            if( !scheduleManager.getFineTimerBuff().contains( entry ) )
+            if( !schedManager.getFineTimerBuff().contains( entry ) )
             {
-                scheduleManager.getFineTimerBuff().add( entry );
+                schedManager.getFineTimerBuff().add( entry );
             }
         }
     }

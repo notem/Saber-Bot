@@ -9,15 +9,13 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  */
 public class SetupCommand implements Command
 {
-    private static String BOTOATH_LINK = "https://discordapp.com/api/oauth2/authorize?client_id=" +
+    private String BOTOATH_LINK = "https://discordapp.com/api/oauth2/authorize?client_id=" +
             Main.getBotSelfUser().getId() + "&scope=bot&permissions=0\n";
-    private static String prefix = Main.getBotSettings().getCommandPrefix();
+    private String prefix = Main.getBotSettings().getCommandPrefix();
 
     @Override
     public String help(boolean brief)
     {
-
-
         String USAGE_EXTENDED = "\nYou can invite Saber to your discord server with " +
                 "this link: " + BOTOATH_LINK;
 

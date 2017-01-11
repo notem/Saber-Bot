@@ -18,28 +18,27 @@ import java.util.Arrays;
  */
 public class EditCommand implements Command
 {
-    private static String prefix = Main.getBotSettings().getCommandPrefix();
-
-    private static final String USAGE_EXTENDED = "The entry's title, start time, start date, end time, comments," +
-            " and repeat may be reconfigured with this command using the form **!edit <ID> <option> <arguments>**\n The" +
-            " possible arguments are **title \"NEW TITLE\"**, **start h:mm**, **end h:mm**, **date MM/dd**, " +
-            "**repeat no**/**daily**/**weekly**, and **comment add \"COMMENT\"** (or **comment remove**). When " +
-            "removing a comment, either the comment copied verbatim (within quotations) or the comment number needs" +
-            " to be supplied.";
-
-    private static final String EXAMPLES = "Ex1: **!edit 3fa0 comment add \"Attendance is mandatory\"**" +
-            "\nEx2: **!edit 0abf start 21:15**" +
-            "\nEx3: **!edit 49af end 2:15pm**" +
-            "\nEx4: **!edit 80c0 comment remove 1**";
-
-    private static final String USAGE_BRIEF = "**" + prefix + "edit** - Modifies an event entry, either" +
-            " changing botSettings or adding/removing comment fields.";
-
-    private static ScheduleManager schedManager = Main.getScheduleManager();
+    private String prefix = Main.getBotSettings().getCommandPrefix();
+    private ScheduleManager schedManager = Main.getScheduleManager();
 
     @Override
     public String help(boolean brief)
     {
+        String USAGE_EXTENDED = "The entry's title, start time, start date, end time, comments," +
+                " and repeat may be reconfigured with this command using the form **!edit <ID> <option> <arguments>**\n The" +
+                " possible arguments are **title \"NEW TITLE\"**, **start h:mm**, **end h:mm**, **date MM/dd**, " +
+                "**repeat no**/**daily**/**weekly**, and **comment add \"COMMENT\"** (or **comment remove**). When " +
+                "removing a comment, either the comment copied verbatim (within quotations) or the comment number needs" +
+                " to be supplied.";
+
+        String EXAMPLES = "Ex1: **!edit 3fa0 comment add \"Attendance is mandatory\"**" +
+                "\nEx2: **!edit 0abf start 21:15**" +
+                "\nEx3: **!edit 49af end 2:15pm**" +
+                "\nEx4: **!edit 80c0 comment remove 1**";
+
+        String USAGE_BRIEF = "**" + prefix + "edit** - Modifies an event entry, either" +
+                " changing botSettings or adding/removing comment fields.";
+
         if( brief )
             return USAGE_BRIEF;
         else

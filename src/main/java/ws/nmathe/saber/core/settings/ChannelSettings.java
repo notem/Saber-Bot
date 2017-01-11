@@ -77,12 +77,8 @@ class ChannelSettings
     void reloadSettingsMsg()
     {
         TextChannel scheduleChan = this.msg.getTextChannel();
-        String msg = this.generateSettingsMsg();
-        if( scheduleChan != null )
-        {
-            MessageUtilities.deleteMsg(this.msg, (x) ->
-                    MessageUtilities.sendMsg(msg, scheduleChan, (message) -> this.msg = message)
-            );
-        }
+        MessageUtilities.deleteMsg(this.msg, (x) ->
+                MessageUtilities.sendMsg(this.generateSettingsMsg(), scheduleChan, (message) -> this.msg = message)
+        );
     }
 }

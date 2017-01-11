@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 public class CommandHandler
 {
     private final CommandParser commandParser = new CommandParser();      // parses command strings into containers
-    private final ExecutorService commandExec = Executors.newCachedThreadPool(); // thread pool for running commands
+    private final ExecutorService executor = Executors.newCachedThreadPool(); // thread pool for running commands
     private HashMap<String, Command> commands;         // maps Command to invoke string
     private HashMap<String, Command> adminCommands;    // ^^ but for admin commands
 
@@ -72,7 +72,16 @@ public class CommandHandler
             // do command action if valid arguments
             if(err.isEmpty())
             {
-                commandExec.submit( () -> commands.get(cc.invoke).action(cc.args, cc.event));
+                executor.submit( () -> {
+                            try
+                            {
+                                commands.get(cc.invoke).action(cc.args, cc.event);
+                            }
+                            catch( Exception e )
+                            {
+                                e.printStackTrace();
+                            }
+                        });
             }
             // otherwise send error message
             else
@@ -99,7 +108,16 @@ public class CommandHandler
             // do command action if valid arguments
             if (err.equals(""))
             {
-                commandExec.submit( () -> adminCommands.get(cc.invoke).action(cc.args, cc.event));
+                executor.submit( () -> {
+                    try
+                    {
+                        adminCommands.get(cc.invoke).action(cc.args, cc.event);
+                    }
+                    catch( Exception e )
+                    {
+                        e.printStackTrace();
+                    }
+                });
             }
         }
     }

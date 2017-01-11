@@ -1,5 +1,6 @@
 package ws.nmathe.saber;
 
+import net.dv8tion.jda.core.entities.Guild;
 import ws.nmathe.saber.core.command.CommandHandler;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import ws.nmathe.saber.core.settings.BotSettings;
@@ -10,6 +11,7 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.SelfUser;
 import ws.nmathe.saber.core.EventListener;
+import ws.nmathe.saber.utils.GuildUtilities;
 import ws.nmathe.saber.utils.__out;
 
 /**
@@ -24,7 +26,6 @@ public class Main
     private static ScheduleManager scheduleManager = new ScheduleManager();
     private static ChannelSettingsManager channelSettingsManager = new ChannelSettingsManager();
     private static CommandHandler commandHandler = new CommandHandler();
-
 
     public static void main( String[] args )
     {
@@ -73,6 +74,12 @@ public class Main
         {
             e.printStackTrace();
             return;
+        }
+
+        // load schedule channels
+        for (Guild guild : jda.getGuilds())
+        {
+            GuildUtilities.loadScheduleChannels( guild );
         }
 
         commandHandler.init();

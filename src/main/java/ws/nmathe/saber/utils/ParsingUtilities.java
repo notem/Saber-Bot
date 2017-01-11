@@ -1,35 +1,15 @@
 package ws.nmathe.saber.utils;
 
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  */
 public class ParsingUtilities
 {
-    public static Collection<TextChannel> channelsStartsWith(Guild guild, String name)
-    {
-        Collection<TextChannel> chans = new ArrayList<>();
-
-        for( TextChannel chan : guild.getTextChannels() )
-        {
-            if( chan.getName().startsWith( name ) )
-            {
-                chans.add(chan);
-            }
-        }
-
-        return chans;
-    }
-
-
     public static ZonedDateTime parseTime(ZonedDateTime t, String localtime)
     {
         LocalTime time;

@@ -2,6 +2,7 @@ package ws.nmathe.saber.core.schedule;
 
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
+import ws.nmathe.saber.utils.__out;
 
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
  */
 public class ScheduleManager
 {
-    static final ExecutorService scheduleExec = Executors.newCachedThreadPool();     // thread pool for schedule tasks
+    private final ExecutorService executor = Executors.newCachedThreadPool();     // thread pool for schedule tasks
     private final Object scheduleLock = new Object();                                       // lock when modifying entry maps
 
     private HashMap<Integer, ScheduleEntry> entriesGlobal;         // maps id to entry
@@ -27,7 +28,6 @@ public class ScheduleManager
     private HashMap<String, ArrayList<Integer>> entriesByChannel;  // maps channel ids to entries
     private Collection<ScheduleEntry> coarseTimerBuff; // holds entries where 1h < start < 24h
     private Collection<ScheduleEntry> fineTimerBuff;   // holds entries where now < start < 1h
-
 
     public ScheduleManager()
     {
@@ -207,5 +207,10 @@ public class ScheduleManager
     public Collection<ScheduleEntry> getFineTimerBuff()
     {
         return fineTimerBuff;
+    }
+
+    public ExecutorService getExecutor()
+    {
+        return executor;
     }
 }

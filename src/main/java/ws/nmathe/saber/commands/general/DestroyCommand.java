@@ -16,21 +16,20 @@ import java.util.stream.Collectors;
  */
 public class DestroyCommand implements Command
 {
-    private static String prefix = Main.getBotSettings().getCommandPrefix();
-    private static String scheduleChan = Main.getBotSettings().getScheduleChan();
-
-    private static final String USAGE_EXTENDED = "\nCalling **!destroy <ID>** will end the event with <ID>" +
-            " prematurely. If **all** is used instead of the event ID, all scheduled events will be destroyed." +
-            "\nEx1: **!destroy 084c**\nEx2: **!destroy all**";
-
-    private static final String USAGE_BRIEF = "**" + prefix + "destroy** - Removes an entry from " +
-            scheduleChan + ".";
-
-    private static ScheduleManager schedManager = Main.getScheduleManager();
+    private String prefix = Main.getBotSettings().getCommandPrefix();
+    private String scheduleChan = Main.getBotSettings().getScheduleChan();
+    private ScheduleManager schedManager = Main.getScheduleManager();
 
     @Override
     public String help(boolean brief)
     {
+        String USAGE_EXTENDED = "\nCalling **!destroy <ID>** will end the event with <ID>" +
+                " prematurely. If **all** is used instead of the event ID, all scheduled events will be destroyed." +
+                "\nEx1: **!destroy 084c**\nEx2: **!destroy all**";
+
+        String USAGE_BRIEF = "**" + prefix + "destroy** - Removes an entry from " +
+                scheduleChan + ".";
+
         if( brief )
             return USAGE_BRIEF;
         else

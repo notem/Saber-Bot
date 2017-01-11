@@ -7,6 +7,7 @@ import ws.nmathe.saber.utils.ParsingUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import ws.nmathe.saber.utils.__out;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -103,7 +104,7 @@ public class ScheduleEntry
                     this.eComments,
                     this.eRepeat,
                     this.eID,
-                    this.eMsg.getGuild().getId()
+                    this.eMsg.getChannel().getId()
             );
 
             MessageUtilities.editMsg(msg, this.eMsg, schedManager::addEntry);
@@ -120,7 +121,7 @@ public class ScheduleEntry
                     this.eComments,
                     this.eRepeat,
                     this.eID,
-                    this.eMsg.getGuild().getId()
+                    this.eMsg.getChannel().getId()
             );
 
             MessageUtilities.editMsg(msg, this.eMsg, schedManager::addEntry);
@@ -145,14 +146,14 @@ public class ScheduleEntry
     public void adjustTimer()
     {
        // convert the times into integers representing the time in seconds
-       long timeTilStart = ZonedDateTime.now(this.eStart.getZone()).until(this.eStart, SECONDS);
+       long timeTilStart = ZonedDateTime.now().until(this.eStart, SECONDS);
        long timeTilEnd = this.eStart.until(this.eEnd, SECONDS);
 
        String[] lines = this.eMsg.getRawContent().split("\n");
 
        if( !startFlag )
        {
-           if( timeTilStart < 60 * 30 )
+           if( timeTilStart < 60 * 60 )
            {
                int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
                String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
@@ -196,7 +197,6 @@ public class ScheduleEntry
 
                MessageUtilities.editMsg( msg, this.eMsg, null );
            }
-
            else
            {
                int daysTil = (int) DAYS.between(ZonedDateTime.now(this.eStart.getZone()), eStart);
@@ -221,7 +221,7 @@ public class ScheduleEntry
                MessageUtilities.editMsg( msg, this.eMsg, null );
            }
        }
-       else
+       else // startFlag == true
        {
            if( timeTilEnd < 30*60 )
            {

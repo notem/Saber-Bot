@@ -144,7 +144,7 @@ public class VerifyUtilities
 
     public static boolean verifyScheduleChannel( Guild guild )
     {
-        Collection<TextChannel> chans = ParsingUtilities.channelsStartsWith(guild, Main.getBotSettings().getScheduleChan());
+        Collection<TextChannel> chans = GuildUtilities.getValidScheduleChannels(guild);
         if( chans == null || chans.isEmpty() )
         {
             return false;
