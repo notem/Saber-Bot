@@ -33,9 +33,10 @@ public class CreateCommand implements Command
     {
         String USAGE_EXTENDED = "Event entries can be initialized using the form **" + prefix +
                 "create \"TITLE\" <Start> <End> <Optional>**. Entries MUST be initialized with a title, a start " +
-                "time, and an end time. Start and end times should be of form h:mm with optional am/pm appended on " +
-                "the end. Entries can optionally be " +
-                "configured with comments, repeat, and a start date. Adding **repeat no**/**daily**/**weekly** to " +
+                "time, and an end time. If your guild has multiple scheduling channels, an additional argument " +
+                "indicating the channel must go before the title. Start and end times should be of form h:mm with " +
+                "optional am/pm appended on the end. " +
+                "\n\nEntries can optionally be configured with comments, repeat, and a start date. Adding **repeat no**/**daily**/**weekly** to " +
                 "**<Optional>** will configure repeat; default behavior is no repeat. Adding **date MM/dd** to " +
                 "**<Optional>** will configure the start date; default behavior is to use the current date or the " +
                 "next day depending on if the current time is greater than the start time. Comments may be added by" +
@@ -43,7 +44,8 @@ public class CreateCommand implements Command
                 "**.";
 
         String EXAMPLES = "Ex1. **!create \"Party in the Guild Hall\" 19:00 02:00**" +
-                "\nEx2. **!create \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
+                "\nEx2. **!create \"event_channel Reminders\" \"Sign up for Raids\" 4:00pm 4:00pm**" +
+                "\nEx3. **!create \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
                 "demand.\" \"PM our raid captain with your role and level if attending.\"**";
 
         String USAGE_BRIEF = "**" + prefix + "create** - Generates a new event entry" +
@@ -146,20 +148,20 @@ public class CreateCommand implements Command
                 {
                     comments++;
                     if (!VerifyUtilities.verifyString(Arrays.copyOfRange(argsRemaining, index - comments, index+1)))
-                        return "Invalid argument '" + args[index] + "', expected a comment";
+                        return "Invalid argument '" + arg + "', expected the end of a comment";
                     commentFlag = false;
                     comments = 0;
                 }
                 else if (dateFlag)
                 {
                     if (!VerifyUtilities.verifyDate(arg))
-                        return "Invalid argument '" + args[index] + "', expected a date";
+                        return "Invalid argument '" + arg + "', expected a date";
                     dateFlag = false;
                 }
                 else if (repeatFlag)
                 {
                     if (!VerifyUtilities.verifyRepeat(arg))
-                        return "Invalid argument '" + args[index] + "', expected a repeat option";
+                        return "Invalid argument '" + arg + "', expected a repeat option";
                     repeatFlag = false;
                 }
                 else if (commentFlag)
@@ -173,7 +175,6 @@ public class CreateCommand implements Command
                     else if (arg.equals("date"))
                         dateFlag = true;
                 }
-                index++;
             }
         }
 

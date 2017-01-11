@@ -31,7 +31,6 @@ public class GuildUtilities
         // parseMsgFormat the history of each schedule channel
         for (TextChannel chan : chans)
         {
-            __out.printOut(GuildUtilities.class, chan.getName());
             MessageHistory history = chan.getHistory();
 
             // ready a consumer to parseMsgFormat the history

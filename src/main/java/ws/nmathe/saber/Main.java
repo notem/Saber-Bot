@@ -42,9 +42,10 @@ public class Main
         try
         {
             jda = new JDABuilder(AccountType.BOT)
-                    .addListener(new EventListener()) // attach listener
                     .setToken(botSettings.getToken()) // set token
                     .buildBlocking();
+            // attach listener
+            jda.addEventListener(new EventListener());
             // enable reconnect
             jda.setAutoReconnect(true);
 

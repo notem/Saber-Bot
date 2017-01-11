@@ -216,7 +216,7 @@ public class EditCommand implements Command
             schedManager.removeEntry( entryId );
         }
 
-        String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, entry.eMsg.getGuild().getId());
+        String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, entry.eMsg.getChannel().getId());
         MessageUtilities.editMsg(msg, entry.eMsg, schedManager::addEntry);
     }
 }
