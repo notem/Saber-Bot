@@ -66,25 +66,17 @@ public class VerifyUtilities
         String[] date = arg.split("/");
         if(date.length != 2)
             return false;
-        if(date[0].length()!=2)
+        if( verifyInteger(date[0]) )
             return false;
         else
         {
-            if(!Character.isDigit(date[0].charAt(0)))
-                return false;
-            if(!Character.isDigit(date[0].charAt(1)))
-                return false;
             if(Integer.parseInt(date[0])>12||Integer.parseInt(date[0])==0)
                 return false;
         }
-        if(date[1].length()!=2)
+        if( verifyInteger(date[2]) )
             return false;
         else
         {
-            if(!Character.isDigit(date[1].charAt(0)))
-                return false;
-            if(!Character.isDigit(date[1].charAt(1)))
-                return false;
             if(Integer.parseInt(date[1])>Month.of(Integer.parseInt(date[0])).minLength()
                     ||Integer.parseInt(date[0])==0)
                 return false;
@@ -103,16 +95,6 @@ public class VerifyUtilities
         {
             return false;
         }
-
-        return true;
-    }
-
-    public static boolean verifyString( String[] args )
-    {
-        if(!args[0].startsWith("\""))
-            return false;
-        if(!args[args.length-1].endsWith("\""))
-            return false;
 
         return true;
     }

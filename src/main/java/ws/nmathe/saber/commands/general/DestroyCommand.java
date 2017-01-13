@@ -41,7 +41,9 @@ public class DestroyCommand implements Command
     @Override
     public String verify(String[] args, MessageReceivedEvent event)
     {
-        if(args.length>1 || args.length==0)
+        if(args.length>1)
+            return "Too many arguments";
+        if(args.length==0)
             return "Not enough arguments";
         if( args[0].equals("all") )
         {

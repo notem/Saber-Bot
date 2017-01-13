@@ -32,16 +32,19 @@ public class CreateCommand implements Command
     public String help(boolean brief)
     {
         String USAGE_EXTENDED = "Event entries can be initialized using the form **" + prefix +
-                "create \"TITLE\" <Start> <End> <Optional>**. Entries MUST be initialized with a title, a start " +
-                "time, and an end time. If your guild has multiple scheduling channels, an additional argument " +
-                "indicating the channel must go before the title. Start and end times should be of form h:mm with " +
-                "optional am/pm appended on the end. " +
-                "\n\nEntries can optionally be configured with comments, repeat, and a start date. Adding **repeat no**/**daily**/**weekly** to " +
+                "create <channel> <title> <start> <end> <extra>**. Entries MUST be initialized with a title, a start " +
+                "time, and an end time. If your guild has multiple scheduling channels, an argument " +
+                "indicating the channel is required; if you have only one schedule channel it may be left out." +
+                " Start and end times should be of form h:mm with " +
+                "optional am/pm appended on the end." +
+                "\n\nEntries can optionally be configured with comments, repeat, and a start date. Adding **repeat " +
+                "no**/**daily**/**weekly** to " +
                 "**<Optional>** will configure repeat; default behavior is no repeat. Adding **date MM/dd** to " +
                 "**<Optional>** will configure the start date; default behavior is to use the current date or the " +
                 "next day depending on if the current time is greater than the start time. Comments may be added by" +
-                " adding **\"YOUR COMMENT\"** in **<Optional>**; any number of comments may be added in **<Optional>" +
-                "**.";
+                " adding **\"YOUR COMMENT\"** in **<Optional>**; any number of comments may be added in **<Optional>**." +
+                "\n\nIf your title, comment, or channel includes any space characters, the phrase my be enclosed in " +
+                "quotations (see examples).";
 
         String EXAMPLES = "Ex1. **!create \"Party in the Guild Hall\" 19:00 02:00**" +
                 "\nEx2. **!create \"event_channel Reminders\" \"Sign up for Raids\" 4:00pm 4:00pm**" +
@@ -65,94 +68,48 @@ public class CreateCommand implements Command
             return "Not enough arguments";
 
         // check channel
-        String tmp = "";
-        if (args[index].startsWith("\"") && args[index].endsWith("\""))
+        Collection<TextChannel> schedChans = GuildUtilities.getValidScheduleChannels(event.getGuild());
+        if( schedChans.size() > 1 )
         {
-            tmp = args[index].replace("\"", "");
-            index++;
-        }
-        else if (args[index].startsWith("\""))
-        {
-            for (; index < args.length - 1; index++)
-            {
-                tmp += args[index];
-                if (args[index].endsWith("\""))
-                    break;
-            }
+            if (args.length < 4)
+                return "Not enough arguments";
 
-            if( !tmp.endsWith("\"") )
-                return "Argument **" + tmp + "** is not valid, missing ending \"";
-        }
-        else
-        {
-            return "Argument **" + args[index] + "** is neither a valid channel or title string";
+            Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(args[index], false);
+            if (chans.isEmpty())
+                return "Schedule channel **" + args[index] + "** does not exist";
+
+            index++;
         }
 
         // check title
-        if (args[index].startsWith("\"") && args[index].endsWith("\""))
-        {
-            Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(tmp, true);
-            if (chans.isEmpty())
-                return "Schedule channel **" + tmp + "** does not exist";
-        }
-        else if (args[index].startsWith("\""))
-        {
-            Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(tmp, true);
-            if (chans.isEmpty())
-                return "Schedule channel **" + tmp + "** does not exist";
+        if( args[index].length() > 255 )
+            return "Your title is too long";
 
-            tmp = "";
-            for (; index < args.length - 1; index++)
-            {
-                tmp += args[index];
-                if (args[index].endsWith("\""))
-                    break;
-            }
-
-            if( !tmp.endsWith("\"") )
-                return "Invalid argument **" + tmp + "**, missing ending \"";
-        }
-        else
-        {
-            Collection<TextChannel> schedChans = GuildUtilities.getValidScheduleChannels(event.getGuild());
-            if( schedChans.size() != 1 )
-                return "Missing either a valid channel or title string.";
-        }
-
-        // check that there are enough args remaining for start and end
-        if( args.length - 1  < index + 2 )
-            return "Not enough arguments";
+        index++;
 
         // check start
-        if( !VerifyUtilities.verifyTime( args[index+1] ) )
-            return "Argument **" + args[index+1] + "** is not a valid start time";
+        if( !VerifyUtilities.verifyTime( args[index] ) )
+            return "Argument **" + args[index] + "** is not a valid start time";
+
+        index++;
 
         // check end
-        if( !VerifyUtilities.verifyTime( args[index+2] ) )
-            return "Argument **" + args[index+2] + "** is not a valid end time";
+        if( !VerifyUtilities.verifyTime( args[index] ) )
+            return "Argument **" + args[index] + "** is not a valid end time";
+
+        index++;
 
         // check remaining args
-        if( args.length - 1 > index + 2 )
+        if( args.length - 1 > index )
         {
-            String[] argsRemaining = Arrays.copyOfRange(args, index+3, args.length);
+            String[] argsRemaining = Arrays.copyOfRange(args, index+1, args.length);
 
-            index = 0;
-            boolean commentFlag = false;
-            int comments = 0;
             boolean repeatFlag = false;
             boolean dateFlag = false;
 
             for (String arg : argsRemaining)
             {
-                if(commentFlag&&arg.endsWith("\""))
-                {
-                    comments++;
-                    if (!VerifyUtilities.verifyString(Arrays.copyOfRange(argsRemaining, index - comments, index+1)))
-                        return "Bad argument **" + arg + "**, expected the end of a comment";
-                    commentFlag = false;
-                    comments = 0;
-                }
-                else if (dateFlag)
+                if (dateFlag)
                 {
                     if (!VerifyUtilities.verifyDate(arg))
                         return "Argument **" + arg + "** is not a valid date";
@@ -164,13 +121,9 @@ public class CreateCommand implements Command
                         return "Argument **" + arg + "** is not a valid repeat option";
                     repeatFlag = false;
                 }
-                else if (commentFlag)
-                    comments++;
                 else
                 {
-                    if (arg.startsWith("\""))
-                        commentFlag = true;
-                    else if (arg.equals("repeat"))
+                    if (arg.equals("repeat"))
                         repeatFlag = true;
                     else if (arg.equals("date"))
                         dateFlag = true;
@@ -198,49 +151,34 @@ public class CreateCommand implements Command
         int eRepeat = 0;                                      // default is 0 (no repeat)
         LocalDate eDate = LocalDate.now();                    // initialize date using the current date
         TextChannel scheduleChan = GuildUtilities.getValidScheduleChannels(event.getGuild()).get(0);
-        String channelName = "";
 
-        String buffComment = "";    // String to generate comments strings to place in eComments
-
-        boolean channelFlag = false;
-        boolean titleFlag = false;    // true if 'eTitle' has been grabbed from args
-        boolean startFlag = false;    // true if 'eStart' has been grabbed from args
-        boolean endFlag = false;      // true if 'eEnd' has been grabbed from args
-        boolean commentFlag = false;  // true if a comment argument was found and is being processed,
-                                      // false when the last arg forming the comment is found
-        boolean repeatFlag = false;   // true if an arg=='repeat' when flag4 is not flagged
-                                      // when true, reads the next arg
+        boolean channelFlag = false;  // true if the channel name arg has been grabbed
+        boolean titleFlag = false;    // true if eTitle has been grabbed from args
+        boolean startFlag = false;    // true if eStart has been grabbed from args
+        boolean endFlag = false;      // true if eEnd has been grabbed from args
+        boolean repeatFlag = false;   // true if a 'repeat' arg has been grabbed
         boolean dateFlag = false;
 
         for( String arg : args )
         {
             if(!channelFlag)
             {
-                if( arg.endsWith("\"") )
+                channelFlag = true;
+                List<TextChannel> chans = event.getGuild().getTextChannelsByName(arg,false);
+                if( chans.isEmpty() )
                 {
-                    channelFlag = true;
-                    channelName += arg.replace("\"", "");
-                    List<TextChannel> chans = event.getGuild().getTextChannelsByName(channelName,true);
-                    if( chans.isEmpty() )
-                    {
-                        titleFlag = true;
-                        eTitle = channelName;
-                    }
+                    titleFlag = true;
+                    eTitle = arg;
                 }
                 else
                 {
-                    channelName += arg.replace("\"", "") + " ";
+                    scheduleChan = chans.get(0);
                 }
             }
             else if(!titleFlag)
             {
-                if( arg.endsWith("\"") )
-                {
-                    titleFlag = true;
-                    eTitle += arg.replace("\"", "");
-                }
-                else
-                    eTitle += arg.replace("\"", "") + " ";
+                titleFlag = true;
+                eTitle = arg;
             }
             else if(!startFlag)
             {
@@ -266,12 +204,7 @@ public class CreateCommand implements Command
                         eRepeat = 2;
                     repeatFlag = false;
                 }
-                if( !commentFlag && !dateFlag && arg.equals("repeat") )
-                {
-                    repeatFlag = true;
-                }
-
-                if( dateFlag )
+                else if( dateFlag )
                 {
                     if( arg.toLowerCase().equals("today") )
                         eDate = LocalDate.now();
@@ -284,27 +217,34 @@ public class CreateCommand implements Command
                     }
                     dateFlag = false;
                 }
-                else if( !commentFlag && !repeatFlag && arg.equals("date"))
+                else if( arg.toLowerCase().equals("repeat") )
+                {
+                    repeatFlag = true;
+                }
+                else if( arg.toLowerCase().equals("date"))
                 {
                     dateFlag = true;
                 }
-
-                if( arg.startsWith("\"") )
-                    commentFlag = true;
-                if( commentFlag )
-                    buffComment += arg.replace("\"","");
-                if( arg.endsWith("\"") )
+                else
                 {
-                    commentFlag = false;
-                    eComments.add(buffComment);
-                    buffComment = "";
+                    eComments.add(arg);
                 }
-                else if( commentFlag )
-                    buffComment += " ";
+
             }
         }
         ZonedDateTime s = ZonedDateTime.of( eDate, eStart, ZoneId.systemDefault() );
         ZonedDateTime e = ZonedDateTime.of( eDate, eEnd, ZoneId.systemDefault() );
+
+        if(ZonedDateTime.now().isAfter(s)) //add a day if the time has already passed
+        {
+            s = s.plusDays(1);
+            e = e.plusDays(1);
+        }
+        if(s.isAfter(e))        //add a day to end if end is after start
+        {
+            e = e.plusDays(1);
+        }
+
         Integer Id = schedManager.newId(null);
 
         // generate the event entry message
@@ -313,9 +253,11 @@ public class CreateCommand implements Command
 
         String finalTitle = eTitle;     //  convert to effectively
         int finalRepeat = eRepeat;      //  final variables
+        ZonedDateTime finalS = s;       //
+        ZonedDateTime finalE = e;       //
 
         MessageUtilities.sendMsg( msg,
                 scheduleChan,
-                (message)->schedManager.addEntry(finalTitle, s, e, eComments, Id, message, finalRepeat, false) );
+                (message)->schedManager.addEntry(finalTitle, finalS, finalE, eComments, Id, message, finalRepeat, false) );
     }
 }

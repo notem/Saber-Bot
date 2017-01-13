@@ -55,7 +55,7 @@ public class Main
                 @Override
                 public String getName()
                 {
-                    return "schedule bot | " + botSettings.getCommandPrefix() + "help " + botSettings.getCommandPrefix() + "setup";
+                    return "Schedule bot | " + botSettings.getCommandPrefix() + "help " + botSettings.getCommandPrefix() + "setup";
                 }
 
                 @Override

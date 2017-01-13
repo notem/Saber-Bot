@@ -49,6 +49,14 @@ public class TimeZonesCommand implements Command
                 if (msg.length() > 1900)
                 {
                     MessageUtilities.sendMsg(msg, event.getChannel(), null);
+
+                    try
+                    {
+                        Thread.sleep(1000);
+                    }
+                    catch( Exception ignored )
+                    { }
+
                     msg = "**continued. . .**\n";
                 }
                 msg += "  " + zone + "\n";
@@ -64,7 +72,15 @@ public class TimeZonesCommand implements Command
                 if (msg.length() > 1900)
                 {
                     MessageUtilities.sendMsg(msg, event.getChannel(), null);
-                    msg = "\n";
+
+                    try
+                    {
+                        Thread.sleep(1000);
+                    }
+                    catch( Exception ignored )
+                    { }
+
+                    msg = "**continued. . .**\n";
                 }
                 if( zone.toUpperCase().contains(args[0].toUpperCase()) )
                 {

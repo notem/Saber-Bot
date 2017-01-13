@@ -8,6 +8,8 @@ import net.dv8tion.jda.core.entities.Message;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 
 /**
@@ -109,7 +111,7 @@ public class ScheduleEntryParser
             }
 
             // create a new thread
-            return new ScheduleEntry(eTitle, eStart, eEnd, eComments, eID, msg, eRepeat, started);
+            return new ScheduleEntry(eTitle, eStart, eEnd, eComments, Id, msg, eRepeat, started);
         }
         catch( Exception e )
         {
@@ -136,7 +138,7 @@ public class ScheduleEntryParser
 
         // of form: "< DATE > from < START > to < END >\n"
         String secondLine = eStart.format(DateTimeFormatter.ofPattern("< MMMM d >"));
-        if( eStart.equals(eEnd) )
+        if( eStart.until(eEnd, ChronoUnit.SECONDS)==0 )
         {
             secondLine += " at " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }

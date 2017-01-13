@@ -7,6 +7,7 @@ import ws.nmathe.saber.core.settings.ChannelSettingsManager;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.utils.GuildUtilities;
 
 import java.time.ZoneId;
 import java.util.Collection;
@@ -44,20 +45,29 @@ public class SetCommand implements Command
     @Override
     public String verify(String[] args, MessageReceivedEvent event)
     {
-        if( args.length < 3 )
+        int index = 0;
+
+        if( args.length < 2 )
         {
             return "Not enough arguments";
         }
 
-        int index = 0;
-        Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(args[index], true);
-        if( chans.isEmpty() )
-            return "Schedule channel **" + args[index] + "** does not exist";
-        if( chans.size() > 1 )
-            return "Duplicate schedule channels with name **" + args[index] + "**";
-        index++;
+        Collection<TextChannel> schedChans = GuildUtilities.getValidScheduleChannels(event.getGuild());
+        if( schedChans.size() > 1 )
+        {
+            if (args.length < 3)
+                return "Not enough arguments";
 
-        switch( args[index] )
+            Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(args[index], false);
+            if (chans.isEmpty())
+                return "Schedule channel **" + args[index] + "** does not exist";
+            if (chans.size() > 1)
+                return "Duplicate channels **" + args[index] + "** exist";
+
+            index++;
+        }
+
+        switch( args[index++] )
         {
             case "msg" :
                 break;
@@ -66,14 +76,14 @@ public class SetCommand implements Command
                 break;
 
             case "zone" :
-                if( ZoneId.of(args[index+1].replace("\"","")) == null )
-                    return "Argument **" + args[index+1] +  "** is not a valid timezone";
+                if( ZoneId.of(args[index].replace("\"","")) == null )
+                    return "Argument **" + args[index] +  "** is not a valid timezone";
                 break;
 
             case "clock" :
-                if( !args[index+1].replace("\"","").equals("24") && !args[index+1].replace("\"","").equals("12"))
-                    return "Argument **" + args[index+1] +  "** is not a valid option. Argument must be **\"24\"** " +
-                            "or **\"12\"**";
+                if( !args[index].equals("24") && !args[index].equals("12"))
+                    return "Argument **" + args[index] +  "** is not a valid option. Argument must be **24** " +
+                            "or **12**";
                 break;
         }
         return "";
@@ -89,33 +99,15 @@ public class SetCommand implements Command
         switch (args[index++])
         {
             case "msg":
-                String msg = "";
-                for (int i = index; i < args.length; i++)
-                {
-                    msg += args[i].replace("\"", "");
-                    if (i + 1 != args.length)
-                    {
-                        msg += " ";
-                    }
-                }
-                chanSetManager.setAnnounceFormat(scheduleChan.getId(), msg);
+                chanSetManager.setAnnounceFormat(scheduleChan.getId(), args[index]);
                 break;
 
             case "chan":
-                String chan = "";
-                for (int i = index; i < args.length; i++)
-                {
-                    chan += args[i].replace("\"", "");
-                    if (i + 1 != args.length)
-                    {
-                        chan += " ";
-                    }
-                }
-                chanSetManager.setAnnounceChan(scheduleChan.getId(), chan);
+                chanSetManager.setAnnounceChan(scheduleChan.getId(), args[index]);
                 break;
 
             case "zone":
-                ZoneId zone = ZoneId.of(args[index].replace("\"", ""));
+                ZoneId zone = ZoneId.of(args[index]);
                 chanSetManager.setTimeZone(scheduleChan.getId(), zone);
 
                 // edit and reload the schedule
@@ -129,7 +121,7 @@ public class SetCommand implements Command
                 break;
 
             case "clock":
-                chanSetManager.setClockFormat(scheduleChan.getId(), args[index].replace("\"", ""));
+                chanSetManager.setClockFormat(scheduleChan.getId(), args[index]);
 
                 // reload the schedule
                 for (Integer id : schedManager.getEntriesByChannel(scheduleChan.getId()))

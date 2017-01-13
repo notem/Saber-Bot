@@ -4,6 +4,7 @@ import ws.nmathe.saber.Main;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 /**
@@ -28,19 +29,52 @@ class CommandParser
         else
             trimmed = raw.replaceFirst( Main.getBotSettings().getCommandPrefix(), "");
 
-        // split the trimmed string into arguments
-        String[] splitTrimmed = trimmed.split(" ");
+        // split at spaces
+        String[] split = trimmed.split(" ");
 
-        // store splitTrimmed into an ArrayList
-        ArrayList<String> split = new ArrayList<>();
-        Collections.addAll(split, splitTrimmed);
-
-        // take the first arg
-        String invoke = split.get(0);
+        // separate out first arg
+        String invoke = split[0];
 
         // divide out the remaining args from the first arg
-        String[] args = new String[split.size() - 1];
-        split.subList(1, split.size()).toArray(args);
+        split = Arrays.copyOfRange(split, 1, split.length);
+
+        // process the remaining elements into arguments in a temporary ArrayList
+        ArrayList<String> list = new ArrayList<>();
+        String tmp = "";            // temporary buffer used when encountering a "txt txt" arg
+        boolean quotesFlag = true;  //
+        for( String str : split )
+        {
+            if( quotesFlag )
+            {
+                if (str.startsWith("\""))
+                {
+                    tmp += str;
+                    quotesFlag = false;
+                }
+                else
+                {
+                    list.add( str.replace("\"","") );
+                }
+            }
+            else
+            {
+                if( str.endsWith("\"") )
+                {
+                    tmp += " " + str;
+                    list.add(tmp.replace("\"", ""));
+
+                    tmp = "";
+                    quotesFlag = true;
+                }
+                else
+                {
+                    tmp += " " + str;
+                }
+            }
+        }
+
+        // ArrayList to primitive array
+        String[] args = list.toArray(new String[list.size()]);
 
         return new CommandContainer(invoke, args, e);
     }
