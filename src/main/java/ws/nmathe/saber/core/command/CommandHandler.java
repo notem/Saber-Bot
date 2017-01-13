@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * Handles MessageEvents which contain user commands
  */
 public class CommandHandler
 {
@@ -30,6 +31,9 @@ public class CommandHandler
         adminCommands = new HashMap<>();
     }
 
+    /**
+     * Loads all commands into the command table
+     */
     public void init()
     {
         // add bot commands with their lookup name

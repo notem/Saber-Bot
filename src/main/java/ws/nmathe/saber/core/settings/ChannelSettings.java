@@ -8,6 +8,8 @@ import net.dv8tion.jda.core.entities.*;
 import java.time.ZoneId;
 
 /**
+ * Object which represents the settings for a schedule channel with it's associated
+ * settings Message.
  */
 class ChannelSettings
 {

@@ -2,7 +2,6 @@ package ws.nmathe.saber.core.schedule;
 
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
-import ws.nmathe.saber.utils.__out;
 
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
@@ -17,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
+ * Manage's the schedule of ScheduleEntries for all attached guilds
  */
 public class ScheduleManager
 {
@@ -39,6 +39,10 @@ public class ScheduleManager
         this.fineTimerBuff = new ArrayList<>();
     }
 
+    /**
+     * creates the scheduledExecutor thread pool and starts schedule timers which
+     * check for expired entries
+     */
     public void init()
     {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -53,10 +57,21 @@ public class ScheduleManager
                 60 - (LocalTime.now().toSecondOfDay()%60), 60, TimeUnit.SECONDS );
     }
 
+    /**
+     * Takes a valid message containing a schedule entry, parses it into an entry
+     * and then adds it to the hashmaps. Should be used when a guild joins or during
+     * the init of the bot.
+     *
+     * @param message Discord Message
+     */
     public void addEntry( Message message )
     {
         ScheduleEntry se = ScheduleEntryParser.parse( message );
-        if( se == null ) return;
+        if( se == null ) return;    // end early if parsing failed
+
+        // regenerate the entry on the off chance the Id was changed
+        String msg = ScheduleEntryParser.generate(se.eTitle,se.eStart,se.eEnd,se.eComments,se.eRepeat,se.eID,se.eMsg.getChannel().getId());
+        MessageUtilities.editMsg( msg, se.eMsg, null);
 
         String guildId = message.getGuild().getId();
         String channelId = message.getChannel().getId();
@@ -102,10 +117,78 @@ public class ScheduleManager
         }
     }
 
-    public void removeId( Integer eId )
+    /**
+     * Constructs a schedule entry from it's parts, which are provided as method arguments.
+     * Needs to do no parsing of the message.  Should be used with the create and edit commands.
+     *
+     * @param title the entry's title
+     * @param start the entry's ZoneDateTime start
+     * @param end the entry's ZoneDateTime end
+     * @param comments list of comment strings
+     * @param Id the integer Id of the entry
+     * @param message the discord Message that contains the entry's information
+     * @param repeat integer repeat settings
+     * @param hasStarted whether or not the event has begun
+     */
+    public void addEntry(String title, ZonedDateTime start, ZonedDateTime end, ArrayList<String> comments, Integer Id, Message message, int repeat, boolean hasStarted)
+    {
+        ScheduleEntry se = new ScheduleEntry( title, start, end, comments, Id, message, repeat, hasStarted);
+
+        String guildId = message.getGuild().getId();
+        String channelId = message.getChannel().getId();
+
+        // put the ScheduleEntry thread into a HashMap by ID
+        entriesGlobal.put(se.eID, se);
+
+        // put the id in guild mapping
+        if( !entriesByGuild.containsKey( guildId ) )
+        {
+            ArrayList<Integer> entries = new ArrayList<>();
+            entries.add(se.eID);
+            entriesByGuild.put( guildId, entries );
+        }
+        else
+            entriesByGuild.get( guildId ).add( se.eID );
+
+        // put the id in channel mapping
+        if( !entriesByChannel.containsKey( channelId ))
+        {
+            ArrayList<Integer> entries = new ArrayList<>();
+            entries.add(se.eID);
+            entriesByChannel.put( channelId, entries );
+        }
+        else
+            entriesByChannel.get( channelId ).add( se.eID );
+
+        // adjusts the displayed time til timer (since it is not set at creation)
+        se.adjustTimer();
+
+        // add the entry to buffer
+        if( !se.startFlag )
+        {
+            long timeTil = ZonedDateTime.now().until(se.eStart, ChronoUnit.SECONDS);
+            if (timeTil <= 45 * 60)
+                fineTimerBuff.add(se);
+            else if (timeTil <= 32 * 60 * 60)
+                coarseTimerBuff.add(se);
+        }
+        else
+        {
+            fineTimerBuff.add(se);
+        }
+    }
+
+    /**
+     * removes the entry from the mappings, does not delete the Message!
+     * Only used internally by the scheduleManager
+     *
+     * @param eId integer Id
+     */
+    private void removeId( Integer eId )
     {
         ScheduleEntry se = this.getEntry( eId );
         if( se == null ) return;
+
         String gId = se.eMsg.getGuild().getId();
         String cId = se.eMsg.getChannel().getId();
 
@@ -123,6 +206,11 @@ public class ScheduleManager
         entriesGlobal.remove(eId);
     }
 
+    /**
+     * removes the entry from the mappings and the timer buffers
+     *
+     * @param eId integer Id
+     */
     public void removeEntry( Integer eId )
     {
         ScheduleEntry se = this.getEntry( eId );
@@ -133,13 +221,27 @@ public class ScheduleManager
         this.removeId( eId );
     }
 
+    /**
+     * regenerates the displayed Message text for a schedule entry
+     *
+     * @param eId integer Id
+     */
     public void reloadEntry( Integer eId )
     {
         ScheduleEntry se = getEntry( eId );
-        String msg = ScheduleEntryParser.generate(se.eTitle,se.eStart,se.eEnd,se.eComments,se.eRepeat,se.eID,se.eMsg.getGuild().getId());
-        MessageUtilities.editMsg( msg, se.eMsg, this::addEntry);
+        if( se == null ) return;
+
+        String msg = ScheduleEntryParser.generate(se.eTitle,se.eStart,se.eEnd,se.eComments,se.eRepeat,se.eID,se.eMsg.getChannel().getId());
+        MessageUtilities.editMsg( msg, se.eMsg, null);
     }
 
+    /**
+     * generates a valid and free schedule ID number. A ID my be requested, which will
+     * be returned if the ID is free
+     *
+     * @param oldId integer Id
+     * @return a free integer Id
+     */
     public Integer newId( Integer oldId )
     {
         // try first to use the requested Id
@@ -209,7 +311,7 @@ public class ScheduleManager
         return fineTimerBuff;
     }
 
-    public ExecutorService getExecutor()
+    ExecutorService getExecutor()
     {
         return executor;
     }

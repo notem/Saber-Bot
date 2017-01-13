@@ -55,7 +55,7 @@ public class Main
                 @Override
                 public String getName()
                 {
-                    return "pm me " + botSettings.getCommandPrefix() + "help or " + botSettings.getCommandPrefix() + "setup";
+                    return "schedule bot | " + botSettings.getCommandPrefix() + "help " + botSettings.getCommandPrefix() + "setup";
                 }
 
                 @Override
@@ -83,8 +83,8 @@ public class Main
             GuildUtilities.loadScheduleChannels( guild );
         }
 
-        commandHandler.init();
-        scheduleManager.init();
+        commandHandler.init();      // ready commands
+        scheduleManager.init();     // start timers
     }
 
 

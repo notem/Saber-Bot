@@ -25,8 +25,8 @@ public class EditCommand implements Command
     public String help(boolean brief)
     {
         String USAGE_EXTENDED = "The entry's title, start time, start date, end time, comments," +
-                " and repeat may be reconfigured with this command using the form **!edit <ID> <option> <arguments>**\n The" +
-                " possible arguments are **title \"NEW TITLE\"**, **start h:mm**, **end h:mm**, **date MM/dd**, " +
+                " and repeat may be reconfigured with this command using the form **!edit <ID> <option> <arguments>**\n\n" +
+                " The possible arguments are **title \"NEW TITLE\"**, **start h:mm**, **end h:mm**, **date MM/dd**, " +
                 "**repeat no**/**daily**/**weekly**, and **comment add \"COMMENT\"** (or **comment remove**). When " +
                 "removing a comment, either the comment copied verbatim (within quotations) or the comment number needs" +
                 " to be supplied.";
@@ -36,8 +36,8 @@ public class EditCommand implements Command
                 "\nEx3: **!edit 49af end 2:15pm**" +
                 "\nEx4: **!edit 80c0 comment remove 1**";
 
-        String USAGE_BRIEF = "**" + prefix + "edit** - Modifies an event entry, either" +
-                " changing botSettings or adding/removing comment fields.";
+        String USAGE_BRIEF = "**" + prefix + "edit** - Modifies an schedule entry, either" +
+                " changing parameters or adding/removing comment fields.";
 
         if( brief )
             return USAGE_BRIEF;
@@ -55,6 +55,9 @@ public class EditCommand implements Command
         if( !VerifyUtilities.verifyHex(args[0]) )
             return "ID \"" + args[0] + "\" is not a valid ID value";
 
+        Integer Id = Integer.decode( "0x" + args[0] );
+        ScheduleEntry entry = schedManager.getEntry( Id );
+
         // check later args
         switch( args[1].toLowerCase() )
         {
@@ -62,21 +65,23 @@ public class EditCommand implements Command
                 switch (args[2])
                 {
                     case "add":
-                        if (!VerifyUtilities.verifyString(Arrays.copyOfRange(args, 3, args.length)))
-                            return "Invalid argument \"" + args[3] + "\"";
+                        String[] add = Arrays.copyOfRange( args, 3, args.length );
+                        if (!VerifyUtilities.verifyString(add))
+                            return "Argument **" + Arrays.toString(add) + "** is not a valid comment string";
                         break;
                     case "remove":
                         if(Character.isDigit(args[3].charAt(0)) &&
                                 !VerifyUtilities.verifyInteger(args[3]))
-                            return "Invalid argument \"" + args[3] + "\"";
+                            return "Argument **" + args[3] + "** cannot be used to remove a comment";
                         else
                         {
-                            if (!VerifyUtilities.verifyString(Arrays.copyOfRange(args, 3, args.length)))
-                                return "Invalid argument \"" + args[3] + "\"";
+                            String[] remove = Arrays.copyOfRange( args, 3, args.length );
+                            if (!VerifyUtilities.verifyString(remove))
+                                return "Argument **" + Arrays.toString(remove) + "** is not a valid comment string";
                         }
                         break;
                     default:
-                        return "Invalid argument \"" + args[2] + "\"";
+                        return "Argument **" + args[2] + "** is not a valid option for **comment**";
                 }
                 break;
 
@@ -84,60 +89,56 @@ public class EditCommand implements Command
                 if(args.length > 3)
                     return "Not enough arguments";
                 if( !VerifyUtilities.verifyTime( args[2] ) )
-                    return "Invalid argument \"" + args[2] + "\"";
+                    return "Argument **" + args[2] + "** is not a valid start time";
+                if( entry.startFlag )
+                    return "You cannot modify the start time after the event has already started.";
                 break;
 
             case "end":
                 if(args.length > 3)
                     return "Not enough arguments";
                 if( !VerifyUtilities.verifyTime( args[2] ) )
-                    return "Invalid argument \"" + args[2] + "\"";
+                    return "Argument **" + args[2] + "** is not a valid end time";
                 break;
 
             case "title":
-                String[] comment = Arrays.copyOfRange( args, 2, args.length );
-                if(!VerifyUtilities.verifyString(comment))
-                    return "Invalid argument \"" + args[2] + "\"";
+                String[] arg = Arrays.copyOfRange( args, 2, args.length );
+                if(!VerifyUtilities.verifyString(arg))
+                {
+                    return "Argument **" + Arrays.toString(arg) + "** is not a valid title string";
+                }
                 break;
 
             case "date":
                 if(args.length > 3)
                     return "Not enough arguments";
                 if( !VerifyUtilities.verifyDate( args[2] ) )
-                    return "Invalid argument \"" + args[2] + "\"";
+                    return "Argument **" + args[2] + "** is not a valid date";
                 break;
 
             case "repeat":
                 if(args.length > 3)
                     return "Not enough arguments";
                 if( !VerifyUtilities.verifyRepeat(args[2]) )
-                    return "Invalid argument \"" + args[2] + "\"";
+                    return "Argument **" + args[2] + "** is not a valid repeat option";
                 break;
         }
 
-        return "";
+        return ""; // return valid
     }
 
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        // parseMsgFormat argument into the event entry's ID
         Integer entryId = Integer.decode( "0x" + args[0] );
-
-        // check if the entry exists
         ScheduleEntry entry = schedManager.getEntry( entryId );
-        if( entry == null  || !entry.eMsg.getGuild().getId().equals(event.getGuild().getId()) )
-        {
-            String msg = "There is no event entry with ID " + Integer.toHexString(entryId) + ".";
-            event.getChannel().sendMessage( msg ).queue();
-            return;
-        }
 
         String title = entry.eTitle;
         ArrayList<String> comments = entry.eComments;
         ZonedDateTime start = entry.eStart;
         ZonedDateTime end = entry.eEnd;
         int repeat = entry.eRepeat;
+        boolean hasStarted = entry.startFlag;
 
         switch( args[1] )
         {
@@ -213,10 +214,19 @@ public class EditCommand implements Command
 
         synchronized( schedManager.getScheduleLock() )
         {
-            schedManager.removeEntry( entryId );
+            schedManager.removeEntry( entryId );    // remove the old entry
         }
+        Integer Id = schedManager.newId( entryId ); // request a new Id (but prefer the old)
 
-        String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, entry.eMsg.getChannel().getId());
-        MessageUtilities.editMsg(msg, entry.eMsg, schedManager::addEntry);
+        String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, Id, entry.eMsg.getChannel().getId());
+
+        int finalRepeat = repeat;           //
+        ZonedDateTime finalEnd = end;       // convert into effectively final
+        ZonedDateTime finalStart = start;   // variables
+        String finalTitle = title;          //
+
+        MessageUtilities.editMsg(msg,
+                entry.eMsg,
+                (message)->schedManager.addEntry(finalTitle, finalStart, finalEnd, comments, Id, message, finalRepeat, hasStarted ));
     }
 }

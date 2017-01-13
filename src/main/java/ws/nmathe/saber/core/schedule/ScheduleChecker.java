@@ -59,6 +59,11 @@ class ScheduleChecker implements Runnable
         }
     }
 
+    /**
+     * the checker function for the 1 minute timer.
+     * @param entry entry to check
+     * @param removeQueue a queue of entries to remove after all entries are checked
+     */
     private void fineCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
         ZonedDateTime now = ZonedDateTime.now();
@@ -89,6 +94,11 @@ class ScheduleChecker implements Runnable
         }
     }
 
+    /**
+     * the 30 minute checker, moves entries into the fine timer if they begin within the hour
+     * @param entry entry to check
+     * @param removeQueue a queue of entries to remove after all entries are checked
+     */
     private void coarseCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
@@ -114,6 +124,11 @@ class ScheduleChecker implements Runnable
         }
     }
 
+    /**
+     * the 12h timer checker. Examine's every active entry, moving entries to the fine
+     * buffer or coarse buffer if appropriate.
+     * @param entry ScheduleEntry to check
+     */
     private void veryCoarseCheck(ScheduleEntry entry)
     {
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );

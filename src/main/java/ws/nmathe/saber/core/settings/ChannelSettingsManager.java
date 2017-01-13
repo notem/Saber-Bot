@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.util.HashMap;
 
 /**
+ * Manage's the settings for all valid schedule channels
  */
 public class ChannelSettingsManager
 {

@@ -34,7 +34,7 @@ public class TimeZonesCommand implements Command
     @Override
     public String verify(String[] args, MessageReceivedEvent event)
     {
-        return args.length<2 ? "" : "Too many characters";
+        return args.length<2 ? "" : "Too many arguments";
     }
 
     @Override

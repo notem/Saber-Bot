@@ -45,7 +45,7 @@ public class CreateCommand implements Command
 
         String EXAMPLES = "Ex1. **!create \"Party in the Guild Hall\" 19:00 02:00**" +
                 "\nEx2. **!create \"event_channel Reminders\" \"Sign up for Raids\" 4:00pm 4:00pm**" +
-                "\nEx3. **!create \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
+                "\nEx3. **!create \"event_channl Raids\" \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
                 "demand.\" \"PM our raid captain with your role and level if attending.\"**";
 
         String USAGE_BRIEF = "**" + prefix + "create** - Generates a new event entry" +
@@ -81,11 +81,11 @@ public class CreateCommand implements Command
             }
 
             if( !tmp.endsWith("\"") )
-                return "Invalid argument '" + tmp + "', missing ending \"";
+                return "Argument **" + tmp + "** is not valid, missing ending \"";
         }
         else
         {
-            return "Invalid argument '" + args[index] + "'";
+            return "Argument **" + args[index] + "** is neither a valid channel or title string";
         }
 
         // check title
@@ -93,13 +93,13 @@ public class CreateCommand implements Command
         {
             Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(tmp, true);
             if (chans.isEmpty())
-                return "Schedule channel '" + tmp + "' does not exist";
+                return "Schedule channel **" + tmp + "** does not exist";
         }
         else if (args[index].startsWith("\""))
         {
             Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(tmp, true);
             if (chans.isEmpty())
-                return "Schedule channel '" + tmp + "' does not exist";
+                return "Schedule channel **" + tmp + "** does not exist";
 
             tmp = "";
             for (; index < args.length - 1; index++)
@@ -110,13 +110,13 @@ public class CreateCommand implements Command
             }
 
             if( !tmp.endsWith("\"") )
-                return "Invalid argument '" + tmp + "', missing ending \"";
+                return "Invalid argument **" + tmp + "**, missing ending \"";
         }
         else
         {
             Collection<TextChannel> schedChans = GuildUtilities.getValidScheduleChannels(event.getGuild());
             if( schedChans.size() != 1 )
-                return "Not enough arguments";
+                return "Missing either a valid channel or title string.";
         }
 
         // check that there are enough args remaining for start and end
@@ -125,11 +125,11 @@ public class CreateCommand implements Command
 
         // check start
         if( !VerifyUtilities.verifyTime( args[index+1] ) )
-            return "Invalid argument '" + args[index+1] + "', expected a start time";
+            return "Argument **" + args[index+1] + "** is not a valid start time";
 
         // check end
         if( !VerifyUtilities.verifyTime( args[index+2] ) )
-            return "Invalid argument '" + args[index+2] + "', expected an end time";
+            return "Argument **" + args[index+2] + "** is not a valid end time";
 
         // check remaining args
         if( args.length - 1 > index + 2 )
@@ -148,20 +148,20 @@ public class CreateCommand implements Command
                 {
                     comments++;
                     if (!VerifyUtilities.verifyString(Arrays.copyOfRange(argsRemaining, index - comments, index+1)))
-                        return "Invalid argument '" + arg + "', expected the end of a comment";
+                        return "Bad argument **" + arg + "**, expected the end of a comment";
                     commentFlag = false;
                     comments = 0;
                 }
                 else if (dateFlag)
                 {
                     if (!VerifyUtilities.verifyDate(arg))
-                        return "Invalid argument '" + arg + "', expected a date";
+                        return "Argument **" + arg + "** is not a valid date";
                     dateFlag = false;
                 }
                 else if (repeatFlag)
                 {
                     if (!VerifyUtilities.verifyRepeat(arg))
-                        return "Invalid argument '" + arg + "', expected a repeat option";
+                        return "Argument **" + arg + "** is not a valid repeat option";
                     repeatFlag = false;
                 }
                 else if (commentFlag)
@@ -181,11 +181,11 @@ public class CreateCommand implements Command
         ArrayList<Integer> entries = schedManager.getEntriesByGuild( event.getGuild().getId() );
         if( entries != null && entries.size() >= maxEntries && maxEntries > 0)
         {
-            return "Your guild has the maximum allowed amount of schedule entries."
+            return "Maximum amount of entries has been reached."
                     +" No more entries may be added until old entries are destroyed.";
         }
 
-        return "";
+        return ""; // return valid
     }
 
     @Override
@@ -305,13 +305,17 @@ public class CreateCommand implements Command
         }
         ZonedDateTime s = ZonedDateTime.of( eDate, eStart, ZoneId.systemDefault() );
         ZonedDateTime e = ZonedDateTime.of( eDate, eEnd, ZoneId.systemDefault() );
+        Integer Id = schedManager.newId(null);
 
         // generate the event entry message
-        String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, null, scheduleChan.getId() );
+        String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, Id, scheduleChan.getId() );
         __out.printOut(this.getClass(), scheduleChan.getName());
+
+        String finalTitle = eTitle;     //  convert to effectively
+        int finalRepeat = eRepeat;      //  final variables
 
         MessageUtilities.sendMsg( msg,
                 scheduleChan,
-                schedManager::addEntry );
+                (message)->schedManager.addEntry(finalTitle, s, e, eComments, Id, message, finalRepeat, false) );
     }
 }

@@ -52,9 +52,9 @@ public class SetCommand implements Command
         int index = 0;
         Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(args[index], true);
         if( chans.isEmpty() )
-            return "Schedule channel \"" + args[index] + "\" does not exist";
+            return "Schedule channel **" + args[index] + "** does not exist";
         if( chans.size() > 1 )
-            return "Duplicate schedule channels with name \"" + args[index] + "\"";
+            return "Duplicate schedule channels with name **" + args[index] + "**";
         index++;
 
         switch( args[index] )
@@ -67,12 +67,13 @@ public class SetCommand implements Command
 
             case "zone" :
                 if( ZoneId.of(args[index+1].replace("\"","")) == null )
-                    return "Invalid zone argument \"" + args[index+1] +  "\"";
+                    return "Argument **" + args[index+1] +  "** is not a valid timezone";
                 break;
 
             case "clock" :
                 if( !args[index+1].replace("\"","").equals("24") && !args[index+1].replace("\"","").equals("12"))
-                    return "Invalid time argument \"" + args[index+1] +  "\"";
+                    return "Argument **" + args[index+1] +  "** is not a valid option. Argument must be **\"24\"** " +
+                            "or **\"12\"**";
                 break;
         }
         return "";

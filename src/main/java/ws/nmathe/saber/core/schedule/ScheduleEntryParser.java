@@ -90,6 +90,7 @@ public class ScheduleEntryParser
             // the last line contains the ID, minutes til timer, and repeat \\
             // of form: "[ID: XXXX](TIME TIL) repeats xxx\n"
             eID = Integer.decode("0x" + lines[lines.length - 2].replace("[ID: ", "").split("]")[0]);
+            Integer Id = schedManager.newId( eID );
 
             boolean started = lines[lines.length - 2].split("\\(")[1].startsWith("ends");
 
@@ -131,7 +132,6 @@ public class ScheduleEntryParser
         // the 'actual' first line (and last line) define format
         String msg = "```Markdown\n";
 
-        if( eId == null) eId = schedManager.newId( null ); // generate an ID for the entry
         String firstLine = "# " + eTitle + "\n";
 
         // of form: "< DATE > from < START > to < END >\n"

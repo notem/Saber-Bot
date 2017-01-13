@@ -12,6 +12,11 @@ import java.util.Collections;
  */
 class CommandParser
 {
+    /**
+     * parses a MessageEvent containing a command into it's parts
+     * @param e event
+     * @return container holding command parts
+     */
     CommandContainer parse(MessageReceivedEvent e)
     {
         String raw = e.getMessage().getRawContent();
@@ -40,7 +45,9 @@ class CommandParser
         return new CommandContainer(invoke, args, e);
     }
 
-    /** an object that holds the parsed user input in the MessageReceivedEvent e. **/
+    /**
+     * an object that holds the parsed user input in the MessageReceivedEvent e.
+     **/
     class CommandContainer
     {
         final String invoke;         // the first argument in the user's input

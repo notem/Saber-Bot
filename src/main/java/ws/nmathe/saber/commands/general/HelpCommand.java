@@ -42,7 +42,7 @@ public class HelpCommand implements Command
     public String verify(String[] args, MessageReceivedEvent event)
     {
         if(args.length>1)
-            return "Not enough arguments";
+            return "Too many arguments";
         return "";
     }
 

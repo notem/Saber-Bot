@@ -7,7 +7,6 @@ import ws.nmathe.saber.utils.ParsingUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
-import ws.nmathe.saber.utils.__out;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -49,6 +48,9 @@ public class ScheduleEntry
         this.startFlag = started;
     }
 
+    /**
+     * Handles when an entries's start time expires
+     */
     public void start()
     {
         if( this.eStart.equals(this.eEnd) )
@@ -70,6 +72,9 @@ public class ScheduleEntry
         this.adjustTimer();
     }
 
+    /**
+     * handles when an entry's end time expires
+     */
     public void end()
     {
         Guild guild = this.eMsg.getGuild();
@@ -128,6 +133,10 @@ public class ScheduleEntry
         }
     }
 
+    /**
+     * internal helper function
+     * @return a valid repeat string (which can be parsed)
+     */
     private String genRepeat()
     {
         String msg = "";
@@ -143,6 +152,10 @@ public class ScheduleEntry
         return msg;
     }
 
+    /**
+     * Edits the displayed Message text to indicate the time remaining until
+     * the entry is scheduled to begin/end
+     */
     public void adjustTimer()
     {
        // convert the times into integers representing the time in seconds

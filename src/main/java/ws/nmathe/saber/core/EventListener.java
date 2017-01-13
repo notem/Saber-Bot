@@ -12,7 +12,6 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 /**
@@ -21,11 +20,10 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
  */
 public class EventListener extends ListenerAdapter
 {
-    // store the bot botSettings for easy reference
+    // store bot settings for easy reference
     private String prefix = Main.getBotSettings().getCommandPrefix();
     private String adminPrefix = Main.getBotSettings().getAdminPrefix();
     private String adminId = Main.getBotSettings().getAdminId();
-    private int maxEntries = Main.getBotSettings().getMaxEntries();
     private String controlChan = Main.getBotSettings().getControlChan();
     private String scheduleChan = Main.getBotSettings().getScheduleChan();
 
@@ -41,13 +39,16 @@ public class EventListener extends ListenerAdapter
         String userId = event.getAuthor().getId();          // the ID of the user
         String origin = event.getChannel().getName().toLowerCase();       // the name of the originating text channel
 
+        // process private commands
         if (event.isFromType(ChannelType.PRIVATE))
         {
+            // help and setup general commands
             if (content.startsWith(prefix + "help") || content.startsWith(prefix + "setup"))
             {
                 cmdHandler.handleCommand(event, 0);
                 return;
             }
+            // admin commands
             else if (content.startsWith(adminPrefix) && userId.equals(adminId))
             {
                 cmdHandler.handleCommand(event, 1);
@@ -62,6 +63,7 @@ public class EventListener extends ListenerAdapter
            return;
         }
 
+        // process a command if it originates in the control channel and with appropriate prefix
         if (origin.equals(controlChan) && content.startsWith(prefix))
         {
             // handle command received
@@ -69,6 +71,7 @@ public class EventListener extends ListenerAdapter
             return;
         }
 
+        // keep schedule channels clean and resend channel settings message when a new entry is added
         if (origin.startsWith(scheduleChan))
         {
             // delete other user's messages
@@ -84,16 +87,17 @@ public class EventListener extends ListenerAdapter
     @Override
     public void onGuildJoin( GuildJoinEvent event )
     {
-        Guild guild = event.getGuild();
-        GuildUtilities.loadScheduleChannels( guild );
+        // load channels of joining guild
+        GuildUtilities.loadScheduleChannels( event.getGuild() );
     }
 
     @Override
     public void onGuildLeave( GuildLeaveEvent event )
     {
+        // purge the leaving guild's entry list
         for( Integer id : scheduleManager.getEntriesByGuild( event.getGuild().getId() ) )
         {
-            scheduleManager.removeId( id );
+            scheduleManager.removeEntry( id );
         }
     }
 }

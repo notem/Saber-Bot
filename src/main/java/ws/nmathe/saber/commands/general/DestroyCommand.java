@@ -29,7 +29,8 @@ public class DestroyCommand implements Command
         String USAGE_BRIEF = "**" + prefix + "destroy** - Removes an entry from " +
                 scheduleChan + ".";
 
-        String USAGE_EXAMPLES = "Ex1: **!destroy 084c**\nEx2: **!destroy all**";
+        String USAGE_EXAMPLES = "Ex1: **!destroy 084c**" +
+                "\nEx2: **!destroy all**";
 
         if( brief )
             return USAGE_BRIEF;
@@ -48,7 +49,18 @@ public class DestroyCommand implements Command
         }
         if( !VerifyUtilities.verifyHex( args[0] ) )
         {
-            return "ID \"" + args[0] + "\" is not a value ID value";
+            return "Argument **" + args[0] + "** is not a valid ID value";
+        }
+        ArrayList<Integer> ent = schedManager.getEntriesByGuild( event.getGuild().getId() );
+        if( ent == null )
+        {
+            return "Your guild has no schedule entries";
+        }
+        Integer entryId = Integer.decode("0x" + args[0]);
+        ScheduleEntry entry = schedManager.getEntry(entryId);
+        if (entry == null)
+        {
+            return "The requested entry does not exist";
         }
         return "";
     }
@@ -61,13 +73,6 @@ public class DestroyCommand implements Command
         if( args[0].equals("all") )
         {
             ArrayList<Integer> ent = schedManager.getEntriesByGuild( guild.getId() );
-            if( ent == null )
-            {
-                MessageUtilities.sendMsg(
-                        "Your guild has no entries on the schedule.",
-                        event.getChannel(), null);
-                return;
-            }
             ArrayList<ScheduleEntry> entries = ent.stream()
                     .map(id -> schedManager.getEntry(id)).collect(Collectors.toCollection(ArrayList::new));
             for (ScheduleEntry entry : entries)
@@ -90,13 +95,6 @@ public class DestroyCommand implements Command
             Integer entryId = Integer.decode("0x" + args[0]);
             ScheduleEntry entry = schedManager.getEntry(entryId);
 
-            if (entry == null)
-            {
-                String msg = "There is no event entry with ID " + args[0] + ".\"";
-                MessageUtilities.sendMsg(msg, event.getChannel(), null);
-                return;
-            }
-
             synchronized( schedManager.getScheduleLock() )
             {
                 schedManager.removeEntry(entryId);
@@ -104,7 +102,6 @@ public class DestroyCommand implements Command
 
             // delete the old entry
             MessageUtilities.deleteMsg(entry.eMsg, null);
-
         }
     }
 }
