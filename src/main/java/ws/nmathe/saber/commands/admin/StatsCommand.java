@@ -35,7 +35,7 @@ public class StatsCommand implements Command
                 "      -free : " + rt.freeMemory()/1024/1024 + " MB\n" +
                 "      -max  : " + rt.maxMemory()/1024/1024 + " MB\n";
         RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-        msg += "  Uptime: " + rb.getUptime()/1000/60 + " minute(s)";
+        msg += "Uptime: " + rb.getUptime()/1000/60 + " minute(s)";
         msg += "```";
 
         MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );
