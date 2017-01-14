@@ -49,8 +49,14 @@ class CommandParser
                 if (str.startsWith("\""))
                 {
                     tmp += str;
-                    if(!str.endsWith("\""))
+                    quotesFlag = false;
+
+                    if(str.endsWith("\""))
+                    {
+                        list.add( tmp.replace("\"","") );
+                        tmp = "";
                         quotesFlag = false;
+                    }
                 }
                 else
                 {
