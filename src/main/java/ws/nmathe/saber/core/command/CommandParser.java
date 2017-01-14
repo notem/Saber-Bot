@@ -55,7 +55,7 @@ class CommandParser
                     {
                         list.add( tmp.replace("\"","") );
                         tmp = "";
-                        quotesFlag = false;
+                        quotesFlag = true;
                     }
                 }
                 else
