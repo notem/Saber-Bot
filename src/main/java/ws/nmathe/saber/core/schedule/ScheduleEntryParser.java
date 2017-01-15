@@ -85,7 +85,7 @@ public class ScheduleEntryParser
             eStart = ZonedDateTime.of(date, timeStart, zone);
             eEnd = ZonedDateTime.of(date, timeEnd, zone);
 
-            if (eStart.isBefore(now) && !eEnd.isBefore(now))
+            if (eStart.isBefore(now) && eEnd.isBefore(now))
             {
                 eStart = eStart.plusYears(1);
                 eEnd = eEnd.plusYears(1);
