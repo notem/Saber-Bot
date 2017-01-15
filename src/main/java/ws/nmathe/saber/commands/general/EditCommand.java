@@ -84,7 +84,7 @@ public class EditCommand implements Command
                     return "Not enough arguments";
                 if( !VerifyUtilities.verifyTime( args[index] ) )
                     return "Argument **" + args[index] + "** is not a valid start time";
-                if( entry.startFlag )
+                if( entry.hasStarted() )
                     return "You cannot modify the start time after the event has already started.";
                 break;
 
@@ -126,12 +126,11 @@ public class EditCommand implements Command
         Integer entryId = Integer.decode( "0x" + args[index] );
         ScheduleEntry entry = schedManager.getEntry( entryId );
 
-        String title = entry.eTitle;                    //
-        ArrayList<String> comments = entry.eComments;   // initialize using old
-        ZonedDateTime start = entry.eStart;             // schedule values
-        ZonedDateTime end = entry.eEnd;                 //
-        int repeat = entry.eRepeat;                     //
-        boolean hasStarted = entry.startFlag;           //
+        String title = entry.getTitle();                    //
+        ArrayList<String> comments = entry.getComments();   // initialize using old
+        ZonedDateTime start = entry.getStart();             // schedule values
+        ZonedDateTime end = entry.getEnd();                 //
+        int repeat = entry.getRepeat();                     //
 
         switch( args[index++] )
         {
@@ -211,7 +210,7 @@ public class EditCommand implements Command
         }
         Integer Id = schedManager.newId( entryId ); // request a new Id (but prefer the old)
 
-        String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, Id, entry.eMsg.getChannel().getId());
+        String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, Id, entry.getMessage().getChannel().getId());
 
         int finalRepeat = repeat;           //
         ZonedDateTime finalEnd = end;       // convert into effectively final
@@ -219,7 +218,7 @@ public class EditCommand implements Command
         String finalTitle = title;          //
 
         MessageUtilities.editMsg(msg,
-                entry.eMsg,
-                (message)->schedManager.addEntry(finalTitle, finalStart, finalEnd, comments, Id, message, finalRepeat, hasStarted ));
+                entry.getMessage(),
+                (message)->schedManager.addEntry(finalTitle, finalStart, finalEnd, comments, Id, message, finalRepeat ));
     }
 }

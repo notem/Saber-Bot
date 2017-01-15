@@ -15,7 +15,6 @@ import java.util.ArrayList;
 public class QueryCommand implements Command
 {
     private static ScheduleManager scheduleManager = Main.getScheduleManager();
-    //private static ChannelSettingsManager CHANNEL_SETTINGS_MANAGER = Main.CHANNEL_SETTINGS_MANAGER;
 
     @Override
     public String help(boolean brief)
@@ -33,7 +32,6 @@ public class QueryCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         String msg = "You didn't supply me with a valid option to query.";
-        int op;
         switch( args[0] )
         {
             case "guild":
@@ -59,14 +57,14 @@ public class QueryCommand implements Command
                 }
                 else
                 {
-                    msg = "Entry " + Integer.toHexString( entry.eID ) + " belongs to " +
-                            entry.eMsg.getGuild().getName() + "(" + entry.eMsg.getGuild().getId() + ")" + ".\n" +
-                            "\t\tTitle = '" + entry.eTitle + "'\n" +
-                            "\t\tStart = " + entry.eStart + "'\n" +
-                            "\t\tEnd = '" + entry.eEnd + "'\n" +
-                            "\t\tRepeat = '" + entry.eRepeat + "'\n" +
+                    msg = "Entry " + Integer.toHexString( entry.getId() ) + " belongs to " +
+                            entry.getMessage().getGuild().getName() + "(" + entry.getMessage().getGuild().getId() + ")" + ".\n" +
+                            "\t\tTitle = '" + entry.getTitle() + "'\n" +
+                            "\t\tStart = " + entry.getStart() + "'\n" +
+                            "\t\tEnd = '" + entry.getEnd() + "'\n" +
+                            "\t\tRepeat = '" + entry.getRepeat() + "'\n" +
                             "\t\tComments = ";
-                    for (String comment : entry.eComments)
+                    for (String comment : entry.getComments())
                     {
                         msg += "\"" + comment + "\"\n\t\t\t";
                     }
@@ -82,7 +80,7 @@ public class QueryCommand implements Command
                         MessageUtilities.sendPrivateMsg(msg, event.getAuthor(), null);
                         msg = "**continued**\n";
                     }
-                    msg += Integer.toHexString(se.eID) + "\n";
+                    msg += Integer.toHexString(se.getId()) + "\n";
                 }
                 break;
 
@@ -95,7 +93,7 @@ public class QueryCommand implements Command
                         MessageUtilities.sendPrivateMsg(msg, event.getAuthor(), null);
                         msg = "**continued**\n";
                     }
-                    msg += Integer.toHexString(se.eID) + "\n";
+                    msg += Integer.toHexString(se.getId()) + "\n";
                 }
                 break;
 

@@ -50,19 +50,19 @@ public class ParsingUtilities
                             {
                                 int x = Integer.parseInt("" + ch);
                                 i++;
-                                if(entry.eComments.size()>=x && x!='0')
+                                if(entry.getComments().size()>=x && x!='0')
                                 {
-                                    announceMsg += entry.eComments.get(x-1);
+                                    announceMsg += entry.getComments().get(x-1);
                                 }
                             }
                         }
                         break;
 
                     case 'a' :
-                        if( entry.eStart.equals(entry.eEnd) )
+                        if( entry.getStart().equals(entry.getEnd()) )
                             break;
 
-                        if( !entry.startFlag )
+                        if( !entry.hasStarted() )
                             announceMsg += "begins";
 
                         else
@@ -71,7 +71,7 @@ public class ParsingUtilities
                         break;
 
                     case 't' :
-                        announceMsg += entry.eTitle;
+                        announceMsg += entry.getTitle();
                         break;
 
                     case '%' :

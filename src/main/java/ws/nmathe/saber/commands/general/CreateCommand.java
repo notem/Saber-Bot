@@ -258,6 +258,6 @@ public class CreateCommand implements Command
 
         MessageUtilities.sendMsg( msg,
                 scheduleChan,
-                (message)->schedManager.addEntry(finalTitle, finalS, finalE, eComments, Id, message, finalRepeat, false) );
+                (message)->schedManager.addEntry(finalTitle, finalS, finalE, eComments, Id, message, finalRepeat) );
     }
 }

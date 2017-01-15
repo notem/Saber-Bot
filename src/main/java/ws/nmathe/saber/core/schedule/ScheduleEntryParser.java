@@ -67,19 +67,6 @@ public class ScheduleEntryParser
                 timeEnd = time;
             }
 
-            eStart = ZonedDateTime.of(date, timeStart, zone);
-            eEnd = ZonedDateTime.of(date, timeEnd, zone);
-
-            if (eStart.isBefore(ZonedDateTime.now()))
-            {
-                eStart = eStart.plusYears(1);
-                eEnd = eEnd.plusYears(1);
-            }
-            if (eEnd.isBefore(eStart))
-            {
-                eEnd = eEnd.plusDays(1);
-            }
-
             // the third line is empty space,     \\
 
             // lines 4 through n-2 are comments,
@@ -94,7 +81,19 @@ public class ScheduleEntryParser
             eID = Integer.decode("0x" + lines[lines.length - 2].replace("[ID: ", "").split("]")[0]);
             Integer Id = schedManager.newId( eID );
 
-            boolean started = lines[lines.length - 2].split("\\(")[1].contains("ends");
+            ZonedDateTime now = ZonedDateTime.now();
+            eStart = ZonedDateTime.of(date, timeStart, zone);
+            eEnd = ZonedDateTime.of(date, timeEnd, zone);
+
+            if (eStart.isBefore(now) && !eEnd.isBefore(now))
+            {
+                eStart = eStart.plusYears(1);
+                eEnd = eEnd.plusYears(1);
+            }
+            if (eEnd.isBefore(eStart))
+            {
+                eEnd = eEnd.plusDays(1);
+            }
 
             String[] tmp = lines[lines.length - 2].split("\\)");
             String repeat = tmp.length>1 ? tmp[1] : "";
@@ -111,7 +110,7 @@ public class ScheduleEntryParser
             }
 
             // create a new thread
-            return new ScheduleEntry(eTitle, eStart, eEnd, eComments, Id, msg, eRepeat, started);
+            return new ScheduleEntry(eTitle, eStart, eEnd, eComments, Id, msg, eRepeat);
         }
         catch( Exception e )
         {

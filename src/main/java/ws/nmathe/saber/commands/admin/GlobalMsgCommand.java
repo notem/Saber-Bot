@@ -38,9 +38,9 @@ public class GlobalMsgCommand implements Command
 
         for( Guild guild : Main.getBotJda().getGuilds() )
         {
-            __out.printOut(this.getClass(),"sending announce to " + guild.getName());
+            __out.printOut(this.getClass(),"Sending global announce to " + guild.getName());
 
-            Collection<TextChannel> chans = guild.getTextChannelsByName( Main.getBotSettings().getControlChan(), false );
+            Collection<TextChannel> chans = guild.getTextChannelsByName( Main.getBotSettings().getControlChan(), true );
             for( TextChannel chan : chans )
             {
                 MessageUtilities.sendMsg(msg, chan, null);

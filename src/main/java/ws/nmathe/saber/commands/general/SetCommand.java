@@ -114,9 +114,8 @@ public class SetCommand implements Command
                 for (Integer id : schedManager.getEntriesByChannel(scheduleChan.getId()))
                 {
                     ScheduleEntry se = schedManager.getEntry(id);
-                    se.eStart.withZoneSameLocal(zone);
-                    se.eEnd.withZoneSameLocal(zone);
-                    schedManager.reloadEntry(se.eID);
+                    se.setZone(zone);
+                    schedManager.reloadEntry(se.getId());
                 }
                 break;
 
@@ -126,8 +125,7 @@ public class SetCommand implements Command
                 // reload the schedule
                 for (Integer id : schedManager.getEntriesByChannel(scheduleChan.getId()))
                 {
-                    ScheduleEntry se = schedManager.getEntry(id);
-                    schedManager.reloadEntry(se.eID);
+                    schedManager.reloadEntry(id);
                 }
                 break;
         }

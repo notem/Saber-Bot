@@ -83,11 +83,11 @@ public class DestroyCommand implements Command
                 {
                     synchronized( schedManager.getScheduleLock() )
                     {
-                        schedManager.removeEntry(entry.eID);
+                        schedManager.removeEntry(entry.getId());
                     }
 
                     // delete the old message
-                    MessageUtilities.deleteMsg(entry.eMsg, null);
+                    MessageUtilities.deleteMsg(entry.getMessage(), null);
                 }
             }
         }
@@ -103,7 +103,7 @@ public class DestroyCommand implements Command
             }
 
             // delete the old entry
-            MessageUtilities.deleteMsg(entry.eMsg, null);
+            MessageUtilities.deleteMsg(entry.getMessage(), null);
         }
     }
 }

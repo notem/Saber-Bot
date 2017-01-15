@@ -70,42 +70,42 @@ public class ScheduleManager
         if( se == null ) return;    // end early if parsing failed
 
         // regenerate the entry on the off chance the Id was changed
-        String msg = ScheduleEntryParser.generate(se.eTitle,se.eStart,se.eEnd,se.eComments,se.eRepeat,se.eID,se.eMsg.getChannel().getId());
-        MessageUtilities.editMsg( msg, se.eMsg, null);
+        String msg = ScheduleEntryParser.generate(se.getTitle(),se.getStart(),se.getEnd(),se.getComments(),se.getRepeat(),se.getId(),se.getMessage().getChannel().getId());
+        MessageUtilities.editMsg( msg, se.getMessage(), null);
 
         String guildId = message.getGuild().getId();
         String channelId = message.getChannel().getId();
 
         // put the ScheduleEntry thread into a HashMap by ID
-        entriesGlobal.put(se.eID, se);
+        entriesGlobal.put(se.getId(), se);
 
         // put the id in guild mapping
         if( !entriesByGuild.containsKey( guildId ) )
         {
             ArrayList<Integer> entries = new ArrayList<>();
-            entries.add(se.eID);
+            entries.add(se.getId());
             entriesByGuild.put( guildId, entries );
         }
         else
-            entriesByGuild.get( guildId ).add( se.eID );
+            entriesByGuild.get( guildId ).add( se.getId() );
 
         // put the id in channel mapping
         if( !entriesByChannel.containsKey( channelId ))
         {
             ArrayList<Integer> entries = new ArrayList<>();
-            entries.add(se.eID);
+            entries.add(se.getId());
             entriesByChannel.put( channelId, entries );
         }
         else
-            entriesByChannel.get( channelId ).add( se.eID );
+            entriesByChannel.get( channelId ).add( se.getId() );
 
         // adjusts the displayed time til timer (since it is not set at creation)
         se.adjustTimer();
 
         // add the entry to buffer
-        if( !se.startFlag )
+        if( !se.hasStarted() )
         {
-            long timeTil = ZonedDateTime.now().until(se.eStart, ChronoUnit.SECONDS);
+            long timeTil = ZonedDateTime.now().until(se.getStart(), ChronoUnit.SECONDS);
             if (timeTil <= 45 * 60)
                 fineTimerBuff.add(se);
             else if (timeTil <= 32 * 60 * 60)
@@ -128,45 +128,44 @@ public class ScheduleManager
      * @param Id the integer Id of the entry
      * @param message the discord Message that contains the entry's information
      * @param repeat integer repeat settings
-     * @param hasStarted whether or not the event has begun
      */
-    public void addEntry(String title, ZonedDateTime start, ZonedDateTime end, ArrayList<String> comments, Integer Id, Message message, int repeat, boolean hasStarted)
+    public void addEntry(String title, ZonedDateTime start, ZonedDateTime end, ArrayList<String> comments, Integer Id, Message message, int repeat)
     {
-        ScheduleEntry se = new ScheduleEntry( title, start, end, comments, Id, message, repeat, hasStarted);
+        ScheduleEntry se = new ScheduleEntry( title, start, end, comments, Id, message, repeat);
 
         String guildId = message.getGuild().getId();
         String channelId = message.getChannel().getId();
 
         // put the ScheduleEntry thread into a HashMap by ID
-        entriesGlobal.put(se.eID, se);
+        entriesGlobal.put(se.getId(), se);
 
         // put the id in guild mapping
         if( !entriesByGuild.containsKey( guildId ) )
         {
             ArrayList<Integer> entries = new ArrayList<>();
-            entries.add(se.eID);
+            entries.add(se.getId());
             entriesByGuild.put( guildId, entries );
         }
         else
-            entriesByGuild.get( guildId ).add( se.eID );
+            entriesByGuild.get( guildId ).add( se.getId() );
 
         // put the id in channel mapping
         if( !entriesByChannel.containsKey( channelId ))
         {
             ArrayList<Integer> entries = new ArrayList<>();
-            entries.add(se.eID);
+            entries.add(se.getId());
             entriesByChannel.put( channelId, entries );
         }
         else
-            entriesByChannel.get( channelId ).add( se.eID );
+            entriesByChannel.get( channelId ).add( se.getId() );
 
         // adjusts the displayed time til timer (since it is not set at creation)
         se.adjustTimer();
 
         // add the entry to buffer
-        if( !se.startFlag )
+        if( !se.hasStarted() )
         {
-            long timeTil = ZonedDateTime.now().until(se.eStart, ChronoUnit.SECONDS);
+            long timeTil = ZonedDateTime.now().until(se.getStart(), ChronoUnit.SECONDS);
             if (timeTil <= 45 * 60)
                 fineTimerBuff.add(se);
             else if (timeTil <= 32 * 60 * 60)
@@ -189,8 +188,8 @@ public class ScheduleManager
         ScheduleEntry se = this.getEntry( eId );
         if( se == null ) return;
 
-        String gId = se.eMsg.getGuild().getId();
-        String cId = se.eMsg.getChannel().getId();
+        String gId = se.getMessage().getGuild().getId();
+        String cId = se.getMessage().getChannel().getId();
 
         // remove entry from guild map
         entriesByGuild.get(gId).remove(eId);
@@ -231,8 +230,8 @@ public class ScheduleManager
         ScheduleEntry se = getEntry( eId );
         if( se == null ) return;
 
-        String msg = ScheduleEntryParser.generate(se.eTitle,se.eStart,se.eEnd,se.eComments,se.eRepeat,se.eID,se.eMsg.getChannel().getId());
-        MessageUtilities.editMsg( msg, se.eMsg, null);
+        String msg = ScheduleEntryParser.generate(se.getTitle(),se.getStart(),se.getEnd(),se.getComments(),se.getRepeat(),se.getId(),se.getMessage().getChannel().getId());
+        MessageUtilities.editMsg( msg, se.getMessage(), null);
     }
 
     /**
@@ -293,7 +292,7 @@ public class ScheduleManager
     public Collection<Integer> getAllEntries()
     {
         return entriesGlobal.values().stream()
-                .map(entry -> entry.eID).collect(Collectors.toCollection(ArrayList::new));
+                .map(entry -> entry.getId()).collect(Collectors.toCollection(ArrayList::new));
     }
 
     public Object getScheduleLock()

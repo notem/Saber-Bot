@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,20 +23,18 @@ import static java.time.temporal.ChronoUnit.SECONDS;
  */
 public class ScheduleEntry
 {
-    public String eTitle;                    // the title/name of the event
-    public ZonedDateTime eStart;             // the time when the event starts
-    public ZonedDateTime eEnd;               // the ending time
-    public ArrayList<String> eComments;      // ArrayList of strings that make up the desc
-    public Integer eID;                      // 16 bit identifier
-    public int eRepeat;                      // 1 is daily, 2 is weekly, 0 is not at all
-    public Message eMsg;                     // reference to the discord message shedule entry
-
-    public boolean startFlag;               // flagged true when the start time has been reached
+    private String eTitle;                    // the title/name of the event
+    private ZonedDateTime eStart;             // the time when the event starts
+    private ZonedDateTime eEnd;               // the ending time
+    private ArrayList<String> eComments;      // ArrayList of strings that make up the desc
+    private Integer eID;                      // 16 bit identifier
+    private Integer eRepeat;                      // 1 is daily, 2 is weekly, 0 is not at all
+    private Message eMsg;                     // reference to the discord message shedule entry
 
     private ScheduleManager schedManager = Main.getScheduleManager();
     private ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
 
-    public ScheduleEntry(String eName, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat, boolean started )
+    public ScheduleEntry(String eName, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat )
     {
         this.eTitle = eName;
         this.eStart = eStart;
@@ -44,8 +43,14 @@ public class ScheduleEntry
         this.eID = eID;
         this.eMsg = eMsg;
         this.eRepeat = eRepeat;
+    }
 
-        this.startFlag = started;
+    /**
+     * returns now > start
+     */
+    public boolean hasStarted()
+    {
+        return ZonedDateTime.now().isAfter(eStart);
     }
 
     /**
@@ -68,7 +73,6 @@ public class ScheduleEntry
             MessageUtilities.sendMsg(startMsg, chan, null);
         }
 
-        this.startFlag = true;
         this.adjustTimer();
     }
 
@@ -164,7 +168,7 @@ public class ScheduleEntry
 
        String[] lines = this.eMsg.getRawContent().split("\n");
 
-       if( !startFlag )
+       if( !this.hasStarted() )
        {
            if( timeTilStart < 60 * 60 )
            {
@@ -234,7 +238,7 @@ public class ScheduleEntry
                MessageUtilities.editMsg( msg, this.eMsg, null );
            }
        }
-       else // startFlag == true
+       else // if the event has started
        {
            if( timeTilEnd < 30*60 )
            {
@@ -282,5 +286,46 @@ public class ScheduleEntry
                MessageUtilities.editMsg( msg, this.eMsg, null );
            }
        }
+    }
+
+    public String getTitle()
+    {
+        return this.eTitle;
+    }
+
+    public ZonedDateTime getStart()
+    {
+        return this.eStart;
+    }
+
+    public ZonedDateTime getEnd()
+    {
+        return this.eEnd;
+    }
+
+    public ArrayList<String> getComments()
+    {
+        return this.eComments;
+    }
+
+    public Integer getId()
+    {
+        return this.eID;
+    }
+
+    public Integer getRepeat()
+    {
+        return this.eRepeat;
+    }
+
+    public Message getMessage()
+    {
+        return this.eMsg;
+    }
+
+    public void setZone(ZoneId zone)
+    {
+        this.eStart.withZoneSameLocal(zone);
+        this.eEnd.withZoneSameLocal(zone);
     }
 }

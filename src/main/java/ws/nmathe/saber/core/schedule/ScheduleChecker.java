@@ -67,11 +67,12 @@ class ScheduleChecker implements Runnable
     private void fineCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
         ZonedDateTime now = ZonedDateTime.now();
-        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + ". Starting in " + now.until(entry.eStart, SECONDS) + ": ending in " + now.until(entry.eEnd,SECONDS) );
+        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.getId()) + ". Starting in " +
+                now.until(entry.getStart(), SECONDS) + ": ending in " + now.until(entry.getEnd(),SECONDS) );
 
-        if (!entry.startFlag)
+        if (!entry.hasStarted())
         {
-            if ( now.until(entry.eStart, SECONDS) <= 0 )
+            if ( now.until(entry.getStart(), SECONDS) <= 0 )
             {
                 schedManager.getExecutor().submit(entry::start);
             }
@@ -82,7 +83,7 @@ class ScheduleChecker implements Runnable
         }
         else
         {
-            if ( now.until(entry.eEnd, SECONDS) <= 0 )
+            if ( now.until(entry.getEnd(), SECONDS) <= 0 )
             {
                 schedManager.getExecutor().submit(entry::end);
                 removeQueue.add( entry );
@@ -101,11 +102,11 @@ class ScheduleChecker implements Runnable
      */
     private void coarseCheck(ScheduleEntry entry, Collection<ScheduleEntry> removeQueue)
     {
-        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
+        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.getId()) + "." );
         ZonedDateTime now = ZonedDateTime.now();
-        if (!entry.startFlag)
+        if (!entry.hasStarted())
         {
-            if( now.until(entry.eStart, SECONDS) < 60*60 )
+            if( now.until(entry.getStart(), SECONDS) < 60*60 )
             {
                 if( !schedManager.getFineTimerBuff().contains( entry ) )
                 {
@@ -131,18 +132,18 @@ class ScheduleChecker implements Runnable
      */
     private void veryCoarseCheck(ScheduleEntry entry)
     {
-        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.eID) + "." );
+        __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.getId()) + "." );
         ZonedDateTime now = ZonedDateTime.now();
-        if (!entry.startFlag)
+        if (!entry.hasStarted())
         {
-            if( now.until(entry.eStart, SECONDS) < 60*60 )
+            if( now.until(entry.getStart(), SECONDS) < 60*60 )
             {
                 if( !schedManager.getFineTimerBuff().contains( entry ) )
                 {
                     schedManager.getFineTimerBuff().add(entry);
                 }
             }
-            else if( now.until(entry.eStart, SECONDS) < 32*60*60 )
+            else if( now.until(entry.getStart(), SECONDS) < 32*60*60 )
             {
                 if( !schedManager.getCoarseTimerBuff().contains( entry ) )
                 {
