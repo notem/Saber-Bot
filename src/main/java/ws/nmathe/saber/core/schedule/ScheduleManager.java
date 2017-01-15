@@ -277,7 +277,7 @@ public class ScheduleManager
             return entriesByGuild.get(gId);
 
         else        // otherwise return null
-            return null;
+            return new ArrayList<>();
     }
 
     public ArrayList<Integer> getEntriesByChannel( String cId )
@@ -287,7 +287,7 @@ public class ScheduleManager
             return entriesByChannel.get(cId);
 
         else        // otherwise return null
-            return null;
+            return new ArrayList<>();
     }
 
     public Collection<Integer> getAllEntries()

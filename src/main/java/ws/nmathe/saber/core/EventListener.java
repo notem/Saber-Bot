@@ -5,9 +5,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.command.CommandHandler;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import ws.nmathe.saber.core.settings.ChannelSettingsManager;
-import ws.nmathe.saber.utils.MessageUtilities;
-import ws.nmathe.saber.utils.GuildUtilities;
-import ws.nmathe.saber.utils.VerifyUtilities;
+import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
@@ -89,6 +87,13 @@ public class EventListener extends ListenerAdapter
     {
         // load channels of joining guild
         GuildUtilities.loadScheduleChannels( event.getGuild() );
+
+        String auth =Main.getBotSettings().getWebToken();
+        __out.printOut(Main.class, auth);
+        if( auth != null )
+        {
+            HttpUtilities.updateCount(Main.getBotJda().getGuilds().size(), auth);
+        }
     }
 
     @Override
@@ -98,6 +103,13 @@ public class EventListener extends ListenerAdapter
         for( Integer id : scheduleManager.getEntriesByGuild( event.getGuild().getId() ) )
         {
             scheduleManager.removeEntry( id );
+        }
+
+        String auth =Main.getBotSettings().getWebToken();
+        __out.printOut(Main.class, auth);
+        if( auth != null )
+        {
+            HttpUtilities.updateCount(Main.getBotJda().getGuilds().size(), auth);
         }
     }
 }

@@ -15,13 +15,11 @@ public class HttpUtilities
         {
             JSONObject json = new JSONObject().put("server_count",i);
 
-            String response = Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotSelfUser().getId() + "stats")
+            int response = Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotSelfUser().getId() + "stats")
                     .header("Authorization", auth)
-                    .header("Content-Type", "application/json")
-                    .header("Accept", "application/json")
-                    .body(json).asString().getStatusText();
+                    .body(json).asString().getStatus();
 
-            __out.printOut(HttpUtilities.class, response);
+            __out.printOut(HttpUtilities.class, "Updated abal bot list, recieved response code: " + response);
 
         } catch (UnirestException e)
         {
