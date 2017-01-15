@@ -2,12 +2,9 @@ package ws.nmathe.saber.core.command;
 
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.admin.*;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import ws.nmathe.saber.commands.admin.GlobalMsgCommand;
-import ws.nmathe.saber.commands.admin.QueryCommand;
-import ws.nmathe.saber.commands.admin.StatsCommand;
-import ws.nmathe.saber.commands.admin.UpdateAllCommand;
 import ws.nmathe.saber.commands.general.*;
 
 import java.util.Collection;
@@ -50,6 +47,7 @@ public class CommandHandler
         adminCommands.put("query", new QueryCommand());
         adminCommands.put("update_all", new UpdateAllCommand());
         adminCommands.put("stats", new StatsCommand());
+        adminCommands.put("playing", new NowPlayingCommand());
     }
 
     public void handleCommand( MessageReceivedEvent event, Integer type )

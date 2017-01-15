@@ -12,6 +12,7 @@ import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.SelfUser;
 import ws.nmathe.saber.core.EventListener;
 import ws.nmathe.saber.utils.GuildUtilities;
+import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.__out;
 
 /**
@@ -85,6 +86,10 @@ public class Main
 
         commandHandler.init();      // ready commands
         scheduleManager.init();     // start timers
+
+        String auth = botSettings.getWebToken();
+        if( auth != null )
+            HttpUtilities.updateCount(Main.getBotJda().getGuilds().size(), auth);
     }
 
 
