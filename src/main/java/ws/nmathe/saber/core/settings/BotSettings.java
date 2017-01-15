@@ -110,10 +110,7 @@ public class BotSettings
 
     public String getWebToken()
     {
-        if( this.properties.contains("webtoken"))
-            return this.properties.getProperty("webtoken");
-        else
-            return null;
+        return this.properties.getProperty("webtoken");
     }
 
     public String getAdminId()

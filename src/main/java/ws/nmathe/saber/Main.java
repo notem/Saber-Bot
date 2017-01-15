@@ -88,8 +88,11 @@ public class Main
         scheduleManager.init();     // start timers
 
         String auth = botSettings.getWebToken();
+        __out.printOut(Main.class, auth);
         if( auth != null )
+        {
             HttpUtilities.updateCount(Main.getBotJda().getGuilds().size(), auth);
+        }
     }
 
 

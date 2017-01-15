@@ -94,7 +94,7 @@ public class ScheduleEntryParser
             eID = Integer.decode("0x" + lines[lines.length - 2].replace("[ID: ", "").split("]")[0]);
             Integer Id = schedManager.newId( eID );
 
-            boolean started = lines[lines.length - 2].split("\\(")[1].startsWith("ends");
+            boolean started = lines[lines.length - 2].split("\\(")[1].contains("ends");
 
             String[] tmp = lines[lines.length - 2].split("\\)");
             String repeat = tmp.length>1 ? tmp[1] : "";
