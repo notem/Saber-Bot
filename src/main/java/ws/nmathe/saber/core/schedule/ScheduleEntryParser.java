@@ -9,7 +9,6 @@ import net.dv8tion.jda.core.entities.Message;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 
 /**
@@ -32,7 +31,7 @@ public class ScheduleEntryParser
             ZonedDateTime eEnd;
             ArrayList<String> eComments = new ArrayList<>();
             Integer eID;
-            int eRepeat = 0;
+            int repeat;
 
 
             String timeFormatter;
@@ -45,7 +44,7 @@ public class ScheduleEntryParser
             String[] lines = raw.split("\n");
 
 
-            // the first line is the title \\
+            // the first line is the title (index 0 can be discarded) \\
             eTitle = lines[1].replaceFirst("# ", "");
 
             // the second line is the date and time \\
@@ -67,11 +66,14 @@ public class ScheduleEntryParser
                 timeEnd = time;
             }
 
-            // the third line is empty space,     \\
+            // the third line is the repeat info \\
+            repeat = ScheduleEntryParser.getRepeatBits( lines[3].replace("> ","") );
 
-            // lines 4 through n-2 are comments,
+            // the fourth line is empty space,     \\
+
+            // lines 5 through n-2 are comments,
             // iterate every two to avoid the new line padding \\
-            for (int c = 4; c < lines.length - 3; c += 2)
+            for (int c = 5; c < lines.length - 3; c += 2)
                 eComments.add(lines[c]);
 
             // line n-1 is an empty space \\
@@ -95,26 +97,11 @@ public class ScheduleEntryParser
                 eEnd = eEnd.plusDays(1);
             }
 
-            String[] tmp = lines[lines.length - 2].split("\\)");
-            String repeat = tmp.length>1 ? tmp[1] : "";
-            switch( repeat )
-            {
-                case " repeats daily" :
-                    eRepeat = 1;
-                    break;
-                case " repeats weekly" :
-                    eRepeat = 2;
-                    break;
-                default:
-                    break;
-            }
-
             // create a new thread
-            return new ScheduleEntry(eTitle, eStart, eEnd, eComments, Id, msg, eRepeat);
+            return new ScheduleEntry(eTitle, eStart, eEnd, eComments, Id, msg, repeat);
         }
         catch( Exception e )
         {
-            e.printStackTrace();
             MessageUtilities.deleteMsg( msg, null );
             return null;
         }
@@ -147,7 +134,10 @@ public class ScheduleEntryParser
                     " to " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
 
-        msg += firstLine + secondLine;
+        // third line is repeat line
+        String thirdLine = "> " + ScheduleEntryParser.getRepeatString( eRepeat ) + "\n";
+
+        msg += firstLine + secondLine + thirdLine;
 
         // create an empty 'gap' line if there exists comments
         msg += "\n";
@@ -157,24 +147,98 @@ public class ScheduleEntryParser
             msg += comment + "\n\n";
 
         // add the final ID and time til line
-        msg += "[ID: " + Integer.toHexString(eId) + "]( )";
-
-        switch( eRepeat )
-        {
-            case 1:
-                msg += " repeats daily\n";
-                break;
-            case 2:
-                msg += " repeats weekly\n";
-                break;
-            default:
-                msg += "\n";
-                break;
-        }
+        msg += "[ID: " + Integer.toHexString(eId) + "]( )\n";
 
         // cap the code block
         msg += "```";
 
         return msg;
+    }
+
+    private static int getRepeatBits( String str )
+    {
+        if( str.equals("does not repeat") )
+            return 0;
+        if( str.equals("repeats daily") )
+            return 1;
+
+        int bits = 0;
+        if( str.startsWith("repeats weekly on ") )
+        {
+            if( str.contains("Su") )
+                bits |= 1;
+            if( str.contains("Mo") )
+                bits |= 1<<1;
+            if( str.contains("Tu") )
+                bits |= 1<<2;
+            if( str.contains("We") )
+                bits |= 1<<3;
+            if( str.contains("Th") )
+                bits |= 1<<4;
+            if( str.contains("Fr") )
+                bits |= 1<<5;
+            if( str.contains("Sa") )
+                bits |= 1<<6;
+        }
+        return bits;
+    }
+
+    private static String getRepeatString(int bitset)
+    {
+        if( bitset == 0 )
+            return "does not repeat";
+        if( bitset == 0b1111111 )
+            return "repeats daily";
+
+        String str = "repeats weekly on ";
+        if( (bitset & 1) == 1 )
+        {
+            str += "Su";
+            if( (bitset>>1) != 0 )
+                str += ", ";
+        }
+        bitset = bitset>>1;
+        if( (bitset & 1) == 1 )
+        {
+            str += "Mo";
+            if( (bitset>>1) != 0 )
+                str += ", ";
+        }
+        bitset = bitset>>1;
+        if( (bitset & 1) == 1 )
+        {
+            str += "Tu";
+            if( (bitset>>1) != 0 )
+                str += ", ";
+        }
+        bitset = bitset>>1;
+        if( (bitset & 1) == 1 )
+        {
+            str += "We";
+            if( (bitset>>1) != 0 )
+                str += ", ";
+        }
+        bitset = bitset>>1;
+        if( (bitset & 1) == 1 )
+        {
+            str += "Th";
+            if( (bitset>>1) != 0 )
+                str += ", ";
+        }
+        bitset = bitset>>1;
+        if( (bitset & 1) == 1 )
+        {
+            str += "Fr";
+            if( (bitset>>1) != 0 )
+                str += ", ";
+        }
+        bitset = bitset>>1;
+        if( (bitset & 1) == 1 )
+        {
+            str += "Sa";
+            if( (bitset>>1) != 0 )
+                str += ", ";
+        }
+        return str;
     }
 }

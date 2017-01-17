@@ -138,25 +138,6 @@ public class ScheduleEntry
     }
 
     /**
-     * internal helper function
-     * @return a valid repeat string (which can be parsed)
-     */
-    private String genRepeat()
-    {
-        String msg = "";
-        switch( eRepeat )
-        {
-            case 1:
-                msg += "repeats daily";
-                break;
-            case 2:
-                msg += "repeats weekly";
-                break;
-        }
-        return msg;
-    }
-
-    /**
      * Edits the displayed Message text to indicate the time remaining until
      * the entry is scheduled to begin/end
      */
@@ -179,18 +160,7 @@ public class ScheduleEntry
                else
                    newline += "in " + minutesTil + " minutes.)";
 
-               String msg = "";
-               for(String line : lines)
-               {
-                   if(line.equals(lines[lines.length-2]))
-                       msg += newline + " " + this.genRepeat();
-                   else
-                       msg += line;
-                   if(!line.equals(lines[lines.length-1]))
-                       msg += "\n";
-               }
-
-               MessageUtilities.editMsg( msg, this.eMsg, null );
+               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
            }
            else if( timeTilStart < 24 * 60 * 60 )
            {
@@ -201,18 +171,7 @@ public class ScheduleEntry
                else
                    newline += "in " + hoursTil + " hours.)";
 
-               String msg = "";
-               for(String line : lines)
-               {
-                   if(line.equals(lines[lines.length-2]))
-                       msg += newline + " " + this.genRepeat();
-                   else
-                       msg += line;
-                   if(!line.equals(lines[lines.length-1]))
-                       msg += "\n";
-               }
-
-               MessageUtilities.editMsg( msg, this.eMsg, null );
+               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
            }
            else
            {
@@ -224,18 +183,7 @@ public class ScheduleEntry
                else
                    newline += "in " + daysTil + " days.)";
 
-               String msg = "";
-               for(String line : lines)
-               {
-                   if(line.equals(lines[lines.length-2]))
-                       msg += newline + " " + this.genRepeat();
-                   else
-                       msg += line;
-                   if(!line.equals(lines[lines.length-1]))
-                       msg += "\n";
-               }
-
-               MessageUtilities.editMsg( msg, this.eMsg, null );
+               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
            }
        }
        else // if the event has started
@@ -249,18 +197,7 @@ public class ScheduleEntry
                else
                    newline += "in " + minutesTil + " minutes.)";
 
-               String msg = "";
-               for(String line : lines)
-               {
-                   if(line.equals(lines[lines.length-2]))
-                       msg += newline + " " + this.genRepeat();
-                   else
-                       msg += line;
-                   if(!line.equals(lines[lines.length-1]))
-                       msg += "\n";
-               }
-
-               MessageUtilities.editMsg( msg, this.eMsg, null );
+               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
            }
 
            else
@@ -272,20 +209,24 @@ public class ScheduleEntry
                else
                    newline += "in " + hoursTil + " hours.)";
 
-               String msg = "";
-               for(String line : lines)
-               {
-                   if(line.equals(lines[lines.length-2]))
-                       msg += newline + " " + this.genRepeat();
-                   else
-                       msg += line;
-                   if(!line.equals(lines[lines.length-1]))
-                       msg += "\n";
-               }
-
-               MessageUtilities.editMsg( msg, this.eMsg, null );
+               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
            }
        }
+    }
+
+    private String adjustTimerHelper( String[] lines, String newline )
+    {
+        String msg = "";
+        for(int i = 0; i < lines.length ; i++)
+        {
+            if(i == lines.length-2)
+                msg += newline + "\n";
+            else if( i == lines.length-1 )
+                msg += lines[i];
+            else
+                msg += lines[i] + "\n";
+        }
+        return msg;
     }
 
     public String getTitle()

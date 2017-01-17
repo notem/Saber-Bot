@@ -7,24 +7,31 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import org.json.JSONObject;
 import ws.nmathe.saber.Main;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
 /**
  */
 public class HttpUtilities
 {
+    private static LocalDateTime lastUpdate = LocalDateTime.MIN;
     public static void updateCount(int i, String auth)
     {
         try
         {
-            JSONObject json = new JSONObject().put("server_count",i);
+            if (lastUpdate.until(LocalDateTime.now(), ChronoUnit.SECONDS) > 60)
+            {
 
-            HttpResponse<JsonNode> response = Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotSelfUser().getId() + "/stats")
-                    .header("Authorization", auth)
-                    .header("Content-Type", "application/json")
-                    .body(json).asJson();
+                JSONObject json = new JSONObject().put("server_count", i);
 
-            __out.printOut(HttpUtilities.class, "Updating stats: abal response " + response.getStatus() + ", body: " + response.getBody());
+                HttpResponse<JsonNode> response = Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotSelfUser().getId() + "/stats")
+                        .header("Authorization", auth)
+                        .header("Content-Type", "application/json")
+                        .body(json).asJson();
 
-        } catch (UnirestException e)
+                __out.printOut(HttpUtilities.class, "Updating stats: abal response " + response.getStatus() + ", body: " + response.getBody());
+            }
+        } catch(UnirestException e)
         {
             e.printStackTrace();
         }

@@ -110,8 +110,6 @@ public class EditCommand implements Command
             case "repeat":
                 if(args.length > 3)
                     return "Not enough arguments";
-                if( !VerifyUtilities.verifyRepeat(args[index]) )
-                    return "Argument **" + args[index] + "** is not a valid repeat option";
                 break;
         }
 
@@ -193,14 +191,28 @@ public class EditCommand implements Command
                 break;
 
             case "repeat":
-                if( Character.isDigit( args[index].charAt(0) ))
-                    repeat = Integer.parseInt(args[index]);
-                else if( args[index].equals("daily") )
-                    repeat = 1;
-                else if( args[index].equals("weekly") )
-                    repeat = 2;
-                else if( args[index].equals("no") )
+                String tmp = args[index].toLowerCase();
+                if( tmp.toLowerCase().equals("daily") )
+                    repeat = 0b1111111;
+                else if( tmp.equals("no") || tmp.equals("none") )
                     repeat = 0;
+                else
+                {
+                    if( tmp.contains("su") )
+                        repeat |= 1;
+                    if( tmp.contains("mo") )
+                        repeat |= 1<<1;
+                    if( tmp.contains("tu") )
+                        repeat |= 1<<2;
+                    if( tmp.contains("we") )
+                        repeat |= 1<<3;
+                    if( tmp.contains("th") )
+                        repeat |= 1<<4;
+                    if( tmp.contains("fr") )
+                        repeat |= 1<<5;
+                    if( tmp.contains("sa") )
+                        repeat |= 1<<6;
+                }
                 break;
         }
 

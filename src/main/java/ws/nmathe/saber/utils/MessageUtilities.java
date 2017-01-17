@@ -55,7 +55,7 @@ public class MessageUtilities
     {
         try
         {
-            user.openPrivateChannel();
+            user.openPrivateChannel().block();
             sendMsg( content, user.getPrivateChannel(), action );
         }
         catch( Exception e)

@@ -99,18 +99,6 @@ public class VerifyUtilities
         return true;
     }
 
-    public static boolean verifyRepeat( String arg )
-    {
-        String argLower = arg.toLowerCase();
-        if(argLower.equals("no")||argLower.equals("weekly")||argLower.equals("daily"))
-            return true;
-
-        else if( verifyInteger( arg ) && Integer.parseInt( arg ) <= 2 )
-            return true;
-
-        return false;
-    }
-
     public static boolean verifyInteger( String arg )
     {
         try

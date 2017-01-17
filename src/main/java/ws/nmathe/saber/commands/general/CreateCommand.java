@@ -104,7 +104,6 @@ public class CreateCommand implements Command
         {
             String[] argsRemaining = Arrays.copyOfRange(args, index+1, args.length);
 
-            boolean repeatFlag = false;
             boolean dateFlag = false;
 
             for (String arg : argsRemaining)
@@ -115,18 +114,9 @@ public class CreateCommand implements Command
                         return "Argument **" + arg + "** is not a valid date";
                     dateFlag = false;
                 }
-                else if (repeatFlag)
+                else if (arg.equals("date"))
                 {
-                    if (!VerifyUtilities.verifyRepeat(arg))
-                        return "Argument **" + arg + "** is not a valid repeat option";
-                    repeatFlag = false;
-                }
-                else
-                {
-                    if (arg.equals("repeat"))
-                        repeatFlag = true;
-                    else if (arg.equals("date"))
-                        dateFlag = true;
+                    dateFlag = true;
                 }
             }
         }
@@ -148,7 +138,7 @@ public class CreateCommand implements Command
         LocalTime eStart = LocalTime.now().plusMinutes(1);    // initialized just in case verify failed it's duty
         LocalTime eEnd = LocalTime.MIDNIGHT;                  //
         ArrayList<String> eComments = new ArrayList<>();      //
-        int eRepeat = 0;                                      // default is 0 (no repeat)
+        int repeat = 0;                                      // default is 0 (no repeat)
         LocalDate eDate = LocalDate.now();                    // initialize date using the current date
         TextChannel scheduleChan = GuildUtilities.getValidScheduleChannels(event.getGuild()).get(0);
 
@@ -194,14 +184,28 @@ public class CreateCommand implements Command
             {
                 if( repeatFlag )
                 {
-                    if( arg.equals("daily") )
-                        eRepeat = 1;
-                    else if( arg.equals("weekly") )
-                        eRepeat = 2;
-                    else if( Character.isDigit(arg.charAt(0)) && Integer.parseInt(arg)==1 )
-                        eRepeat = 1;
-                    else if ( Character.isDigit(arg.charAt(0)) && Integer.parseInt(arg)==2)
-                        eRepeat = 2;
+                    String tmp = arg.toLowerCase();
+                    if( tmp.toLowerCase().equals("daily") )
+                        repeat = 0b1111111;
+                    else if( tmp.equals("no") || tmp.equals("none") )
+                        repeat = 0;
+                    else
+                    {
+                        if( tmp.contains("su") )
+                            repeat |= 1;
+                        if( tmp.contains("mo") )
+                            repeat |= 1<<1;
+                        if( tmp.contains("tu") )
+                            repeat |= 1<<2;
+                        if( tmp.contains("we") )
+                            repeat |= 1<<3;
+                        if( tmp.contains("th") )
+                            repeat |= 1<<4;
+                        if( tmp.contains("fr") )
+                            repeat |= 1<<5;
+                        if( tmp.contains("sa") )
+                            repeat |= 1<<6;
+                    }
                     repeatFlag = false;
                 }
                 else if( dateFlag )
@@ -229,7 +233,6 @@ public class CreateCommand implements Command
                 {
                     eComments.add(arg);
                 }
-
             }
         }
         ZonedDateTime s = ZonedDateTime.of( eDate, eStart, ZoneId.systemDefault() );
@@ -248,11 +251,11 @@ public class CreateCommand implements Command
         Integer Id = schedManager.newId(null);
 
         // generate the event entry message
-        String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, eRepeat, Id, scheduleChan.getId() );
+        String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, repeat, Id, scheduleChan.getId() );
         __out.printOut(this.getClass(), scheduleChan.getName());
 
         String finalTitle = eTitle;     //  convert to effectively
-        int finalRepeat = eRepeat;      //  final variables
+        int finalRepeat = repeat;       //  final variables
         ZonedDateTime finalS = s;       //
         ZonedDateTime finalE = e;       //
 
