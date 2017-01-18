@@ -5,6 +5,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.settings.ChannelSettingsManager;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
+import ws.nmathe.saber.utils.__out;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -67,13 +68,17 @@ public class ScheduleEntryParser
             }
 
             // the third line is the repeat info \\
+            int i = 0;                          //
+            if( lines[3].startsWith(">") )      // compat fix
+                i = 1;                          //
+
             repeat = ScheduleEntryParser.getRepeatBits( lines[3].replace("> ","") );
 
             // the fourth line is empty space,     \\
 
             // lines 5 through n-2 are comments,
             // iterate every two to avoid the new line padding \\
-            for (int c = 5; c < lines.length - 3; c += 2)
+            for (int c = 4+i; c < lines.length - 3; c += 2)
                 eComments.add(lines[c]);
 
             // line n-1 is an empty space \\

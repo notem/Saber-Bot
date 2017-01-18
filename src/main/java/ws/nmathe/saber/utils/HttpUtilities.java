@@ -15,7 +15,17 @@ import java.time.temporal.ChronoUnit;
 public class HttpUtilities
 {
     private static LocalDateTime lastUpdate = LocalDateTime.MIN;
-    public static void updateCount(int i, String auth)
+
+    public static void updateStats()
+    {
+        String auth = Main.getBotSettings().getWebToken();
+        if( auth != null )
+        {
+            HttpUtilities.updateStats_abal(Main.getBotJda().getGuilds().size(), auth);
+        }
+    }
+
+    private static void updateStats_abal(int i, String auth)
     {
         try
         {

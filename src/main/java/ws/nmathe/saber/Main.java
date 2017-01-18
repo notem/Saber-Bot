@@ -89,11 +89,7 @@ public class Main
         commandHandler.init();      // ready commands
         scheduleManager.init();     // start timers
 
-        String auth = botSettings.getWebToken();
-        if( auth != null )
-        {
-            HttpUtilities.updateCount(Main.getBotJda().getGuilds().size(), auth);
-        }
+        HttpUtilities.updateStats();
     }
 
 

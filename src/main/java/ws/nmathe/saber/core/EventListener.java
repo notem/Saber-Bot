@@ -88,11 +88,7 @@ public class EventListener extends ListenerAdapter
         // load channels of joining guild
         GuildUtilities.loadScheduleChannels( event.getGuild() );
 
-        String auth =Main.getBotSettings().getWebToken();
-        if( auth != null )
-        {
-            HttpUtilities.updateCount(Main.getBotJda().getGuilds().size(), auth);
-        }
+        HttpUtilities.updateStats();
     }
 
     @Override
@@ -104,10 +100,6 @@ public class EventListener extends ListenerAdapter
             scheduleManager.removeEntry( id );
         }
 
-        String auth =Main.getBotSettings().getWebToken();
-        if( auth != null )
-        {
-            HttpUtilities.updateCount(Main.getBotJda().getGuilds().size(), auth);
-        }
+        HttpUtilities.updateStats();
     }
 }
