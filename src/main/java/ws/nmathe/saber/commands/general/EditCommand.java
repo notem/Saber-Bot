@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
+import ws.nmathe.saber.utils.__out;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -130,10 +131,12 @@ public class EditCommand implements Command
         ZonedDateTime end = entry.getEnd();                 //
         int repeat = entry.getRepeat();                     //
 
-        switch( args[index++] )
+        index++;    // 1
+
+        switch( args[index++] )     // 2
         {
             case "comment":
-                switch( args[index++] )
+                switch( args[index++] )   // 3
                 {
                     case "add" :
                         comments.add( args[index] );
@@ -216,13 +219,13 @@ public class EditCommand implements Command
                 break;
         }
 
+
+        String msg;
         synchronized( schedManager.getScheduleLock() )
         {
+            msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, entry.getMessage().getChannel().getId());
             schedManager.removeEntry( entryId );    // remove the old entry
         }
-        Integer Id = schedManager.newId( entryId ); // request a new Id (but prefer the old)
-
-        String msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, Id, entry.getMessage().getChannel().getId());
 
         int finalRepeat = repeat;           //
         ZonedDateTime finalEnd = end;       // convert into effectively final
@@ -231,6 +234,6 @@ public class EditCommand implements Command
 
         MessageUtilities.editMsg(msg,
                 entry.getMessage(),
-                (message)->schedManager.addEntry(finalTitle, finalStart, finalEnd, comments, Id, message, finalRepeat ));
+                (message)->schedManager.addEntry(finalTitle, finalStart, finalEnd, comments, entryId, message, finalRepeat ));
     }
 }
