@@ -11,6 +11,7 @@ import ws.nmathe.saber.utils.GuildUtilities;
 
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.List;
 
 /**
  */
@@ -76,7 +77,7 @@ public class SetCommand implements Command
                 break;
 
             case "zone" :
-                if( ZoneId.of(args[index].replace("\"","")) == null )
+                if( ZoneId.of(args[index]) == null )
                     return "Argument **" + args[index] +  "** is not a valid timezone";
                 break;
 
@@ -93,8 +94,13 @@ public class SetCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         int index = 0;
-        TextChannel scheduleChan = event.getGuild().getTextChannelsByName( args[index], true ).get(0);
-        index++;
+        List<TextChannel> chans= GuildUtilities.getValidScheduleChannels(event.getGuild());
+        TextChannel scheduleChan = chans.get(0);
+        if( chans.size() > 1 )
+        {
+            scheduleChan = event.getGuild().getTextChannelsByName(args[index], true).get(0);
+            index++;
+        }
 
         switch (args[index++])
         {
