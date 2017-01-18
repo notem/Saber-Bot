@@ -67,6 +67,7 @@ public class ScheduleEntryParser
             }
 
             // the third line is the repeat info \\
+            assert(!lines[3].startsWith(">"));
             repeat = ScheduleEntryParser.getRepeatBits( lines[3].replace("> ","") );
 
             // the fourth line is empty space,     \\
