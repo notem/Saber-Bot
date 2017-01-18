@@ -60,6 +60,7 @@ public class GuildUtilities
     {
         String name = Main.getBotSettings().getScheduleChan();
         List<TextChannel> chans = new ArrayList<>();
+        ChannelSettingsManager channelSettingsManager = Main.getChannelSettingsManager();
 
         Member botAsMember = guild.getMember(Main.getBotSelfUser());
         List<Permission> perms = Arrays.asList( // required permissions
@@ -72,6 +73,7 @@ public class GuildUtilities
             if( chan.getName().startsWith( name ) && botAsMember.hasPermission(chan, perms) )
             {
                 chans.add(chan);
+                channelSettingsManager.checkChannel(chan);
             }
         }
 

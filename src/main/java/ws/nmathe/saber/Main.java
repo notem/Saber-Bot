@@ -15,6 +15,8 @@ import ws.nmathe.saber.utils.GuildUtilities;
 import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.__out;
 
+import java.util.HashMap;
+
 /**
  *  initializes and maintains the bot
  *  main maintains the entry maps as well as the command and schedule thread pools

@@ -89,7 +89,6 @@ public class EventListener extends ListenerAdapter
         GuildUtilities.loadScheduleChannels( event.getGuild() );
 
         String auth =Main.getBotSettings().getWebToken();
-        __out.printOut(Main.class, auth);
         if( auth != null )
         {
             HttpUtilities.updateCount(Main.getBotJda().getGuilds().size(), auth);
@@ -106,7 +105,6 @@ public class EventListener extends ListenerAdapter
         }
 
         String auth =Main.getBotSettings().getWebToken();
-        __out.printOut(Main.class, auth);
         if( auth != null )
         {
             HttpUtilities.updateCount(Main.getBotJda().getGuilds().size(), auth);
