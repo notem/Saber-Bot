@@ -289,10 +289,14 @@ public class ScheduleManager
             return new ArrayList<>();
     }
 
-    public Collection<Integer> getAllEntries()
+    public Collection<Integer> getAllIds()
     {
-        return entriesGlobal.values().stream()
-                .map(entry -> entry.getId()).collect(Collectors.toCollection(ArrayList::new));
+        return entriesGlobal.keySet();
+    }
+
+    public Collection<ScheduleEntry> getAllEntries()
+    {
+        return entriesGlobal.values();
     }
 
     public Object getScheduleLock()

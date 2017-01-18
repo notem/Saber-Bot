@@ -99,7 +99,7 @@ public class QueryCommand implements Command
 
             case "entries" :
                 msg = "**Current contents of the entries map**\n";
-                for( Integer Id : scheduleManager.getAllEntries() )
+                for( Integer Id : scheduleManager.getAllIds() )
                 {
                     if( msg.length() >= 1900 )
                     {

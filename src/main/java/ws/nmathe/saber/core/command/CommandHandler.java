@@ -75,16 +75,7 @@ public class CommandHandler
             // do command action if valid arguments
             if(err.isEmpty())
             {
-                executor.submit( () -> {
-                            try
-                            {
-                                commands.get(cc.invoke).action(cc.args, cc.event);
-                            }
-                            catch( Exception e )
-                            {
-                                e.printStackTrace();
-                            }
-                        });
+                executor.submit( () -> commands.get(cc.invoke).action(cc.args, cc.event));
             }
             // otherwise send error message
             else
@@ -111,16 +102,7 @@ public class CommandHandler
             // do command action if valid arguments
             if (err.equals(""))
             {
-                executor.submit( () -> {
-                    try
-                    {
-                        adminCommands.get(cc.invoke).action(cc.args, cc.event);
-                    }
-                    catch( Exception e )
-                    {
-                        e.printStackTrace();
-                    }
-                });
+                executor.submit( () -> adminCommands.get(cc.invoke).action(cc.args, cc.event));
             }
         }
     }

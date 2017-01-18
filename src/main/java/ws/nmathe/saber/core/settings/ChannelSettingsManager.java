@@ -2,6 +2,8 @@ package ws.nmathe.saber.core.settings;
 
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
+import ws.nmathe.saber.Main;
+import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -24,38 +26,64 @@ public class ChannelSettingsManager
         {
             ChannelSettings settings = new ChannelSettings( channel );
             settingsByChannel.put(channel.getId(), settings );
-            settings.reloadSettingsMsg();
         }
     }
 
     public void sendSettingsMsg( MessageChannel channel )
     {
-        settingsByChannel.get( channel.getId() ).reloadSettingsMsg();
+        ChannelSettings settings = settingsByChannel.get( channel.getId() );
+        if( settings == null )
+            settingsByChannel.put(channel.getId(), new ChannelSettings( channel ));
+        else
+            settings.reloadSettingsMsg();
     }
 
     public void loadSettings( Message message )
     {
-        settingsByChannel.put( message.getChannel().getId(), new ChannelSettings( message ) );
+        if( settingsByChannel.containsKey(message.getChannel().getId() ) )
+            MessageUtilities.deleteMsg( message );
+        else
+            settingsByChannel.put( message.getChannel().getId(), new ChannelSettings( message ) );
     }
 
-    public String getAnnounceChan(String gId )
+    public String getAnnounceChan(String cId )
     {
-        return settingsByChannel.get(gId).announceChannel;
+        ChannelSettings settings = settingsByChannel.get(cId);
+        if( settings == null )
+        {
+            return Main.getBotSettings().getAnnounceChan();
+        }
+        return settings.announceChannel;
     }
 
-    public String getAnnounceFormat(String gId )
+    public String getAnnounceFormat(String cId )
     {
-        return settingsByChannel.get(gId).announceFormat;
+        ChannelSettings settings = settingsByChannel.get(cId);
+        if( settings == null )
+        {
+            return Main.getBotSettings().getAnnounceFormat();
+        }
+        return settings.announceFormat;
     }
 
-    public String getClockFormat(String gId )
+    public String getClockFormat(String cId )
     {
-        return settingsByChannel.get(gId).clockFormat;
+        ChannelSettings settings = settingsByChannel.get(cId);
+        if( settings == null )
+        {
+            return Main.getBotSettings().getClockFormat();
+        }
+        return settings.clockFormat;
     }
 
-    public ZoneId getTimeZone(String gId )
+    public ZoneId getTimeZone(String cId )
     {
-        return settingsByChannel.get(gId).timeZone;
+        ChannelSettings settings = settingsByChannel.get(cId);
+        if( settings == null )
+        {
+            return ZoneId.of(Main.getBotSettings().getTimeZone());
+        }
+        return settings.timeZone;
     }
 
     public void setAnnounceChan(String cId, String chan )
