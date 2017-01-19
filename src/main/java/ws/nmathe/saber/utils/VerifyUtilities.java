@@ -66,14 +66,14 @@ public class VerifyUtilities
         String[] date = arg.split("/");
         if(date.length != 2)
             return false;
-        if( verifyInteger(date[0]) )
+        if( !verifyInteger(date[0]) )
             return false;
         else
         {
             if(Integer.parseInt(date[0])>12||Integer.parseInt(date[0])==0)
                 return false;
         }
-        if( verifyInteger(date[2]) )
+        if( !verifyInteger(date[1]) )
             return false;
         else
         {
