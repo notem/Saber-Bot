@@ -35,7 +35,7 @@ public class HttpUtilities
                 JSONObject json = new JSONObject().put("server_count", i);
 
                 HttpResponse<JsonNode> response = Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotSelfUser().getId() + "/stats")
-                        .header("Authorization", auth)
+                        .header("GoogleAuth", auth)
                         .header("Content-Type", "application/json")
                         .body(json).asJson();
 

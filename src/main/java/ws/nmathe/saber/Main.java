@@ -2,6 +2,7 @@ package ws.nmathe.saber;
 
 import net.dv8tion.jda.core.entities.Guild;
 import ws.nmathe.saber.core.command.CommandHandler;
+import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import ws.nmathe.saber.core.settings.BotSettings;
 import ws.nmathe.saber.core.settings.ChannelSettingsManager;
@@ -14,8 +15,6 @@ import ws.nmathe.saber.core.EventListener;
 import ws.nmathe.saber.utils.GuildUtilities;
 import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.__out;
-
-import java.util.HashMap;
 
 /**
  *  initializes and maintains the bot
@@ -88,6 +87,7 @@ public class Main
 
         commandHandler.init();      // ready commands
         scheduleManager.init();     // start timers
+        GoogleAuth.init();          // ready the gCal service
 
         HttpUtilities.updateStats();
     }
