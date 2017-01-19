@@ -201,6 +201,7 @@ public class EditCommand implements Command
                     repeat = 0;
                 else
                 {
+                    repeat = 0;
                     if( tmp.contains("su") )
                         repeat |= 1;
                     if( tmp.contains("mo") )

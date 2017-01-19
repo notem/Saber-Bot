@@ -49,22 +49,45 @@ public class ScheduleEntryParser
             eTitle = lines[1].replaceFirst("# ", "");
 
             // the second line is the date and time \\
-            LocalDate date;
+            LocalDate dateStart;
+            LocalDate dateEnd;
             LocalTime timeStart;
             LocalTime timeEnd;
 
+            String[] tmp;
+
             ZoneId zone = chanSetManager.getTimeZone( msg.getChannel().getId() );
-            try
+            if( lines[2].contains(" to ") )
             {
-                date = LocalDate.parse(lines[2].split(" from ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
-                timeStart = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[0], DateTimeFormatter.ofPattern(timeFormatter));
-                timeEnd = LocalTime.parse(lines[2].split(" from ")[1].split(" to ")[1], DateTimeFormatter.ofPattern(timeFormatter));
-            } catch (Exception ignored)
+                tmp = lines[2].split(" from ");
+                dateStart = LocalDate.parse(tmp[0] + ZonedDateTime.now(zone).getYear(),
+                        DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+
+                tmp = tmp[1].split(" to ");
+                timeStart = LocalTime.parse(tmp[0], DateTimeFormatter.ofPattern(timeFormatter));
+
+                if( tmp[1].contains(" at ") )
+                {
+                    tmp = tmp[1].split(" at ");
+                    dateEnd = LocalDate.parse(tmp[0] + ZonedDateTime.now(zone).getYear(),
+                            DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                }
+                else
+                {
+                    dateEnd = dateStart;
+                }
+
+                timeEnd = LocalTime.parse(tmp[1], DateTimeFormatter.ofPattern(timeFormatter));
+            }
+            else
             {
-                date = LocalDate.parse(lines[2].split(" at ")[0] + ZonedDateTime.now(zone).getYear(), DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
-                LocalTime time = LocalTime.parse(lines[2].split(" at ")[1], DateTimeFormatter.ofPattern(timeFormatter));
-                timeStart = time;
-                timeEnd = time;
+                tmp = lines[2].split(" at ");
+                dateStart = LocalDate.parse(tmp[0] + ZonedDateTime.now(zone).getYear(),
+                        DateTimeFormatter.ofPattern("< MMMM d >yyyy"));
+                timeStart = LocalTime.parse(tmp[1], DateTimeFormatter.ofPattern(timeFormatter));
+
+                timeEnd = timeStart;
+                dateEnd = dateStart;
             }
 
             // the third line is the repeat info \\
@@ -89,8 +112,8 @@ public class ScheduleEntryParser
             Integer Id = schedManager.newId( eID );
 
             ZonedDateTime now = ZonedDateTime.now();
-            eStart = ZonedDateTime.of(date, timeStart, zone);
-            eEnd = ZonedDateTime.of(date, timeEnd, zone);
+            eStart = ZonedDateTime.of(dateStart, timeStart, zone);
+            eEnd = ZonedDateTime.of(dateEnd, timeEnd, zone);
 
             if (eStart.isBefore(now) && eEnd.isBefore(now))
             {
@@ -127,11 +150,16 @@ public class ScheduleEntryParser
 
         String firstLine = "# " + eTitle + "\n";
 
-        // of form: "< DATE > from < START > to < END >\n"
         String secondLine = eStart.format(DateTimeFormatter.ofPattern("< MMMM d >"));
         if( eStart.until(eEnd, ChronoUnit.SECONDS)==0 )
         {
             secondLine += " at " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
+        }
+        else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
+        {
+            secondLine += " from " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                    " to " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + " at " +
+                    eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
         else
         {
@@ -165,7 +193,7 @@ public class ScheduleEntryParser
         if( str.equals("does not repeat") )
             return 0;
         if( str.equals("repeats daily") )
-            return 1;
+            return 0b1111111;
 
         int bits = 0;
         if( str.startsWith("repeats weekly on ") )
