@@ -2,6 +2,7 @@ package ws.nmathe.saber;
 
 import net.dv8tion.jda.core.entities.Guild;
 import ws.nmathe.saber.core.command.CommandHandler;
+import ws.nmathe.saber.core.google.CalendarConverter;
 import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import ws.nmathe.saber.core.settings.BotSettings;
@@ -28,6 +29,7 @@ public class Main
     private static ScheduleManager scheduleManager = new ScheduleManager();
     private static ChannelSettingsManager channelSettingsManager = new ChannelSettingsManager();
     private static CommandHandler commandHandler = new CommandHandler();
+    private static CalendarConverter calendarConverter = new CalendarConverter();
 
     public static void main( String[] args )
     {
@@ -87,7 +89,7 @@ public class Main
 
         commandHandler.init();      // ready commands
         scheduleManager.init();     // start timers
-        GoogleAuth.init();          // ready the gCal service
+        calendarConverter.init();   // connect to calendar service
 
         HttpUtilities.updateStats();
     }
@@ -121,5 +123,10 @@ public class Main
     public static ChannelSettingsManager getChannelSettingsManager()
     {
        return channelSettingsManager;
+    }
+
+    public static CalendarConverter getCalendarConverter()
+    {
+        return calendarConverter;
     }
 }

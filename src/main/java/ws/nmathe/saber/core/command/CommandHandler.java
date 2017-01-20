@@ -42,6 +42,7 @@ public class CommandHandler
         commands.put("set", new SetCommand());
         commands.put("timezones", new TimeZonesCommand());
         commands.put("init", new InitCommand());
+        commands.put("sync", new SyncCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put("global_announce", new GlobalMsgCommand());

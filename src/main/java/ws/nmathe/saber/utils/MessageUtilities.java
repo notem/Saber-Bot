@@ -32,15 +32,16 @@ public class MessageUtilities
         }
     }
 
-    public static void sendMsg( String content, MessageChannel chan )
+    public static Message sendMsg( String content, MessageChannel chan )
     {
         try
         {
-            chan.sendMessage(content).block();
+            return chan.sendMessage(content).block();
         }
         catch( Exception e)
         {
             __out.printOut( MessageUtilities.class, e.getMessage() );
+            return null;
         }
     }
 

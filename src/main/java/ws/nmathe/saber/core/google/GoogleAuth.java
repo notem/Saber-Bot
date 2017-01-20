@@ -14,6 +14,7 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.CalendarScopes;
 import ws.nmathe.saber.utils.__out;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -66,7 +67,7 @@ public class GoogleAuth
     static Credential authorize() throws IOException
     {
         // Load client secrets.
-        InputStream in = GoogleAuth.class.getResourceAsStream("/client_secret.json");
+        InputStream in = new FileInputStream("./client_secret.json");
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
         // Build flow and trigger user authorization request.
