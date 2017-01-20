@@ -102,7 +102,7 @@ public class CreateCommand implements Command
         // check remaining args
         if( args.length - 1 > index )
         {
-            String[] argsRemaining = Arrays.copyOfRange(args, index+1, args.length);
+            String[] argsRemaining = Arrays.copyOfRange(args, index, args.length);
 
             boolean dateFlag = false;
 
