@@ -25,7 +25,7 @@ public class CalendarConverter
     /** Calendar service instance */
     private com.google.api.services.calendar.Calendar service;
 
-    private static DateTimeFormatter rfc3339Formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
+    private static DateTimeFormatter rfc3339Formatter = DateTimeFormatter.ISO_DATE_TIME;
 
     public void init()
     {
@@ -93,9 +93,12 @@ public class CalendarConverter
                 removeQueue.add(id);
             }
         }
-        for( Integer id : removeQueue )
+        synchronized( Main.getScheduleManager() )
         {
-            Main.getScheduleManager().removeEntry(id);
+            for (Integer id : removeQueue)
+            {
+                Main.getScheduleManager().removeEntry(id);
+            }
         }
 
         // change the zone to match the calendar
@@ -111,6 +114,7 @@ public class CalendarConverter
             ArrayList<String> comments = new ArrayList<>();
             int repeat = 0;
 
+            __out.printOut(this.getClass(), event.getStart().getDateTime().toStringRfc3339());
             start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter);
             end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter);
 
