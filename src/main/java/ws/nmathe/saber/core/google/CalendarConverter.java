@@ -25,7 +25,7 @@ public class CalendarConverter
     /** Calendar service instance */
     private com.google.api.services.calendar.Calendar service;
 
-    private static DateTimeFormatter rfc3339Formatter = DateTimeFormatter.ISO_DATE_TIME;
+    private static DateTimeFormatter rfc3339Formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     public void init()
     {
@@ -68,9 +68,11 @@ public class CalendarConverter
             ZonedDateTime min = ZonedDateTime.now();
             ZonedDateTime max = min.plusDays(7);
 
+            __out.printOut(this.getClass(), min.format(rfc3339Formatter));
+
             events = service.events().list(address)
-                    .setTimeMin(new DateTime(min.toString()))
-                    .setTimeMax(new DateTime(max.toString()))
+                    .setTimeMin(new DateTime(min.format(rfc3339Formatter)))
+                    .setTimeMax(new DateTime(max.format(rfc3339Formatter)))
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
                     .execute();
