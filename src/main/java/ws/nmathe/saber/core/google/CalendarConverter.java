@@ -42,6 +42,23 @@ public class CalendarConverter
         }
     }
 
+    public boolean checkValidAddress( String address )
+    {
+        try
+        {
+            Events events = service.events().list(address)
+                    .setMaxResults(1)
+                    .execute();
+            return true;
+        }
+        catch( IOException e )
+        {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
     public void syncCalendar(String address, TextChannel channel) throws Exception
     {
         Events events;
@@ -82,8 +99,8 @@ public class CalendarConverter
         }
 
         // change the zone to match the calendar
-        //ZoneId zone = ZoneId.of( events.getTimeZone() );
-        //Main.getChannelSettingsManager().setTimeZone( channel.getId(), zone );
+        ZoneId zone = ZoneId.of( events.getTimeZone() );
+        Main.getChannelSettingsManager().setTimeZone( channel.getId(), zone );
 
         // convert every entry and add it to the scheduleManager
         for(Event event : events.getItems())
@@ -94,7 +111,6 @@ public class CalendarConverter
             ArrayList<String> comments = new ArrayList<>();
             int repeat = 0;
 
-            __out.printOut(this.getClass(), event.getStart().getDateTime().toStringRfc3339());
             start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter);
             end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter);
 

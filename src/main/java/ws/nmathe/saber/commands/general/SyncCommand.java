@@ -21,8 +21,12 @@ public class SyncCommand implements Command
     {
         if( args.length < 2 )
             return "Not enough arguments";
+        if( args.length > 2)
+            return "Too many arguments";
         if( event.getGuild().getTextChannelsByName(args[0], false).isEmpty() )
             return "Channel **" + args[0] + "** does not exist";
+        if( !Main.getCalendarConverter().checkValidAddress( args[1] ) )
+            return "Cannot connect to google calendar address **" + args[2] + "**";
 
         return "";
     }

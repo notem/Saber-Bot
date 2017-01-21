@@ -94,11 +94,19 @@ public class SetCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         int index = 0;
-        List<TextChannel> chans= GuildUtilities.getValidScheduleChannels(event.getGuild());
-        TextChannel scheduleChan = chans.get(0);
-        if( chans.size() > 1 )
+        List<TextChannel> chans = event.getGuild().getTextChannelsByName(args[index], false);
+        List<TextChannel> validChans = GuildUtilities.getValidScheduleChannels(event.getGuild());
+        TextChannel scheduleChan;
+
+        if( !validChans.isEmpty() && chans.isEmpty() )
         {
-            scheduleChan = event.getGuild().getTextChannelsByName(args[index], true).get(0);
+            if (chans.size() > 1)
+                return;
+            scheduleChan = validChans.get(0);
+        }
+        else
+        {
+            scheduleChan = chans.get(0);
             index++;
         }
 

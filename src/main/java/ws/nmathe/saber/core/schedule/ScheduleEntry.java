@@ -147,7 +147,7 @@ public class ScheduleEntry
        long timeTilStart = ZonedDateTime.now().until(this.eStart, SECONDS);
        long timeTilEnd = this.eStart.until(this.eEnd, SECONDS);
 
-       String[] lines = this.eMsg.getRawContent().split("\n");
+       String[] lines = this.eMsg.getContent().split("\n");
 
        if( !this.hasStarted() )
        {

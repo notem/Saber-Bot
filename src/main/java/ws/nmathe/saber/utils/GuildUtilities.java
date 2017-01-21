@@ -36,12 +36,16 @@ public class GuildUtilities
             // ready a consumer to parseMsgFormat the history
             Consumer<List<Message>> cons = (l) ->
             {
+                int count = 0;
                 for (Message message : l)
                 {
                     if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
                     {
-                        if (message.getRawContent().startsWith("```java"))
+                        if (message.getRawContent().startsWith("```java") && count <= 1)
+                        {
                             channelSettingsManager.loadSettings(message);
+                            count++;
+                        }
                         else
                             scheduleManager.addEntry(message);
                     } else

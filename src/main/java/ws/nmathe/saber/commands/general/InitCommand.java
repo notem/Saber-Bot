@@ -5,6 +5,9 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.GuildUtilities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  */
 public class InitCommand implements Command
@@ -24,16 +27,28 @@ public class InitCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        synchronized( Main.getScheduleManager().getScheduleLock() )
+        try
         {
-            // clear the guild mapping
-            for (Integer id : Main.getScheduleManager().getEntriesByGuild(event.getGuild().getId()))
-            {
-                Main.getScheduleManager().removeEntry(id);
-            }
+                // clear the guild mapping
+                List<Integer> removeQueue = new ArrayList<>();
+                for (Integer id : Main.getScheduleManager().getEntriesByGuild(event.getGuild().getId()))
+                {
+                    removeQueue.add(id);
+                }
+                for( Integer id : removeQueue )
+                {
+                    synchronized (Main.getScheduleManager().getScheduleLock())
+                    {
+                        Main.getScheduleManager().removeEntry(id);
+                    }
+                }
 
-            // reload all channels
-            GuildUtilities.loadScheduleChannels(event.getGuild());
+                // reload all channels
+                GuildUtilities.loadScheduleChannels(event.getGuild());
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
         }
     }
 }

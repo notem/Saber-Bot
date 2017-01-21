@@ -40,10 +40,7 @@ public class ChannelSettingsManager
 
     public void loadSettings( Message message )
     {
-        if( settingsByChannel.containsKey(message.getChannel().getId() ) )
-            MessageUtilities.deleteMsg( message );
-        else
-            settingsByChannel.put( message.getChannel().getId(), new ChannelSettings( message ) );
+        settingsByChannel.put( message.getChannel().getId(), new ChannelSettings( message ) );
     }
 
     public String getAnnounceChan(String cId )

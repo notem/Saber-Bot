@@ -158,7 +158,7 @@ public class ScheduleEntryParser
         else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
         {
             secondLine += " from " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " to " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + " at " +
+                    " to " + eEnd.format(DateTimeFormatter.ofPattern("< MMMM d >")) + " at " +
                     eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
         else
