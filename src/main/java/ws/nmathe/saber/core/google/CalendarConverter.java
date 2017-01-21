@@ -25,7 +25,7 @@ public class CalendarConverter
     /** Calendar service instance */
     private com.google.api.services.calendar.Calendar service;
 
-    private static DateTimeFormatter rfc3339Formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+    private static DateTimeFormatter rfc3339Formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
 
     public void init()
     {
