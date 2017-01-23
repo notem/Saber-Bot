@@ -95,45 +95,31 @@ public class ScheduleEntry
             schedManager.removeEntry(this.eID);
         }
 
-        if( this.eRepeat == 0 )
+        if( this.eRepeat != 0 ) // find next repeat date and edit the message
+        {
+            int days = this.daysUntilNextOccurence();
+
+            // fixes wrap-around at new years
+            ZonedDateTime newStart = this.eStart.plusDays(days).isAfter(this.eStart) ?
+                            this.eStart.plusDays(days) : this.eStart.plusDays(days).plusYears(1);
+            ZonedDateTime newEnd = this.eEnd.plusDays(days).isAfter(this.eEnd) ?
+                    this.eEnd.plusDays(days) : this.eEnd.plusDays(days).plusYears(1);
+
+            String msg = ScheduleEntryParser.generate(
+                    this.eTitle,
+                    newStart,
+                    newEnd,
+                    this.eComments,
+                    this.eRepeat,
+                    this.eID,
+                    this.eMsg.getChannel().getId()
+            );
+
+            MessageUtilities.editMsg(msg, this.eMsg, schedManager::addEntry);
+        }
+        else // otherwise delete the message
         {
             MessageUtilities.deleteMsg( this.eMsg, null );
-        }
-
-        // if the event entry is scheduled to repeat, must be handled with now
-        if( this.eRepeat == 1 )
-        {
-            // generate the event entry message
-            String msg = ScheduleEntryParser.generate(
-                    this.eTitle,
-                    this.eStart.plusDays(1).isAfter(this.eStart) ?
-                            this.eStart.plusDays(1) : this.eStart.plusDays(1).plusYears(1),
-                    this.eEnd.plusDays(1).isAfter(this.eEnd) ?
-                            this.eEnd.plusDays(1) : this.eEnd.plusDays(1).plusYears(1),
-                    this.eComments,
-                    this.eRepeat,
-                    this.eID,
-                    this.eMsg.getChannel().getId()
-            );
-
-            MessageUtilities.editMsg(msg, this.eMsg, schedManager::addEntry);
-        }
-        else if( this.eRepeat == 2 )
-        {
-            // generate the event entry message
-            String msg = ScheduleEntryParser.generate(
-                    this.eTitle,
-                    this.eStart.plusDays(7).isAfter(this.eStart) ?
-                            this.eStart.plusDays(7) : this.eStart.plusDays(7).plusYears(1),
-                    this.eEnd.plusDays(7).isAfter(this.eEnd) ?
-                            this.eEnd.plusDays(7) : this.eEnd.plusDays(1).plusYears(1),
-                    this.eComments,
-                    this.eRepeat,
-                    this.eID,
-                    this.eMsg.getChannel().getId()
-            );
-
-            MessageUtilities.editMsg(msg, this.eMsg, schedManager::addEntry);
         }
     }
 
@@ -227,6 +213,36 @@ public class ScheduleEntry
                 msg += lines[i] + "\n";
         }
         return msg;
+    }
+
+    private int daysUntilNextOccurence()
+    {
+        int dayOfWeek = ZonedDateTime.now().getDayOfWeek().getValue();
+        int dayAsBitSet;
+        if( dayOfWeek == 7 ) //sunday
+            dayAsBitSet = 1;
+        else                //monday - saturday
+            dayAsBitSet = 1<<dayOfWeek;
+
+        int daysTil = 0;
+        if( (dayAsBitSet & this.eRepeat) == dayAsBitSet )
+            daysTil = 7;
+
+        for( int i = 1; i < 7; i++)
+        {
+            if( (dayAsBitSet<<i) >= 0b1000000 ) //if shifting results in too large a string
+                dayAsBitSet = 0b0000001;        //set to monday string
+            else
+                dayAsBitSet <<= i;     // else, set to the next day
+
+            if( (dayAsBitSet & this.eRepeat) == dayAsBitSet )
+            {
+                daysTil = i;
+                break;
+            }
+        }
+
+        return daysTil; // if this is zero, eRepeat was zero
     }
 
     public String getTitle()
