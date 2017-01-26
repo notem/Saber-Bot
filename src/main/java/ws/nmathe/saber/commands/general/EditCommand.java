@@ -36,7 +36,7 @@ public class EditCommand implements Command
                 "\nEx3: **!edit 49af end 2:15pm**" +
                 "\nEx4: **!edit 80c0 comment remove 1**";
 
-        String USAGE_BRIEF = "**" + prefix + "edit** - Modifies an schedule entry, either" +
+        String USAGE_BRIEF = "``" + prefix + "edit`` - Modifies an schedule entry, either" +
                 " changing parameters or adding/removing comment fields.";
 
         if( brief )

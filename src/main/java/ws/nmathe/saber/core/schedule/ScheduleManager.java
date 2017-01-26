@@ -73,48 +73,7 @@ public class ScheduleManager
         String msg = ScheduleEntryParser.generate(se.getTitle(),se.getStart(),se.getEnd(),se.getComments(),se.getRepeat(),se.getId(),se.getMessage().getChannel().getId());
         MessageUtilities.editMsg( msg, se.getMessage(), null);
 
-        String guildId = message.getGuild().getId();
-        String channelId = message.getChannel().getId();
-
-        // put the ScheduleEntry thread into a HashMap by ID
-        entriesGlobal.put(se.getId(), se);
-
-        // put the id in guild mapping
-        if( !entriesByGuild.containsKey( guildId ) )
-        {
-            ArrayList<Integer> entries = new ArrayList<>();
-            entries.add(se.getId());
-            entriesByGuild.put( guildId, entries );
-        }
-        else
-            entriesByGuild.get( guildId ).add( se.getId() );
-
-        // put the id in channel mapping
-        if( !entriesByChannel.containsKey( channelId ))
-        {
-            ArrayList<Integer> entries = new ArrayList<>();
-            entries.add(se.getId());
-            entriesByChannel.put( channelId, entries );
-        }
-        else
-            entriesByChannel.get( channelId ).add( se.getId() );
-
-        // adjusts the displayed time til timer (since it is not set at creation)
-        se.adjustTimer();
-
-        // add the entry to buffer
-        if( !se.hasStarted() )
-        {
-            long timeTil = ZonedDateTime.now().until(se.getStart(), ChronoUnit.SECONDS);
-            if (timeTil <= 45 * 60)
-                fineTimerBuff.add(se);
-            else if (timeTil <= 32 * 60 * 60)
-                coarseTimerBuff.add(se);
-        }
-        else
-        {
-            fineTimerBuff.add(se);
-        }
+        addEntryWrapped(message, se);
     }
 
     /**
@@ -133,6 +92,11 @@ public class ScheduleManager
     {
         ScheduleEntry se = new ScheduleEntry( title, start, end, comments, Id, message, repeat);
 
+        this.addEntryWrapped(message, se);
+    }
+
+    private void addEntryWrapped(Message message, ScheduleEntry se)
+    {
         String guildId = message.getGuild().getId();
         String channelId = message.getChannel().getId();
 

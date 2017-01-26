@@ -12,10 +12,22 @@ import java.util.List;
  */
 public class InitCommand implements Command
 {
+    private String invoke = Main.getBotSettings().getCommandPrefix() + "init";
+
     @Override
     public String help(boolean brief)
     {
-        return null;
+        String USAGE_EXTENDED = "Using ``" + invoke + "`` will reload all valid schedule channels. If the bot doesn't " +
+                "seem to be recognizing your schedule channels, try using this command. Or, if you schedule " +
+                "entries are missing the section which tells the time remaining until the event, this command should " +
+                "fix the issue.";
+
+        String USAGE_BRIEF = "``" + invoke + "`` - reloads schedule channels. Use this when something is odd.";
+
+        if( brief )
+            return USAGE_BRIEF;
+        else
+            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED;
     }
 
     @Override

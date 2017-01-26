@@ -24,10 +24,10 @@ public class HelpCommand implements Command
             "my appropriate channels to get started.\n\n";
 
     private String USAGE_EXTENDED = "\nTo get detailed information concerning the usage of any of these" +
-            " commands use the command **!help <command>** where the prefix for <command> is stripped off. " +
-            "Ex. **!help create**";
+            " commands use the command ``!help <command>`` where the prefix for <command> is stripped off. " +
+            "Ex. ``" + prefix + "help create``";
 
-    private String USAGE_BRIEF = "**" + prefix + "help** - Messages the user help messages.";
+    private String USAGE_BRIEF = "``" + prefix + "help`` - Messages the user help messages.";
 
     @Override
     public String help(boolean brief)

@@ -51,7 +51,7 @@ public class CreateCommand implements Command
                 "\nEx3. **!create \"event_channl Raids\" \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
                 "demand.\" \"PM our raid captain with your role and level if attending.\"**";
 
-        String USAGE_BRIEF = "**" + prefix + "create** - Generates a new event entry" +
+        String USAGE_BRIEF = "``" + prefix + "create`` - Generates a new event entry" +
                 " and sends it to the specified schedule channel.";
 
         if( brief )

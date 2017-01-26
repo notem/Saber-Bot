@@ -20,7 +20,7 @@ class CommandParser
      */
     CommandContainer parse(MessageReceivedEvent e)
     {
-        String raw = e.getMessage().getRawContent();
+        String raw = e.getMessage().getRawContent().replace("```","");
 
         /// trim off the prefix
         String trimmed;

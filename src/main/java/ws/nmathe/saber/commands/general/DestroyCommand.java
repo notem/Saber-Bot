@@ -26,7 +26,7 @@ public class DestroyCommand implements Command
         String USAGE_EXTENDED = "Calling **!destroy <ID>** will end the event with <ID>" +
                 " prematurely. If **all** is used instead of the event ID, all scheduled events will be destroyed.";
 
-        String USAGE_BRIEF = "**" + prefix + "destroy** - Removes an entry from " +
+        String USAGE_BRIEF = "``" + prefix + "destroy`` - Removes an entry from " +
                 scheduleChan + ".";
 
         String USAGE_EXAMPLES = "Ex1: **!destroy 084c**" +

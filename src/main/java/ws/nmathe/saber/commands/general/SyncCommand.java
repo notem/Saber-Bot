@@ -10,10 +10,24 @@ import ws.nmathe.saber.commands.Command;
 public class SyncCommand implements Command
 {
 
+    private String invoke = Main.getBotSettings().getCommandPrefix() + "sync";
+
     @Override
     public String help(boolean brief)
     {
-        return null;
+        String USAGE_EXTENDED = "Using ``" + invoke + " <channel> <calendar address>`` will replace all events in the specified channel" +
+                "with events imported from a public google calendar. The command imports the next 7 days of events into the channel;" +
+                " auto sync is planned but not yet implemented. You can find your google calendar's public URL address in the calendar's" +
+                " settings; provide the command with the full address.";
+
+        String USAGE_BRIEF = "``" + invoke + "`` - Sync a schedule channel to a public google calendar.";
+
+        String EXAMPLES = "Ex: ``" + invoke + " schedule_entries g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com``";
+
+        if( brief )
+            return USAGE_BRIEF;
+        else
+            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
 
     @Override

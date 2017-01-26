@@ -24,18 +24,18 @@ public class SetCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "**!set [option] \"new configuration\"**. Options are 'msg' " +
+        String USAGE_EXTENDED = "``" + invoke + " <option> <new configuration>``. Options are 'msg' " +
                 "(announcement message format), chan (announcement channel), zone (timezone to use), and clock " +
                 "('12' to use am/pm or '24' for full form). When creating a custom announcement message format the " +
                 "'%' acts as a delimiter for entry parameters such as the title or a comment. %t will cause the entry" +
                 " title to be inserted, %c[1-9] will cause the nth comment for the entry to be inserted, %a will insert" +
                 " 'begins' or 'ends', and %% will insert %.";
 
-        String USAGE_BRIEF = "**" + invoke + "** - Used to set guild-wide schedule botSettings.";
+        String USAGE_BRIEF = "``" + invoke + "`` - Used to set guild-wide schedule botSettings.";
 
-        String EXAMPLES = "Ex1: **" + invoke + " msg \"@here The event %t %a.\"**\n" +
-                "Ex2: **" + invoke + " msg \"@everyone %c1\"" +
-                "Ex3: **" + invoke + " chan \"event announcements\"**";
+        String EXAMPLES = "Ex1: ``" + invoke + " msg \"@here The event %t %a.\"``\n" +
+                "Ex2: ``" + invoke + " msg \"@everyone %c1\"``" +
+                "Ex3: ``" + invoke + " chan \"event announcements\"``";
 
         if( brief )
             return USAGE_BRIEF;
