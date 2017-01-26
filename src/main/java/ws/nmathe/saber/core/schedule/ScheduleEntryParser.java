@@ -216,7 +216,7 @@ public class ScheduleEntryParser
         return bits;
     }
 
-    private static String getRepeatString(int bitset)
+    static String getRepeatString(int bitset)
     {
         if( bitset == 0 )
             return "does not repeat";
