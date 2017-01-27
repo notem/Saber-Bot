@@ -7,9 +7,6 @@ import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.EmbedParser;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
-/**
- * Created by janedoe on 1/26/17.
- */
 public class AsEmbedCommand implements Command
 {
     private String prefix = Main.getBotSettings().getCommandPrefix();
@@ -36,8 +33,8 @@ public class AsEmbedCommand implements Command
             if( se==null)
                 return;
 
-            EmbedBuilder builder = EmbedParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(), se.getId(),
-                    se.getRepeat(), se.getMessage().getChannel().getId());
+            EmbedBuilder builder = EmbedParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
+                    se.getRepeat(), se.getId(), se.getMessage().getChannel().getId());
 
             event.getChannel().sendMessage(builder.build()).queue();
         }

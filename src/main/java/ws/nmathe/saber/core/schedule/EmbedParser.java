@@ -4,7 +4,6 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import ws.nmathe.saber.Main;
 
-import java.awt.*;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -42,7 +41,7 @@ public class EmbedParser
 
         String firstLine = ":calendar_spiral: ``" + eTitle + "``\n";
 
-        String secondLine = eStart.format(DateTimeFormatter.ofPattern("< MMMM d >"));
+        String secondLine = eStart.format(DateTimeFormatter.ofPattern("< MMM d >"));
         if( eStart.until(eEnd, ChronoUnit.SECONDS)==0 )
         {
             secondLine += " at " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
@@ -50,7 +49,7 @@ public class EmbedParser
         else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
         {
             secondLine += " from " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " to " + eEnd.format(DateTimeFormatter.ofPattern("< MMMM d >")) + " at " +
+                    " to " + eEnd.format(DateTimeFormatter.ofPattern("< MMM d >")) + " at " +
                     eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
         else
