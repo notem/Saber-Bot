@@ -36,23 +36,19 @@ public class GuildUtilities
             // ready a consumer to parseMsgFormat the history
             Consumer<List<Message>> cons = (l) ->
             {
-                int count = 0;
-                for (Message message : l)
+                channelSettingsManager.loadSettings(l.get(0));
+
+                for (int i = 1; i < l.size(); i++)
                 {
+                    Message message = l.get(i);
                     if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
                     {
-                        if (message.getRawContent().startsWith("```java") && count <= 1)
-                        {
-                            channelSettingsManager.loadSettings(message);
-                            count++;
-                        }
-                        else
-                            scheduleManager.addEntry(message);
+                        scheduleManager.addEntry(message);
                     } else
                         MessageUtilities.deleteMsg(message, null);
                 }
 
-                channelSettingsManager.checkChannel(chan);
+                channelSettingsManager.sendSettingsMsg(l.get(0).getChannel());
             };
 
             // retrieve history and have the consumer act on it

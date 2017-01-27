@@ -25,6 +25,13 @@ public class ScheduleEntryParser
     {
         try
         {
+            if( chanSetManager.getStyle(msg.getChannel().getId()).equals("embed") )
+            {
+                ScheduleEntry se = EmbedParser.parse(msg.getEmbeds().get(0), msg);
+                if( se != null )
+                    return se;
+            }
+
             String raw = msg.getRawContent();
 
             String eTitle;
@@ -125,7 +132,6 @@ public class ScheduleEntryParser
                 eEnd = eEnd.plusDays(1);
             }
 
-            // create a new thread
             return new ScheduleEntry(eTitle, eStart, eEnd, eComments, Id, msg, repeat);
         }
         catch( Exception e )
@@ -188,7 +194,7 @@ public class ScheduleEntryParser
         return msg;
     }
 
-    private static int getRepeatBits( String str )
+    static int getRepeatBits(String str)
     {
         if( str.equals("does not repeat") )
             return 0;

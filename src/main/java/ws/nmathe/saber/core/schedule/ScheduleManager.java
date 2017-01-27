@@ -1,5 +1,10 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Channel;
+import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
+import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
 
@@ -194,9 +199,20 @@ public class ScheduleManager
         ScheduleEntry se = getEntry( eId );
         if( se == null ) return;
 
-        String msg = ScheduleEntryParser.generate(se.getTitle(),se.getStart(),se.getEnd(),se.getComments(),se.getRepeat(),se.getId(),se.getMessage().getChannel().getId());
-        //MessageUtilities.editMsg( msg, se.getMessage(), (ignored)-> se.adjustTimer());
-        MessageUtilities.editMsg( msg, se.getMessage(), null);
+        MessageChannel chan = se.getMessage().getChannel();
+
+        if(Main.getChannelSettingsManager().getStyle(se.getMessage().getChannel().getId()).equals("plain"))
+        {
+            String msg = ScheduleEntryParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
+                    se.getRepeat(), se.getId(), se.getMessage().getChannel().getId());
+            MessageUtilities.deleteMsg(se.getMessage(), (ignored) -> MessageUtilities.sendMsg(msg, chan, null));
+        }
+        else
+        {
+            EmbedBuilder builder = EmbedParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
+                    se.getRepeat(), se.getId(), se.getMessage().getChannel().getId());
+            MessageUtilities.deleteMsg(se.getMessage(), (ignored) -> MessageUtilities.sendEmbedMsg(builder.build(), chan, null));
+        }
     }
 
     /**

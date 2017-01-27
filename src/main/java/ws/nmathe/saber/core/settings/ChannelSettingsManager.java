@@ -83,6 +83,16 @@ public class ChannelSettingsManager
         return settings.timeZone;
     }
 
+    public String getStyle(String cId)
+    {
+        ChannelSettings settings = settingsByChannel.get(cId);
+        if( settings == null )
+        {
+            return "plain";
+        }
+        return settings.messageStyle;
+    }
+
     public void setAnnounceChan(String cId, String chan )
     {
         settingsByChannel.get(cId).announceChannel = chan;
@@ -104,6 +114,12 @@ public class ChannelSettingsManager
     public void setTimeZone(String cId, ZoneId zone )
     {
         settingsByChannel.get(cId).timeZone = zone;
+        settingsByChannel.get(cId).reloadSettingsMsg();
+    }
+
+    public void setStyle(String cId, String style)
+    {
+        settingsByChannel.get(cId).messageStyle = style;
         settingsByChannel.get(cId).reloadSettingsMsg();
     }
 }

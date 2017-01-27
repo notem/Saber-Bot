@@ -1,7 +1,10 @@
 package ws.nmathe.saber.commands.general;
 
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.MessageEmbed;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.core.schedule.EmbedParser;
 import ws.nmathe.saber.core.schedule.ScheduleEntryParser;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import ws.nmathe.saber.utils.*;
@@ -250,17 +253,22 @@ public class CreateCommand implements Command
 
         Integer Id = schedManager.newId(null);
 
-        // generate the event entry message
-        String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, repeat, Id, scheduleChan.getId() );
-        __out.printOut(this.getClass(), scheduleChan.getName());
-
         String finalTitle = eTitle;     //  convert to effectively
         int finalRepeat = repeat;       //  final variables
         ZonedDateTime finalS = s;       //
         ZonedDateTime finalE = e;       //
 
-        MessageUtilities.sendMsg( msg,
-                scheduleChan,
-                (message)->schedManager.addEntry(finalTitle, finalS, finalE, eComments, Id, message, finalRepeat) );
+        if( Main.getChannelSettingsManager().getStyle(scheduleChan.getId()).equals("embed")) {
+            EmbedBuilder embed = EmbedParser.generate( eTitle, s, e, eComments, repeat, Id, scheduleChan.getId() );
+            MessageUtilities.sendEmbedMsg(embed.build(),
+                    scheduleChan,
+                    (message) -> schedManager.addEntry(finalTitle, finalS, finalE, eComments, Id, message, finalRepeat));
+        }
+        else {
+            String msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, repeat, Id, scheduleChan.getId() );
+            MessageUtilities.sendMsg(msg,
+                    scheduleChan,
+                    (message) -> schedManager.addEntry(finalTitle, finalS, finalE, eComments, Id, message, finalRepeat));
+        }
     }
 }

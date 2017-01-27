@@ -1,7 +1,9 @@
 package ws.nmathe.saber.utils;
 
+import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.User;
 import java.util.function.Consumer;
 
@@ -45,6 +47,19 @@ public class MessageUtilities
         }
     }
 
+
+    public static void sendEmbedMsg(MessageEmbed embed, MessageChannel chan, Consumer<Message> action )
+    {
+        try
+        {
+            chan.sendMessage(embed).queue( action );
+        }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
+    }
+
     /**
      * sends a message to a private message channel, opening the channel before use
      *
@@ -76,7 +91,20 @@ public class MessageUtilities
     {
         try
         {
-            msg.editMessage(content).queue( action );
+            msg.editMessage(new MessageBuilder().append(content).build()).queue( action );
+        }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
+    }
+
+
+    public static void editEmbedMsg(MessageEmbed embed, Message msg, Consumer<Message> action )
+    {
+        try
+        {
+            msg.editMessage(new MessageBuilder().setEmbed(embed).build()).queue( action );
         }
         catch( Exception e)
         {

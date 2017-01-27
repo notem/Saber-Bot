@@ -86,6 +86,12 @@ public class SetCommand implements Command
                     return "Argument **" + args[index] +  "** is not a valid option. Argument must be **24** " +
                             "or **12**";
                 break;
+
+            case "style" :
+                if( !args[index].equals("embed") && !args[index].equals("plain"))
+                    return "Argument **" + args[index] +  "** is not a valid option. Argument may be **embed** " +
+                            "or **plain**";
+                break;
         }
         return "";
     }
@@ -135,6 +141,17 @@ public class SetCommand implements Command
 
             case "clock":
                 chanSetManager.setClockFormat(scheduleChan.getId(), args[index]);
+
+                // reload the schedule
+                for (Integer id : schedManager.getEntriesByChannel(scheduleChan.getId()))
+                {
+                    schedManager.reloadEntry(id);
+                }
+                break;
+
+
+            case "style":
+                chanSetManager.setStyle(scheduleChan.getId(), args[index]);
 
                 // reload the schedule
                 for (Integer id : schedManager.getEntriesByChannel(scheduleChan.getId()))

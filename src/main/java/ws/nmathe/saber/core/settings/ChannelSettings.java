@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.settings;
 
+import net.dv8tion.jda.core.EmbedBuilder;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.__out;
@@ -13,19 +14,15 @@ import java.time.ZoneId;
  */
 class ChannelSettings
 {
-    String announceChannel;
-    String announceFormat;
-    ZoneId timeZone;
-    String clockFormat;
+    String announceChannel = Main.getBotSettings().getAnnounceChan();;
+    String announceFormat = Main.getBotSettings().getAnnounceFormat();
+    ZoneId timeZone = ZoneId.of(Main.getBotSettings().getTimeZone());
+    String clockFormat = Main.getBotSettings().getClockFormat();
+    String messageStyle = "plain";
     private Message msg;
 
     ChannelSettings(MessageChannel channel)
     {
-        this.announceChannel = Main.getBotSettings().getAnnounceChan();
-        this.announceFormat = Main.getBotSettings().getAnnounceFormat();
-        this.timeZone = ZoneId.of(Main.getBotSettings().getTimeZone());
-        this.clockFormat = Main.getBotSettings().getClockFormat();
-
         try
         {
             this.msg = channel.sendMessage(this.generateSettingsMsg()).block();
@@ -38,7 +35,13 @@ class ChannelSettings
 
     ChannelSettings(Message msg)
     {
-        String trimmed = msg.getRawContent().replace("```java\n","").replace("\n```","");
+        String raw;
+        if(msg.getEmbeds().isEmpty())
+            raw = msg.getRawContent();
+        else
+            raw = msg.getEmbeds().get(0).getDescription();
+
+        String trimmed = raw.replace("```java\n", "").replace("\n```", "");
         String[] options = trimmed.split(" \\| ");
 
         for( String option : options )
@@ -58,6 +61,9 @@ class ChannelSettings
                 case "clock":
                     this.clockFormat = splt[1].replaceAll("\"","");
                     break;
+                case "style":
+                    this.messageStyle = splt[1].replaceAll("\"","");
+                    break;
             }
         }
 
@@ -71,7 +77,8 @@ class ChannelSettings
                 " | msg:\"" + this.announceFormat + "\"" +
                 " | chan:\"" + this.announceChannel + "\"" +
                 " | zone:\"" + this.timeZone + "\"" +
-                " | clock:\"" + this.clockFormat + "\"";
+                " | clock:\"" + this.clockFormat + "\"" +
+                " | style:\"" + this.messageStyle + "\"";
         msg += "\n```";
         return msg;
     }
@@ -79,8 +86,19 @@ class ChannelSettings
     void reloadSettingsMsg()
     {
         TextChannel scheduleChan = this.msg.getTextChannel();
-        MessageUtilities.deleteMsg(this.msg, (x) ->
-                MessageUtilities.sendMsg(this.generateSettingsMsg(), scheduleChan, (message) -> this.msg = message)
-        );
+        if( this.messageStyle.equals("plain") )
+        {
+            MessageUtilities.deleteMsg(this.msg, (x) ->
+                    MessageUtilities.sendMsg(this.generateSettingsMsg(), scheduleChan, (message) -> this.msg = message)
+            );
+        }
+        else if( this.messageStyle.equals("embed") )
+        {
+            MessageUtilities.deleteMsg(this.msg, (x) ->
+                    MessageUtilities.sendEmbedMsg(
+                            new EmbedBuilder().setDescription(this.generateSettingsMsg()).build(),
+                            scheduleChan, (message) -> this.msg = message)
+            );
+        }
     }
 }

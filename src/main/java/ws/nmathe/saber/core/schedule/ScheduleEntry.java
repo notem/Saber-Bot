@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.core.EmbedBuilder;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.settings.ChannelSettingsManager;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -129,11 +130,17 @@ public class ScheduleEntry
      */
     public void adjustTimer()
     {
+        String raw;
+        if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("embed"))
+            raw = this.eMsg.getEmbeds().get(0).getDescription();
+        else
+            raw = this.eMsg.getRawContent();
+
        // convert the times into integers representing the time in seconds
        long timeTilStart = ZonedDateTime.now().until(this.eStart, SECONDS);
        long timeTilEnd = this.eStart.until(this.eEnd, SECONDS);
 
-       String[] lines = this.eMsg.getContent().split("\n");
+       String[] lines = raw.split("\n");
 
        if( !this.hasStarted() )
        {
@@ -146,7 +153,12 @@ public class ScheduleEntry
                else
                    newline += "in " + minutesTil + " minutes.)";
 
-               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
+                    MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               else
+                   MessageUtilities.editEmbedMsg(
+                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
+                           this.eMsg, null );
            }
            else if( timeTilStart < 24 * 60 * 60 )
            {
@@ -157,7 +169,12 @@ public class ScheduleEntry
                else
                    newline += "in " + hoursTil + " hours.)";
 
-               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
+                   MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               else
+                   MessageUtilities.editEmbedMsg(
+                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
+                           this.eMsg, null );
            }
            else
            {
@@ -169,7 +186,12 @@ public class ScheduleEntry
                else
                    newline += "in " + daysTil + " days.)";
 
-               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
+                   MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               else
+                   MessageUtilities.editEmbedMsg(
+                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
+                           this.eMsg, null );
            }
        }
        else // if the event has started
@@ -183,7 +205,12 @@ public class ScheduleEntry
                else
                    newline += "in " + minutesTil + " minutes.)";
 
-               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
+                   MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               else
+                   MessageUtilities.editEmbedMsg(
+                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
+                           this.eMsg, null );
            }
 
            else
@@ -195,7 +222,12 @@ public class ScheduleEntry
                else
                    newline += "in " + hoursTil + " hours.)";
 
-               MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
+                   MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               else
+                   MessageUtilities.editEmbedMsg(
+                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
+                           this.eMsg, null );
            }
        }
     }
