@@ -1,5 +1,6 @@
 package ws.nmathe.saber.commands.general;
 
+import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -221,7 +222,7 @@ public class EditCommand implements Command
         }
 
 
-        String msg;
+        Message msg;
         synchronized( schedManager.getScheduleLock() )
         {
             msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, entry.getMessage().getChannel().getId());

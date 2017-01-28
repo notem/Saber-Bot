@@ -3,6 +3,7 @@ package ws.nmathe.saber.core.google;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -149,7 +150,7 @@ public class CalendarConverter
             }
 
             int id = Main.getScheduleManager().newId( null );
-            String msg = ScheduleEntryParser.generate( title, start, end, comments, repeat, id, channel.getId());
+            Message msg = ScheduleEntryParser.generate( title, start, end, comments, repeat, id, channel.getId());
 
             int finalRepeat = repeat;
             MessageUtilities.sendMsg( msg, channel, (message) ->

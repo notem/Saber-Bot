@@ -1,6 +1,7 @@
 package ws.nmathe.saber.core.settings;
 
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.MessageBuilder;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.__out;
@@ -14,11 +15,11 @@ import java.time.ZoneId;
  */
 class ChannelSettings
 {
-    String announceChannel = Main.getBotSettings().getAnnounceChan();;
-    String announceFormat = Main.getBotSettings().getAnnounceFormat();
-    ZoneId timeZone = ZoneId.of(Main.getBotSettings().getTimeZone());
-    String clockFormat = Main.getBotSettings().getClockFormat();
-    String messageStyle = "plain";
+    String announceChannel = Main.getBotSettings().getAnnounceChan();   //
+    String announceFormat = Main.getBotSettings().getAnnounceFormat();  //
+    ZoneId timeZone = ZoneId.of(Main.getBotSettings().getTimeZone());   // defaults
+    String clockFormat = Main.getBotSettings().getClockFormat();        //
+    String messageStyle = "embed";                                      //
     private Message msg;
 
     ChannelSettings(MessageChannel channel)
@@ -95,10 +96,10 @@ class ChannelSettings
         else if( this.messageStyle.equals("embed") )
         {
             MessageUtilities.deleteMsg(this.msg, (x) ->
-                    MessageUtilities.sendEmbedMsg(
-                            new EmbedBuilder().setDescription(this.generateSettingsMsg()).build(),
-                            scheduleChan, (message) -> this.msg = message)
-            );
+            {
+                MessageEmbed embed = new EmbedBuilder().setDescription(this.generateSettingsMsg()).build();
+                MessageUtilities.sendMsg( new MessageBuilder().setEmbed(embed).build(),scheduleChan, (message)-> this.msg = message);
+            });
         }
     }
 }

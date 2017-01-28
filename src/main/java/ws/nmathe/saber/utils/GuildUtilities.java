@@ -2,10 +2,7 @@ package ws.nmathe.saber.utils;
 
 import net.dv8tion.jda.core.MessageHistory;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.*;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import ws.nmathe.saber.core.settings.ChannelSettingsManager;
@@ -22,38 +19,44 @@ public class GuildUtilities
 {
     public static void loadScheduleChannels(Guild guild)
     {
-        ScheduleManager scheduleManager = Main.getScheduleManager();
-        ChannelSettingsManager channelSettingsManager = Main.getChannelSettingsManager();
-        int maxEntries = Main.getBotSettings().getMaxEntries();
-
         Collection<TextChannel> chans = getValidScheduleChannels(guild);
 
         // parseMsgFormat the history of each schedule channel
         for (TextChannel chan : chans)
         {
-            MessageHistory history = chan.getHistory();
-
-            // ready a consumer to parseMsgFormat the history
-            Consumer<List<Message>> cons = (l) ->
-            {
-                channelSettingsManager.loadSettings(l.get(0));
-
-                for (int i = 1; i < l.size(); i++)
-                {
-                    Message message = l.get(i);
-                    if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
-                    {
-                        scheduleManager.addEntry(message);
-                    } else
-                        MessageUtilities.deleteMsg(message, null);
-                }
-
-                channelSettingsManager.sendSettingsMsg(l.get(0).getChannel());
-            };
-
-            // retrieve history and have the consumer act on it
-            history.retrievePast((maxEntries >= 0) ? maxEntries * 2 : 50).queue(cons);
+            loadScheduleChannel(chan);
         }
+    }
+
+    public static void loadScheduleChannel(TextChannel chan)
+    {
+        ScheduleManager schedManager = Main.getScheduleManager();
+        ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
+        int maxEntries = Main.getBotSettings().getMaxEntries();
+
+        MessageHistory history = chan.getHistory();
+
+        // ready a consumer to parseMsgFormat the history
+        Consumer<List<Message>> cons = (l) ->
+        {
+            chanSetManager.loadSettings(l.get(0));
+
+            for (int i = 1; i < l.size(); i++)
+            {
+                Message message = l.get(i);
+                if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
+                {
+                    schedManager.addEntry(message);
+                } else
+                    MessageUtilities.deleteMsg(message, null);
+            }
+
+            chanSetManager.sendSettingsMsg(l.get(0).getChannel());
+        };
+
+        // retrieve history and have the consumer act on it
+        history.retrievePast((maxEntries >= 0) ? maxEntries * 2 : 50).queue(cons);
+
     }
 
     public static List<TextChannel> getValidScheduleChannels(Guild guild)

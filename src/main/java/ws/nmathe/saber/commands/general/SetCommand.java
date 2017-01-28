@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.utils.GuildUtilities;
 
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -77,8 +78,13 @@ public class SetCommand implements Command
                 break;
 
             case "zone" :
-                if( ZoneId.of(args[index]) == null )
+                try
+                {
+                    ZoneId.of(args[index]);
+                } catch(Exception e)
+                {
                     return "Argument **" + args[index] +  "** is not a valid timezone";
+                }
                 break;
 
             case "clock" :
@@ -92,6 +98,8 @@ public class SetCommand implements Command
                     return "Argument **" + args[index] +  "** is not a valid option. Argument may be **embed** " +
                             "or **plain**";
                 break;
+            default:
+                return "Argument **" + args[index-1] + "** is not a configurable setting!";
         }
         return "";
     }

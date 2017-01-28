@@ -88,7 +88,7 @@ public class ChannelSettingsManager
         ChannelSettings settings = settingsByChannel.get(cId);
         if( settings == null )
         {
-            return "plain";
+            return "embed";
         }
         return settings.messageStyle;
     }

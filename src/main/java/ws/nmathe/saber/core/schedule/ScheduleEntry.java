@@ -98,7 +98,7 @@ public class ScheduleEntry
 
         if( this.eRepeat != 0 ) // find next repeat date and edit the message
         {
-            int days = this.daysUntilNextOccurence();
+            int days = this.daysUntilNextOccurrence();
 
             // fixes wrap-around at new years
             ZonedDateTime newStart = this.eStart.plusDays(days).isAfter(this.eStart) ?
@@ -106,7 +106,7 @@ public class ScheduleEntry
             ZonedDateTime newEnd = this.eEnd.plusDays(days).isAfter(this.eEnd) ?
                     this.eEnd.plusDays(days) : this.eEnd.plusDays(days).plusYears(1);
 
-            String msg = ScheduleEntryParser.generate(
+            Message msg = ScheduleEntryParser.generate(
                     this.eTitle,
                     newStart,
                     newEnd,
@@ -247,7 +247,7 @@ public class ScheduleEntry
         return msg;
     }
 
-    private int daysUntilNextOccurence()
+    private int daysUntilNextOccurrence()
     {
         int dayOfWeek = ZonedDateTime.now().getDayOfWeek().getValue();
         int dayAsBitSet;
@@ -310,6 +310,11 @@ public class ScheduleEntry
     public Message getMessage()
     {
         return this.eMsg;
+    }
+
+    public void setMessage(Message message)
+    {
+        this.eMsg = message;
     }
 
     public void setZone(ZoneId zone)

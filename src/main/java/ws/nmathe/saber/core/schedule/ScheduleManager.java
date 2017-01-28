@@ -1,9 +1,7 @@
 package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
@@ -18,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Manage's the schedule of ScheduleEntries for all attached guilds
@@ -75,10 +72,11 @@ public class ScheduleManager
         if( se == null ) return;    // end early if parsing failed
 
         // regenerate the entry on the off chance the Id was changed
-        String msg = ScheduleEntryParser.generate(se.getTitle(),se.getStart(),se.getEnd(),se.getComments(),se.getRepeat(),se.getId(),se.getMessage().getChannel().getId());
+        Message msg = ScheduleEntryParser.generate(se.getTitle(),se.getStart(),se.getEnd(),se.getComments(),
+                se.getRepeat(),se.getId(),se.getMessage().getChannel().getId());
         MessageUtilities.editMsg( msg, se.getMessage(), null);
 
-        addEntryWrapped(message, se);
+        this.addEntryWrapped(message, se);
     }
 
     /**
@@ -200,19 +198,10 @@ public class ScheduleManager
         if( se == null ) return;
 
         MessageChannel chan = se.getMessage().getChannel();
+        Message message = ScheduleEntryParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
+                se.getRepeat(), se.getId(), se.getMessage().getChannel().getId());
 
-        if(Main.getChannelSettingsManager().getStyle(se.getMessage().getChannel().getId()).equals("plain"))
-        {
-            String msg = ScheduleEntryParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
-                    se.getRepeat(), se.getId(), se.getMessage().getChannel().getId());
-            MessageUtilities.deleteMsg(se.getMessage(), (ignored) -> MessageUtilities.sendMsg(msg, chan, null));
-        }
-        else
-        {
-            EmbedBuilder builder = EmbedParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
-                    se.getRepeat(), se.getId(), se.getMessage().getChannel().getId());
-            MessageUtilities.deleteMsg(se.getMessage(), (ignored) -> MessageUtilities.sendEmbedMsg(builder.build(), chan, null));
-        }
+        MessageUtilities.deleteMsg(se.getMessage(), (ignored) -> MessageUtilities.sendMsg(message, chan, se::setMessage));
     }
 
     /**

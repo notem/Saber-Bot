@@ -34,25 +34,11 @@ public class MessageUtilities
         }
     }
 
-    public static Message sendMsg( String content, MessageChannel chan )
+    public static void sendMsg(Message message, MessageChannel chan, Consumer<Message> action )
     {
         try
         {
-            return chan.sendMessage(content).block();
-        }
-        catch( Exception e)
-        {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
-            return null;
-        }
-    }
-
-
-    public static void sendEmbedMsg(MessageEmbed embed, MessageChannel chan, Consumer<Message> action )
-    {
-        try
-        {
-            chan.sendMessage(embed).queue( action );
+            chan.sendMessage(message).queue( action );
         }
         catch( Exception e)
         {
@@ -91,7 +77,7 @@ public class MessageUtilities
     {
         try
         {
-            msg.editMessage(new MessageBuilder().append(content).build()).queue( action );
+            msg.editMessage(content).queue( action );
         }
         catch( Exception e)
         {
@@ -99,8 +85,19 @@ public class MessageUtilities
         }
     }
 
+    public static void editMsg(Message newMsg, Message msg, Consumer<Message> action )
+    {
+        try
+        {
+            msg.editMessage(newMsg).queue( action );
+        }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
+    }
 
-    public static void editEmbedMsg(MessageEmbed embed, Message msg, Consumer<Message> action )
+    public static void editEmbedMsg(MessageEmbed embed, Message msg, Consumer<Message> action)
     {
         try
         {
@@ -112,8 +109,10 @@ public class MessageUtilities
         }
     }
 
+
+
     /**
-     * attempts to remove a message
+     * attempts to remove a message, asynchronous (non-blocking)
      *
      * @param msg the message to delete
      * @param action a non null Consumer will do operations on the results returned
@@ -130,15 +129,22 @@ public class MessageUtilities
         }
     }
 
-    public static void deleteMsg( Message msg )
+    /**
+     * attempts to remove a message, synchronous (blocking)
+     *
+     * @param msg the message to delete
+     * @return results of message delete
+     */
+    public static Void deleteMsg(Message msg )
     {
         try
         {
-            msg.deleteMessage().block();
+            return msg.deleteMessage().block();
         }
         catch( Exception e)
         {
             __out.printOut( MessageUtilities.class, e.getMessage() );
+            return null;
         }
     }
 }
