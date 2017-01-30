@@ -70,6 +70,14 @@ class ScheduleChecker implements Runnable
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.getId()) + ". Starting in " +
                 now.until(entry.getStart(), SECONDS) + ": ending in " + now.until(entry.getEnd(),SECONDS) );
 
+        if( entry.getMessageObject()==null )
+        {
+            synchronized(Main.getScheduleManager().getScheduleLock())
+            {
+                Main.getScheduleManager().removeEntry(entry.getId());
+            }
+        }
+
         if (!entry.hasStarted())
         {
             if ( now.until(entry.getStart(), SECONDS) <= 0 )
@@ -104,6 +112,15 @@ class ScheduleChecker implements Runnable
     {
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.getId()) + "." );
         ZonedDateTime now = ZonedDateTime.now();
+
+        if( entry.getMessageObject()==null )
+        {
+            synchronized(Main.getScheduleManager().getScheduleLock())
+            {
+                Main.getScheduleManager().removeEntry(entry.getId());
+            }
+        }
+
         if (!entry.hasStarted())
         {
             if( now.until(entry.getStart(), SECONDS) < 60*60 )
@@ -134,6 +151,15 @@ class ScheduleChecker implements Runnable
     {
         __out.printOut( this.getClass(), "Processing " + Integer.toHexString(entry.getId()) + "." );
         ZonedDateTime now = ZonedDateTime.now();
+
+        if( entry.getMessageObject()==null )
+        {
+            synchronized(Main.getScheduleManager().getScheduleLock())
+            {
+                Main.getScheduleManager().removeEntry(entry.getId());
+            }
+        }
+
         if (!entry.hasStarted())
         {
             if( now.until(entry.getStart(), SECONDS) < 60*60 )

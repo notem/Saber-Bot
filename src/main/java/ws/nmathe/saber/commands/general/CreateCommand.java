@@ -256,9 +256,14 @@ public class CreateCommand implements Command
         int finalRepeat = repeat;       //  final variables
         ZonedDateTime finalS = s;       //
         ZonedDateTime finalE = e;       //
+        TextChannel finalScheduleChan = scheduleChan;
 
         Message msg = ScheduleEntryParser.generate( eTitle, s, e, eComments, repeat, Id, scheduleChan.getId() );
         MessageUtilities.sendMsg(msg, scheduleChan,
-                (message) -> schedManager.addEntry(finalTitle, finalS, finalE, eComments, Id, message, finalRepeat));
+                (message) -> {
+                    schedManager.addEntry(finalTitle, finalS, finalE, eComments, Id, message, finalRepeat);
+                    Main.getChannelSettingsManager().sendSettingsMsg(finalScheduleChan);
+                });
+
     }
 }

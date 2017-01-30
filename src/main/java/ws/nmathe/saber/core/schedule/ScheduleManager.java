@@ -1,7 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
@@ -72,9 +71,9 @@ public class ScheduleManager
         if( se == null ) return;    // end early if parsing failed
 
         // regenerate the entry on the off chance the Id was changed
-        Message msg = ScheduleEntryParser.generate(se.getTitle(),se.getStart(),se.getEnd(),se.getComments(),
-                se.getRepeat(),se.getId(),se.getMessage().getChannel().getId());
-        MessageUtilities.editMsg( msg, se.getMessage(), null);
+        Message msgContent = ScheduleEntryParser.generate(se.getTitle(),se.getStart(),se.getEnd(),se.getComments(),
+                se.getRepeat(),se.getId(), message.getChannel().getId());
+        MessageUtilities.editMsg( msgContent, message, null);
 
         this.addEntryWrapped(message, se);
     }
@@ -88,14 +87,14 @@ public class ScheduleManager
      * @param end the entry's ZoneDateTime end
      * @param comments list of comment strings
      * @param Id the integer Id of the entry
-     * @param message the discord Message that contains the entry's information
+     * @param msg the discord Message that contains the entry's information
      * @param repeat integer repeat settings
      */
-    public void addEntry(String title, ZonedDateTime start, ZonedDateTime end, ArrayList<String> comments, Integer Id, Message message, int repeat)
+    public void addEntry(String title, ZonedDateTime start, ZonedDateTime end, ArrayList<String> comments, Integer Id, Message msg, int repeat)
     {
-        ScheduleEntry se = new ScheduleEntry( title, start, end, comments, Id, message, repeat);
+        ScheduleEntry se = new ScheduleEntry( Id, title, start, end, comments, repeat, msg.getId(), msg.getChannel().getId(), msg.getGuild().getId());
 
-        this.addEntryWrapped(message, se);
+        this.addEntryWrapped(msg, se);
     }
 
     private void addEntryWrapped(Message message, ScheduleEntry se)
@@ -155,8 +154,12 @@ public class ScheduleManager
         ScheduleEntry se = this.getEntry( eId );
         if( se == null ) return;
 
-        String gId = se.getMessage().getGuild().getId();
-        String cId = se.getMessage().getChannel().getId();
+        Message msg = se.getMessageObject();
+        if( msg==null )
+            return;
+
+        String gId = msg.getGuild().getId();
+        String cId = msg.getChannel().getId();
 
         // remove entry from guild map
         entriesByGuild.get(gId).remove(eId);
@@ -197,11 +200,18 @@ public class ScheduleManager
         ScheduleEntry se = getEntry( eId );
         if( se == null ) return;
 
-        MessageChannel chan = se.getMessage().getChannel();
-        Message message = ScheduleEntryParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
-                se.getRepeat(), se.getId(), se.getMessage().getChannel().getId());
+        Message msg = se.getMessageObject();
+        if( msg==null )
+            return;
 
-        MessageUtilities.deleteMsg(se.getMessage(), (ignored) -> MessageUtilities.sendMsg(message, chan, se::setMessage));
+        TextChannel chan =  msg.getTextChannel();
+        Message message = ScheduleEntryParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
+                se.getRepeat(), se.getId(), chan.getId());
+
+        MessageUtilities.deleteMsg(msg, (ignored) -> MessageUtilities.sendMsg(message, chan, (mssg)-> {
+            se.setMessageObject(mssg);
+            Main.getChannelSettingsManager().sendSettingsMsg(chan);
+        }));
     }
 
     /**

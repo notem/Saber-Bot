@@ -58,7 +58,7 @@ public class QueryCommand implements Command
                 else
                 {
                     msg = "Entry " + Integer.toHexString( entry.getId() ) + " belongs to " +
-                            entry.getMessage().getGuild().getName() + "(" + entry.getMessage().getGuild().getId() + ")" + ".\n" +
+                            entry.getMessageObject().getGuild().getName() + "(" + entry.getMessageObject().getGuild().getId() + ")" + ".\n" +
                             "\t\tTitle = '" + entry.getTitle() + "'\n" +
                             "\t\tStart = " + entry.getStart() + "'\n" +
                             "\t\tEnd = '" + entry.getEnd() + "'\n" +

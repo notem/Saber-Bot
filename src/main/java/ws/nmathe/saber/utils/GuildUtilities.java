@@ -51,7 +51,7 @@ public class GuildUtilities
                     MessageUtilities.deleteMsg(message, null);
             }
 
-            chanSetManager.sendSettingsMsg(l.get(0).getChannel());
+            chanSetManager.sendSettingsMsg(chan);
         };
 
         // retrieve history and have the consumer act on it

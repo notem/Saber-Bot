@@ -8,6 +8,7 @@ import ws.nmathe.saber.utils.ParsingUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import ws.nmathe.saber.utils.__out;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -18,32 +19,39 @@ import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
- * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
+ * A SchedulentryEndtry object represents a currently scheduled entry is either waiting to start or has already started
  * start and end functions are to be triggered upon the scheduled starting time and ending time.
  * adjustTimer is used to update the displayed 'time until' timer
  */
 public class ScheduleEntry
 {
-    private String eTitle;                    // the title/name of the event
-    private ZonedDateTime eStart;             // the time when the event starts
-    private ZonedDateTime eEnd;               // the ending time
-    private ArrayList<String> eComments;      // ArrayList of strings that make up the desc
-    private Integer eID;                      // 16 bit identifier
-    private Integer eRepeat;                      // 1 is daily, 2 is weekly, 0 is not at all
-    private Message eMsg;                     // reference to the discord message shedule entry
+    private Integer entryId;                      // 16 bit identifier
+    private String entryTitle;                    // the title/name of the event
+    private ZonedDateTime entryStart;             // the time when the event starts
+    private ZonedDateTime entryEnd;               // the ending time
+    private ArrayList<String> entryComments;      // ArrayList of strings that make up the desc
+    private Integer entryRepeat;                  // 1 is daily, 2 is weekly, 0 is not at all
+
+    private String msgId;
+    private String chanId;
+    private String guildId;
 
     private ScheduleManager schedManager = Main.getScheduleManager();
     private ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
 
-    public ScheduleEntry(String eName, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments, Integer eID, Message eMsg, int eRepeat )
+    public ScheduleEntry(Integer eId, String eName, ZonedDateTime entryStart, ZonedDateTime entryEnd,
+                         ArrayList<String> eComments, int eRepeat, String msgId, String chanId, String guildId )
     {
-        this.eTitle = eName;
-        this.eStart = eStart;
-        this.eEnd = eEnd;
-        this.eComments = eComments;
-        this.eID = eID;
-        this.eMsg = eMsg;
-        this.eRepeat = eRepeat;
+        this.entryId = eId;
+        this.entryTitle = eName;
+        this.entryStart = entryStart;
+        this.entryEnd = entryEnd;
+        this.entryComments = eComments;
+        this.entryRepeat = eRepeat;
+
+        this.msgId = msgId;
+        this.chanId = chanId;
+        this.guildId = guildId;
     }
 
     /**
@@ -51,7 +59,7 @@ public class ScheduleEntry
      */
     public boolean hasStarted()
     {
-        return ZonedDateTime.now().isAfter(eStart);
+        return ZonedDateTime.now().isAfter(entryStart);
     }
 
     /**
@@ -59,16 +67,20 @@ public class ScheduleEntry
      */
     public void start()
     {
-        if( this.eStart.equals(this.eEnd) )
+        Message msg = this.getMessageObject();
+        if( msg == null )
+            return;
+
+        if( this.entryStart.equals(this.entryEnd) )
         {
             this.end();
             return;
         }
 
-        Guild guild = this.eMsg.getGuild();
-        String startMsg = ParsingUtilities.parseMsgFormat( chanSetManager.getAnnounceFormat(this.eMsg.getChannel().getId()), this );
+        Guild guild = msg.getGuild();
+        String startMsg = ParsingUtilities.parseMsgFormat( chanSetManager.getAnnounceFormat(this.chanId), this );
 
-        Collection<TextChannel> chans = guild.getTextChannelsByName(chanSetManager.getAnnounceChan(this.eMsg.getChannel().getId()), true);
+        Collection<TextChannel> chans = guild.getTextChannelsByName(chanSetManager.getAnnounceChan(this.chanId), true);
         for( TextChannel chan : chans )
         {
             MessageUtilities.sendMsg(startMsg, chan, null);
@@ -82,10 +94,14 @@ public class ScheduleEntry
      */
     public void end()
     {
-        Guild guild = this.eMsg.getGuild();
-        String endMsg = ParsingUtilities.parseMsgFormat( chanSetManager.getAnnounceFormat(this.eMsg.getChannel().getId()), this );
+        Message eMsg = this.getMessageObject();
+        if( eMsg==null )
+            return;
 
-        Collection<TextChannel> chans = guild.getTextChannelsByName(chanSetManager.getAnnounceChan(this.eMsg.getChannel().getId()), true);
+        Guild guild = eMsg.getGuild();
+        String endMsg = ParsingUtilities.parseMsgFormat( chanSetManager.getAnnounceFormat(this.chanId), this );
+
+        Collection<TextChannel> chans = guild.getTextChannelsByName(chanSetManager.getAnnounceChan(this.chanId), true);
         for( TextChannel chan : chans )
         {
             MessageUtilities.sendMsg(endMsg, chan, null);
@@ -93,34 +109,34 @@ public class ScheduleEntry
 
         synchronized( schedManager.getScheduleLock() )
         {
-            schedManager.removeEntry(this.eID);
+            schedManager.removeEntry(this.entryId);
         }
 
-        if( this.eRepeat != 0 ) // find next repeat date and edit the message
+        if( this.entryRepeat != 0 ) // find next repeat date and edit the message
         {
             int days = this.daysUntilNextOccurrence();
 
             // fixes wrap-around at new years
-            ZonedDateTime newStart = this.eStart.plusDays(days).isAfter(this.eStart) ?
-                            this.eStart.plusDays(days) : this.eStart.plusDays(days).plusYears(1);
-            ZonedDateTime newEnd = this.eEnd.plusDays(days).isAfter(this.eEnd) ?
-                    this.eEnd.plusDays(days) : this.eEnd.plusDays(days).plusYears(1);
+            ZonedDateTime newStart = this.entryStart.plusDays(days).isAfter(this.entryStart) ?
+                            this.entryStart.plusDays(days) : this.entryStart.plusDays(days).plusYears(1);
+            ZonedDateTime newEnd = this.entryEnd.plusDays(days).isAfter(this.entryEnd) ?
+                    this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
 
-            Message msg = ScheduleEntryParser.generate(
-                    this.eTitle,
+            Message msgContent = ScheduleEntryParser.generate(
+                    this.entryTitle,
                     newStart,
                     newEnd,
-                    this.eComments,
-                    this.eRepeat,
-                    this.eID,
-                    this.eMsg.getChannel().getId()
+                    this.entryComments,
+                    this.entryRepeat,
+                    this.entryId,
+                    this.chanId
             );
 
-            MessageUtilities.editMsg(msg, this.eMsg, schedManager::addEntry);
+            MessageUtilities.editMsg(msgContent, eMsg, schedManager::addEntry);
         }
         else // otherwise delete the message
         {
-            MessageUtilities.deleteMsg( this.eMsg, null );
+            MessageUtilities.deleteMsg( eMsg, null );
         }
     }
 
@@ -130,68 +146,52 @@ public class ScheduleEntry
      */
     public void adjustTimer()
     {
+        Message msg = this.getMessageObject();
+        if( msg == null )
+            return;
+
         String raw;
-        if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("embed"))
-            raw = this.eMsg.getEmbeds().get(0).getDescription();
+        if(chanSetManager.getStyle(msg.getChannel().getId()).equals("embed"))
+            raw = msg.getEmbeds().get(0).getDescription();
         else
-            raw = this.eMsg.getRawContent();
+            raw = msg.getRawContent();
 
        // convert the times into integers representing the time in seconds
-       long timeTilStart = ZonedDateTime.now().until(this.eStart, SECONDS);
-       long timeTilEnd = ZonedDateTime.now().until(this.eEnd, SECONDS);
+       long timeTilStart = ZonedDateTime.now().until(this.entryStart, SECONDS);
+       long timeTilEnd = ZonedDateTime.now().until(this.entryEnd, SECONDS);
 
        String[] lines = raw.split("\n");
+       String newline;
 
        if( !this.hasStarted() )
        {
            if( timeTilStart < 60 * 60 )
            {
                int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
-               String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
+               newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
                if( minutesTil <= 1)
                    newline += "in a minute.)";
                else
                    newline += "in " + minutesTil + " minutes.)";
-
-               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
-                    MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
-               else
-                   MessageUtilities.editEmbedMsg(
-                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
-                           this.eMsg, null );
            }
            else if( timeTilStart < 24 * 60 * 60 )
            {
                int hoursTil = (int)Math.ceil((double)timeTilStart/(60*60));
-               String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
+               newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
                if( hoursTil <= 1)
                    newline += "within the hour.)";
                else
                    newline += "in " + hoursTil + " hours.)";
-
-               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
-                   MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
-               else
-                   MessageUtilities.editEmbedMsg(
-                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
-                           this.eMsg, null );
            }
            else
            {
-               int daysTil = (int) DAYS.between(ZonedDateTime.now(this.eStart.getZone()), eStart);
+               int daysTil = (int) DAYS.between(ZonedDateTime.now(this.entryStart.getZone()), this.entryStart);
 
-               String newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
+               newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
                if( daysTil <= 1)
                    newline += "tomorrow.)";
                else
                    newline += "in " + daysTil + " days.)";
-
-               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
-                   MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
-               else
-                   MessageUtilities.editEmbedMsg(
-                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
-                           this.eMsg, null );
            }
        }
        else // if the event has started
@@ -199,37 +199,40 @@ public class ScheduleEntry
            if( timeTilEnd < 30*60 )
            {
                int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
-               String newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
+               newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
                if( minutesTil <= 1)
                    newline += "in a minute.)";
                else
                    newline += "in " + minutesTil + " minutes.)";
-
-               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
-                   MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
-               else
-                   MessageUtilities.editEmbedMsg(
-                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
-                           this.eMsg, null );
            }
 
-           else
+           else if( timeTilEnd < 24 * 60 * 60 )
            {
                int hoursTil = (int)Math.ceil((double)timeTilEnd/(60*60));
-               String newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
+               newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
                if( hoursTil <= 1)
                    newline += "within one hour.)";
                else
                    newline += "in " + hoursTil + " hours.)";
+           }
+           else
+           {
+               int daysTil = (int) DAYS.between(ZonedDateTime.now(), this.entryEnd);
 
-               if(chanSetManager.getStyle(eMsg.getChannel().getId()).equals("plain"))
-                   MessageUtilities.editMsg( adjustTimerHelper(lines,newline), this.eMsg, null );
+               newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
+               if( daysTil <= 1)
+                   newline += "tomorrow.)";
                else
-                   MessageUtilities.editEmbedMsg(
-                           new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
-                           this.eMsg, null );
+                   newline += "in " + daysTil + " days.)";
            }
        }
+        if(chanSetManager.getStyle(this.chanId).equals("plain"))
+            MessageUtilities.editMsg( adjustTimerHelper(lines,newline), msg, null );
+        else
+            MessageUtilities.editEmbedMsg(
+                    new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
+                    msg,
+                    null);
     }
 
     private String adjustTimerHelper( String[] lines, String newline )
@@ -257,7 +260,7 @@ public class ScheduleEntry
             dayAsBitSet = 1<<dayOfWeek;
 
         int daysTil = 0;
-        if( (dayAsBitSet & this.eRepeat) == dayAsBitSet )
+        if( (dayAsBitSet & this.entryRepeat) == dayAsBitSet )
             daysTil = 7;
 
         for( int i = 1; i < 7; i++)
@@ -267,7 +270,7 @@ public class ScheduleEntry
             else
                 dayAsBitSet <<= i;     // else, set to the next day
 
-            if( (dayAsBitSet & this.eRepeat) == dayAsBitSet )
+            if( (dayAsBitSet & this.entryRepeat) == dayAsBitSet )
             {
                 daysTil = i;
                 break;
@@ -279,47 +282,63 @@ public class ScheduleEntry
 
     public String getTitle()
     {
-        return this.eTitle;
+        return this.entryTitle;
     }
 
     public ZonedDateTime getStart()
     {
-        return this.eStart;
+        return this.entryStart;
     }
 
     public ZonedDateTime getEnd()
     {
-        return this.eEnd;
+        return this.entryEnd;
     }
 
     public ArrayList<String> getComments()
     {
-        return this.eComments;
+        return this.entryComments;
     }
 
     public Integer getId()
     {
-        return this.eID;
+        return this.entryId;
     }
 
     public Integer getRepeat()
     {
-        return this.eRepeat;
-    }
-
-    public Message getMessage()
-    {
-        return this.eMsg;
-    }
-
-    public void setMessage(Message message)
-    {
-        this.eMsg = message;
+        return this.entryRepeat;
     }
 
     public void setZone(ZoneId zone)
     {
-        this.eStart.withZoneSameLocal(zone);
-        this.eEnd.withZoneSameLocal(zone);
+        this.entryStart.withZoneSameLocal(zone);
+        this.entryEnd.withZoneSameLocal(zone);
+    }
+
+    public void setMessageObject(Message msg)
+    {
+        this.chanId = msg.getChannel().getId();
+        this.guildId = msg.getGuild().getId();
+        this.msgId = msg.getId();
+    }
+
+    public Message getMessageObject()
+    {
+        Message msg;
+        try
+        {
+            msg = Main.getBotJda()
+                            .getGuildById(this.guildId)
+                            .getTextChannelById(this.chanId)
+                            .getMessageById(this.msgId)
+                            .block();
+        }
+        catch( Exception e )
+        {
+            __out.printOut(this.getClass(), e.toString());
+            msg = null;
+        }
+        return msg;
     }
 }

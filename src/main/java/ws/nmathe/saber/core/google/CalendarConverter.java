@@ -88,15 +88,24 @@ public class CalendarConverter
         List<Integer> removeQueue = new ArrayList<>();
         for( Integer id : Main.getScheduleManager().getEntriesByChannel(channel.getId()) )
         {
-            synchronized( Main.getScheduleManager().getScheduleLock() )
+            __out.printOut(this.getClass(), "integer: " + id);
+            ScheduleEntry se = Main.getScheduleManager().getEntry( id );
+            Message msg = se.getMessageObject();
+            if( msg==null )
             {
-                ScheduleEntry se = Main.getScheduleManager().getEntry( id );
-                MessageUtilities.deleteMsg( se.getMessage(), null );
-
+                synchronized(Main.getScheduleManager().getScheduleLock())
+                {
+                    __out.printOut(this.getClass(), "removing entry");
+                    Main.getScheduleManager().removeEntry(id);
+                }
+            }
+            if( msg!=null )
+            {
+                MessageUtilities.deleteMsg(msg, null);
                 removeQueue.add(id);
             }
         }
-        synchronized( Main.getScheduleManager() )
+        synchronized( Main.getScheduleManager().getScheduleLock() )
         {
             for (Integer id : removeQueue)
             {
@@ -127,7 +136,13 @@ public class CalendarConverter
                 title = event.getSummary();
 
             if( event.getDescription() != null )
-                Collections.addAll(comments, event.getDescription().split("\n"));
+            {
+                for( String comment : event.getDescription().split("\n") )
+                {
+                    if( !comment.trim().isEmpty() )
+                        comments.add( comment );
+                }
+            }
 
             List<String> recurrence = event.getRecurrence();
             String recurrenceId = event.getRecurringEventId();
@@ -153,10 +168,9 @@ public class CalendarConverter
             Message msg = ScheduleEntryParser.generate( title, start, end, comments, repeat, id, channel.getId());
 
             int finalRepeat = repeat;
-            MessageUtilities.sendMsg( msg, channel, (message) ->
-                    Main.getScheduleManager().addEntry( title, start, end, comments, id, message, finalRepeat));
 
-            Thread.sleep(1000*4 );
+            Message message = MessageUtilities.sendMsg( msg, channel);
+            Main.getScheduleManager().addEntry( title, start, end, comments, id, message, finalRepeat);
         }
     }
 }

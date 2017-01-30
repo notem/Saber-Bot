@@ -75,10 +75,6 @@ public class EventListener extends ListenerAdapter
             // delete other user's messages
             if (!userId.equals(Main.getBotSelfUser().getId()))
                 MessageUtilities.deleteMsg(event.getMessage(), null);
-
-            // if it is from myself, resend the guild botSettings message (so that it is at the bottom)
-            else if(!content.startsWith("```java"))
-                channelSettingsManager.sendSettingsMsg(event.getChannel());
         }
     }
 

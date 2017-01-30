@@ -126,6 +126,10 @@ public class EditCommand implements Command
         Integer entryId = Integer.decode( "0x" + args[index] );
         ScheduleEntry entry = schedManager.getEntry( entryId );
 
+        Message msg = entry.getMessageObject();
+        if( msg==null )
+            return;
+
         String title = entry.getTitle();                    //
         ArrayList<String> comments = entry.getComments();   // initialize using old
         ZonedDateTime start = entry.getStart();             // schedule values
@@ -222,10 +226,10 @@ public class EditCommand implements Command
         }
 
 
-        Message msg;
+        Message newMsg;
         synchronized( schedManager.getScheduleLock() )
         {
-            msg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, entry.getMessage().getChannel().getId());
+            newMsg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, msg.getChannel().getId() );
             schedManager.removeEntry( entryId );    // remove the old entry
         }
 
@@ -234,8 +238,8 @@ public class EditCommand implements Command
         ZonedDateTime finalStart = start;   // variables
         String finalTitle = title;          //
 
-        MessageUtilities.editMsg(msg,
-                entry.getMessage(),
+        MessageUtilities.editMsg(newMsg,
+                msg,
                 (message)->schedManager.addEntry(finalTitle, finalStart, finalEnd, comments, entryId, message, finalRepeat ));
     }
 }

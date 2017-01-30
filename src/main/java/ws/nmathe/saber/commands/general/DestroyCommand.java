@@ -1,5 +1,6 @@
 package ws.nmathe.saber.commands.general;
 
+import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -79,15 +80,15 @@ public class DestroyCommand implements Command
                     .map(id -> schedManager.getEntry(id)).collect(Collectors.toCollection(ArrayList::new));
             for (ScheduleEntry entry : entries)
             {
-                if (entry != null)
+                Message msg = entry.getMessageObject();
+                if (msg != null)
                 {
                     synchronized( schedManager.getScheduleLock() )
                     {
                         schedManager.removeEntry(entry.getId());
                     }
 
-                    // delete the old message
-                    MessageUtilities.deleteMsg(entry.getMessage(), null);
+                    MessageUtilities.deleteMsg(msg, null);
                 }
             }
         }
@@ -97,13 +98,16 @@ public class DestroyCommand implements Command
             Integer entryId = Integer.decode("0x" + args[0]);
             ScheduleEntry entry = schedManager.getEntry(entryId);
 
+            Message msg = entry.getMessageObject();
+            if( msg==null )
+                return;
+
             synchronized( schedManager.getScheduleLock() )
             {
                 schedManager.removeEntry(entryId);
             }
 
-            // delete the old entry
-            MessageUtilities.deleteMsg(entry.getMessage(), null);
+            MessageUtilities.deleteMsg(msg, null);
         }
     }
 }

@@ -20,15 +20,6 @@ public class ChannelSettingsManager
         settingsByChannel = new HashMap<>();
     }
 
-    public void checkChannel(MessageChannel channel)
-    {
-        if( settingsByChannel.get(channel.getId()) == null )
-        {
-            ChannelSettings settings = new ChannelSettings( channel );
-            settingsByChannel.put(channel.getId(), settings );
-        }
-    }
-
     public void sendSettingsMsg( MessageChannel channel )
     {
         ChannelSettings settings = settingsByChannel.get( channel.getId() );

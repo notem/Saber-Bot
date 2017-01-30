@@ -52,6 +52,7 @@ public class SyncCommand implements Command
         try
         {
             Main.getCalendarConverter().syncCalendar(args[1], channel);
+            Main.getChannelSettingsManager().sendSettingsMsg(channel);
         }
         catch( Exception e )
         {

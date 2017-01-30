@@ -47,7 +47,6 @@ public class CommandHandler
         // add administrator commands with their lookup name
         adminCommands.put("global_announce", new GlobalMsgCommand());
         adminCommands.put("query", new QueryCommand());
-        adminCommands.put("update_all", new UpdateAllCommand());
         adminCommands.put("stats", new StatsCommand());
         adminCommands.put("playing", new NowPlayingCommand());
     }

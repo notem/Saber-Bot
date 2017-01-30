@@ -26,7 +26,7 @@ public class MessageUtilities
     {
         try
         {
-            chan.sendMessage(content).queue( action );
+            chan.sendMessage(content).queue( action, null );
         }
         catch( Exception e)
         {
@@ -38,7 +38,7 @@ public class MessageUtilities
     {
         try
         {
-            chan.sendMessage(message).queue( action );
+            chan.sendMessage(message).queue( action, null );
         }
         catch( Exception e)
         {
@@ -46,9 +46,22 @@ public class MessageUtilities
         }
     }
 
+    public static Message sendMsg(Message message, MessageChannel chan)
+    {
+        try
+        {
+            return chan.sendMessage(message).block();
+        }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+            return null;
+        }
+    }
+
     /**
      * sends a message to a private message channel, opening the channel before use
-     *
+     *, asynchronous (non-blocking)
      * @param content the message to send as a string
      * @param user the user to send the private message to
      * @param action a non null Consumer will do operations on the results returned
@@ -68,7 +81,7 @@ public class MessageUtilities
 
     /**
      * replaces the content of a message with a new content (string)
-     *
+     * , asynchronous (non-blocking)
      * @param content the new message content
      * @param msg the message object to edit
      * @param action a non null Consumer will do operations on the results returned
@@ -77,7 +90,7 @@ public class MessageUtilities
     {
         try
         {
-            msg.editMessage(content).queue( action );
+            msg.editMessage(content).queue( action, null );
         }
         catch( Exception e)
         {
@@ -89,7 +102,7 @@ public class MessageUtilities
     {
         try
         {
-            msg.editMessage(newMsg).queue( action );
+            msg.editMessage(newMsg).queue( action, null );
         }
         catch( Exception e)
         {
@@ -101,14 +114,13 @@ public class MessageUtilities
     {
         try
         {
-            msg.editMessage(new MessageBuilder().setEmbed(embed).build()).queue( action );
+            msg.editMessage(new MessageBuilder().setEmbed(embed).build()).queue( action, null );
         }
         catch( Exception e)
         {
             __out.printOut( MessageUtilities.class, e.getMessage() );
         }
     }
-
 
 
     /**
@@ -121,30 +133,11 @@ public class MessageUtilities
     {
         try
         {
-            msg.deleteMessage().queue( action );
+            msg.deleteMessage().queue( action, null );
         }
         catch( Exception e)
         {
             __out.printOut( MessageUtilities.class, e.getMessage() );
-        }
-    }
-
-    /**
-     * attempts to remove a message, synchronous (blocking)
-     *
-     * @param msg the message to delete
-     * @return results of message delete
-     */
-    public static Void deleteMsg(Message msg )
-    {
-        try
-        {
-            return msg.deleteMessage().block();
-        }
-        catch( Exception e)
-        {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
-            return null;
         }
     }
 }

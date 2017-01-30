@@ -24,14 +24,9 @@ class ChannelSettings
 
     ChannelSettings(MessageChannel channel)
     {
-        try
-        {
-            this.msg = channel.sendMessage(this.generateSettingsMsg()).block();
-        }
-        catch( Exception e)
-        {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
-        }
+        // use defaults
+        MessageEmbed embed = new EmbedBuilder().setDescription(this.generateSettingsMsg()).build();
+        this.msg = MessageUtilities.sendMsg(new MessageBuilder().setEmbed(embed).build(), channel);
     }
 
     ChannelSettings(Message msg)
