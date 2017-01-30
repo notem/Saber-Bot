@@ -138,7 +138,7 @@ public class ScheduleEntry
 
        // convert the times into integers representing the time in seconds
        long timeTilStart = ZonedDateTime.now().until(this.eStart, SECONDS);
-       long timeTilEnd = this.eStart.until(this.eEnd, SECONDS);
+       long timeTilEnd = ZonedDateTime.now().until(this.eEnd, SECONDS);
 
        String[] lines = raw.split("\n");
 
