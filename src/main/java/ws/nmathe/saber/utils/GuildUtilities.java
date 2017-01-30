@@ -39,6 +39,9 @@ public class GuildUtilities
         // ready a consumer to parseMsgFormat the history
         Consumer<List<Message>> cons = (l) ->
         {
+            if(l.size()<1)
+                return;
+
             chanSetManager.loadSettings(l.get(0));
 
             for (int i = 1; i < l.size(); i++)
@@ -51,7 +54,7 @@ public class GuildUtilities
                     MessageUtilities.deleteMsg(message, null);
             }
 
-            chanSetManager.sendSettingsMsg(chan);
+            //chanSetManager.sendSettingsMsg(chan);
         };
 
         // retrieve history and have the consumer act on it

@@ -37,6 +37,9 @@ class ChannelSettings
         else
             raw = msg.getEmbeds().get(0).getDescription();
 
+        if( !raw.contains("```java\n") )
+            return;
+
         String trimmed = raw.replace("```java\n", "").replace("\n```", "");
         String[] options = trimmed.split(" \\| ");
 

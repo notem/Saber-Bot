@@ -29,9 +29,18 @@ public class ChannelSettingsManager
             settings.reloadSettingsMsg();
     }
 
-    public void loadSettings( Message message )
+    public void loadSettings( Message msg )
     {
-        settingsByChannel.put( message.getChannel().getId(), new ChannelSettings( message ) );
+        String raw;
+        if(msg.getEmbeds().isEmpty())
+            raw = msg.getRawContent();
+        else
+            raw = msg.getEmbeds().get(0).getDescription();
+
+        if( !raw.contains("```java\n") )
+            this.sendSettingsMsg( msg.getChannel() );
+        else
+            settingsByChannel.put( msg.getChannel().getId(), new ChannelSettings( msg ) );
     }
 
     public String getAnnounceChan(String cId )
