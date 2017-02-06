@@ -7,12 +7,12 @@
 + Organize events across multiple schedule channels.
 + Custom announcement messages on start/end of events (can be used to schedule other bot commands).
 + Set announcement message, channel to announce to, timezone and clock format per schedule channel.
++ Sync a schedule channel to a public Google Calendars calendar
 
 ### Roadmap
-+ Support sync'ing to public Google Calendars
-+ Support deletion of entries on message deletion
++ Support auto-sync'ing of a channel to a calendar
 + Add optional reminders which send announcement messages before an event begins
-+ Use SQL as backend for storing the list of schedule entries
++ Use a DB system as backend for storing the list of schedule entries
 + (When channel categories release) organize schedule channels under the 'Schedule' category
 + Dynamically sort entries in a channel w/ the top-most entry having the earliest start time
 
