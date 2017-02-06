@@ -1,6 +1,5 @@
 package ws.nmathe.saber.commands.general;
 
-import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -16,8 +15,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * CreateCommand places a new entry message on the discord schedule channel
@@ -33,25 +30,23 @@ public class CreateCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "Event entries can be initialized using the form **" + prefix +
-                "create <channel> <title> <start> <end> <extra>**. Entries MUST be initialized with a title, a start " +
-                "time, and an end time. If your guild has multiple scheduling channels, an argument " +
-                "indicating the channel is required; if you have only one schedule channel it may be left out." +
-                " Start and end times should be of form h:mm with " +
+        String USAGE_EXTENDED = "Event entries can be initialized using the form ``" + prefix +
+                "create <channel> <title> <start> <end> <extra>``. Entries MUST be initialized with a title, a start " +
+                "time, and an end time.  Start and end times should be of form h:mm with " +
                 "optional am/pm appended on the end." +
-                "\n\nEntries can optionally be configured with comments, repeat, and a start date. Adding **repeat " +
-                "no**/**daily**/**weekly** to " +
-                "**<Optional>** will configure repeat; default behavior is no repeat. Adding **date MM/dd** to " +
-                "**<Optional>** will configure the start date; default behavior is to use the current date or the " +
+                "\n\nEntries can optionally be configured with comments, repeat, and a start date. Adding ``repeat " +
+                "<no/daily/weekly>`` to " +
+                "``<Optional>`` will configure repeat; default behavior is no repeat. Adding ``date MM/dd`` to " +
+                "``<Optional>`` will configure the start date; default behavior is to use the current date or the " +
                 "next day depending on if the current time is greater than the start time. Comments may be added by" +
-                " adding **\"YOUR COMMENT\"** in **<Optional>**; any number of comments may be added in **<Optional>**." +
+                " adding ``\"YOUR COMMENT\"`` in ``<Optional>``; any number of comments may be added in ``<Optional>``." +
                 "\n\nIf your title, comment, or channel includes any space characters, the phrase my be enclosed in " +
                 "quotations (see examples).";
 
-        String EXAMPLES = "Ex1. **!create \"Party in the Guild Hall\" 19:00 02:00**" +
-                "\nEx2. **!create \"event_channel Reminders\" \"Sign up for Raids\" 4:00pm 4:00pm**" +
-                "\nEx3. **!create \"event_channl Raids\" \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
-                "demand.\" \"PM our raid captain with your role and level if attending.\"**";
+        String EXAMPLES = "Ex1. ``!create #event_schedule \"Party in the Guild Hall\" 19:00 02:00``" +
+                "\nEx2. ``!create \"#event_channel Reminders\" \"Sign up for Raids\" 4:00pm 4:00pm``" +
+                "\nEx3. ``!create \"#event_channel Raids\" \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and tanks always in " +
+                "demand.\" \"PM our raid captain with your role and level if attending.\"``";
 
         String USAGE_BRIEF = "``" + prefix + "create`` - Generates a new event entry" +
                 " and sends it to the specified schedule channel.";
@@ -66,22 +61,14 @@ public class CreateCommand implements Command
     {
         int index = 0;
 
-        if (args.length < 3)
+        if (args.length < 4)
             return "Not enough arguments";
 
-        // check channel
-        Collection<TextChannel> schedChans = GuildUtilities.getValidScheduleChannels(event.getGuild());
-        if( schedChans.size() > 1 )
-        {
-            if (args.length < 4)
-                return "Not enough arguments";
+        if( !Main.getChannelSettingsManager().idIsInMap(args[index].replace("<#","").replace(">","")) )
+            return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
+                    "Try using the ``init`` command!";
 
-            Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(args[index], false);
-            if (chans.isEmpty())
-                return "Schedule channel **" + args[index] + "** does not exist";
-
-            index++;
-        }
+        index++;
 
         // check title
         if( args[index].length() > 255 )
@@ -137,12 +124,14 @@ public class CreateCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         String eTitle = "";
-        LocalTime eStart = LocalTime.now().plusMinutes(1);    // initialized just in case verify failed it's duty
+
+        LocalTime eStart = LocalTime.now().plusMinutes(1);    //
         LocalTime eEnd = LocalTime.MIDNIGHT;                  //
-        ArrayList<String> eComments = new ArrayList<>();      //
-        int repeat = 0;                                      // default is 0 (no repeat)
-        LocalDate eDate = LocalDate.now();                    // initialize date using the current date
-        TextChannel scheduleChan = GuildUtilities.getValidScheduleChannels(event.getGuild()).get(0);
+        ArrayList<String> eComments = new ArrayList<>();      // defaults initialized
+        int repeat = 0;                                       //
+        LocalDate eDate = LocalDate.now();                    //
+        TextChannel scheduleChan = GuildUtilities.            //
+                getValidScheduleChannels(event.getGuild()).get(0);
 
         boolean channelFlag = false;  // true if the channel name arg has been grabbed
         boolean titleFlag = false;    // true if eTitle has been grabbed from args
@@ -156,16 +145,7 @@ public class CreateCommand implements Command
             if(!channelFlag)
             {
                 channelFlag = true;
-                List<TextChannel> chans = event.getGuild().getTextChannelsByName(arg,false);
-                if( chans.isEmpty() )
-                {
-                    titleFlag = true;
-                    eTitle = arg;
-                }
-                else
-                {
-                    scheduleChan = chans.get(0);
-                }
+                scheduleChan = event.getGuild().getTextChannelById(arg.replace("<#","").replace(">",""));
             }
             else if(!titleFlag)
             {

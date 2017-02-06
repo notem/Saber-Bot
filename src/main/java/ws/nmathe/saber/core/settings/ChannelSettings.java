@@ -7,7 +7,9 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.__out;
 import net.dv8tion.jda.core.entities.*;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 /**
  * Object which represents the settings for a schedule channel with it's associated
@@ -20,6 +22,10 @@ class ChannelSettings
     ZoneId timeZone = ZoneId.of(Main.getBotSettings().getTimeZone());   // defaults
     String clockFormat = Main.getBotSettings().getClockFormat();        //
     String messageStyle = "embed";                                      //
+    String calendarAddress = "off";                                     //
+
+    ZonedDateTime nextSync = null;
+
     private Message msg;
 
     ChannelSettings(MessageChannel channel)
@@ -63,6 +69,8 @@ class ChannelSettings
                 case "style":
                     this.messageStyle = splt[1].replaceAll("\"","");
                     break;
+                case "sync":
+                    this.calendarAddress = splt[1].replaceAll("\"","");
             }
         }
 
@@ -73,11 +81,12 @@ class ChannelSettings
     {
         String msg = "```java\n";
         msg += "Settings " +
-                " | msg:\"" + this.announceFormat + "\"" +
-                " | chan:\"" + this.announceChannel + "\"" +
                 " | zone:\"" + this.timeZone + "\"" +
                 " | clock:\"" + this.clockFormat + "\"" +
-                " | style:\"" + this.messageStyle + "\"";
+                " | style:\"" + this.messageStyle + "\"" +
+                " | msg:\"" + this.announceFormat + "\"" +
+                " | chan:\"" + this.announceChannel + "\"" +
+                " | sync:\"" + this.calendarAddress;
         msg += "\n```";
         return msg;
     }

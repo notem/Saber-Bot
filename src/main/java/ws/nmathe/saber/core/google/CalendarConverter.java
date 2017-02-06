@@ -9,14 +9,12 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.core.schedule.ScheduleEntryParser;
 import ws.nmathe.saber.utils.MessageUtilities;
-import ws.nmathe.saber.utils.__out;
 
 import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,7 +52,6 @@ public class CalendarConverter
         }
         catch( IOException e )
         {
-            e.printStackTrace();
             return false;
         }
 
@@ -68,8 +65,6 @@ public class CalendarConverter
         {
             ZonedDateTime min = ZonedDateTime.now();
             ZonedDateTime max = min.plusDays(7);
-
-            __out.printOut(this.getClass(), min.format(rfc3339Formatter));
 
             events = service.events().list(address)
                     .setTimeMin(new DateTime(min.format(rfc3339Formatter)))
@@ -88,14 +83,12 @@ public class CalendarConverter
         List<Integer> removeQueue = new ArrayList<>();
         for( Integer id : Main.getScheduleManager().getEntriesByChannel(channel.getId()) )
         {
-            __out.printOut(this.getClass(), "integer: " + id);
             ScheduleEntry se = Main.getScheduleManager().getEntry( id );
             Message msg = se.getMessageObject();
             if( msg==null )
             {
                 synchronized(Main.getScheduleManager().getScheduleLock())
                 {
-                    __out.printOut(this.getClass(), "removing entry");
                     Main.getScheduleManager().removeEntry(id);
                 }
             }
@@ -126,7 +119,6 @@ public class CalendarConverter
             ArrayList<String> comments = new ArrayList<>();
             int repeat = 0;
 
-            __out.printOut(this.getClass(), event.getStart().getDateTime().toStringRfc3339());
             start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter);
             end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter);
 

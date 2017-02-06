@@ -37,10 +37,11 @@ public class SyncCommand implements Command
             return "Not enough arguments";
         if( args.length > 2)
             return "Too many arguments";
-        if( event.getGuild().getTextChannelsByName(args[0], false).isEmpty() )
-            return "Channel **" + args[0] + "** does not exist";
+        if( !Main.getChannelSettingsManager().idIsInMap(args[0].replace("<#","").replace(">","")))
+            return "Channel " + args[0] + " is not on my list of schedule channels for your guild. " +
+                    "Try using the ``init`` command!";
         if( !Main.getCalendarConverter().checkValidAddress( args[1] ) )
-            return "Cannot connect to google calendar address **" + args[2] + "**";
+            return "Cannot connect to google calendar address **" + args[1] + "**";
 
         return "";
     }
@@ -48,11 +49,14 @@ public class SyncCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        TextChannel channel = event.getGuild().getTextChannelsByName( args[0], false ).get(0);
+        TextChannel channel = event.getGuild().getTextChannelById( args[0].replace("<#","").replace(">","") );
         try
         {
             Main.getCalendarConverter().syncCalendar(args[1], channel);
             Main.getChannelSettingsManager().sendSettingsMsg(channel);
+
+            Main.getChannelSettingsManager().setAddress(channel.getId(),args[1]);
+            Main.getChannelSettingsManager().adjustSync(channel.getId());
         }
         catch( Exception e )
         {

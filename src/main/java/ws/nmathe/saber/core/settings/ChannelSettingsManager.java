@@ -6,6 +6,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 
 /**
@@ -93,6 +94,35 @@ public class ChannelSettingsManager
         return settings.messageStyle;
     }
 
+    public String getAddress(String cId)
+    {
+        ChannelSettings settings = settingsByChannel.get(cId);
+        if( settings == null )
+        {
+            return "off";
+        }
+        return settings.calendarAddress;
+    }
+
+    public boolean checkSync(String cId)
+    {
+        ChannelSettings settings = settingsByChannel.get(cId);
+        if( settings == null )
+            return false;
+        if( settings.calendarAddress.equals("off") )
+            return false;
+        if( settings.nextSync == null )
+            return true;
+
+        return settings.nextSync.isBefore(ZonedDateTime.now());
+    }
+
+    public void adjustSync(String cId)
+    {
+        int rand = (int)((Math.random()*8)+20);  // safeguard to protect against overloaded syncing
+        settingsByChannel.get(cId).nextSync = ZonedDateTime.now().plusHours(rand);
+    }
+
     public void setAnnounceChan(String cId, String chan )
     {
         settingsByChannel.get(cId).announceChannel = chan;
@@ -121,5 +151,16 @@ public class ChannelSettingsManager
     {
         settingsByChannel.get(cId).messageStyle = style;
         settingsByChannel.get(cId).reloadSettingsMsg();
+    }
+
+    public void setAddress(String cId, String address)
+    {
+        settingsByChannel.get(cId).calendarAddress = address;
+        settingsByChannel.get(cId).reloadSettingsMsg();
+    }
+
+    public boolean idIsInMap(String cId)
+    {
+        return settingsByChannel.containsKey(cId);
     }
 }

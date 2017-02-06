@@ -46,8 +46,8 @@ public class ScheduleManager
      */
     public void init()
     {
+        // schedule threads to check entries if they have expired timers
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
         scheduler.scheduleAtFixedRate( new ScheduleChecker( entriesGlobal.values() , 2 ),
                 0, 12*60*60, TimeUnit.SECONDS);
         // 15 min timer
@@ -56,6 +56,11 @@ public class ScheduleManager
         // 1 min timer
         scheduler.scheduleAtFixedRate( new ScheduleChecker(fineTimerBuff, 0 ),
                 60 - (LocalTime.now().toSecondOfDay()%60), 60, TimeUnit.SECONDS );
+
+        // schedule a thread to check channels if they need to be synced
+        ScheduledExecutorService syncer = Executors.newScheduledThreadPool(1);
+        syncer.scheduleAtFixedRate( new ChannelSyncChecker( entriesByChannel.keySet() ),
+                0, 35*60, TimeUnit.SECONDS );
     }
 
     /**
@@ -272,11 +277,6 @@ public class ScheduleManager
     public Collection<Integer> getAllIds()
     {
         return entriesGlobal.keySet();
-    }
-
-    public Collection<ScheduleEntry> getAllEntries()
-    {
-        return entriesGlobal.values();
     }
 
     public Object getScheduleLock()

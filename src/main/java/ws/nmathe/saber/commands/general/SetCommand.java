@@ -25,7 +25,7 @@ public class SetCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + invoke + " <option> <new configuration>``. Options are 'msg' " +
+        String USAGE_EXTENDED = "``" + invoke + " <channel> <option> <new configuration>``. Options are 'msg' " +
                 "(announcement message format), chan (announcement channel), zone (timezone to use), and clock " +
                 "('12' to use am/pm or '24' for full form). When creating a custom announcement message format the " +
                 "'%' acts as a delimiter for entry parameters such as the title or a comment. %t will cause the entry" +
@@ -35,7 +35,7 @@ public class SetCommand implements Command
         String USAGE_BRIEF = "``" + invoke + "`` - Used to set guild-wide schedule botSettings.";
 
         String EXAMPLES = "Ex1: ``" + invoke + " msg \"@here The event %t %a.\"``\n" +
-                "Ex2: ``" + invoke + " msg \"@everyone %c1\"``" +
+                "Ex2: ``" + invoke + " msg \"@everyone %c1\"``\n" +
                 "Ex3: ``" + invoke + " chan \"event announcements\"``";
 
         if( brief )
@@ -49,25 +49,14 @@ public class SetCommand implements Command
     {
         int index = 0;
 
-        if( args.length < 2 )
-        {
+        if (args.length < 3)
             return "Not enough arguments";
-        }
 
-        Collection<TextChannel> schedChans = GuildUtilities.getValidScheduleChannels(event.getGuild());
-        if( schedChans.size() > 1 )
-        {
-            if (args.length < 3)
-                return "Not enough arguments";
+        if( !chanSetManager.idIsInMap(args[index].replace("<#","").replace(">","")) )
+            return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
+                    "Try using the ``init`` command!";
 
-            Collection<TextChannel> chans = event.getGuild().getTextChannelsByName(args[index], false);
-            if (chans.isEmpty())
-                return "Schedule channel **" + args[index] + "** does not exist";
-            if (chans.size() > 1)
-                return "Duplicate channels **" + args[index] + "** exist";
-
-            index++;
-        }
+        index++;
 
         switch( args[index++] )
         {
@@ -98,6 +87,8 @@ public class SetCommand implements Command
                     return "Argument **" + args[index] +  "** is not a valid option. Argument may be **embed** " +
                             "or **plain**";
                 break;
+            case "sync" :
+                break;
             default:
                 return "Argument **" + args[index-1] + "** is not a configurable setting!";
         }
@@ -108,21 +99,8 @@ public class SetCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         int index = 0;
-        List<TextChannel> chans = event.getGuild().getTextChannelsByName(args[index], false);
-        List<TextChannel> validChans = GuildUtilities.getValidScheduleChannels(event.getGuild());
-        TextChannel scheduleChan;
-
-        if( !validChans.isEmpty() && chans.isEmpty() )
-        {
-            if (chans.size() > 1)
-                return;
-            scheduleChan = validChans.get(0);
-        }
-        else
-        {
-            scheduleChan = chans.get(0);
-            index++;
-        }
+        TextChannel scheduleChan = event.getGuild()
+                .getTextChannelById(args[index++].replace("<#","").replace(">",""));
 
         switch (args[index++])
         {
@@ -131,7 +109,11 @@ public class SetCommand implements Command
                 break;
 
             case "chan":
-                chanSetManager.setAnnounceChan(scheduleChan.getId(), args[index]);
+                TextChannel tmp = event.getGuild()
+                        .getTextChannelById(args[index].replace("<#","").replace(">",""));
+                String chanName = (tmp==null) ? args[index] : tmp.getName();
+
+                chanSetManager.setAnnounceChan(scheduleChan.getId(), chanName);
                 break;
 
             case "zone":
@@ -167,6 +149,11 @@ public class SetCommand implements Command
                     schedManager.reloadEntry(id);
                 }
                 break;
+            case "sync":
+                if( Main.getCalendarConverter().checkValidAddress(args[index]) )
+                    chanSetManager.setAddress(scheduleChan.getId(), args[index]);
+                else
+                    chanSetManager.setAddress(scheduleChan.getId(), "off");
         }
     }
 }

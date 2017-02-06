@@ -21,9 +21,9 @@ public class TimeZonesCommand implements Command
                 "one argument to the command to filter for all zones which contain the word provided. For both our sakes," +
                 " always provide a filter.";
 
-        String USAGE_BRIEF = "**" + invoke + "** - shows all available timezones.";
+        String USAGE_BRIEF = "``" + invoke + "`` - shows all available timezones.";
 
-        String EXAMPLES = "Ex1: **" + invoke + " america**";
+        String EXAMPLES = "Ex: ``" + invoke + " america``";
 
         if( brief )
             return USAGE_BRIEF;
