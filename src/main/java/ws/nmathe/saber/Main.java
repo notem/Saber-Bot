@@ -31,8 +31,7 @@ public class Main
     private static CommandHandler commandHandler = new CommandHandler();
     private static CalendarConverter calendarConverter = new CalendarConverter();
 
-    public static void main( String[] args )
-    {
+    public static void main( String[] args ) throws InterruptedException {
         // get or generate bot settings
         botSettings = BotSettings.init();
         if( botSettings == null )
@@ -87,9 +86,9 @@ public class Main
             GuildUtilities.loadScheduleChannels( guild );
         }
 
+        calendarConverter.init();   // connect to calendar service
         commandHandler.init();      // ready commands
         scheduleManager.init();     // start timers
-        calendarConverter.init();   // connect to calendar service
 
         HttpUtilities.updateStats();
     }

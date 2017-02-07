@@ -10,6 +10,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,8 +37,8 @@ public class ScheduleManager
         this.entriesByGuild = new HashMap<>();
         this.entriesByChannel = new HashMap<>();
 
-        this.coarseTimerBuff = new ArrayList<>();
-        this.fineTimerBuff = new ArrayList<>();
+        this.coarseTimerBuff = Collections.synchronizedCollection(new ArrayList<>());
+        this.fineTimerBuff = Collections.synchronizedCollection(new ArrayList<>());
     }
 
     /**
@@ -51,10 +52,10 @@ public class ScheduleManager
         scheduler.scheduleAtFixedRate( new ScheduleChecker( entriesGlobal.values() , 2 ),
                 0, 12*60*60, TimeUnit.SECONDS);
         // 15 min timer
-        scheduler.scheduleAtFixedRate( new ScheduleChecker(coarseTimerBuff, 1 ),
+        scheduler.scheduleAtFixedRate( new ScheduleChecker(this.getCoarseTimerBuff(), 1 ),
                 1, 60*15, TimeUnit.SECONDS);
         // 1 min timer
-        scheduler.scheduleAtFixedRate( new ScheduleChecker(fineTimerBuff, 0 ),
+        scheduler.scheduleAtFixedRate( new ScheduleChecker(this.getFineTimerBuff(), 0 ),
                 60 - (LocalTime.now().toSecondOfDay()%60), 60, TimeUnit.SECONDS );
 
         // schedule a thread to check channels if they need to be synced
@@ -135,9 +136,9 @@ public class ScheduleManager
         {
             long timeTil = ZonedDateTime.now().until(se.getStart(), ChronoUnit.SECONDS);
             if (timeTil <= 45 * 60)
-                fineTimerBuff.add(se);
+                this.getFineTimerBuff().add(se);
             else if (timeTil <= 32 * 60 * 60)
-                coarseTimerBuff.add(se);
+                this.getCoarseTimerBuff().add(se);
         }
         else
         {
