@@ -33,4 +33,4 @@ If you're looking for user documentation, the bots invite link, or a list of com
 
 ## User Docs
 
-Some user documentation is hosted on [my website](https://nmathe.ws/saber/index.md).  Alternatively, the docs are [also viewable through my website's github repository](https://github.com/notem/nmathe.ws-content/blob/master/bots/saber/index.md), whose webpage formatting is likely nicer and far more reliable than my website.
+Some user documentation is hosted on [my website](https://nmathe.ws/bots/saber).  Alternatively, the docs are [also viewable through my website's github repository](https://github.com/notem/nmathe.ws-content/blob/master/bots/saber/index.md), whose webpage formatting is likely nicer and far more reliable than my website.
