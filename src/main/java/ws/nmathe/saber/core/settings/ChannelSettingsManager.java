@@ -3,7 +3,6 @@ package ws.nmathe.saber.core.settings;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import ws.nmathe.saber.Main;
-import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -30,7 +29,7 @@ public class ChannelSettingsManager
             settings.reloadSettingsMsg();
     }
 
-    public void loadSettings( Message msg )
+    public boolean loadSettings(Message msg )
     {
         String raw;
         if(msg.getEmbeds().isEmpty())
@@ -39,9 +38,15 @@ public class ChannelSettingsManager
             raw = msg.getEmbeds().get(0).getDescription();
 
         if( !raw.contains("```java\n") )
-            this.sendSettingsMsg( msg.getChannel() );
+        {
+            this.sendSettingsMsg(msg.getChannel());
+            return false;
+        }
         else
-            settingsByChannel.put( msg.getChannel().getId(), new ChannelSettings( msg ) );
+        {
+            settingsByChannel.put(msg.getChannel().getId(), new ChannelSettings(msg));
+            return true;
+        }
     }
 
     public String getAnnounceChan(String cId )

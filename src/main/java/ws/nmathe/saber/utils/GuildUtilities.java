@@ -42,9 +42,11 @@ public class GuildUtilities
             if(l.size()<1)
                 return;
 
-            chanSetManager.loadSettings(l.get(0));
+            int i = 0;
+            if( chanSetManager.loadSettings(l.get(0)) )
+                i++;
 
-            for (int i = 1; i < l.size(); i++)
+            for (; i < l.size(); i++)
             {
                 Message message = l.get(i);
                 if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))

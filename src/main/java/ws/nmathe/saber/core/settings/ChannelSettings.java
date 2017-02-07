@@ -26,13 +26,15 @@ class ChannelSettings
 
     ZonedDateTime nextSync = null;
 
-    private Message msg;
+    private String msgId;
+    private String chaId;
 
     ChannelSettings(MessageChannel channel)
     {
         // use defaults
         MessageEmbed embed = new EmbedBuilder().setDescription(this.generateSettingsMsg()).build();
-        this.msg = MessageUtilities.sendMsg(new MessageBuilder().setEmbed(embed).build(), channel);
+        this.msgId = MessageUtilities.sendMsg(new MessageBuilder().setEmbed(embed).build(), channel).getId();
+        this.chaId = channel.getId();
     }
 
     ChannelSettings(Message msg)
@@ -74,7 +76,8 @@ class ChannelSettings
             }
         }
 
-        this.msg = msg;
+        this.msgId = msg.getId();
+        this.chaId = msg.getChannel().getId();
     }
 
     private String generateSettingsMsg()
@@ -93,17 +96,23 @@ class ChannelSettings
 
     void reloadSettingsMsg()
     {
-        TextChannel scheduleChan = this.msg.getTextChannel();
+        TextChannel chan = Main.getBotJda().getTextChannelById(chaId);
+        try
+        {
+            Message msg = chan.getMessageById(this.msgId).block();
+            MessageUtilities.deleteMsg( msg );
+        }
+        catch( Exception ignored )
+        {}
+
         if( this.messageStyle.equals("plain") )
         {
-            MessageUtilities.deleteMsg(this.msg);
-            MessageUtilities.sendMsg(this.generateSettingsMsg(), scheduleChan, (message) -> this.msg = message);
+            MessageUtilities.sendMsg(this.generateSettingsMsg(), chan, (message) -> this.msgId = message.getId());
         }
         else if( this.messageStyle.equals("embed") )
         {
-            MessageUtilities.deleteMsg(this.msg);
             MessageEmbed embed = new EmbedBuilder().setDescription(this.generateSettingsMsg()).build();
-            MessageUtilities.sendMsg( new MessageBuilder().setEmbed(embed).build(),scheduleChan, (message)-> this.msg = message);
+            MessageUtilities.sendMsg( new MessageBuilder().setEmbed(embed).build(),chan, (message)-> this.msgId = message.getId());
         }
     }
 }

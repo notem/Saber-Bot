@@ -130,9 +130,6 @@ public class ScheduleManager
         else
             entriesByChannel.get( channelId ).add( se.getId() );
 
-        // adjusts the displayed time til timer (since it is not set at creation)
-        se.adjustTimer();
-
         // add the entry to buffer
         if( !se.hasStarted() )
         {
@@ -213,10 +210,7 @@ public class ScheduleManager
         Message message = ScheduleEntryParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
                 se.getRepeat(), se.getId(), chan.getId());
 
-        MessageUtilities.deleteMsg(msg, (ignored) -> MessageUtilities.sendMsg(message, chan, (mssg)-> {
-            se.setMessageObject(mssg);
-            Main.getChannelSettingsManager().sendSettingsMsg(chan);
-        }));
+        MessageUtilities.editMsg(message, msg, se::setMessageObject);
     }
 
     /**

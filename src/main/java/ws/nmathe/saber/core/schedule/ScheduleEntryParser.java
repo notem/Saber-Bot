@@ -143,22 +143,22 @@ public class ScheduleEntryParser
     }
 
 
-    public static Message generate(String eTitle, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments,
+    public static Message generate(String eTitle, ZonedDateTime start, ZonedDateTime end, ArrayList<String> eComments,
                                   int eRepeat, Integer eId, String cId)
     {
         if( chanSetManager.getStyle(cId).equals("embed") )
         {
-            MessageEmbed embed = EmbedParser.generate(eTitle, eStart, eEnd, eComments, eRepeat, eId, cId);
+            MessageEmbed embed = EmbedParser.generate(eTitle, start, end, eComments, eRepeat, eId, cId);
             return new MessageBuilder().setEmbed(embed).build();
         }
         else
         {
-            String msg = genContent(eTitle, eStart, eEnd, eComments, eRepeat, eId, cId);
+            String msg = genContent(eTitle, start, end, eComments, eRepeat, eId, cId);
             return new MessageBuilder().append(msg).build();
         }
     }
 
-    private static String genContent(String eTitle, ZonedDateTime eStart, ZonedDateTime eEnd, ArrayList<String> eComments,
+    private static String genContent(String eTitle, ZonedDateTime start, ZonedDateTime end, ArrayList<String> eComments,
                                   int eRepeat, Integer eId, String cId)
     {
         String timeFormatter;
@@ -172,21 +172,21 @@ public class ScheduleEntryParser
 
         String firstLine = "# " + eTitle + "\n";
 
-        String secondLine = eStart.format(DateTimeFormatter.ofPattern("< MMMM d >"));
-        if( eStart.until(eEnd, ChronoUnit.SECONDS)==0 )
+        String secondLine = start.format(DateTimeFormatter.ofPattern("< MMMM d >"));
+        if( start.until(end, ChronoUnit.SECONDS)==0 )
         {
-            secondLine += " at " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
+            secondLine += " at " + start.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
-        else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
+        else if( start.until(end, ChronoUnit.DAYS)>=1 )
         {
-            secondLine += " from " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " to " + eEnd.format(DateTimeFormatter.ofPattern("< MMMM d >")) + " at " +
-                    eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
+            secondLine += " from " + start.format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                    " to " + end.format(DateTimeFormatter.ofPattern("< MMMM d >")) + " at " +
+                    end.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
         else
         {
-            secondLine += " from " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " to " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
+            secondLine += " from " + start.format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                    " to " + end.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
 
         // third line is repeat line
@@ -202,7 +202,7 @@ public class ScheduleEntryParser
             msg += comment + "\n\n";
 
         // add the final ID and time til line
-        msg += "[ID: " + Integer.toHexString(eId) + "]( )\n";
+        msg += "[ID: " + Integer.toHexString(eId) + "]" + ScheduleEntryParser.genTimer(start,end) + "\n";
 
         // cap the code block
         msg += "```";
@@ -295,6 +295,72 @@ public class ScheduleEntryParser
                 str += ", ";
         }
         return str;
+    }
+
+    static String genTimer(ZonedDateTime start, ZonedDateTime end)
+    {
+        String timer;
+        long timeTilStart = ZonedDateTime.now().until(start, ChronoUnit.SECONDS);
+        long timeTilEnd = ZonedDateTime.now().until(end, ChronoUnit.SECONDS);
+
+        if(start.isAfter(ZonedDateTime.now()))
+        {
+            timer = "(begins ";
+            if( timeTilStart < 60 * 60 )
+            {
+                int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
+                if( minutesTil <= 1)
+                    timer += "in a minute.)";
+                else
+                    timer += "in " + minutesTil + " minutes.)";
+            }
+            else if( timeTilStart < 24 * 60 * 60 )
+            {
+                int hoursTil = (int)Math.ceil((double)timeTilStart/(60*60));
+                if( hoursTil <= 1)
+                    timer += "within the hour.)";
+                else
+                    timer += "in " + hoursTil + " hours.)";
+            }
+            else
+            {
+                int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now(), start);
+                if( daysTil <= 1)
+                    timer += "tomorrow.)";
+                else
+                    timer += "in " + daysTil + " days.)";
+            }
+        }
+        else // if the event has started
+        {
+            timer = "(ends ";
+            if( timeTilEnd < 30*60 )
+            {
+                int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
+                if( minutesTil <= 1)
+                    timer += "in a minute.)";
+                else
+                    timer += "in " + minutesTil + " minutes.)";
+            }
+
+            else if( timeTilEnd < 24 * 60 * 60 )
+            {
+                int hoursTil = (int)Math.ceil((double)timeTilEnd/(60*60));
+                if( hoursTil <= 1)
+                    timer += "within one hour.)";
+                else
+                    timer += "in " + hoursTil + " hours.)";
+            }
+            else
+            {
+                int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now(), end);
+                if( daysTil <= 1)
+                    timer += "tomorrow.)";
+                else
+                    timer += "in " + daysTil + " days.)";
+            }
+        }
+        return timer;
     }
 
     /**
@@ -447,11 +513,12 @@ public class ScheduleEntryParser
 
             msg += "```md\n";
 
-            msg += "[ID: " + Integer.toHexString(eId) + "]( )\n";
+            msg += "[ID: " + Integer.toHexString(eId) + "]" + ScheduleEntryParser.genTimer(eStart,eEnd) + "\n";
 
             msg += "```";
 
             return msg;
         }
     }
+
 }

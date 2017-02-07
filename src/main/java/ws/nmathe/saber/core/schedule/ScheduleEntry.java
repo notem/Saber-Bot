@@ -19,7 +19,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
- * A SchedulentryEndtry object represents a currently scheduled entry is either waiting to start or has already started
+ * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
  * start and end functions are to be triggered upon the scheduled starting time and ending time.
  * adjustTimer is used to update the displayed 'time until' timer
  */
@@ -36,8 +36,6 @@ public class ScheduleEntry
     private String chanId;
     private String guildId;
 
-    private ScheduleManager schedManager = Main.getScheduleManager();
-    private ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
 
     public ScheduleEntry(Integer eId, String eName, ZonedDateTime entryStart, ZonedDateTime entryEnd,
                          ArrayList<String> eComments, int eRepeat, String msgId, String chanId, String guildId )
@@ -67,6 +65,9 @@ public class ScheduleEntry
      */
     public void start()
     {
+        ScheduleManager schedManager = Main.getScheduleManager();
+        ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
+
         Message msg = this.getMessageObject();
         if( msg == null )
             return;
@@ -94,6 +95,9 @@ public class ScheduleEntry
      */
     public void end()
     {
+        ScheduleManager schedManager = Main.getScheduleManager();
+        ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
+
         Message eMsg = this.getMessageObject();
         if( eMsg==null )
             return;
@@ -146,6 +150,8 @@ public class ScheduleEntry
      */
     public void adjustTimer()
     {
+        ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
+
         Message msg = this.getMessageObject();
         if( msg == null )
             return;
@@ -156,76 +162,10 @@ public class ScheduleEntry
         else
             raw = msg.getRawContent();
 
-       // convert the times into integers representing the time in seconds
-       long timeTilStart = ZonedDateTime.now().until(this.entryStart, SECONDS);
-       long timeTilEnd = ZonedDateTime.now().until(this.entryEnd, SECONDS);
+        String[] lines = raw.split("\n");
+        String newline = lines[lines.length-2].split("\\(")[0] +
+                ScheduleEntryParser.genTimer(this.entryStart,this.entryEnd);
 
-       String[] lines = raw.split("\n");
-       String newline;
-
-       if( !this.hasStarted() )
-       {
-           if( timeTilStart < 60 * 60 )
-           {
-               int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
-               newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
-               if( minutesTil <= 1)
-                   newline += "in a minute.)";
-               else
-                   newline += "in " + minutesTil + " minutes.)";
-           }
-           else if( timeTilStart < 24 * 60 * 60 )
-           {
-               int hoursTil = (int)Math.ceil((double)timeTilStart/(60*60));
-               newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
-               if( hoursTil <= 1)
-                   newline += "within the hour.)";
-               else
-                   newline += "in " + hoursTil + " hours.)";
-           }
-           else
-           {
-               int daysTil = (int) DAYS.between(ZonedDateTime.now(this.entryStart.getZone()), this.entryStart);
-
-               newline = lines[lines.length-2].split("\\(")[0] + "(begins ";
-               if( daysTil <= 1)
-                   newline += "tomorrow.)";
-               else
-                   newline += "in " + daysTil + " days.)";
-           }
-       }
-       else // if the event has started
-       {
-           if( timeTilEnd < 30*60 )
-           {
-               int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
-               newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
-               if( minutesTil <= 1)
-                   newline += "in a minute.)";
-               else
-                   newline += "in " + minutesTil + " minutes.)";
-           }
-
-           else if( timeTilEnd < 24 * 60 * 60 )
-           {
-               int hoursTil = (int)Math.ceil((double)timeTilEnd/(60*60));
-               newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
-               if( hoursTil <= 1)
-                   newline += "within one hour.)";
-               else
-                   newline += "in " + hoursTil + " hours.)";
-           }
-           else
-           {
-               int daysTil = (int) DAYS.between(ZonedDateTime.now(), this.entryEnd);
-
-               newline = lines[lines.length-2].split("\\(")[0] + "(ends ";
-               if( daysTil <= 1)
-                   newline += "tomorrow.)";
-               else
-                   newline += "in " + daysTil + " days.)";
-           }
-       }
         if(chanSetManager.getStyle(this.chanId).equals("plain"))
             MessageUtilities.editMsg( adjustTimerHelper(lines,newline), msg, null );
         else
@@ -235,6 +175,7 @@ public class ScheduleEntry
                     null);
     }
 
+    /// reconstructs the full message, substituting in the new timer
     private String adjustTimerHelper( String[] lines, String newline )
     {
         String msg = "";
@@ -336,7 +277,7 @@ public class ScheduleEntry
         }
         catch( Exception e )
         {
-            __out.printOut(this.getClass(), e.toString());
+            //__out.printOut(this.getClass(), e.toString());
             msg = null;
         }
         return msg;
