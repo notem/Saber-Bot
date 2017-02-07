@@ -49,6 +49,7 @@ public class ChannelSettingsManager
         ChannelSettings settings = settingsByChannel.get(cId);
         if( settings == null )
         {
+            this.sendSettingsMsg(Main.getBotJda().getTextChannelById(cId));
             return Main.getBotSettings().getAnnounceChan();
         }
         return settings.announceChannel;
@@ -59,6 +60,7 @@ public class ChannelSettingsManager
         ChannelSettings settings = settingsByChannel.get(cId);
         if( settings == null )
         {
+            this.sendSettingsMsg(Main.getBotJda().getTextChannelById(cId));
             return Main.getBotSettings().getAnnounceFormat();
         }
         return settings.announceFormat;
@@ -69,6 +71,7 @@ public class ChannelSettingsManager
         ChannelSettings settings = settingsByChannel.get(cId);
         if( settings == null )
         {
+            this.sendSettingsMsg(Main.getBotJda().getTextChannelById(cId));
             return Main.getBotSettings().getClockFormat();
         }
         return settings.clockFormat;
@@ -79,6 +82,7 @@ public class ChannelSettingsManager
         ChannelSettings settings = settingsByChannel.get(cId);
         if( settings == null )
         {
+            this.sendSettingsMsg(Main.getBotJda().getTextChannelById(cId));
             return ZoneId.of(Main.getBotSettings().getTimeZone());
         }
         return settings.timeZone;
@@ -89,6 +93,7 @@ public class ChannelSettingsManager
         ChannelSettings settings = settingsByChannel.get(cId);
         if( settings == null )
         {
+            this.sendSettingsMsg(Main.getBotJda().getTextChannelById(cId));
             return "embed";
         }
         return settings.messageStyle;
@@ -99,6 +104,7 @@ public class ChannelSettingsManager
         ChannelSettings settings = settingsByChannel.get(cId);
         if( settings == null )
         {
+            this.sendSettingsMsg(Main.getBotJda().getTextChannelById(cId));
             return "off";
         }
         return settings.calendarAddress;

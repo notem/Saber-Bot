@@ -96,17 +96,14 @@ class ChannelSettings
         TextChannel scheduleChan = this.msg.getTextChannel();
         if( this.messageStyle.equals("plain") )
         {
-            MessageUtilities.deleteMsg(this.msg, (x) ->
-                    MessageUtilities.sendMsg(this.generateSettingsMsg(), scheduleChan, (message) -> this.msg = message)
-            );
+            MessageUtilities.deleteMsg(this.msg);
+            MessageUtilities.sendMsg(this.generateSettingsMsg(), scheduleChan, (message) -> this.msg = message);
         }
         else if( this.messageStyle.equals("embed") )
         {
-            MessageUtilities.deleteMsg(this.msg, (x) ->
-            {
-                MessageEmbed embed = new EmbedBuilder().setDescription(this.generateSettingsMsg()).build();
-                MessageUtilities.sendMsg( new MessageBuilder().setEmbed(embed).build(),scheduleChan, (message)-> this.msg = message);
-            });
+            MessageUtilities.deleteMsg(this.msg);
+            MessageEmbed embed = new EmbedBuilder().setDescription(this.generateSettingsMsg()).build();
+            MessageUtilities.sendMsg( new MessageBuilder().setEmbed(embed).build(),scheduleChan, (message)-> this.msg = message);
         }
     }
 }

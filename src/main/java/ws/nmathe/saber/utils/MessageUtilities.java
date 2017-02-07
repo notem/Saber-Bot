@@ -140,4 +140,17 @@ public class MessageUtilities
             __out.printOut( MessageUtilities.class, e.getMessage() );
         }
     }
+
+    public static Void deleteMsg(Message msg )
+    {
+        try
+        {
+            return msg.deleteMessage().block();
+        }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+        }
+        return null;
+    }
 }
