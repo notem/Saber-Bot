@@ -246,6 +246,16 @@ public class ScheduleEntry
         return this.entryId;
     }
 
+    public String getChanId()
+    {
+        return this.chanId;
+    }
+
+    public String getGuildId()
+    {
+        return this.guildId;
+    }
+
     public Integer getRepeat()
     {
         return this.entryRepeat;
@@ -277,7 +287,12 @@ public class ScheduleEntry
         }
         catch( Exception e )
         {
-            //__out.printOut(this.getClass(), e.toString());
+            Main.getScheduleManager().getExecutor().submit(()-> {
+                synchronized( Main.getScheduleManager().getScheduleLock() )
+                {
+                    Main.getScheduleManager().removeEntry(this.getId());
+                }
+            });
             msg = null;
         }
         return msg;

@@ -71,12 +71,7 @@ class ScheduleChecker implements Runnable
                 now.until(entry.getStart(), SECONDS) + ": ending in " + now.until(entry.getEnd(),SECONDS) );
 
         if( entry.getMessageObject()==null )
-        {
-            synchronized(Main.getScheduleManager().getScheduleLock())
-            {
-                Main.getScheduleManager().removeEntry(entry.getId());
-            }
-        }
+            return;
 
         if (!entry.hasStarted())
         {
@@ -114,12 +109,7 @@ class ScheduleChecker implements Runnable
         ZonedDateTime now = ZonedDateTime.now();
 
         if( entry.getMessageObject()==null )
-        {
-            synchronized(Main.getScheduleManager().getScheduleLock())
-            {
-                Main.getScheduleManager().removeEntry(entry.getId());
-            }
-        }
+            return;
 
         if (!entry.hasStarted())
         {
@@ -153,12 +143,7 @@ class ScheduleChecker implements Runnable
         ZonedDateTime now = ZonedDateTime.now();
 
         if( entry.getMessageObject()==null )
-        {
-            synchronized(Main.getScheduleManager().getScheduleLock())
-            {
-                Main.getScheduleManager().removeEntry(entry.getId());
-            }
-        }
+            return;
 
         if (!entry.hasStarted())
         {

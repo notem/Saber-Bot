@@ -157,12 +157,8 @@ public class ScheduleManager
         ScheduleEntry se = this.getEntry( eId );
         if( se == null ) return;
 
-        Message msg = se.getMessageObject();
-        if( msg==null )
-            return;
-
-        String gId = msg.getGuild().getId();
-        String cId = msg.getChannel().getId();
+        String gId = se.getGuildId();
+        String cId = se.getChanId();
 
         // remove entry from guild map
         entriesByGuild.get(gId).remove(eId);
