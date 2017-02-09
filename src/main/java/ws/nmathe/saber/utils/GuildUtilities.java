@@ -39,9 +39,7 @@ public class GuildUtilities
         // ready a consumer to parseMsgFormat the history
         Consumer<List<Message>> cons = (l) ->
         {
-            if(l.size()<1)
-                return;
-
+            // attempt to load the first message as a settings message
             int i = 0;
             if( chanSetManager.loadSettings(l.get(0)) )
                 i++;
@@ -56,12 +54,11 @@ public class GuildUtilities
                     MessageUtilities.deleteMsg(message, null);
             }
 
-            //chanSetManager.sendSettingsMsg(chan);
+            chanSetManager.sendSettingsMsg(chan);
         };
 
         // retrieve history and have the consumer act on it
         history.retrievePast((maxEntries >= 0) ? maxEntries * 2 : 50).queue(cons);
-
     }
 
     public static List<TextChannel> getValidScheduleChannels(Guild guild)

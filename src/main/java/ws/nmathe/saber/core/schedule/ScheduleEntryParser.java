@@ -8,6 +8,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.settings.ChannelSettingsManager;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
+import ws.nmathe.saber.utils.__out;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -137,7 +138,9 @@ public class ScheduleEntryParser
         }
         catch( Exception e )
         {
-            MessageUtilities.deleteMsg( msg, null );
+            __out.printOut(ScheduleEntryParser.class, "Failed to parse a schedule entry from server " +
+                    msg.getGuild().getId() + " - " + msg.getGuild().getName() );
+            //MessageUtilities.deleteMsg( msg, null );
             return null;
         }
     }
@@ -457,7 +460,9 @@ public class ScheduleEntryParser
                 return new ScheduleEntry(Id, eTitle, eStart, eEnd, eComments, repeat, msg.getId(), msg.getChannel().getId(), msg.getGuild().getId());
             } catch(Exception e)
             {
-                e.printStackTrace();
+                __out.printOut(ScheduleEntryParser.class, "Failed to parse a schedule entry from server " +
+                        msg.getGuild().getId() + " - " + msg.getGuild().getName() );
+                //MessageUtilities.deleteMsg( msg, null );
                 return null;
             }
         }
