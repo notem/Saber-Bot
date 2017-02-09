@@ -40,20 +40,22 @@ public class GuildUtilities
         Consumer<List<Message>> cons = (l) ->
         {
             // attempt to load the first message as a settings message
-            int i = 0;
-            if( chanSetManager.loadSettings(l.get(0)) )
-                i++;
-
-            for (; i < l.size(); i++)
+            if(l.size() > 0)
             {
-                Message message = l.get(i);
-                if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
-                {
-                    schedManager.addEntry(message);
-                } else
-                    MessageUtilities.deleteMsg(message, null);
-            }
+                int i = 0;
+                if( chanSetManager.loadSettings(l.get(0)) )
+                    i++;
 
+                for (; i < l.size(); i++)
+                {
+                    Message message = l.get(i);
+                    if (message.getAuthor().getId().equals(Main.getBotSelfUser().getId()))
+                    {
+                        schedManager.addEntry(message);
+                    } else
+                        MessageUtilities.deleteMsg(message, null);
+                }
+            }
             chanSetManager.sendSettingsMsg(chan);
         };
 
