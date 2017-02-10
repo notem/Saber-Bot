@@ -205,23 +205,7 @@ public class EditCommand implements Command
                 else if( tmp.equals("no") || tmp.equals("none") )
                     repeat = 0;
                 else
-                {
-                    repeat = 0;
-                    if( tmp.contains("su") )
-                        repeat |= 1;
-                    if( tmp.contains("mo") )
-                        repeat |= 1<<1;
-                    if( tmp.contains("tu") )
-                        repeat |= 1<<2;
-                    if( tmp.contains("we") )
-                        repeat |= 1<<3;
-                    if( tmp.contains("th") )
-                        repeat |= 1<<4;
-                    if( tmp.contains("fr") )
-                        repeat |= 1<<5;
-                    if( tmp.contains("sa") )
-                        repeat |= 1<<6;
-                }
+                    repeat = ScheduleEntryParser.parseWeeklyRepeat(tmp);
                 break;
         }
 

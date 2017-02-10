@@ -15,10 +15,10 @@ public class SyncCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "Using ``" + invoke + " <channel> <calendar address>`` will replace all events in the specified channel" +
+        String USAGE_EXTENDED = "Using ``" + invoke + " <channel> [<calendar address>]`` will replace all events in the specified channel" +
                 "with events imported from a public google calendar. The command imports the next 7 days of events into the channel;" +
-                " auto sync is planned but not yet implemented. You can find your google calendar's public URL address in the calendar's" +
-                " settings; provide the command with the full address.";
+                " the channel will then automatically re-sync once every day. If you ``<calendar address>`` is not included, " +
+                "the address saved in the channel settings will be used.";
 
         String USAGE_BRIEF = "``" + invoke + "`` - Sync a schedule channel to a public google calendar.";
 
@@ -33,16 +33,17 @@ public class SyncCommand implements Command
     @Override
     public String verify(String[] args, MessageReceivedEvent event)
     {
-        if( args.length < 2 )
-            return "Not enough arguments";
+        if( args.length < 1 )
+            return "That's not enough arguments";
         if( args.length > 2)
-            return "Too many arguments";
+            return "That's too many arguments";
         if( !Main.getChannelSettingsManager().idIsInMap(args[0].replace("<#","").replace(">","")))
             return "Channel " + args[0] + " is not on my list of schedule channels for your guild. " +
                     "Try using the ``init`` command!";
-        if( !Main.getCalendarConverter().checkValidAddress( args[1] ) )
-            return "Cannot connect to google calendar address **" + args[1] + "**";
-
+        if( args.length == 2 && !Main.getCalendarConverter().checkValidAddress( args[1] ) )
+            return "I could not connect to google calendar address **" + args[1] + "**";
+        if( args.length == 1 && Main.getChannelSettingsManager().getAddress(args[0].replace("<#","").replace(">","")).equals("off"))
+            return "That channel is not configured to sync to any calendar!";
         return "";
     }
 
@@ -50,11 +51,18 @@ public class SyncCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         TextChannel channel = event.getGuild().getTextChannelById( args[0].replace("<#","").replace(">","") );
+        String address;
+        if( args.length == 1 )
+            address = Main.getChannelSettingsManager().getAddress(channel.getId());
+        else
+        {
+            address = args[1];
+        }
+
         try
         {
-            Main.getCalendarConverter().syncCalendar(args[1], channel);
-
-            Main.getChannelSettingsManager().setAddress(channel.getId(),args[1]);
+            Main.getCalendarConverter().syncCalendar(address, channel);
+            Main.getChannelSettingsManager().setAddress(channel.getId(),address);
             Main.getChannelSettingsManager().adjustSync(channel.getId());
         }
         catch( Exception e )

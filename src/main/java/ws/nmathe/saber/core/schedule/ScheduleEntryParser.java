@@ -213,6 +213,27 @@ public class ScheduleEntryParser
         return msg;
     }
 
+    public static int parseWeeklyRepeat(String str)
+    {
+        str = str.toLowerCase();
+        int bits = 0;
+        if( str.contains("su") )
+            bits |= 1;
+        if( str.contains("mo") )
+            bits |= 1<<1;
+        if( str.contains("tu") )
+            bits |= 1<<2;
+        if( str.contains("we") )
+            bits |= 1<<3;
+        if( str.contains("th") )
+            bits |= 1<<4;
+        if( str.contains("fr") )
+            bits |= 1<<5;
+        if( str.contains("sa") )
+            bits |= 1<<6;
+        return bits;
+    }
+
     private static int getRepeatBits(String str)
     {
         if( str.equals("does not repeat") )
@@ -223,20 +244,7 @@ public class ScheduleEntryParser
         int bits = 0;
         if( str.startsWith("repeats weekly on ") )
         {
-            if( str.contains("Su") )
-                bits |= 1;
-            if( str.contains("Mo") )
-                bits |= 1<<1;
-            if( str.contains("Tu") )
-                bits |= 1<<2;
-            if( str.contains("We") )
-                bits |= 1<<3;
-            if( str.contains("Th") )
-                bits |= 1<<4;
-            if( str.contains("Fr") )
-                bits |= 1<<5;
-            if( str.contains("Sa") )
-                bits |= 1<<6;
+            ScheduleEntryParser.parseWeeklyRepeat(str);
         }
         return bits;
     }

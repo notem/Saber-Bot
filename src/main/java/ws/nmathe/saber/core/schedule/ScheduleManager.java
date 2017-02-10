@@ -61,7 +61,7 @@ public class ScheduleManager
         // schedule a thread to check channels if they need to be synced
         ScheduledExecutorService syncer = Executors.newScheduledThreadPool(1);
         syncer.scheduleAtFixedRate( new ChannelSyncChecker( entriesByChannel.keySet() ),
-                0, 35*60, TimeUnit.SECONDS );
+                5*60, 35*60, TimeUnit.SECONDS );
     }
 
     /**

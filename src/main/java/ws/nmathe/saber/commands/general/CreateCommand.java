@@ -3,6 +3,7 @@ package ws.nmathe.saber.commands.general;
 import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.core.schedule.ScheduleEntryParser;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import ws.nmathe.saber.utils.*;
@@ -172,22 +173,7 @@ public class CreateCommand implements Command
                     else if( tmp.equals("no") || tmp.equals("none") )
                         repeat = 0;
                     else
-                    {
-                        if( tmp.contains("su") )
-                            repeat |= 1;
-                        if( tmp.contains("mo") )
-                            repeat |= 1<<1;
-                        if( tmp.contains("tu") )
-                            repeat |= 1<<2;
-                        if( tmp.contains("we") )
-                            repeat |= 1<<3;
-                        if( tmp.contains("th") )
-                            repeat |= 1<<4;
-                        if( tmp.contains("fr") )
-                            repeat |= 1<<5;
-                        if( tmp.contains("sa") )
-                            repeat |= 1<<6;
-                    }
+                        repeat = ScheduleEntryParser.parseWeeklyRepeat(tmp);
                     repeatFlag = false;
                 }
                 else if( dateFlag )

@@ -9,12 +9,15 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.core.schedule.ScheduleEntryParser;
 import ws.nmathe.saber.utils.MessageUtilities;
+import ws.nmathe.saber.utils.__out;
 
 import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -110,6 +113,8 @@ public class CalendarConverter
         ZoneId zone = ZoneId.of( events.getTimeZone() );
         Main.getChannelSettingsManager().setTimeZone( channel.getId(), zone );
 
+        HashSet<String> uniqueEvents = new HashSet<>();
+
         // convert every entry and add it to the scheduleManager
         for(Event event : events.getItems())
         {
@@ -152,17 +157,32 @@ public class CalendarConverter
             }
             if( recurrence != null )
             {
-                // TODO parse recurrence rules into repeat bitset
-                repeat = 0;
+                for( String rule : recurrence )
+                {
+                    if( rule.startsWith("RRULE") && rule.contains("FREQ" ) )
+                    {
+                        String tmp = rule.split("FREQ=")[1].split(";")[0];
+                        if( tmp.equals("DAILY" ) )
+                            repeat = 0b1111111;
+                        else if( tmp.equals("WEEKLY") && rule.contains("BYDAY") )
+                        {
+                            tmp = rule.split("BYDAY=")[1].split(";")[0];
+                            repeat = ScheduleEntryParser.parseWeeklyRepeat(tmp);
+                        }
+                    }
+                }
             }
 
-            int id = Main.getScheduleManager().newId( null );
-            Message msg = ScheduleEntryParser.generate( title, start, end, comments, repeat, id, channel.getId());
+            if(!uniqueEvents.contains((recurrenceId==null?event.getId():recurrenceId)))
+            {
+                int id = Main.getScheduleManager().newId( null );
+                Message msg = ScheduleEntryParser.generate( title, start, end, comments, repeat, id, channel.getId());
 
-            int finalRepeat = repeat;
+                Message message = MessageUtilities.sendMsg( msg, channel);
+                Main.getScheduleManager().addEntry( title, start, end, comments, id, message, repeat);
 
-            Message message = MessageUtilities.sendMsg( msg, channel);
-            Main.getScheduleManager().addEntry( title, start, end, comments, id, message, finalRepeat);
+                uniqueEvents.add((recurrenceId==null?event.getId():recurrenceId));
+            }
         }
     }
 }
