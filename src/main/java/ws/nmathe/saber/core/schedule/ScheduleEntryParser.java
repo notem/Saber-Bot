@@ -142,7 +142,8 @@ public class ScheduleEntryParser
         {
             __out.printOut(ScheduleEntryParser.class, "Failed to parse a schedule entry from server " +
                     msg.getGuild().getId() + " - " + msg.getGuild().getName() );
-            //MessageUtilities.deleteMsg( msg, null );
+            e.printStackTrace();
+            MessageUtilities.deleteMsg( msg, null );
             return null;
         }
     }
@@ -472,7 +473,8 @@ public class ScheduleEntryParser
             {
                 __out.printOut(ScheduleEntryParser.class, "Failed to parse a schedule entry from server " +
                         msg.getGuild().getId() + " - " + msg.getGuild().getName() );
-                //MessageUtilities.deleteMsg( msg, null );
+                e.printStackTrace();
+                MessageUtilities.deleteMsg( msg, null );
                 return null;
             }
         }
