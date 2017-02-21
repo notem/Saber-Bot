@@ -36,9 +36,9 @@ public class CreateCommand implements Command
                 "time, and an end time.  Start and end times should be of form h:mm with " +
                 "optional am/pm appended on the end." +
                 "\n\nEntries can optionally be configured with comments, repeat, and a start date. Adding ``repeat " +
-                "<no/daily/weekly>`` to " +
-                "``<Optional>`` will configure repeat; default behavior is no repeat. Adding ``date MM/dd`` to " +
-                "``<Optional>`` will configure the start date; default behavior is to use the current date or the " +
+                "<no|daily|\"Su,Mo,Tu,We,Th,Fr,Sa\">`` to ``<Optional>`` will configure the event to repeat with the " +
+                "given interval; default behavior is no repeat. Adding ``date MM/dd`` to " +
+                "``<Optional>`` will set the events start date; default behavior is to use the current date or the " +
                 "next day depending on if the current time is greater than the start time. Comments may be added by" +
                 " adding ``\"YOUR COMMENT\"`` in ``<Optional>``; any number of comments may be added in ``<Optional>``." +
                 "\n\nIf your title, comment, or channel includes any space characters, the phrase my be enclosed in " +

@@ -22,7 +22,7 @@ public class MessageUtilities
      * @param chan The channel to send to
      * @param action a non null Consumer will do operations on the results returned
      */
-    public static void sendMsg( String content, MessageChannel chan, Consumer<Message> action )
+    public static void sendMsg(String content, MessageChannel chan, Consumer<Message> action )
     {
         try
         {
@@ -34,6 +34,7 @@ public class MessageUtilities
         }
     }
 
+    /// version which takes a message rather than a string
     public static void sendMsg(Message message, MessageChannel chan, Consumer<Message> action )
     {
         try
@@ -46,6 +47,7 @@ public class MessageUtilities
         }
     }
 
+    /// blocking version
     public static Message sendMsg(Message message, MessageChannel chan)
     {
         try
@@ -141,6 +143,7 @@ public class MessageUtilities
         }
     }
 
+    /// blocking version
     public static Void deleteMsg(Message msg )
     {
         try

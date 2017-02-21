@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Reloads the schedule channel.
  */
 public class InitCommand implements Command
 {

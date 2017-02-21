@@ -24,8 +24,8 @@ public class DestroyCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "Calling **!destroy <ID>** will end the event with <ID>" +
-                " prematurely. If **all** is used instead of the event ID, all scheduled events will be destroyed.";
+        String USAGE_EXTENDED = "Calling ``!destroy <ID>`` will end the event with <ID>" +
+                " prematurely. If ``all`` is used instead of the event ID, all scheduled events will be destroyed.";
 
         String USAGE_BRIEF = "``" + prefix + "destroy`` - Removes an entry from " +
                 scheduleChan + ".";

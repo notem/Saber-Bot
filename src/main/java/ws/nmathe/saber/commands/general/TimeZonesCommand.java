@@ -41,54 +41,25 @@ public class TimeZonesCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         Set<String> zones = ZoneId.getAvailableZoneIds();
-        if( args.length == 0 )
+
+        String msg = "**Available options for time zones**\n";
+        for (String zone : zones )
         {
-            String msg = "**Available options for time zones**\n";
-            for (String zone : zones )
+            if (msg.length() > 1900)
             {
-                if (msg.length() > 1900)
-                {
-                    MessageUtilities.sendMsg(msg, event.getChannel(), null);
-
-                    try
-                    {
-                        Thread.sleep(1000);
-                    }
-                    catch( Exception ignored )
-                    { }
-
-                    msg = "**continued. . .**\n";
-                }
+                MessageUtilities.sendMsg(msg, event.getChannel(), null);
+                try
+                {Thread.sleep(1000);}
+                catch( Exception ignored )
+                { }
+                msg = "**continued. . .**\n";
+            }
+            if( args.length == 0 )
                 msg += "  " + zone + "\n";
-            }
-
-            MessageUtilities.sendMsg(msg, event.getChannel(), null);
+            else if( zone.toUpperCase().contains(args[0].toUpperCase()) )
+                msg += "  " + zone + "\n";
         }
-        else
-        {
-            String msg = "**Time zones for " + args[0] + "**\n";
-            for (String zone : zones )
-            {
-                if (msg.length() > 1900)
-                {
-                    MessageUtilities.sendMsg(msg, event.getChannel(), null);
 
-                    try
-                    {
-                        Thread.sleep(1000);
-                    }
-                    catch( Exception ignored )
-                    { }
-
-                    msg = "**continued. . .**\n";
-                }
-                if( zone.toUpperCase().contains(args[0].toUpperCase()) )
-                {
-                    msg += "  " + zone + "\n";
-                }
-            }
-
-            MessageUtilities.sendMsg(msg, event.getChannel(), null);
-        }
+        MessageUtilities.sendMsg(msg, event.getChannel(), null);
     }
 }

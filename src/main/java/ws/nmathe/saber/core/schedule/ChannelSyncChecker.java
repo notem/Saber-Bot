@@ -3,9 +3,11 @@ package ws.nmathe.saber.core.schedule;
 import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.settings.ChannelSettingsManager;
-
 import java.util.Collection;
 
+/**
+ * A runnable thread which resyncs a channel to it's linked google calendar
+ */
 public class ChannelSyncChecker implements Runnable {
 
     private Collection<String> cIds;

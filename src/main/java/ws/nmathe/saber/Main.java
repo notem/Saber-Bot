@@ -86,8 +86,8 @@ public class Main
             GuildUtilities.loadScheduleChannels( guild );
         }
 
-        calendarConverter.init();   // connect to calendar service
         commandHandler.init();      // ready commands
+        calendarConverter.init();   // connect to calendar service
         scheduleManager.init();     // start timers
 
         HttpUtilities.updateStats();

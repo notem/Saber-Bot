@@ -21,10 +21,13 @@ public class HelpCommand implements Command
 
     private String INTRO = "I am **" + Main.getBotSelfUser().getName() + "**, the task scheduling discord bot." +
             " I can provide your discord with basic event schedule management.  Invite me to your discord and set up " +
-            "my appropriate channels to get started.\n\n";
+            "my appropriate channels to get started.\n\n" +
+            "github: <https://github.com/notem/Saber-Bot>\n" +
+            "userdocs: <https://nmathe.ws/bots/saber>\n" +
+            "support server: <https://discord.gg/ZQZnXsC>\n\n";
 
-    private String USAGE_EXTENDED = "\nTo get detailed information concerning the usage of any of these" +
-            " commands use the command ``!help <command>`` where the prefix for <command> is stripped off. " +
+    private String USAGE_EXTENDED = "To get detailed information concerning the usage of any of these" +
+            " commands use the command ``" + prefix + "help <command>`` where the prefix for <command> is stripped off.\n" +
             "Ex. ``" + prefix + "help create``";
 
     private String USAGE_BRIEF = "``" + prefix + "help`` - Messages the user help messages.";
@@ -35,7 +38,7 @@ public class HelpCommand implements Command
         if( brief )
             return USAGE_BRIEF;
         else
-            return USAGE_BRIEF + "\n" + USAGE_EXTENDED;
+            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED;
     }
 
     @Override

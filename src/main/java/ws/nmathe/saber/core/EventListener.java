@@ -26,7 +26,6 @@ public class EventListener extends ListenerAdapter
     private String scheduleChan = Main.getBotSettings().getScheduleChan();
 
     private ScheduleManager scheduleManager = Main.getScheduleManager();
-    private ChannelSettingsManager channelSettingsManager = Main.getChannelSettingsManager();
     private CommandHandler cmdHandler = Main.getCommandHandler();
 
     @Override

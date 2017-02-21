@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
+ * Command which is used to adjust the schedule settings for a channel
  */
 public class SetCommand implements Command
 {
@@ -34,9 +35,9 @@ public class SetCommand implements Command
 
         String USAGE_BRIEF = "``" + invoke + "`` - Used to set guild-wide schedule botSettings.";
 
-        String EXAMPLES = "Ex1: ``" + invoke + " msg \"@here The event %t %a.\"``\n" +
-                "Ex2: ``" + invoke + " msg \"@everyone %c1\"``\n" +
-                "Ex3: ``" + invoke + " chan \"event announcements\"``";
+        String EXAMPLES = "Ex1: ``" + invoke + " #events_channel msg \"@here The event %t %a.\"``\n" +
+                "Ex2: ``" + invoke + " #events_channel msg \"@everyone %c1\"``\n" +
+                "Ex3: ``" + invoke + " #events_channel chan \"event announcements\"``";
 
         if( brief )
             return USAGE_BRIEF;

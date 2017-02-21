@@ -18,7 +18,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Manage's the schedule of ScheduleEntries for all attached guilds
+ * Manages the schedule of ScheduleEntries for all attached guilds
+ * Responsible for checking for expired entries, syncing channels to
+ * their respective google calendar address, managing IDs, and removing/creating
+ * entries.
  */
 public class ScheduleManager
 {

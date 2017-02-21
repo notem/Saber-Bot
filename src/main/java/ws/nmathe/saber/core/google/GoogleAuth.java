@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * authentication with google api services
  */
 public class GoogleAuth
 {

@@ -10,6 +10,9 @@ import java.util.Collections;
 /**
  * used to create a CommandContainer object which contains the parsed tokens of the user input
  * along with the originating event object
+ *
+ * strings are parsed into tokens which are space separated. Tokens may include
+ * a space if the token is enclosed in quotations ("a token")
  */
 class CommandParser
 {

@@ -7,9 +7,16 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
+ * utilities which do some sort of string parsing
  */
 public class ParsingUtilities
 {
+    /**
+     * parses a local time string inputted by a user into a ZonedDateTime object
+     * @param t a dummy ZonedDateTime with the desired zone and date set
+     * @param localtime the local time
+     * @return new ZonedDateTime with the new time
+     */
     public static ZonedDateTime parseTime(ZonedDateTime t, String localtime)
     {
         LocalTime time;
@@ -29,6 +36,11 @@ public class ParsingUtilities
         return t;
     }
 
+    /**
+     * @param format the base string to parse into a message
+     * @param entry the entry associated with the message
+     * @return a new message which has entry specific information inserted into the format string
+     */
     public static String parseMsgFormat(String format, ScheduleEntry entry)
     {
         String announceMsg = "";

@@ -27,15 +27,15 @@ public class EditCommand implements Command
     public String help(boolean brief)
     {
         String USAGE_EXTENDED = "The entry's title, start time, start date, end time, comments," +
-                " and repeat may be reconfigured with this command using the form **!edit <ID> <option> <arg>**\n\n" +
-                " The possible arguments are **title <title>**, **start h:mm**, **end h:mm**, **date MM/dd**, " +
-                "**repeat no**/**daily**/**weekly**, and **comment add <comment>** (or **comment remove**). When " +
+                " and repeat may be reconfigured with this command using the form ``!edit <ID> <option> <arg>``\n\n" +
+                " The possible arguments are ``title <title>``, ``start h:mm``, ``end h:mm``, ``date MM/dd``, " +
+                "``repeat no``/``daily``/``weekly``, and ``comment add <comment>`` (or ``comment remove``). When " +
                 "removing a comment, either the comment copied verbatim or the comment number needs to be supplied.";
 
-        String EXAMPLES = "Ex1: **!edit 3fa0 comment add \"Attendance is mandatory\"**" +
-                "\nEx2: **!edit 0abf start 21:15**" +
-                "\nEx3: **!edit 49af end 2:15pm**" +
-                "\nEx4: **!edit 80c0 comment remove 1**";
+        String EXAMPLES = "Ex1: ``!edit 3fa0 comment add \"Attendance is mandatory\"``" +
+                "\nEx2: ``!edit 0abf start 21:15``" +
+                "\nEx3: ``!edit 49af end 2:15pm``" +
+                "\nEx4: ``!edit 80c0 comment remove 1``";
 
         String USAGE_BRIEF = "``" + prefix + "edit`` - Modifies an schedule entry, either" +
                 " changing parameters or adding/removing comment fields.";

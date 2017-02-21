@@ -12,8 +12,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * static methods frequently used in the verify() methods used by classes implementing the
- * Command interface.
+ * static methods used to verify user input for the verify() method of commands
  */
 public class VerifyUtilities
 {

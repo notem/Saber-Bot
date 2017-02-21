@@ -6,6 +6,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 
 /**
+ * Sets a channel to sync to a google calendar address
  */
 public class SyncCommand implements Command
 {

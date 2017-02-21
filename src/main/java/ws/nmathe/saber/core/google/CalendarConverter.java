@@ -16,11 +16,14 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
 /**
+ * Reads the next 7 days of events on a google calendar and converts
+ * the events into a saber schedule entry. Events with recurrence are
+ * condensed into one saber schedule entry.  Only daily and weekly by day
+ * recurrence is supported.
  */
 public class CalendarConverter
 {
@@ -37,10 +40,11 @@ public class CalendarConverter
         try
         {
             service = GoogleAuth.getCalendarService();
+            Main.getCommandHandler().putSync();
         }
         catch( IOException e )
         {
-            e.printStackTrace();
+            __out.printOut(this.getClass(), e.getMessage());
         }
     }
 

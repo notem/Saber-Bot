@@ -18,6 +18,8 @@ import java.util.ArrayList;
 /**
  *  This class is responsible for both parsing a discord message containing information that creates a ScheduleEvent,
  *  as well as is responsible for generating the message that is to be used as the parsable discord schedule entry
+ *
+ *  Entries can be of two forms: a plain/legacy form or an embed form
  */
 public class ScheduleEntryParser
 {
@@ -533,5 +535,4 @@ public class ScheduleEntryParser
             return msg;
         }
     }
-
 }

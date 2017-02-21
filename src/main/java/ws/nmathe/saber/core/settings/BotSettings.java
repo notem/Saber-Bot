@@ -5,6 +5,10 @@ import java.util.Properties;
 
 /**
  * contains configurable variables for the bot
+ * file should be auto-generated with required fields if the file is found
+ * not to exist.
+ *
+ * an optional 'webtoken' field may be added to sync stats with bots.discord.pw
  */
 public class BotSettings
 {
