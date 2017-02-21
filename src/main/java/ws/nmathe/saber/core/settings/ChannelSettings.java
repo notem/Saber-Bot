@@ -89,7 +89,7 @@ class ChannelSettings
                 " | style:\"" + this.messageStyle + "\"" +
                 " | msg:\"" + this.announceFormat + "\"" +
                 " | chan:\"" + this.announceChannel + "\"" +
-                " | sync:\"" + this.calendarAddress;
+                " | sync:\"" + this.calendarAddress + "\"";
         msg += "\n```";
         return msg;
     }
