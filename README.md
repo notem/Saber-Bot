@@ -1,3 +1,14 @@
+### ALERT: Development on Saber-bot has been halted. Instead, I'll be working the [G4M3R discord bot](https://github.com/pedall/G4M3R) for the time being. However, I will continue to provide hosting for the bot.
+
+### Current Issues
+
++ NULL pointer exception encountered in some instances of calendar sync'ing
++ Various, intermitten concurrency issues on guild leave, schedule checking, and bot schedule reloading.
++ Getting rate limited by Discord causes all maner of issues.
+
+In general Saber-bot struggles to handle schedule management simultaneously for many discord servers. Some of my core design choices (No backend db, reloading of schedules and channel settings on startup) are deeply flawed and require a major rework. Unfortunately, I cannot currently devote the time necessary to do these revisions. I will likely return to finish up this project sometime in the future (assuming other discord scheduling utilities haven't replaced it's need).
+
+<hr>
 # Saber-Bot
 ## A calendar/schedule manager discord bot written in Java 8 and using JDA
 
@@ -8,17 +19,6 @@
 + Custom announcement messages on start/end of events (can be used to schedule other bot commands).
 + Set announcement message, channel to announce to, timezone and clock format per schedule channel.
 + Sync a schedule channel to a public Google Calendars calendar
-
-### Roadmap
-+ Improve sync to google calendar
-+ Add optional reminders which send announcement messages before an event begins
-+ Use a DB system as backend for storing the list of schedule entries
-+ (When channel categories release) organize schedule channels under the 'Schedule' category
-+ Dynamically sort entries in a channel w/ the top-most entry having the earliest start time
-+ More options for custom messages
-+ User experience improvements, and automated setup
-+ Character limits on user input
-
 
 ### Dependencies
 
