@@ -68,7 +68,6 @@ public class ScheduleEntry
      */
     public void start()
     {
-        this.hasStarted = true;
         ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
 
         Message msg = this.getMessageObject();
@@ -91,6 +90,7 @@ public class ScheduleEntry
         }
 
         this.adjustTimer();
+        this.hasStarted = true;
     }
 
     /**
