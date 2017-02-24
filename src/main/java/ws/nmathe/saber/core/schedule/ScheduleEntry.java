@@ -36,6 +36,8 @@ public class ScheduleEntry
     private String chanId;
     private String guildId;
 
+    private boolean hasStarted;
+
 
     public ScheduleEntry(Integer eId, String eName, ZonedDateTime entryStart, ZonedDateTime entryEnd,
                          ArrayList<String> eComments, int eRepeat, String msgId, String chanId, String guildId )
@@ -50,6 +52,7 @@ public class ScheduleEntry
         this.msgId = msgId;
         this.chanId = chanId;
         this.guildId = guildId;
+        this.hasStarted = false;
     }
 
     /**
@@ -57,7 +60,7 @@ public class ScheduleEntry
      */
     public boolean hasStarted()
     {
-        return ZonedDateTime.now().isAfter(entryStart);
+        return this.hasStarted;
     }
 
     /**
@@ -65,7 +68,7 @@ public class ScheduleEntry
      */
     public void start()
     {
-        ScheduleManager schedManager = Main.getScheduleManager();
+        this.hasStarted = true;
         ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
 
         Message msg = this.getMessageObject();
