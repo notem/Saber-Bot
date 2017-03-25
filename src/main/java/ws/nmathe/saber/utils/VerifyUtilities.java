@@ -1,15 +1,7 @@
 package ws.nmathe.saber.utils;
 
-import ws.nmathe.saber.Main;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.TextChannel;
-
+import java.net.URL;
 import java.time.Month;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * static methods used to verify user input for the verify() method of commands
@@ -84,7 +76,7 @@ public class VerifyUtilities
         return true;
     }
 
-    public static boolean verifyHex( String arg )
+    public static boolean verifyHex(String arg)
     {
         try
         {
@@ -98,7 +90,7 @@ public class VerifyUtilities
         return true;
     }
 
-    public static boolean verifyInteger( String arg )
+    public static boolean verifyInteger(String arg)
     {
         try
         {
@@ -111,28 +103,16 @@ public class VerifyUtilities
         return true;
     }
 
-    public static boolean verifyScheduleChannel( Guild guild )
+    public static boolean verifyUrl(String arg)
     {
-        Collection<TextChannel> chans = GuildUtilities.getValidScheduleChannels(guild);
-        if( chans == null || chans.isEmpty() )
+        try
+        {
+            new URL(arg);
+        }
+        catch(Exception e)
         {
             return false;
         }
-
-        Member botAsMember = guild.getMember(Main.getBotSelfUser());
-
-        List<Permission> perms = Arrays.asList( // required permissions
-                Permission.MESSAGE_HISTORY, Permission.MESSAGE_READ,
-                Permission.MESSAGE_WRITE, Permission.MESSAGE_MANAGE
-        );
-
-        for( TextChannel chan : chans ) // if any one channel has required permissions
-        {
-            if( botAsMember.hasPermission( chan, perms ) )
-            {
-                return true;
-            }
-        }
-        return false;
+        return true;
     }
 }

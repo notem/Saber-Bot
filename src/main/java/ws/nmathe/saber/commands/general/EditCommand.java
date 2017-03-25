@@ -4,41 +4,36 @@ import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
-import ws.nmathe.saber.core.schedule.ScheduleManager;
-import ws.nmathe.saber.core.schedule.ScheduleEntryParser;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
-import ws.nmathe.saber.utils.__out;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  */
 public class EditCommand implements Command
 {
     private String prefix = Main.getBotSettings().getCommandPrefix();
-    private ScheduleManager schedManager = Main.getScheduleManager();
 
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "The entry's title, start time, start date, end time, comments," +
-                " and repeat may be reconfigured with this command using the form ``!edit <ID> <option> <arg>``\n\n" +
-                " The possible arguments are ``title <title>``, ``start h:mm``, ``end h:mm``, ``date MM/dd``, " +
-                "``repeat no``/``daily``/``weekly``, and ``comment add <comment>`` (or ``comment remove``). When " +
+        String USAGE_EXTENDED = "``!edit <ID> <option> <arg>`` will allow you to change an" +
+                " entry's title, start time, start date, end time, comments," +
+                " and repeat parameters.\n\n" +
+                " The possible arguments are ``title <title>``, ``start <h:mm>``, ``end <h:mm>``, ``date MM/dd``, " +
+                "``repeat <no|daily|Su,Mo,Tu. . .>``, and ``comment add|remove <comment>``. When " +
                 "removing a comment, either the comment copied verbatim or the comment number needs to be supplied.";
 
-        String EXAMPLES = "Ex1: ``!edit 3fa0 comment add \"Attendance is mandatory\"``" +
+        String EXAMPLES = "" +
+                "Ex1: ``!edit 3fa0 comment add \"Attendance is mandatory\"``" +
                 "\nEx2: ``!edit 0abf start 21:15``" +
                 "\nEx3: ``!edit 49af end 2:15pm``" +
                 "\nEx4: ``!edit 80c0 comment remove 1``";
 
-        String USAGE_BRIEF = "``" + prefix + "edit`` - Modifies an schedule entry, either" +
-                " changing parameters or adding/removing comment fields.";
+        String USAGE_BRIEF = "``" + prefix + "edit`` - modify an event";
 
         if( brief )
             return USAGE_BRIEF;
@@ -52,14 +47,17 @@ public class EditCommand implements Command
         int index = 0;
 
         if( args.length < 3 )
-            return "Not enough arguments";
+            return "That's not enough arguments!";
 
         // check first arg
         if( !VerifyUtilities.verifyHex(args[index]) )
-            return "ID \"" + args[index] + "\" is not a valid ID value";
+            return "``" + args[index] + "`` is not a valid entry ID!";
 
         Integer Id = Integer.decode( "0x" + args[index] );
-        ScheduleEntry entry = schedManager.getEntry( Id );
+        ScheduleEntry entry = Main.getEntryManager().getEntryFromGuild( Id, event.getGuild().getId() );
+
+        if(entry == null)
+            return "I could not find an entry with that ID!";
 
         index++;
 
@@ -83,7 +81,7 @@ public class EditCommand implements Command
 
             case "start":
                 if(args.length > 3)
-                    return "Not enough arguments";
+                    return "That's too many arguments for **start**!";
                 if( !VerifyUtilities.verifyTime( args[index] ) )
                     return "Argument **" + args[index] + "** is not a valid start time";
                 if( entry.hasStarted() )
@@ -92,26 +90,33 @@ public class EditCommand implements Command
 
             case "end":
                 if(args.length > 3)
-                    return "Not enough arguments";
+                    return "That's too many arguments for **end**!";
                 if( !VerifyUtilities.verifyTime( args[index] ) )
                     return "Argument **" + args[index] + "** is not a valid end time";
                 break;
 
             case "title":
                 if( args[index].length() > 255 )
-                    return "Your title is too long";
+                    return "Your title can be at most 255 characters!";
                 break;
 
             case "date":
                 if(args.length > 3)
-                    return "Not enough arguments";
+                    return "That's too many arguments for **date**!";
                 if( !VerifyUtilities.verifyDate( args[index] ) )
-                    return "Argument **" + args[index] + "** is not a valid date";
+                    return "**" + args[index] + "** is not a valid date";
                 break;
 
             case "repeat":
                 if(args.length > 3)
-                    return "Not enough arguments";
+                    return "That's too many arguments for **repeat**!";
+                break;
+
+            case "url":
+                if (args.length > 3)
+                    return "That's too many arguments for **repeat**!";
+                if (!VerifyUtilities.verifyUrl(args[index]))
+                    return "``" + args[index] + "`` is not a url!";
                 break;
         }
 
@@ -124,7 +129,7 @@ public class EditCommand implements Command
         int index = 0;
 
         Integer entryId = Integer.decode( "0x" + args[index] );
-        ScheduleEntry entry = schedManager.getEntry( entryId );
+        ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
 
         Message msg = entry.getMessageObject();
         if( msg==null )
@@ -135,6 +140,7 @@ public class EditCommand implements Command
         ZonedDateTime start = entry.getStart();             // schedule values
         ZonedDateTime end = entry.getEnd();                 //
         int repeat = entry.getRepeat();                     //
+        String url = entry.getTitleUrl();                   //
 
         index++;    // 1
 
@@ -200,30 +206,15 @@ public class EditCommand implements Command
 
             case "repeat":
                 String tmp = args[index].toLowerCase();
-                if( tmp.toLowerCase().equals("daily") )
-                    repeat = 0b1111111;
-                else if( tmp.equals("no") || tmp.equals("none") )
-                    repeat = 0;
-                else
-                    repeat = ScheduleEntryParser.parseWeeklyRepeat(tmp);
+                repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
                 break;
+
+            case "url":
+                url = args[index];
+                break;
+
         }
 
-
-        Message newMsg;
-        synchronized( schedManager.getScheduleLock() )
-        {
-            newMsg = ScheduleEntryParser.generate(title, start, end, comments, repeat, entryId, msg.getChannel().getId() );
-            schedManager.removeEntry( entryId );    // remove the old entry
-        }
-
-        int finalRepeat = repeat;           //
-        ZonedDateTime finalEnd = end;       // convert into effectively final
-        ZonedDateTime finalStart = start;   // variables
-        String finalTitle = title;          //
-
-        MessageUtilities.editMsg(newMsg,
-                msg,
-                (message)->schedManager.addEntry(finalTitle, finalStart, finalEnd, comments, entryId, message, finalRepeat ));
+        Main.getEntryManager().updateEntry(entryId, title, start, end, comments, repeat, url, msg);
     }
 }

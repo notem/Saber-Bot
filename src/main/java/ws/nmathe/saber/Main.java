@@ -1,19 +1,17 @@
 package ws.nmathe.saber;
 
-import net.dv8tion.jda.core.entities.Guild;
 import ws.nmathe.saber.core.command.CommandHandler;
+import ws.nmathe.saber.core.database.Driver;
 import ws.nmathe.saber.core.google.CalendarConverter;
-import ws.nmathe.saber.core.google.GoogleAuth;
-import ws.nmathe.saber.core.schedule.ScheduleManager;
+import ws.nmathe.saber.core.schedule.EntryManager;
 import ws.nmathe.saber.core.settings.BotSettings;
-import ws.nmathe.saber.core.settings.ChannelSettingsManager;
+import ws.nmathe.saber.core.schedule.ScheduleManager;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.SelfUser;
 import ws.nmathe.saber.core.EventListener;
-import ws.nmathe.saber.utils.GuildUtilities;
 import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.__out;
 
@@ -26,10 +24,11 @@ public class Main
     private static JDA jda;                     // api
     private static BotSettings botSettings;     // global config botSettings
 
+    private static EntryManager entryManager = new EntryManager();
     private static ScheduleManager scheduleManager = new ScheduleManager();
-    private static ChannelSettingsManager channelSettingsManager = new ChannelSettingsManager();
     private static CommandHandler commandHandler = new CommandHandler();
     private static CalendarConverter calendarConverter = new CalendarConverter();
+    private static Driver mongoDriver = new Driver();
 
     public static void main( String[] args ) throws InterruptedException {
         // get or generate bot settings
@@ -80,15 +79,11 @@ public class Main
             return;
         }
 
-        // load schedule channels
-        for (Guild guild : jda.getGuilds())
-        {
-            GuildUtilities.loadScheduleChannels( guild );
-        }
-
+        mongoDriver.init();         // ready database
         commandHandler.init();      // ready commands
         calendarConverter.init();   // connect to calendar service
-        scheduleManager.init();     // start timers
+        entryManager.init();        // start timers
+        scheduleManager.init();     // start auto-sync
 
         HttpUtilities.updateStats();
     }
@@ -114,18 +109,23 @@ public class Main
         return commandHandler;
     }
 
-    public static ScheduleManager getScheduleManager()
+    public static EntryManager getEntryManager()
     {
-        return scheduleManager;
+        return entryManager;
     }
 
-    public static ChannelSettingsManager getChannelSettingsManager()
+    public static ScheduleManager getScheduleManager()
     {
-       return channelSettingsManager;
+       return scheduleManager;
     }
 
     public static CalendarConverter getCalendarConverter()
     {
         return calendarConverter;
+    }
+
+    public static Driver getDBDriver()
+    {
+        return mongoDriver;
     }
 }

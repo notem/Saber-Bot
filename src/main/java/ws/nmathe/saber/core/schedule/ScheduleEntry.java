@@ -1,22 +1,18 @@
 package ws.nmathe.saber.core.schedule;
 
-import net.dv8tion.jda.core.EmbedBuilder;
+import org.bson.Document;
 import ws.nmathe.saber.Main;
-import ws.nmathe.saber.core.settings.ChannelSettingsManager;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
-import ws.nmathe.saber.utils.__out;
-
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-
-import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.SECONDS;
+import java.util.Date;
+import java.util.List;
 
 /**
  * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
@@ -30,7 +26,9 @@ public class ScheduleEntry
     private ZonedDateTime entryStart;             // the time when the event starts
     private ZonedDateTime entryEnd;               // the ending time
     private ArrayList<String> entryComments;      // ArrayList of strings that make up the desc
-    private Integer entryRepeat;                  // 1 is daily, 2 is weekly, 0 is not at all
+    private Integer entryRepeat;
+    private String titleUrl;
+    private List<Date> reminders;
 
     private String msgId;
     private String chanId;
@@ -38,21 +36,23 @@ public class ScheduleEntry
 
     private boolean hasStarted;
 
-
-    public ScheduleEntry(Integer eId, String eName, ZonedDateTime entryStart, ZonedDateTime entryEnd,
-                         ArrayList<String> eComments, int eRepeat, String msgId, String chanId, String guildId )
+    ScheduleEntry(Document entryDocument)
     {
-        this.entryId = eId;
-        this.entryTitle = eName;
-        this.entryStart = entryStart;
-        this.entryEnd = entryEnd;
-        this.entryComments = eComments;
-        this.entryRepeat = eRepeat;
+        ZoneId zone = ZoneId.of((String) entryDocument.get("zone"));
 
-        this.msgId = msgId;
-        this.chanId = chanId;
-        this.guildId = guildId;
-        this.hasStarted = false;
+        this.entryId = (Integer) entryDocument.get("_id");
+        this.entryTitle = (String) entryDocument.get("title");
+        this.entryStart = ZonedDateTime.ofInstant(((Date) entryDocument.get("start")).toInstant(), zone);
+        this.entryEnd = ZonedDateTime.ofInstant(((Date) entryDocument.get("end")).toInstant(), zone);
+        this.entryComments = (ArrayList<String>) entryDocument.get("comments");
+        this.entryRepeat = (Integer) entryDocument.get("repeat");
+        this.titleUrl = (String) entryDocument.get("url");
+        this.reminders = (List<Date>) entryDocument.get("reminders");
+
+        this.msgId = (String) entryDocument.get("messageId");
+        this.chanId = (String) entryDocument.get("channelId");
+        this.guildId = (String) entryDocument.get("guildId");
+        this.hasStarted = (boolean) entryDocument.get("hasStarted");
     }
 
     /**
@@ -64,29 +64,45 @@ public class ScheduleEntry
     }
 
     /**
-     * Handles when an entries's start time expires
+     *
      */
-    public void start()
+    public void remind()
     {
-        ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
-
         Message msg = this.getMessageObject();
         if( msg == null )
             return;
 
-        if( this.entryStart.equals(this.entryEnd) )
-        {
-            this.end();
-            return;
-        }
-
         Guild guild = msg.getGuild();
-        String startMsg = ParsingUtilities.parseMsgFormat( chanSetManager.getAnnounceFormat(this.chanId), this );
+        String startMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
 
-        Collection<TextChannel> chans = guild.getTextChannelsByName(chanSetManager.getAnnounceChan(this.chanId), true);
+        Collection<TextChannel> chans = guild.getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true);
         for( TextChannel chan : chans )
         {
             MessageUtilities.sendMsg(startMsg, chan, null);
+        }
+    }
+
+    /**
+     * Handles when an entries's start time expires
+     */
+    public void start()
+    {
+        Message msg = this.getMessageObject();
+        if( msg == null )
+            return;
+
+        Guild guild = msg.getGuild();
+        String startMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
+
+        Collection<TextChannel> chans = guild.getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true);
+        for( TextChannel chan : chans )
+        {
+            MessageUtilities.sendMsg(startMsg, chan, null);
+        }
+
+        if( this.entryStart.equals(this.entryEnd) )
+        {
+            this.end();
         }
 
         this.adjustTimer();
@@ -98,25 +114,20 @@ public class ScheduleEntry
      */
     public void end()
     {
-        ScheduleManager schedManager = Main.getScheduleManager();
-        ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
-
         Message eMsg = this.getMessageObject();
         if( eMsg==null )
             return;
 
-        Guild guild = eMsg.getGuild();
-        String endMsg = ParsingUtilities.parseMsgFormat( chanSetManager.getAnnounceFormat(this.chanId), this );
-
-        Collection<TextChannel> chans = guild.getTextChannelsByName(chanSetManager.getAnnounceChan(this.chanId), true);
-        for( TextChannel chan : chans )
+        if( !this.entryStart.equals(this.entryEnd) )
         {
-            MessageUtilities.sendMsg(endMsg, chan, null);
-        }
+            Guild guild = eMsg.getGuild();
+            String endMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
 
-        synchronized( schedManager.getScheduleLock() )
-        {
-            schedManager.removeEntry(this.entryId);
+            Collection<TextChannel> chans = guild.getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true);
+            for( TextChannel chan : chans )
+            {
+                MessageUtilities.sendMsg(endMsg, chan, null);
+            }
         }
 
         if( this.entryRepeat != 0 ) // find next repeat date and edit the message
@@ -129,20 +140,12 @@ public class ScheduleEntry
             ZonedDateTime newEnd = this.entryEnd.plusDays(days).isAfter(this.entryEnd) ?
                     this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
 
-            Message msgContent = ScheduleEntryParser.generate(
-                    this.entryTitle,
-                    newStart,
-                    newEnd,
-                    this.entryComments,
-                    this.entryRepeat,
-                    this.entryId,
-                    this.chanId
-            );
-
-            MessageUtilities.editMsg(msgContent, eMsg, schedManager::addEntry);
+            Main.getEntryManager().updateEntry(this.entryId, this.entryTitle, newStart, newEnd, this.entryComments,
+                    this.entryRepeat, this.titleUrl, this.getMessageObject());
         }
-        else // otherwise delete the message
+        else // otherwise remove entry and delete the message
         {
+            Main.getEntryManager().removeEntry(this.entryId);
             MessageUtilities.deleteMsg( eMsg, null );
         }
     }
@@ -151,47 +154,17 @@ public class ScheduleEntry
      * Edits the displayed Message text to indicate the time remaining until
      * the entry is scheduled to begin/end
      */
-    public void adjustTimer()
+    void adjustTimer()
     {
-        ChannelSettingsManager chanSetManager = Main.getChannelSettingsManager();
-
         Message msg = this.getMessageObject();
         if( msg == null )
             return;
 
-        String raw;
-        if(chanSetManager.getStyle(msg.getChannel().getId()).equals("embed"))
-            raw = msg.getEmbeds().get(0).getDescription();
-        else
-            raw = msg.getRawContent();
-
-        String[] lines = raw.split("\n");
-        String newline = lines[lines.length-2].split("\\(")[0] +
-                ScheduleEntryParser.genTimer(this.entryStart,this.entryEnd);
-
-        if(chanSetManager.getStyle(this.chanId).equals("plain"))
-            MessageUtilities.editMsg( adjustTimerHelper(lines,newline), msg, null );
-        else
-            MessageUtilities.editEmbedMsg(
-                    new EmbedBuilder().setDescription(adjustTimerHelper(lines,newline)).build(),
-                    msg,
-                    null);
-    }
-
-    /// reconstructs the full message, substituting in the new timer
-    private String adjustTimerHelper( String[] lines, String newline )
-    {
-        String msg = "";
-        for(int i = 0; i < lines.length ; i++)
-        {
-            if(i == lines.length-2)
-                msg += newline + "\n";
-            else if( i == lines.length-1 )
-                msg += lines[i];
-            else
-                msg += lines[i] + "\n";
-        }
-        return msg;
+        MessageUtilities.editMsg(
+                MessageGenerator.generate(this.entryTitle, this.entryStart, this.entryEnd, this.entryComments,
+                        this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId),
+                msg,
+                null);
     }
 
     private int daysUntilNextOccurrence()
@@ -249,28 +222,22 @@ public class ScheduleEntry
         return this.entryId;
     }
 
-    public String getChanId()
-    {
-        return this.chanId;
-    }
-
-    public String getGuildId()
-    {
-        return this.guildId;
-    }
-
     public Integer getRepeat()
     {
         return this.entryRepeat;
     }
 
-    public void setZone(ZoneId zone)
+    public String getTitleUrl()
     {
-        this.entryStart.withZoneSameLocal(zone);
-        this.entryEnd.withZoneSameLocal(zone);
+        return this.titleUrl;
     }
 
-    public void setMessageObject(Message msg)
+    public List<Date> getReminders()
+    {
+        return this.reminders;
+    }
+
+    void setMessageObject(Message msg)
     {
         this.chanId = msg.getChannel().getId();
         this.guildId = msg.getGuild().getId();
@@ -283,19 +250,14 @@ public class ScheduleEntry
         try
         {
             msg = Main.getBotJda()
-                            .getGuildById(this.guildId)
-                            .getTextChannelById(this.chanId)
-                            .getMessageById(this.msgId)
-                            .block();
+                    .getGuildById(this.guildId)
+                    .getTextChannelById(this.chanId)
+                    .getMessageById(this.msgId)
+                    .complete();
         }
         catch( Exception e )
         {
-            Main.getScheduleManager().getExecutor().submit(()-> {
-                synchronized( Main.getScheduleManager().getScheduleLock() )
-                {
-                    Main.getScheduleManager().removeEntry(this.getId());
-                }
-            });
+            Main.getEntryManager().removeEntry(this.getId());
             msg = null;
         }
         return msg;

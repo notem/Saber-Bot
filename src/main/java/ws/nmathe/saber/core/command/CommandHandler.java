@@ -1,11 +1,11 @@
 package ws.nmathe.saber.core.command;
 
-import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.admin.*;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.commands.general.*;
+import ws.nmathe.saber.utils.__out;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,17 +34,16 @@ public class CommandHandler
     public void init()
     {
         // add bot commands with their lookup name
-        commands.put("help", new HelpCommand());
-        commands.put("create", new CreateCommand());
-        commands.put("destroy", new DestroyCommand());
-        commands.put("edit", new EditCommand());
-        commands.put("set", new SetCommand());
-        commands.put("timezones", new TimeZonesCommand());
         commands.put("init", new InitCommand());
+        commands.put("create", new CreateCommand());
+        commands.put("delete", new DeleteCommand());
+        commands.put("edit", new EditCommand());
+        commands.put("help", new HelpCommand());
+        commands.put("config", new ConfigCommand());
+        commands.put("zones", new TimeZonesCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put("global_announce", new GlobalMsgCommand());
-        adminCommands.put("query", new QueryCommand());
         adminCommands.put("stats", new StatsCommand());
         adminCommands.put("playing", new NowPlayingCommand());
     }
@@ -73,7 +72,18 @@ public class CommandHandler
             // do command action if valid arguments
             if(err.isEmpty())
             {
-                executor.submit( () -> commands.get(cc.invoke).action(cc.args, cc.event));
+                executor.submit( () ->
+                {
+                    try
+                    {
+                        commands.get(cc.invoke).action(cc.args, cc.event);
+                    }
+                    catch(Exception e)
+                    {
+                        __out.printOut(this.getClass(), e.getLocalizedMessage());
+                        e.printStackTrace();
+                    }
+                });
             }
             // otherwise send error message
             else
@@ -85,7 +95,7 @@ public class CommandHandler
         // else the invoking command is invalid
         else
         {
-            String msg = "Invalid command \"" + Main.getBotSettings().getCommandPrefix() + cc.invoke + "\"";
+            String msg = "``" + cc.invoke + "`` is not a command!";
             MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
         }
     }
@@ -100,7 +110,18 @@ public class CommandHandler
             // do command action if valid arguments
             if (err.equals(""))
             {
-                executor.submit( () -> adminCommands.get(cc.invoke).action(cc.args, cc.event));
+                executor.submit( () ->
+                {
+                    try
+                    {
+                        adminCommands.get(cc.invoke).action(cc.args, cc.event);
+                    }
+                    catch(Exception e)
+                    {
+                        __out.printOut(e.getClass(), e.getLocalizedMessage());
+                        e.printStackTrace();
+                    }
+                });
             }
         }
     }

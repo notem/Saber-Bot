@@ -52,7 +52,7 @@ public class MessageUtilities
     {
         try
         {
-            return chan.sendMessage(message).block();
+            return chan.sendMessage(message).complete();
         }
         catch( Exception e)
         {
@@ -72,7 +72,7 @@ public class MessageUtilities
     {
         try
         {
-            user.openPrivateChannel().block();
+            user.openPrivateChannel().complete();
             sendMsg( content, user.getPrivateChannel(), action );
         }
         catch( Exception e)
@@ -135,25 +135,11 @@ public class MessageUtilities
     {
         try
         {
-            msg.deleteMessage().queue( action, null );
+            msg.delete().queue( action, null );
         }
         catch( Exception e)
         {
             __out.printOut( MessageUtilities.class, e.getMessage() );
         }
-    }
-
-    /// blocking version
-    public static Void deleteMsg(Message msg )
-    {
-        try
-        {
-            return msg.deleteMessage().block();
-        }
-        catch( Exception e)
-        {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
-        }
-        return null;
     }
 }

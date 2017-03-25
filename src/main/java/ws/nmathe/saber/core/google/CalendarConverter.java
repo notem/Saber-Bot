@@ -2,13 +2,15 @@ package ws.nmathe.saber.core.google;
 
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventReminder;
 import com.google.api.services.calendar.model.Events;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
-import ws.nmathe.saber.core.schedule.ScheduleEntryParser;
 import ws.nmathe.saber.utils.MessageUtilities;
+import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.__out;
 
 import java.io.IOException;
@@ -16,8 +18,12 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Consumer;
+
+import static com.mongodb.client.model.Filters.eq;
 
 /**
  * Reads the next 7 days of events on a google calendar and converts
@@ -64,7 +70,7 @@ public class CalendarConverter
 
     }
 
-    public void syncCalendar(String address, TextChannel channel) throws Exception
+    public void syncCalendar(String address, TextChannel channel)
     {
         Events events;
 
@@ -87,35 +93,22 @@ public class CalendarConverter
         }
 
         // purge channel of all entries
-        List<Integer> removeQueue = new ArrayList<>();
-        for( Integer id : Main.getScheduleManager().getEntriesByChannel(channel.getId()) )
-        {
-            ScheduleEntry se = Main.getScheduleManager().getEntry( id );
-            Message msg = se.getMessageObject();
-            if( msg==null )
-            {
-                synchronized(Main.getScheduleManager().getScheduleLock())
+        Main.getDBDriver().getEventCollection()
+                .find(eq("channelId", channel.getId()))
+                .forEach((Consumer<? super Document>) document ->
                 {
-                    Main.getScheduleManager().removeEntry(id);
-                }
-            }
-            if( msg!=null )
-            {
-                MessageUtilities.deleteMsg(msg, null);
-                removeQueue.add(id);
-            }
-        }
-        synchronized( Main.getScheduleManager().getScheduleLock() )
-        {
-            for (Integer id : removeQueue)
-            {
-                Main.getScheduleManager().removeEntry(id);
-            }
-        }
+                    ScheduleEntry entry = Main.getEntryManager().getEntry((Integer) document.get("_id"));
+                    Message msg = entry.getMessageObject();
+                    if( msg==null )
+                        return;
+
+                    Main.getEntryManager().removeEntry((Integer) document.get("_id"));
+                    MessageUtilities.deleteMsg(msg, null);
+                });
 
         // change the zone to match the calendar
         ZoneId zone = ZoneId.of( events.getTimeZone() );
-        Main.getChannelSettingsManager().setTimeZone( channel.getId(), zone );
+        Main.getScheduleManager().setTimeZone( channel.getId(), zone );
 
         HashSet<String> uniqueEvents = new HashSet<>();
 
@@ -128,8 +121,8 @@ public class CalendarConverter
             ArrayList<String> comments = new ArrayList<>();
             int repeat = 0;
 
-            start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter);
-            end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter);
+            start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter).withZoneSameInstant(zone);
+            end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter).withZoneSameInstant(zone);
 
             if( event.getSummary() == null )
                 title = "(No title)";
@@ -151,8 +144,7 @@ public class CalendarConverter
             {
                 try
                 {
-                    recurrence = service.events().get(address, recurrenceId).execute()
-                            .getRecurrence();
+                    recurrence = service.events().get(address, recurrenceId).execute().getRecurrence();
                 }
                 catch( IOException e )
                 {
@@ -171,21 +163,17 @@ public class CalendarConverter
                         else if( tmp.equals("WEEKLY") && rule.contains("BYDAY") )
                         {
                             tmp = rule.split("BYDAY=")[1].split(";")[0];
-                            repeat = ScheduleEntryParser.parseWeeklyRepeat(tmp);
+                            repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
                         }
                     }
                 }
             }
 
-            if(!uniqueEvents.contains((recurrenceId==null?event.getId():recurrenceId)))
+            if(!uniqueEvents.contains(recurrenceId==null ? event.getId() : recurrenceId))
             {
-                int id = Main.getScheduleManager().newId( null );
-                Message msg = ScheduleEntryParser.generate( title, start, end, comments, repeat, id, channel.getId());
+                Main.getEntryManager().newEntry(title, start, end, comments, repeat, event.getHtmlLink(), channel);
 
-                Message message = MessageUtilities.sendMsg( msg, channel);
-                Main.getScheduleManager().addEntry( title, start, end, comments, id, message, repeat);
-
-                uniqueEvents.add((recurrenceId==null?event.getId():recurrenceId));
+                uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);
             }
         }
     }

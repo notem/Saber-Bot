@@ -28,14 +28,15 @@ public class StatsCommand implements Command
     public void action(String[] args, MessageReceivedEvent event)
     {
         String msg = "```python\n";
-        msg += "Entries: " + Main.getScheduleManager().getAllIds().size() + "\n";
-        msg += "Guilds: " + Main.getBotJda().getGuilds().size() + "\n";
+        msg += "     Entries: " + Main.getDBDriver().getEventCollection().count() + "\n";
+        msg += "   Schedules: " + Main.getDBDriver().getScheduleCollection().count() + "\n";
+        msg += "      Guilds: " + Main.getBotJda().getGuilds().size() + "\n";
         Runtime rt = Runtime.getRuntime();
         msg += "Memory-total: " +rt.totalMemory()/1024/1024 + " MB\n" +
-                "      -free : " + rt.freeMemory()/1024/1024 + " MB\n" +
-                "      -max  : " + rt.maxMemory()/1024/1024 + " MB\n";
+               "      -free : " + rt.freeMemory()/1024/1024 + " MB\n" +
+               "      -max  : " + rt.maxMemory()/1024/1024 + " MB\n";
         RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-        msg += "Uptime: " + rb.getUptime()/1000/60 + " minute(s)";
+        msg += "      Uptime: " + rb.getUptime()/1000/60 + " minute(s)";
         msg += "```";
 
         MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );

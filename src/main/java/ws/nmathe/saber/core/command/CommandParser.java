@@ -5,7 +5,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 /**
  * used to create a CommandContainer object which contains the parsed tokens of the user input

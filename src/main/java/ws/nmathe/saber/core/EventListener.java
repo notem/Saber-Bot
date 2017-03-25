@@ -1,16 +1,18 @@
 package ws.nmathe.saber.core;
 
+import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
+import org.bson.Document;
 import ws.nmathe.saber.Main;
 
 import ws.nmathe.saber.core.command.CommandHandler;
-import ws.nmathe.saber.core.schedule.ScheduleManager;
-import ws.nmathe.saber.core.settings.ChannelSettingsManager;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+
+import static com.mongodb.client.model.Filters.eq;
 
 /**
  * Listens for new messages and performs actions during it's own
@@ -23,10 +25,6 @@ public class EventListener extends ListenerAdapter
     private String adminPrefix = Main.getBotSettings().getAdminPrefix();
     private String adminId = Main.getBotSettings().getAdminId();
     private String controlChan = Main.getBotSettings().getControlChan();
-    private String scheduleChan = Main.getBotSettings().getScheduleChan();
-
-    private ScheduleManager scheduleManager = Main.getScheduleManager();
-    private CommandHandler cmdHandler = Main.getCommandHandler();
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
@@ -34,44 +32,38 @@ public class EventListener extends ListenerAdapter
         // store some properties of the message for use later
         String content = event.getMessage().getContent();   // the raw string the user sent
         String userId = event.getAuthor().getId();          // the ID of the user
-        String origin = event.getChannel().getName().toLowerCase();       // the name of the originating text channel
 
         // process private commands
         if (event.isFromType(ChannelType.PRIVATE))
         {
             // help and setup general commands
-            if (content.startsWith(prefix + "help") || content.startsWith(prefix + "setup"))
+            if (content.startsWith(prefix + "help"))
             {
-                cmdHandler.handleCommand(event, 0);
+                Main.getCommandHandler().handleCommand(event, 0);
                 return;
             }
             // admin commands
             else if (content.startsWith(adminPrefix) && userId.equals(adminId))
             {
-                cmdHandler.handleCommand(event, 1);
+                Main.getCommandHandler().handleCommand(event, 1);
                 return;
             }
             return;
         }
 
-        // if main schedule channel is not setup go no further
-        if( !VerifyUtilities.verifyScheduleChannel( event.getGuild() ) )
-        {
-           return;
-        }
-
         // process a command if it originates in the control channel and with appropriate prefix
-        if (origin.equals(controlChan) && content.startsWith(prefix))
+        if (event.getChannel().getName().toLowerCase().equals(controlChan) && content.startsWith(prefix))
         {
             // handle command received
-            cmdHandler.handleCommand(event, 0);
+            Main.getCommandHandler().handleCommand(event, 0);
             return;
         }
 
-        // keep schedule channels clean and resend channel settings message when a new entry is added
-        if (origin.startsWith(scheduleChan))
+        // if channel is a schedule for the guild
+        if (Main.getScheduleManager()
+                .getSchedulesForGuild(event.getGuild().getId()).contains(event.getChannel().getId()))
         {
-            // delete other user's messages
+            // delete all other user's messages
             if (!userId.equals(Main.getBotSelfUser().getId()))
                 MessageUtilities.deleteMsg(event.getMessage(), null);
         }
@@ -80,9 +72,7 @@ public class EventListener extends ListenerAdapter
     @Override
     public void onGuildJoin( GuildJoinEvent event )
     {
-        // load channels of joining guild
-        GuildUtilities.loadScheduleChannels( event.getGuild() );
-
+        // update web stats
         HttpUtilities.updateStats();
     }
 
@@ -90,11 +80,25 @@ public class EventListener extends ListenerAdapter
     public void onGuildLeave( GuildLeaveEvent event )
     {
         // purge the leaving guild's entry list
-        for( Integer id : scheduleManager.getEntriesByGuild( event.getGuild().getId() ) )
-        {
-            scheduleManager.removeEntry( id );
-        }
+        Main.getDBDriver().getEventCollection().deleteMany(eq("guildId", event.getGuild().getId()));
+        // remove the guild
+        Main.getDBDriver().getScheduleCollection().deleteOne(eq("guildId", event.getGuild().getId()));
 
         HttpUtilities.updateStats();
+    }
+
+    @Override
+    public void onTextChannelDelete(TextChannelDeleteEvent event)
+    {
+        String cId = event.getChannel().getId();
+        Document scheduleDocument = Main.getDBDriver().getScheduleCollection()
+                .find(eq("_id", cId)).first();
+
+        // if the deleted channel was a schedule, clear the db entries
+        if(scheduleDocument != null)
+        {
+            Main.getDBDriver().getEventCollection().deleteMany(eq("channelId", cId));
+            Main.getDBDriver().getScheduleCollection().deleteOne(eq("_id", cId));
+        }
     }
 }

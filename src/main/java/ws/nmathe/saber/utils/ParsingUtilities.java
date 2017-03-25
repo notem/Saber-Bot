@@ -5,6 +5,11 @@ import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * utilities which do some sort of string parsing
@@ -71,14 +76,21 @@ public class ParsingUtilities
                         break;
 
                     case 'a' :
-                        if( entry.getStart().equals(entry.getEnd()) )
-                            break;
-
                         if( !entry.hasStarted() )
+                        {
                             announceMsg += "begins";
-
+                            if(!entry.getReminders().isEmpty())
+                            {
+                                announceMsg += " in " +
+                                        (ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES)+1) +
+                                        " minutes";
+                            }
+                        }
                         else
+                        {
                             announceMsg += "ends";
+                        }
+
 
                         break;
 
@@ -99,5 +111,47 @@ public class ParsingUtilities
         }
 
         return announceMsg;
+    }
+
+    public static int parseWeeklyRepeat(String str)
+    {
+        str = str.toLowerCase();
+        int bits = 0;
+        if( str.toLowerCase().equals("daily") )
+        {
+            bits = 0b1111111;
+        }
+        else if( str.equals("no") || str.equals("none") )
+        {
+            bits = 0;
+        }
+        else
+        {
+            if( str.contains("su") )
+                bits |= 1;
+            if( str.contains("mo") )
+                bits |= 1<<1;
+            if( str.contains("tu") )
+                bits |= 1<<2;
+            if( str.contains("we") )
+                bits |= 1<<3;
+            if( str.contains("th") )
+                bits |= 1<<4;
+            if( str.contains("fr") )
+                bits |= 1<<5;
+            if( str.contains("sa") )
+                bits |= 1<<6;
+        }
+        return bits;
+    }
+
+    public static List<Integer> parseReminderStr(String arg)
+    {
+        List<Integer> list = new ArrayList<>();
+        Matcher matcher = Pattern.compile("\\d+").matcher(arg);
+        while (matcher.find()) {
+            list.add(Integer.parseInt(matcher.group()));
+        }
+        return list;
     }
 }

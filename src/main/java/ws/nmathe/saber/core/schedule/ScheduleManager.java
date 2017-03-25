@@ -1,295 +1,204 @@
 package ws.nmathe.saber.core.schedule;
 
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.exceptions.PermissionException;
+import org.bson.Document;
 import ws.nmathe.saber.Main;
-import ws.nmathe.saber.utils.MessageUtilities;
-import net.dv8tion.jda.core.entities.Message;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.set;
+
 /**
- * Manages the schedule of ScheduleEntries for all attached guilds
- * Responsible for checking for expired entries, syncing channels to
- * their respective google calendar address, managing IDs, and removing/creating
- * entries.
+ * Manage's the settings for all valid schedule channels
  */
 public class ScheduleManager
 {
-    private final ExecutorService executor = Executors.newCachedThreadPool();     // thread pool for schedule tasks
-    private final Object scheduleLock = new Object();                                       // lock when modifying entry maps
-
-    private HashMap<Integer, ScheduleEntry> entriesGlobal;         // maps id to entry
-    private HashMap<String, ArrayList<Integer>> entriesByGuild;    // maps guild to ids
-    private HashMap<String, ArrayList<Integer>> entriesByChannel;  // maps channel ids to entries
-    private Collection<ScheduleEntry> coarseTimerBuff; // holds entries where 1h < start < 24h
-    private Collection<ScheduleEntry> fineTimerBuff;   // holds entries where now < start < 1h
-
-    public ScheduleManager()
-    {
-        this.entriesGlobal = new HashMap<>();
-        this.entriesByGuild = new HashMap<>();
-        this.entriesByChannel = new HashMap<>();
-
-        this.coarseTimerBuff = Collections.synchronizedCollection(new ArrayList<>());
-        this.fineTimerBuff = Collections.synchronizedCollection(new ArrayList<>());
-    }
-
-    /**
-     * creates the scheduledExecutor thread pool and starts schedule timers which
-     * check for expired entries
-     */
     public void init()
     {
-        // schedule threads to check entries if they have expired timers
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate( new ScheduleChecker( entriesGlobal.values() , 2 ),
-                0, 12*60*60, TimeUnit.SECONDS);
-        // 15 min timer
-        scheduler.scheduleAtFixedRate( new ScheduleChecker(this.getCoarseTimerBuff(), 1 ),
-                1, 60*15, TimeUnit.SECONDS);
-        // 1 min timer
-        scheduler.scheduleAtFixedRate( new ScheduleChecker(this.getFineTimerBuff(), 0 ),
-                60 - (LocalTime.now().toSecondOfDay()%60), 60, TimeUnit.SECONDS );
-
-        // schedule a thread to check channels if they need to be synced
-        ScheduledExecutorService syncer = Executors.newScheduledThreadPool(1);
-        syncer.scheduleAtFixedRate( new ChannelSyncChecker( entriesByChannel.keySet() ),
-                5*60, 35*60, TimeUnit.SECONDS );
+        // every 15 minutes create a thread to check for schedules to sync
+        ScheduledExecutorService syncScheduler = Executors.newScheduledThreadPool(1);
+        syncScheduler.scheduleAtFixedRate( new ScheduleSyncer(),
+                3, 60*15, TimeUnit.SECONDS );
     }
 
-    /**
-     * Takes a valid message containing a schedule entry, parses it into an entry
-     * and then adds it to the hashmaps. Should be used when a guild joins or during
-     * the init of the bot.
-     *
-     * @param message Discord Message
-     */
-    public void addEntry( Message message )
+    public void createSchedule(String gId, String optional)
     {
-        ScheduleEntry se = ScheduleEntryParser.parse( message );
-        if( se == null ) return;    // end early if parsing failed
-
-        // regenerate the entry on the off chance the Id was changed
-        Message msgContent = ScheduleEntryParser.generate(se.getTitle(),se.getStart(),se.getEnd(),se.getComments(),
-                se.getRepeat(),se.getId(), message.getChannel().getId());
-        MessageUtilities.editMsg( msgContent, message, null);
-
-        this.addEntryWrapped(message, se);
-    }
-
-    /**
-     * Constructs a schedule entry from it's parts, which are provided as method arguments.
-     * Needs to do no parsing of the message.  Should be used with the create and edit commands.
-     *
-     * @param title the entry's title
-     * @param start the entry's ZoneDateTime start
-     * @param end the entry's ZoneDateTime end
-     * @param comments list of comment strings
-     * @param Id the integer Id of the entry
-     * @param msg the discord Message that contains the entry's information
-     * @param repeat integer repeat settings
-     */
-    public void addEntry(String title, ZonedDateTime start, ZonedDateTime end, ArrayList<String> comments, Integer Id, Message msg, int repeat)
-    {
-        ScheduleEntry se = new ScheduleEntry( Id, title, start, end, comments, repeat, msg.getId(), msg.getChannel().getId(), msg.getGuild().getId());
-
-        this.addEntryWrapped(msg, se);
-    }
-
-    private void addEntryWrapped(Message message, ScheduleEntry se)
-    {
-        String guildId = message.getGuild().getId();
-        String channelId = message.getChannel().getId();
-
-        // put the ScheduleEntry thread into a HashMap by ID
-        entriesGlobal.put(se.getId(), se);
-
-        // put the id in guild mapping
-        if( !entriesByGuild.containsKey( guildId ) )
+        String cId;
+        try
         {
-            ArrayList<Integer> entries = new ArrayList<>();
-            entries.add(se.getId());
-            entriesByGuild.put( guildId, entries );
+            cId = Main.getBotJda().getGuildById(gId)
+                    .getController().createTextChannel(optional!=null ? optional : "new_schedule").complete().getId();
         }
-        else
-            entriesByGuild.get( guildId ).add( se.getId() );
+        catch(PermissionException ignored)
+        { return; }
 
-        // put the id in channel mapping
-        if( !entriesByChannel.containsKey( channelId ))
+        List<Integer> default_reminders = new ArrayList<Integer>();
+        default_reminders.add(10);
+
+        Document schedule =
+                new Document("_id", cId)
+                        .append("guildId", gId)
+                        .append("announcement_channel", Main.getBotSettings().getAnnounceChan())
+                        .append("announcement_format", Main.getBotSettings().getAnnounceFormat())
+                        .append("clock_format", Main.getBotSettings().getClockFormat())
+                        .append("timezone", Main.getBotSettings().getTimeZone())
+                        .append("sync_time", Date.from(ZonedDateTime.of(LocalDate.now().plusDays(1),
+                                LocalTime.MIDNIGHT, ZoneId.systemDefault()).toInstant()))
+                        .append("default_reminders", default_reminders)
+                        .append("sync_address", "off");
+
+        Main.getDBDriver().getScheduleCollection().insertOne(schedule);
+    }
+
+    public void deleteSchedule(String cId)
+    {
+        try
         {
-            ArrayList<Integer> entries = new ArrayList<>();
-            entries.add(se.getId());
-            entriesByChannel.put( channelId, entries );
+            Main.getBotJda().getTextChannelById(cId).delete().complete();
         }
-        else
-            entriesByChannel.get( channelId ).add( se.getId() );
+        catch(Exception ignored)
+        { }
 
-        // add the entry to buffer
-        if( !se.hasStarted() )
+        Main.getDBDriver().getEventCollection().deleteMany(eq("channelId", cId));
+        Main.getDBDriver().getScheduleCollection().deleteOne(eq("_id", cId));
+    }
+
+    public List<String> getSchedulesForGuild(String gId)
+    {
+        List<String> list = new ArrayList<>();
+        for (Document document : Main.getDBDriver().getScheduleCollection().find(eq("guildId", gId)))
         {
-            long timeTil = ZonedDateTime.now().until(se.getStart(), ChronoUnit.SECONDS);
-            if (timeTil <= 45 * 60)
-                this.getFineTimerBuff().add(se);
-            else if (timeTil <= 32 * 60 * 60)
-                this.getCoarseTimerBuff().add(se);
+            list.add((String) document.get("_id"));
         }
-        else
+        return list;
+    }
+
+    public String getAnnounceChan(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
         {
-            fineTimerBuff.add(se);
+            return Main.getBotSettings().getAnnounceChan();
         }
+        return (String) settings.get("announcement_channel");
     }
 
-    /**
-     * removes the entry from the mappings, does not delete the Message!
-     * Only used internally by the scheduleManager
-     *
-     * @param eId integer Id
-     */
-    private void removeId( Integer eId )
+    public String getAnnounceFormat(String cId)
     {
-        ScheduleEntry se = this.getEntry( eId );
-        if( se == null ) return;
-
-        String gId = se.getGuildId();
-        String cId = se.getChanId();
-
-        // remove entry from guild map
-        entriesByGuild.get(gId).remove(eId);
-        if (entriesByGuild.get(gId).isEmpty())
-            entriesByGuild.remove(gId);
-
-        // remove entry from guild map
-        entriesByChannel.get(cId).remove(eId);
-        if (entriesByChannel.get(cId).isEmpty())
-            entriesByGuild.remove(cId);
-
-        // remove entry from global map
-        entriesGlobal.remove(eId);
-    }
-
-    /**
-     * removes the entry from the mappings and the timer buffers
-     *
-     * @param eId integer Id
-     */
-    public void removeEntry( Integer eId )
-    {
-        ScheduleEntry se = this.getEntry( eId );
-        if( se == null ) return;
-
-        this.getFineTimerBuff().remove( se );
-        this.getCoarseTimerBuff().remove( se );
-        this.removeId( eId );
-    }
-
-    /**
-     * regenerates the displayed Message text for a schedule entry
-     *
-     * @param eId integer Id
-     */
-    public void reloadEntry( Integer eId )
-    {
-        ScheduleEntry se = getEntry( eId );
-        if( se == null ) return;
-
-        Message msg = se.getMessageObject();
-        if( msg==null )
-            return;
-
-        TextChannel chan =  msg.getTextChannel();
-        Message message = ScheduleEntryParser.generate(se.getTitle(), se.getStart(), se.getEnd(), se.getComments(),
-                se.getRepeat(), se.getId(), chan.getId());
-
-        MessageUtilities.editMsg(message, msg, se::setMessageObject);
-    }
-
-    /**
-     * generates a valid and free schedule ID number. A ID my be requested, which will
-     * be returned if the ID is free
-     *
-     * @param oldId integer Id
-     * @return a free integer Id
-     */
-    public Integer newId( Integer oldId )
-    {
-        // try first to use the requested Id
-        Integer ID;
-        if (oldId == null)
-            ID = (int) Math.ceil(Math.random() * (Math.pow(2, 16) - 1));
-        else
-            ID = oldId;
-
-        // if the Id is in use, generate a new one until a free one is found
-        while (entriesGlobal.containsKey(ID))
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
         {
-            ID = (int) Math.ceil(Math.random() * (Math.pow(2, 16) - 1));
+            return Main.getBotSettings().getAnnounceFormat();
         }
-
-        return ID;
+        return (String) settings.get("announcement_format");
     }
 
-    public ScheduleEntry getEntry(Integer eId)
+    public String getClockFormat(String cId)
     {
-        // check if entry exists, if so return it
-        if( entriesGlobal.containsKey(eId) )
-            return entriesGlobal.get(eId);
-
-        else    // otherwise return null
-            return null;
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+        {
+            return Main.getBotSettings().getClockFormat();
+        }
+        return (String) settings.get("clock_format");
     }
 
-    public ArrayList<Integer> getEntriesByGuild( String gId )
+    public ZoneId getTimeZone(String cId)
     {
-        // check if guild exists in map, if so return their entries
-        if( entriesByGuild.containsKey(gId) )
-            return entriesByGuild.get(gId);
-
-        else        // otherwise return null
-            return new ArrayList<>();
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+        {
+            return ZoneId.of(Main.getBotSettings().getTimeZone());
+        }
+        return ZoneId.of((String) settings.get("timezone"));
     }
 
-    public ArrayList<Integer> getEntriesByChannel( String cId )
+    public String getAddress(String cId)
     {
-        // check if guild exists in map, if so return their entries
-        if( entriesByChannel.containsKey(cId) )
-            return entriesByChannel.get(cId);
-
-        else        // otherwise return null
-            return new ArrayList<>();
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+        {
+            return "off";
+        }
+        return (String) settings.get("sync_address");
     }
 
-    public Collection<Integer> getAllIds()
+    public Date getSyncTime(String cId)
     {
-        return entriesGlobal.keySet();
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+        {
+            return Date.from(ZonedDateTime.of(LocalDate.now().plusDays(1),
+                    LocalTime.MIDNIGHT, ZoneId.systemDefault()).toInstant());
+        }
+        return (Date) settings.get("sync_time");
     }
 
-    public Object getScheduleLock()
+    public List<Integer> getDefaultReminders(String cId)
     {
-        return scheduleLock;
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+        {
+            return new ArrayList<>(10);
+        }
+        return (List<Integer>) settings.get("default_reminders");
     }
 
-    public Collection<ScheduleEntry> getCoarseTimerBuff()
+    public void setAnnounceChan(String cId, String chan )
     {
-        return coarseTimerBuff;
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("announcement_channel", chan));
     }
 
-    public Collection<ScheduleEntry> getFineTimerBuff()
+    public void setAnnounceFormat(String cId, String format )
     {
-        return fineTimerBuff;
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("announcement_format", format));
     }
 
-    ExecutorService getExecutor()
+    public void setClockFormat(String cId, String clock )
     {
-        return executor;
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("clock_format", clock));
+    }
+
+    public void setTimeZone(String cId, ZoneId zone )
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("timezone", zone.toString()));
+    }
+
+    public void setAddress(String cId, String address)
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("sync_address", address));
+    }
+
+    public void setSyncTime(String cId, Date syncTime)
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("sync_time", syncTime));
+    }
+
+    public void setDefaultReminders(String cId, List<Integer> reminders)
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("default_reminders", reminders));
+    }
+
+    public boolean isASchedule(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        return settings != null;
     }
 }

@@ -15,17 +15,16 @@ public class BotSettings
     private static final String FILENAME = "saber.properties";
     private static final String DEFAULT_TOKEN = "BOT_TOKEN";
     private static final String DEFAULT_ADMIN_ID = "ADMIN_USER_ID";
-    private static final String DEFAULT_MAX_ENTRIES = "15";
-    private static final String DEFAULT_COMMAND_PREFIX = "saber: ";
-    private static final String DEFAULT_ADMIN_COMMAND_PREFIX = ".";
+    private static final String DEFAULT_MAX_ENTRIES = "25";
+    private static final String DEFAULT_COMMAND_PREFIX = "!";
+    private static final String DEFAULT_ADMIN_COMMAND_PREFIX = "s.";
 
     private static final String DEFAULT_CONTROL_CHAN = "saber_control";
-    private static final String DEFAULT_ANNOUNCE_CHAN = "announce";
-    private static final String DEFAULT_SCHEDULE_CHAN = "event_schedule";
+    private static final String DEFAULT_ANNOUNCE_CHAN = "general";
 
     private static final String DEFAULT_TIME_ZONE = "America/New_York";
-    private static final String DEFAULT_CLOCK_FORMAT = "24";
-    private static final String DEFAULT_ANNOUNCE_FORMAT = "@everyone The event **%t** %a.";
+    private static final String DEFAULT_CLOCK_FORMAT = "12";
+    private static final String DEFAULT_ANNOUNCE_FORMAT = "Event %a: ``%t``";
 
     private Properties properties;
 
@@ -78,7 +77,6 @@ public class BotSettings
             p.setProperty("max_entries", DEFAULT_MAX_ENTRIES);
             p.setProperty("command_prefix", DEFAULT_COMMAND_PREFIX);
             p.setProperty("admin_command_prefix", DEFAULT_ADMIN_COMMAND_PREFIX);
-            p.setProperty("chan_schedule", DEFAULT_SCHEDULE_CHAN);
             p.setProperty("chan_control", DEFAULT_CONTROL_CHAN);
             p.setProperty("chan_announce", DEFAULT_ANNOUNCE_CHAN);
             p.setProperty("clock_format", DEFAULT_CLOCK_FORMAT);
@@ -140,11 +138,6 @@ public class BotSettings
     public String getAnnounceChan()
     {
         return this.properties.getProperty("chan_announce");
-    }
-
-    public String getScheduleChan()
-    {
-        return this.properties.getProperty("chan_schedule");
     }
 
     public String getControlChan()
