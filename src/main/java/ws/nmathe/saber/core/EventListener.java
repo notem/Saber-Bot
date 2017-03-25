@@ -1,6 +1,7 @@
 package ws.nmathe.saber.core;
 
 import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
+import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 
@@ -67,6 +68,15 @@ public class EventListener extends ListenerAdapter
             if (!userId.equals(Main.getBotSelfUser().getId()))
                 MessageUtilities.deleteMsg(event.getMessage(), null);
         }
+    }
+
+    @Override
+    public void onMessageDelete( MessageDeleteEvent event )
+    {
+        // delete the event if the delete message was an event message
+        // TODO watch for performance issues
+        Main.getDBDriver().getEventCollection()
+                .findOneAndDelete(eq("messageId", event.getMessageId()));
     }
 
     @Override

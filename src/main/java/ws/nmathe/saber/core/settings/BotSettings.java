@@ -82,6 +82,7 @@ public class BotSettings
             p.setProperty("clock_format", DEFAULT_CLOCK_FORMAT);
             p.setProperty("time_zone", DEFAULT_TIME_ZONE);
             p.setProperty("announce_msg_format", DEFAULT_ANNOUNCE_FORMAT);
+            p.setProperty("mongodb", "mongodb://localhost:27017");
 
             // save properties to project root folder
             p.store(output, null);
@@ -158,5 +159,10 @@ public class BotSettings
     public String getTimeZone()
     {
         return this.properties.getProperty("time_zone");
+    }
+
+    public String getMongoURI()
+    {
+        return this.properties.getProperty("mongodb");
     }
 }

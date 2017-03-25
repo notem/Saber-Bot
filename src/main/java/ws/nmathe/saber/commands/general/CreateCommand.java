@@ -24,9 +24,9 @@ public class CreateCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + prefix + "create <channel> <title> <start> <end> [<extra>]`` will add a" +
-                " new entry to a schedule. Entries MUST be initialized with a title, a start " +
-                "time, and an end time.  Start and end times should be of form h:mm with " +
+        String USAGE_EXTENDED = "``" + prefix + "create <channel> <title> <start> [<end> <extra>]`` will add a" +
+                " new entry to a schedule. Entries MUST be initialized with a title, and a start " +
+                "time. The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
                 "optional am/pm appended on the end." +
                 "\n\n" +
                 "Entries can optionally be configured with comments, repeat, and a start date. \nAdding ``repeat " +
@@ -57,7 +57,7 @@ public class CreateCommand implements Command
     {
         int index = 0;
 
-        if (args.length < 4)
+        if (args.length < 3)
             return "Not enough arguments";
 
         if( !Main.getScheduleManager().isASchedule(args[index].replace("<#","").replace(">","")) )
@@ -76,13 +76,18 @@ public class CreateCommand implements Command
         if( !VerifyUtilities.verifyTime( args[index] ) )
             return "Argument **" + args[index] + "** is not a valid start time";
 
+        // if minimum args, then end here
+        if (args.length == 3)
+            return "";
+
         index++;
 
         // check end
-        if( !VerifyUtilities.verifyTime( args[index] ) )
-            return "Argument **" + args[index] + "** is not a valid end time";
-
-        index++;
+        if( VerifyUtilities.verifyTime( args[index] ) )
+        {
+            //return "Argument **" + args[index] + "** is not a valid end time";
+            index++;
+        }
 
         // check remaining args
         if( args.length - 1 > index )
@@ -120,7 +125,7 @@ public class CreateCommand implements Command
         if (Main.getEntryManager().isLimitReached(event.getGuild().getId()))
         {
             return "I can't allow your guild any more entries."
-                    +"Please remove entries before trying again.";
+                    + "Please remove entries before trying again.";
         }
 
         return ""; // return valid
@@ -132,7 +137,7 @@ public class CreateCommand implements Command
         String eTitle = "";
 
         LocalTime eStart = LocalTime.now().plusMinutes(1);    //
-        LocalTime eEnd = LocalTime.MIDNIGHT;                  //
+        LocalTime eEnd = null;                  //
         ArrayList<String> eComments = new ArrayList<>();      // defaults initialized
         int repeat = 0;                                       //
         LocalDate eDate = LocalDate.now();                    //
@@ -162,19 +167,22 @@ public class CreateCommand implements Command
                 startFlag = true;
                 eStart = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
             }
-            else if(!endFlag)
+            else if(!endFlag && VerifyUtilities.verifyTime(arg))
             {
                 endFlag = true;
                 eEnd = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
             }
             else
             {
-                if( repeatFlag )
+                if (!endFlag)
+                    endFlag = true;
+
+                if (repeatFlag)
                 {
                     repeat = ParsingUtilities.parseWeeklyRepeat(arg.toLowerCase());
                     repeatFlag = false;
                 }
-                else if( dateFlag )
+                else if (dateFlag)
                 {
                     if( arg.toLowerCase().equals("today") )
                         eDate = LocalDate.now();
@@ -192,11 +200,11 @@ public class CreateCommand implements Command
                     url = arg;
                     urlFlag = false;
                 }
-                else if( arg.toLowerCase().equals("repeats") || arg.toLowerCase().equals("repeat") )
+                else if (arg.toLowerCase().equals("repeats") || arg.toLowerCase().equals("repeat"))
                 {
                     repeatFlag = true;
                 }
-                else if( arg.toLowerCase().equals("date"))
+                else if (arg.toLowerCase().equals("date"))
                 {
                     dateFlag = true;
                 }
@@ -210,6 +218,12 @@ public class CreateCommand implements Command
                 }
             }
         }
+
+        if(eEnd == null)
+        {
+            eEnd = LocalTime.from(eStart);
+        }
+
         ZonedDateTime s = ZonedDateTime.of( eDate, eStart, ZoneId.systemDefault() );
         ZonedDateTime e = ZonedDateTime.of( eDate, eEnd, ZoneId.systemDefault() );
 

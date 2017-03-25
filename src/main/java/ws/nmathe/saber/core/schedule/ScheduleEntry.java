@@ -91,6 +91,12 @@ public class ScheduleEntry
         if( msg == null )
             return;
 
+        if( this.entryStart.isEqual(this.entryEnd) )
+        {
+            this.end();
+            return;
+        }
+
         Guild guild = msg.getGuild();
         String startMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
 
@@ -99,14 +105,6 @@ public class ScheduleEntry
         {
             MessageUtilities.sendMsg(startMsg, chan, null);
         }
-
-        if( this.entryStart.equals(this.entryEnd) )
-        {
-            this.end();
-        }
-
-        this.adjustTimer();
-        this.hasStarted = true;
     }
 
     /**
@@ -118,16 +116,13 @@ public class ScheduleEntry
         if( eMsg==null )
             return;
 
-        if( !this.entryStart.equals(this.entryEnd) )
-        {
-            Guild guild = eMsg.getGuild();
-            String endMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
+        Guild guild = eMsg.getGuild();
+        String endMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
 
-            Collection<TextChannel> chans = guild.getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true);
-            for( TextChannel chan : chans )
-            {
-                MessageUtilities.sendMsg(endMsg, chan, null);
-            }
+        Collection<TextChannel> chans = guild.getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true);
+        for( TextChannel chan : chans )
+        {
+            MessageUtilities.sendMsg(endMsg, chan, null);
         }
 
         if( this.entryRepeat != 0 ) // find next repeat date and edit the message

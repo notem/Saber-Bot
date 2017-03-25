@@ -7,13 +7,14 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 import org.bson.Document;
+import ws.nmathe.saber.Main;
 
 public class Driver {
     private MongoDatabase db;
 
     public void init()
     {
-        MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:27017"));
+        MongoClient mongoClient = new MongoClient(new MongoClientURI(Main.getBotSettings().getMongoURI()));
         db = mongoClient.getDatabase("saberDB");
     }
 

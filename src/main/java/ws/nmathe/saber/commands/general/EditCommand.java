@@ -107,6 +107,7 @@ public class EditCommand implements Command
                     return "**" + args[index] + "** is not a valid date";
                 break;
 
+            case "repeats":
             case "repeat":
                 if(args.length > 3)
                     return "That's too many arguments for **repeat**!";
@@ -118,6 +119,8 @@ public class EditCommand implements Command
                 if (!VerifyUtilities.verifyUrl(args[index]))
                     return "``" + args[index] + "`` is not a url!";
                 break;
+            default:
+                return "That specified option is not valid!";
         }
 
         return ""; // return valid
