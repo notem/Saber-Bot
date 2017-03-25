@@ -192,7 +192,7 @@ public class CreateCommand implements Command
                     url = arg;
                     urlFlag = false;
                 }
-                else if( arg.toLowerCase().equals("repeats") )
+                else if( arg.toLowerCase().equals("repeats") || arg.toLowerCase().equals("repeat") )
                 {
                     repeatFlag = true;
                 }

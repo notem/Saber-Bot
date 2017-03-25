@@ -18,27 +18,10 @@ hs_err_pid*
 
 .gitignore
 .idea/.name
-.idea/compiler.xml
 .idea/copyright/
-.idea/libraries/Maven__com_mashape_unirest_unirest_java_1_4_9.xml
 .idea/libraries/Maven__com_neovisionaries_nv_websocket_client_1_30.xml
-.idea/libraries/Maven__commons_codec_commons_codec_1_9.xml
-.idea/libraries/Maven__commons_logging_commons_logging_1_2.xml
 .idea/libraries/Maven__net_dv8tion_JDA_3_0_BETA2_108.xml
 .idea/libraries/Maven__net_java_dev_jna_jna_4_2_2.xml
-.idea/libraries/Maven__org_apache_commons_commons_collections4_4_1.xml
-.idea/libraries/Maven__org_apache_commons_commons_lang3_3_5.xml
-.idea/libraries/Maven__org_apache_httpcomponents_httpasyncclient_4_1_1.xml
-.idea/libraries/Maven__org_apache_httpcomponents_httpclient_4_5_2.xml
-.idea/libraries/Maven__org_apache_httpcomponents_httpcore_4_4_4.xml
-.idea/libraries/Maven__org_apache_httpcomponents_httpcore_nio_4_4_4.xml
-.idea/libraries/Maven__org_apache_httpcomponents_httpmime_4_5_2.xml
-.idea/libraries/Maven__org_json_json_20160810.xml
-.idea/misc.xml
-.idea/modules.xml
-.idea/uiDesigner.xml
-.idea/vcs.xml
-.idea/workspace.xml
 StoredCredential
 bot.iml
 client_secret.json

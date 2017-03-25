@@ -204,6 +204,7 @@ public class EditCommand implements Command
                 }
                 break;
 
+            case "repeats":
             case "repeat":
                 String tmp = args[index].toLowerCase();
                 repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
