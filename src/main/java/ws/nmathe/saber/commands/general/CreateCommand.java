@@ -142,6 +142,7 @@ public class CreateCommand implements Command
         int repeat = 0;                                       //
         LocalDate eDate = LocalDate.now();                    //
         String url = null;
+        String cId = args[0].replace("<#","").replace(">","");
 
         boolean channelFlag = false;  // true if the channel name arg has been grabbed
         boolean titleFlag = false;    // true if eTitle has been grabbed from args
@@ -224,8 +225,8 @@ public class CreateCommand implements Command
             eEnd = LocalTime.from(eStart);
         }
 
-        ZonedDateTime s = ZonedDateTime.of( eDate, eStart, ZoneId.systemDefault() );
-        ZonedDateTime e = ZonedDateTime.of( eDate, eEnd, ZoneId.systemDefault() );
+        ZonedDateTime s = ZonedDateTime.of( eDate, eStart, Main.getScheduleManager().getTimeZone(cId) );
+        ZonedDateTime e = ZonedDateTime.of( eDate, eEnd, Main.getScheduleManager().getTimeZone(cId) );
 
         if(ZonedDateTime.now().isAfter(s)) //add a day if the time has already passed
         {
@@ -238,6 +239,6 @@ public class CreateCommand implements Command
         }
 
         Main.getEntryManager().newEntry(eTitle, s, e, eComments, repeat, url,
-                event.getGuild().getTextChannelById(args[0].replace("<#","").replace(">","")));
+                event.getGuild().getTextChannelById(cId));
     }
 }
