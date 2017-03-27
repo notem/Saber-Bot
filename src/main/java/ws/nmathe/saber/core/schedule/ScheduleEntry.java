@@ -162,6 +162,11 @@ public class ScheduleEntry
                 null);
     }
 
+    /**
+     * determines how many days until the event is scheduled to repeat next from the current time
+     * and using the schedule's repeat repeat bitset (eg, 2^0 - sun, 2^1 - mon, etc.)
+     * @return days until next occurrence as an int
+     */
     private int daysUntilNextOccurrence()
     {
         int dayOfWeek = ZonedDateTime.now().getDayOfWeek().getValue();
@@ -171,16 +176,18 @@ public class ScheduleEntry
         else                //monday - saturday
             dayAsBitSet = 1<<dayOfWeek;
 
-        int daysTil = 0;
-        if( (dayAsBitSet & this.entryRepeat) == dayAsBitSet )
-            daysTil = 7;
+        // if repeats on same weekday next week
+        if( (dayAsBitSet | this.entryRepeat) == dayAsBitSet )
+            return 7;
 
+        // else repeats earlier
+        int daysTil = 0;
         for( int i = 1; i < 7; i++)
         {
-            if( (dayAsBitSet<<i) >= 0b1000000 ) //if shifting results in too large a string
-                dayAsBitSet = 0b0000001;        //set to monday string
+            if( dayAsBitSet == 0b1000000 )      //if bitset is SATURDAY, then
+                dayAsBitSet = 0b0000001;        //set bitset to SUNDAY
             else
-                dayAsBitSet <<= i;     // else, set to the next day
+                dayAsBitSet <<= 1;     // else, set to the next day
 
             if( (dayAsBitSet & this.entryRepeat) == dayAsBitSet )
             {
