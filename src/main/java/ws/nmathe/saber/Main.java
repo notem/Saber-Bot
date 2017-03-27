@@ -32,8 +32,6 @@ public class Main
 
     public static void main( String[] args ) throws InterruptedException {
 
-        mongoDriver.init();         // ready database
-
         // get or generate bot settings
         botSettings = BotSettings.init();
         if( botSettings == null )
@@ -42,6 +40,8 @@ public class Main
                     "bot token to the file and restart the bot.\n");
             return;
         }
+
+        mongoDriver.init();         // ready database
 
         // build the bot
         try
