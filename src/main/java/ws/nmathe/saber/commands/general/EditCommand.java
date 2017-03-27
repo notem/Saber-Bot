@@ -8,6 +8,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
@@ -72,27 +74,29 @@ public class EditCommand implements Command
                     case "remove":
                         if(Character.isDigit(args[index].charAt(0)) &&
                                 !VerifyUtilities.verifyInteger(args[index]))
-                            return "Argument **" + args[index] + "** cannot be used to remove a comment";
+                            return "I cannot use **" + args[index] + "** to remove a comment!";
                         break;
                     default:
-                        return "Argument **" + args[index] + "** is not a valid option for **comment**";
+                        return "The only valid options for ``comment`` is **add** or **remove***!";
                 }
                 break;
 
+            case "starts":
             case "start":
                 if(args.length > 3)
                     return "That's too many arguments for **start**!";
                 if( !VerifyUtilities.verifyTime( args[index] ) )
-                    return "Argument **" + args[index] + "** is not a valid start time";
+                    return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                 if( entry.hasStarted() )
                     return "You cannot modify the start time after the event has already started.";
                 break;
 
+            case "ends":
             case "end":
                 if(args.length > 3)
                     return "That's too many arguments for **end**!";
                 if( !VerifyUtilities.verifyTime( args[index] ) )
-                    return "Argument **" + args[index] + "** is not a valid end time";
+                    return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                 break;
 
             case "title":
@@ -104,7 +108,9 @@ public class EditCommand implements Command
                 if(args.length > 3)
                     return "That's too many arguments for **date**!";
                 if( !VerifyUtilities.verifyDate( args[index] ) )
-                    return "**" + args[index] + "** is not a valid date";
+                    return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                if(entry.hasStarted())
+                    return "You cannot modify the date of events which have already started!";
                 break;
 
             case "repeats":
@@ -117,10 +123,12 @@ public class EditCommand implements Command
                 if (args.length > 3)
                     return "That's too many arguments for **repeat**!";
                 if (!VerifyUtilities.verifyUrl(args[index]))
-                    return "``" + args[index] + "`` is not a url!";
+                    return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
                 break;
+
             default:
-                return "That specified option is not valid!";
+                return "**" + args[index] + "** is not an option I know of! Please use ``" +
+                        prefix + "help edit`` to see available options!";
         }
 
         return ""; // return valid
@@ -166,6 +174,7 @@ public class EditCommand implements Command
                 }
                 break;
 
+            case "starts":
             case "start":
                 start = ParsingUtilities.parseTime( start, args[index] );
 
@@ -179,6 +188,7 @@ public class EditCommand implements Command
                 }
                 break;
 
+            case "ends":
             case "end":
                 end = ParsingUtilities.parseTime( end, args[index] );
 
@@ -197,14 +207,20 @@ public class EditCommand implements Command
                 break;
 
             case "date":
-                start = start.withMonth(Integer.parseInt(args[index].split("/")[0]))
-                        .withDayOfMonth(Integer.parseInt(args[index].split("/")[1]));
-                end = end.withMonth(Integer.parseInt(args[index].split("/")[0]))
-                        .withDayOfMonth(Integer.parseInt(args[index].split("/")[1]));
-                if( end.isBefore(start) )
-                {
+                LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+
+                start = start.withMonth(date.getMonthValue())
+                        .withDayOfMonth(date.getDayOfMonth());
+                end = end.withMonth(date.getMonthValue())
+                        .withDayOfMonth(date.getDayOfMonth());
+
+                if(end.isBefore(start))
                     end.plusDays(1);
-                }
+                if(Instant.now().isAfter(start.toInstant()))
+                    start.plusYears(1);
+                if(Instant.now().isAfter(end.toInstant()))
+                    start.plusYears(1);
+
                 break;
 
             case "repeats":

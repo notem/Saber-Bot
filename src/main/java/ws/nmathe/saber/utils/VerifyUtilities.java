@@ -1,7 +1,10 @@
 package ws.nmathe.saber.utils;
 
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.Month;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 /**
  * static methods used to verify user input for the verify() method of commands
@@ -54,26 +57,18 @@ public class VerifyUtilities
 
     public static boolean verifyDate( String arg )
     {
-        String[] date = arg.split("/");
-        if(date.length != 2)
-            return false;
-        if( !verifyInteger(date[0]) )
-            return false;
-        else
-        {
-            if(Integer.parseInt(date[0])>12||Integer.parseInt(date[0])==0)
-                return false;
-        }
-        if( !verifyInteger(date[1]) )
-            return false;
-        else
-        {
-            if(Integer.parseInt(date[1])>Month.of(Integer.parseInt(date[0])).minLength()
-                    ||Integer.parseInt(date[0])==0)
-                return false;
-        }
+        if(arg.toLowerCase().equals("tomorrow") || arg.toLowerCase().equals("today"))
+            return true;
 
-        return true;
+        try
+        {
+            LocalDate.parse(arg, DateTimeFormatter.ofPattern("MM d"));
+            return true;
+        }
+        catch(DateTimeParseException e)
+        {
+            return false;
+        }
     }
 
     public static boolean verifyHex(String arg)

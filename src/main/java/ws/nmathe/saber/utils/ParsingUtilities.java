@@ -2,6 +2,7 @@ package ws.nmathe.saber.utils;
 
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -153,5 +154,15 @@ public class ParsingUtilities
             list.add(Integer.parseInt(matcher.group()));
         }
         return list;
+    }
+
+    public static LocalDate parseDateStr(String arg)
+    {
+        if( arg.equals("today") )
+            return LocalDate.now();
+        else if( arg.equals("tomorrow") )
+            return LocalDate.now().plusDays( 1 );
+        else
+            return LocalDate.parse(arg, DateTimeFormatter.ofPattern("MM d"));
     }
 }
