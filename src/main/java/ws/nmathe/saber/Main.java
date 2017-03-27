@@ -31,6 +31,9 @@ public class Main
     private static Driver mongoDriver = new Driver();
 
     public static void main( String[] args ) throws InterruptedException {
+
+        mongoDriver.init();         // ready database
+
         // get or generate bot settings
         botSettings = BotSettings.init();
         if( botSettings == null )
@@ -79,11 +82,11 @@ public class Main
             return;
         }
 
-        mongoDriver.init();         // ready database
-        commandHandler.init();      // ready commands
         calendarConverter.init();   // connect to calendar service
         entryManager.init();        // start timers
         scheduleManager.init();     // start auto-sync
+
+        commandHandler.init();      // ready commands
 
         HttpUtilities.updateStats();
     }
