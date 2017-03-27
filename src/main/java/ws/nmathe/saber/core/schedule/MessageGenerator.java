@@ -33,14 +33,14 @@ class MessageGenerator
             if(minutes<=120)
                 footerStr += " " + minutes + "m";
             else
-                footerStr += " " + Math.ceil(minutes/60) + "h";
+                footerStr += " " + (int) Math.ceil(minutes/60) + "h";
             for (int i=1; i<reminders.size()-1; i++)
             {
                 minutes = Instant.now().until(reminders.get(i).toInstant(), ChronoUnit.MINUTES);
                 if(minutes<=120)
                     footerStr += ", " + minutes + "m";
                 else
-                    footerStr += ", " + Math.ceil(minutes/60) + "h";
+                    footerStr += ", " + (int) Math.ceil(minutes/60) + "h";
             }
             if (reminders.size()>1)
             {
@@ -49,7 +49,7 @@ class MessageGenerator
                 if(minutes<=120)
                     footerStr += minutes + "m";
                 else
-                    footerStr += Math.ceil(minutes/60) + "h";
+                    footerStr += (int) Math.ceil(minutes/60) + "h";
             }
         }
 

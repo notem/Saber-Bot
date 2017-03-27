@@ -22,7 +22,7 @@ class CommandParser
      */
     CommandContainer parse(MessageReceivedEvent e)
     {
-        String raw = e.getMessage().getRawContent().replace("```","");
+        String raw = e.getMessage().getRawContent();
 
         /// trim off the prefix
         String trimmed;
@@ -31,8 +31,8 @@ class CommandParser
         else
             trimmed = raw.replaceFirst( Main.getBotSettings().getCommandPrefix(), "");
 
-        // split at spaces
-        String[] split = trimmed.split(" ");
+        // split at white spaces (non newlines)
+        String[] split = trimmed.split("[^\\S\n\r]+");
 
         // separate out first arg
         String invoke = split[0];
@@ -42,7 +42,7 @@ class CommandParser
 
         // process the remaining elements into arguments in a temporary ArrayList
         ArrayList<String> list = new ArrayList<>();
-        String tmp = "";            // temporary buffer used when encountering a "txt txt" arg
+        String tmp = "";            // temporary buffer used when encountering a "txt ... txt" arg
         boolean quotesFlag = true;  //
         for( String str : split )
         {
