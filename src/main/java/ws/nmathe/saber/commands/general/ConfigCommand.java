@@ -143,10 +143,22 @@ public class ConfigCommand implements Command
             OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
                     .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
 
+            List<Integer> reminders = Main.getScheduleManager().getDefaultReminders(cId);
             String reminderStr = "";
-            for (Integer i : Main.getScheduleManager().getDefaultReminders(cId))
+            if(reminders.isEmpty())
             {
-                reminderStr += i + "min ";
+                reminderStr = "off";
+            }
+            else
+            {
+                reminderStr += reminders.get(0);
+                for (int i=1; i<reminders.size()-1; i++)
+                {
+                    reminderStr += ", " + reminders.get(i) ;
+                }
+                if(reminders.size() > 1)
+                    reminderStr += " and " + reminders.get(reminders.size()-1);
+                reminderStr += " minutes";
             }
 
             String content = "<#" + cId + ">\n```js\n" +

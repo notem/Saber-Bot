@@ -1,10 +1,8 @@
 package ws.nmathe.saber.utils;
 
 import java.net.URL;
+import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.time.Month;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 /**
  * static methods used to verify user input for the verify() method of commands
@@ -62,10 +60,13 @@ public class VerifyUtilities
 
         try
         {
-            LocalDate.parse(arg, DateTimeFormatter.ofPattern("MM d"));
+            String[] splt = arg.split("[^0-9]+");
+            if(splt.length != 2)
+                return false;
+            LocalDate.of(LocalDate.now().getYear(), Integer.parseInt(splt[0]), Integer.parseInt(splt[1]));
             return true;
         }
-        catch(DateTimeParseException e)
+        catch(DateTimeException e)
         {
             return false;
         }

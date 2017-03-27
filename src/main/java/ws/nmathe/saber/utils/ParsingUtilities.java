@@ -158,11 +158,16 @@ public class ParsingUtilities
 
     public static LocalDate parseDateStr(String arg)
     {
-        if( arg.equals("today") )
-            return LocalDate.now();
-        else if( arg.equals("tomorrow") )
-            return LocalDate.now().plusDays( 1 );
-        else
-            return LocalDate.parse(arg, DateTimeFormatter.ofPattern("MM d"));
+        switch (arg) {
+            case "today":
+                return LocalDate.now();
+
+            case "tomorrow":
+                return LocalDate.now().plusDays(1);
+
+            default:
+                String[] splt = arg.split("[^0-9]+");
+                return LocalDate.of(LocalDate.now().getYear(), Integer.parseInt(splt[0]), Integer.parseInt(splt[1]));
+        }
     }
 }

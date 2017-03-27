@@ -45,7 +45,7 @@ public class CreateCommand implements Command
                 "\nEx3. ``!create \"#raid_schedule\" \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and " +
                 "tanks always in demand.\" \"PM our raid captain with your role and level if attending.\"``";
 
-        String USAGE_BRIEF = "``" + prefix + "create`` - add a new event to a schedule";
+        String USAGE_BRIEF = "``" + prefix + "create`` - add an event to a schedule";
 
         if( brief )
             return USAGE_BRIEF;
@@ -224,7 +224,7 @@ public class CreateCommand implements Command
             e = e.plusDays(1);
         }
 
-        if( e.isEqual(s) || s.isAfter(e))        //add a day to end if end is after start
+        if(s.isAfter(e))        //add a day to end if end is after start
             e = e.plusDays(1);
 
         Main.getEntryManager().newEntry(eTitle, s, e, eComments, repeat, url,

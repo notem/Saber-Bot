@@ -28,17 +28,29 @@ class MessageGenerator
 
         if (!reminders.isEmpty())
         {
-            footerStr += " | remind in " + Instant.now().until(reminders.get(0).toInstant(), ChronoUnit.MINUTES);
+            footerStr += " | remind in ";
+            long minutes = Instant.now().until(reminders.get(0).toInstant(), ChronoUnit.MINUTES);
+            if(minutes<=120)
+                footerStr += " " + minutes + "m";
+            else
+                footerStr += " " + Math.ceil(minutes/60) + "h";
             for (int i=1; i<reminders.size()-1; i++)
             {
-                footerStr += ", " + Instant.now().until(reminders.get(i).toInstant(), ChronoUnit.MINUTES);
+                minutes = Instant.now().until(reminders.get(i).toInstant(), ChronoUnit.MINUTES);
+                if(minutes<=120)
+                    footerStr += ", " + minutes + "m";
+                else
+                    footerStr += ", " + Math.ceil(minutes/60) + "h";
             }
             if (reminders.size()>1)
             {
-                footerStr += ", and " + (Instant.now()
-                        .until(reminders.get(reminders.size()-1).toInstant(), ChronoUnit.MINUTES));
+                minutes = Instant.now().until(reminders.get(reminders.size()-1).toInstant(), ChronoUnit.MINUTES);
+                footerStr += " and ";
+                if(minutes<=120)
+                    footerStr += minutes + "m";
+                else
+                    footerStr += Math.ceil(minutes/60) + "h";
             }
-            footerStr += " minutes";
         }
 
         EmbedBuilder builder = new EmbedBuilder();
