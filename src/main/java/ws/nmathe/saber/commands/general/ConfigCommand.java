@@ -102,6 +102,9 @@ public class ConfigCommand implements Command
                     break;
 
                 case "remind" :
+                    if(args[index].toLowerCase().equals("off"))
+                        return "";
+
                     List<Integer> list = ParsingUtilities.parseReminderStr(args[index]);
                     if (list.size() <= 0)
                         return "I could not parse out any times!";
@@ -221,7 +224,13 @@ public class ConfigCommand implements Command
                     Main.getScheduleManager().setSyncTime(cId, Date.from(syncTime.toInstant()));
                     break;
                 case "remind":
-                    Main.getScheduleManager().setDefaultReminders(cId, ParsingUtilities.parseReminderStr(args[index]));
+                    List<Integer> rem;
+                    if(args[index].toLowerCase().equals("off"))
+                        rem = new ArrayList<>();
+                    else
+                        rem = ParsingUtilities.parseReminderStr(args[index]);
+
+                    Main.getScheduleManager().setDefaultReminders(cId, rem);
 
                     // for every entry on channel, update
                     Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
@@ -230,7 +239,7 @@ public class ConfigCommand implements Command
                                 // generate new entry reminders
                                 List<Date> reminders = new ArrayList<>();
                                 Instant start = ((Date) document.get("start")).toInstant();
-                                for(Integer til : Main.getScheduleManager().getDefaultReminders(cId))
+                                for(Integer til : rem)
                                 {
                                     if(Instant.now().until(start, ChronoUnit.MINUTES) > til)
                                     {
@@ -241,6 +250,9 @@ public class ConfigCommand implements Command
                                 // update db
                                 Main.getDBDriver().getEventCollection()
                                         .updateOne(eq("_id", document.get("_id")), set("reminders", reminders));
+
+                                // reload displayed message
+                                Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
                             });
 
             }
