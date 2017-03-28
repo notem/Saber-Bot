@@ -100,7 +100,7 @@ class CommandParser
         // constructor for CommandContainer
         CommandContainer(String invoke, String[] args, MessageReceivedEvent e)
         {
-            this.invoke = invoke;
+            this.invoke = invoke.toLowerCase();
             this.args = args;
             this.event = e;
         }

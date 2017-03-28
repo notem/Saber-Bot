@@ -56,18 +56,18 @@ public class ConfigCommand implements Command
         int index = 0;
 
         if (args.length < 1)
-            return "Not enough arguments";
+            return "That's not enough arguments";
 
         if( !Main.getScheduleManager().isASchedule(args[index].replace("<#","").replace(">","")) )
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
-                    "Try using the ``init`` command!";
+                    "Use the ``!init`` command to create a new schedule!";
 
         index++;
 
         if (args.length > 1)
         {
             if (args.length < 3)
-                return "Not enough arguments";
+                return "That's not enough arguments!";
 
             switch( args[index++] )
             {
@@ -135,45 +135,7 @@ public class ConfigCommand implements Command
 
         index++;
 
-        if (args.length == 1)
-        {
-            ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
-            Date syncTime = Main.getScheduleManager().getSyncTime(cId);
-
-            OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
-                    .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
-
-            List<Integer> reminders = Main.getScheduleManager().getDefaultReminders(cId);
-            String reminderStr = "";
-            if(reminders.isEmpty())
-            {
-                reminderStr = "off";
-            }
-            else
-            {
-                reminderStr += reminders.get(0);
-                for (int i=1; i<reminders.size()-1; i++)
-                {
-                    reminderStr += ", " + reminders.get(i) ;
-                }
-                if(reminders.size() > 1)
-                    reminderStr += " and " + reminders.get(reminders.size()-1);
-                reminderStr += " minutes";
-            }
-
-            String content = "<#" + cId + ">\n```js\n" +
-                    "Message Format    (msg): " + "\"" + Main.getScheduleManager().getAnnounceFormat(cId) + "\"\n" +
-                    "Announce Channel (chan): " + "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
-                    "Timezone         (zone): " + "\"" + zone + "\"\n" +
-                    "Clock Format    (clock): " + "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
-                    "Calendar Sync    (sync): " + "\"" + Main.getScheduleManager().getAddress(cId) + "\"\n" +
-                    "Time to Sync     (time): " + "\"" + sync_time_display + "\"\n" +
-                    "Reminders      (remind): " + "\"" + reminderStr + "\"\n" +
-                    "```";
-
-            MessageUtilities.sendMsg(content, event.getChannel(), null);
-        }
-        else
+        if (args.length > 1)
         {
             switch (args[index++])
             {
@@ -203,6 +165,7 @@ public class ConfigCommand implements Command
                             {
                                 Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
                             });
+
                     break;
 
                 case "clock":
@@ -266,8 +229,47 @@ public class ConfigCommand implements Command
                                 // reload displayed message
                                 Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
                             });
-
+                    break;
             }
         }
+
+        // always message out the schedule configuration
+
+        ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
+        Date syncTime = Main.getScheduleManager().getSyncTime(cId);
+
+        OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
+                .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
+
+        List<Integer> reminders = Main.getScheduleManager().getDefaultReminders(cId);
+        String reminderStr = "";
+        if(reminders.isEmpty())
+        {
+            reminderStr = "off";
+        }
+        else
+        {
+            reminderStr += reminders.get(0);
+            for (int i=1; i<reminders.size()-1; i++)
+            {
+                reminderStr += ", " + reminders.get(i) ;
+            }
+            if(reminders.size() > 1)
+                reminderStr += " and " + reminders.get(reminders.size()-1);
+            reminderStr += " minutes";
+        }
+
+        String content = "<#" + cId + "> **" + (args.length>1?"New":"Current") + " Configuration**\n```js\n" +
+                "Message Format    (msg): " + "\"" +
+                    Main.getScheduleManager().getAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
+                "Announce Channel (chan): " + "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
+                "Timezone         (zone): " + "\"" + zone + "\"\n" +
+                "Clock Format    (clock): " + "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
+                "Calendar Sync    (sync): " + "\"" + Main.getScheduleManager().getAddress(cId) + "\"\n" +
+                "Time to Sync     (time): " + "\"" + sync_time_display + "\"\n" +
+                "Reminders      (remind): " + "\"" + reminderStr + "\"\n" +
+                "```";
+
+        MessageUtilities.sendMsg(content, event.getChannel(), null);
     }
 }

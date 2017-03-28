@@ -99,7 +99,7 @@ class MessageGenerator
 
         // insert each comment line with a gap line
         for( String comment : eComments )
-            msg += comment + "\n\n";
+            msg += comment.replace("```","`\uFEFF`\uFEFF`") + "\n\n";
 
         msg += "```Markdown\n\n" + zoneLine + "```";
 
