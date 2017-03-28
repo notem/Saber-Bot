@@ -12,7 +12,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  */
 public class DeleteCommand implements Command
 {
-    private String prefix = Main.getBotSettings().getCommandPrefix();
+    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
 
     @Override
     public String help(boolean brief)

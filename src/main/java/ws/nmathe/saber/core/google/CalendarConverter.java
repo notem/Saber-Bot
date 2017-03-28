@@ -5,6 +5,7 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventReminder;
 import com.google.api.services.calendar.model.Events;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
@@ -54,6 +55,12 @@ public class CalendarConverter
         }
     }
 
+    /**
+     * verifies that an address url is a valid Calendar address Saber can
+     * sync with
+     * @param address (String) google calendar address
+     * @return (boolean) true if valid
+     */
     public boolean checkValidAddress( String address )
     {
         try
@@ -70,7 +77,13 @@ public class CalendarConverter
 
     }
 
-    public void syncCalendar(String address, TextChannel channel)
+    /**
+     * Purges a schedule from entries and adds events (after conversion)
+     * from the next 7 day span of a Google Calendar
+     * @param address (String) valid address of calendar
+     * @param channel (MessageChannel) channel to sync with
+     */
+    public void syncCalendar(String address, MessageChannel channel)
     {
         Events events;
 
@@ -121,14 +134,19 @@ public class CalendarConverter
             ArrayList<String> comments = new ArrayList<>();
             int repeat = 0;
 
-            start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter).withZoneSameInstant(zone);
-            end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter).withZoneSameInstant(zone);
+            // parse start and end times
+            start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                    .withZoneSameInstant(zone);
+            end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                    .withZoneSameInstant(zone);
 
+            // get event title
             if( event.getSummary() == null )
                 title = "(No title)";
             else
                 title = event.getSummary();
 
+            // process event description into event comments
             if( event.getDescription() != null )
             {
                 for( String comment : event.getDescription().split("\n") )
@@ -138,6 +156,7 @@ public class CalendarConverter
                 }
             }
 
+            // handle event repeat/recurrence
             List<String> recurrence = event.getRecurrence();
             String recurrenceId = event.getRecurringEventId();
             if( recurrenceId != null )
@@ -169,10 +188,10 @@ public class CalendarConverter
                 }
             }
 
+            // add new event entry if the event has not already been added (ie, a repeating event)
             if(!uniqueEvents.contains(recurrenceId==null ? event.getId() : recurrenceId))
             {
                 Main.getEntryManager().newEntry(title, start, end, comments, repeat, event.getHtmlLink(), channel);
-
                 uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);
             }
         }

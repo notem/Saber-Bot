@@ -14,7 +14,7 @@ public class Driver {
 
     public void init()
     {
-        MongoClient mongoClient = new MongoClient(new MongoClientURI(Main.getBotSettings().getMongoURI()));
+        MongoClient mongoClient = new MongoClient(new MongoClientURI(Main.getBotSettingsManager().getMongoURI()));
         db = mongoClient.getDatabase("saberDB");
     }
 

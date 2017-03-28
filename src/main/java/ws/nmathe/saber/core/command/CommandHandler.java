@@ -43,9 +43,9 @@ public class CommandHandler
         commands.put("zones", new TimeZonesCommand());
 
         // add administrator commands with their lookup name
-        adminCommands.put("global_announce", new GlobalMsgCommand());
+        adminCommands.put("announcement", new GlobalMsgCommand());
         adminCommands.put("stats", new StatsCommand());
-        adminCommands.put("playing", new NowPlayingCommand());
+        adminCommands.put("reload", new ReloadSettingsCommand());
     }
 
     public void handleCommand( MessageReceivedEvent event, Integer type )

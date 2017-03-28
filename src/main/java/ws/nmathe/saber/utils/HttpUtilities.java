@@ -18,7 +18,7 @@ public class HttpUtilities
 
     public static void updateStats()
     {
-        String auth = Main.getBotSettings().getWebToken();
+        String auth = Main.getBotSettingsManager().getWebToken();
         if( auth != null )
         {
             HttpUtilities.updateStats_abal(Main.getBotJda().getGuilds().size(), auth);
@@ -34,7 +34,7 @@ public class HttpUtilities
 
                 JSONObject json = new JSONObject().put("server_count", i);
 
-                HttpResponse<JsonNode> response = Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotSelfUser().getId() + "/stats")
+                HttpResponse<JsonNode> response = Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotJda().getSelfUser().getId() + "/stats")
                         .header("Authorization", auth)
                         .header("Content-Type", "application/json")
                         .body(json).asJson();

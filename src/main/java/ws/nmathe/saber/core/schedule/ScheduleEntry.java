@@ -4,13 +4,11 @@ import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
-import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -56,15 +54,7 @@ public class ScheduleEntry
     }
 
     /**
-     * returns now > start
-     */
-    public boolean hasStarted()
-    {
-        return this.hasStarted;
-    }
-
-    /**
-     *
+     * send an event reminder announcement
      */
     public void remind()
     {
@@ -72,13 +62,13 @@ public class ScheduleEntry
         if( msg == null )
             return;
 
-        Guild guild = msg.getGuild();
-        String startMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
-
-        Collection<TextChannel> chans = guild.getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true);
-        for( TextChannel chan : chans )
+        // send the remind announcement
+        String remindMsg = ParsingUtilities.
+                parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
+        for( TextChannel chan : msg.getGuild().
+                getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
         {
-            MessageUtilities.sendMsg(startMsg, chan, null);
+            MessageUtilities.sendMsg(remindMsg, chan, null);
         }
     }
 
@@ -91,17 +81,19 @@ public class ScheduleEntry
         if( msg == null )
             return;
 
+        // if the entry's start time is the same as it's end
+        // skip to end
         if( this.entryStart.isEqual(this.entryEnd) )
         {
             this.end();
             return;
         }
 
-        Guild guild = msg.getGuild();
-        String startMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
-
-        Collection<TextChannel> chans = guild.getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true);
-        for( TextChannel chan : chans )
+        // send the start announcement
+        String startMsg = ParsingUtilities
+                .parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
+        for( TextChannel chan : msg.getGuild()
+                .getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
         {
             MessageUtilities.sendMsg(startMsg, chan, null);
         }
@@ -116,11 +108,11 @@ public class ScheduleEntry
         if( eMsg==null )
             return;
 
-        Guild guild = eMsg.getGuild();
-        String endMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
-
-        Collection<TextChannel> chans = guild.getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true);
-        for( TextChannel chan : chans )
+        // send the end announcement
+        String endMsg = ParsingUtilities
+                .parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
+        for( TextChannel chan : eMsg.getGuild().
+                getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true))
         {
             MessageUtilities.sendMsg(endMsg, chan, null);
         }
@@ -146,7 +138,7 @@ public class ScheduleEntry
     }
 
     /**
-     * Edits the displayed Message text to indicate the time remaining until
+     * Edits the displayed Message to indicate the time remaining until
      * the entry is scheduled to begin/end
      */
     void adjustTimer()
@@ -199,6 +191,11 @@ public class ScheduleEntry
         return daysTil; // if this is zero, eRepeat was zero
     }
 
+    public boolean hasStarted()
+    {
+        return this.hasStarted;
+    }
+
     public String getTitle()
     {
         return this.entryTitle;
@@ -246,6 +243,12 @@ public class ScheduleEntry
         this.msgId = msg.getId();
     }
 
+    /**
+     * Attempts to retrieve the discord Message, if the message does not exist
+     * (or the bot can for any other reason cannot retrieve it) the event entry is
+     * removed and null returned
+     * @return (Message) if exists, otherwise null
+     */
     public Message getMessageObject()
     {
         Message msg;

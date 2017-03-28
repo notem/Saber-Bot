@@ -6,7 +6,7 @@ import ws.nmathe.saber.commands.Command;
 
 public class InitCommand implements Command
 {
-    private String prefix = Main.getBotSettings().getCommandPrefix();
+    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
 
     @Override
     public String help(boolean brief)

@@ -7,7 +7,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +18,7 @@ import java.util.Arrays;
  */
 public class CreateCommand implements Command
 {
-    private String prefix = Main.getBotSettings().getCommandPrefix();
+    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
 
     @Override
     public String help(boolean brief)

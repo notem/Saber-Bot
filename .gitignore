@@ -37,3 +37,4 @@ saber.properties.old
 src/main/resources/
 target/
 /.idea/
+/saber.toml

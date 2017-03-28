@@ -19,8 +19,8 @@ import java.util.List;
  */
 class MessageGenerator
 {
-    static Message generate(String eTitle, ZonedDateTime start, ZonedDateTime end, ArrayList<String> eComments,
-                            int eRepeat, String url, List<Date> reminders, Integer eId, String cId)
+    static Message generate(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
+                            int repeat, String url, List<Date> reminders, Integer eId, String cId)
     {
         String titleUrl = url != null ? url : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
@@ -54,16 +54,16 @@ class MessageGenerator
         }
 
         EmbedBuilder builder = new EmbedBuilder();
-        builder.setDescription(generateDesc(start, end, cId, eRepeat, eComments))
+        builder.setDescription(generateDesc(start, end, cId, repeat, comments))
                 .setColor(Color.DARK_GRAY)
-                .setAuthor(eTitle, titleUrl, titleImage)
+                .setAuthor(title, titleUrl, titleImage)
                 .setFooter(footerStr, null);
 
         return new MessageBuilder().setEmbed(builder.build()).build();
     }
 
     private static String generateDesc(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
-                                       int eRepeat, ArrayList<String> eComments)
+                                       int eRepeat, List<String> eComments)
     {
         String timeFormatter;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
@@ -92,7 +92,8 @@ class MessageGenerator
         }
 
         String repeatLine = "> " + getRepeatString( eRepeat ) + "\n";
-        String zoneLine = "[" + eStart.getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "]" + MessageGenerator.genTimer(eStart,eEnd) + "\n";
+        String zoneLine = "[" + eStart.getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "]" +
+                MessageGenerator.genTimer(eStart,eEnd) + "\n";
 
         msg += "```Markdown\n\n" + timeLine + repeatLine + "```\n";
 
@@ -164,7 +165,7 @@ class MessageGenerator
         return str;
     }
 
-    static String genTimer(ZonedDateTime start, ZonedDateTime end)
+    private static String genTimer(ZonedDateTime start, ZonedDateTime end)
     {
         String timer;
         long timeTilStart = ZonedDateTime.now().until(start, ChronoUnit.SECONDS);

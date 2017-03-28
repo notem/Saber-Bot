@@ -17,7 +17,7 @@ import java.util.ArrayList;
  */
 public class EditCommand implements Command
 {
-    private String prefix = Main.getBotSettings().getCommandPrefix();
+    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
 
     @Override
     public String help(boolean brief)

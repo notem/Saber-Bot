@@ -3,7 +3,6 @@ package ws.nmathe.saber.commands.admin;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.MessageUtilities;
-import ws.nmathe.saber.utils.__out;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -38,11 +37,12 @@ public class GlobalMsgCommand implements Command
 
         for( Guild guild : Main.getBotJda().getGuilds() )
         {
-            Collection<TextChannel> chans = guild.getTextChannelsByName( Main.getBotSettings().getControlChan(), true );
+            Collection<TextChannel> chans = guild.getTextChannelsByName( Main.getBotSettingsManager().getControlChan(), true );
             for( TextChannel chan : chans )
             {
                 MessageUtilities.sendMsg(msg, chan, null);
             }
         }
+        MessageUtilities.sendPrivateMsg("Finished sending announcements to guilds!", event.getAuthor(), null);
     }
 }

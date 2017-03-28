@@ -19,7 +19,7 @@ import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
 
 /**
- * Manage's the settings for all valid schedule channels
+ * Manage schedules and their settings for all guilds
  */
 public class ScheduleManager
 {
@@ -31,6 +31,12 @@ public class ScheduleManager
                 3, 60*15, TimeUnit.SECONDS );
     }
 
+    /**
+     * Create a new schedule and it's associated schedule channel, if the bot cannot create the
+     * new channel no schedule will be created
+     * @param gId (String) guild ID
+     * @param optional (String) optional name of schedule channel
+     */
     public void createSchedule(String gId, String optional)
     {
         String cId;
@@ -48,10 +54,10 @@ public class ScheduleManager
         Document schedule =
                 new Document("_id", cId)
                         .append("guildId", gId)
-                        .append("announcement_channel", Main.getBotSettings().getAnnounceChan())
-                        .append("announcement_format", Main.getBotSettings().getAnnounceFormat())
-                        .append("clock_format", Main.getBotSettings().getClockFormat())
-                        .append("timezone", Main.getBotSettings().getTimeZone())
+                        .append("announcement_channel", Main.getBotSettingsManager().getAnnounceChan())
+                        .append("announcement_format", Main.getBotSettingsManager().getAnnounceFormat())
+                        .append("clock_format", Main.getBotSettingsManager().getClockFormat())
+                        .append("timezone", Main.getBotSettingsManager().getTimeZone())
                         .append("sync_time", Date.from(ZonedDateTime.of(LocalDate.now().plusDays(1),
                                 LocalTime.MIDNIGHT, ZoneId.systemDefault()).toInstant()))
                         .append("default_reminders", default_reminders)
@@ -60,6 +66,10 @@ public class ScheduleManager
         Main.getDBDriver().getScheduleCollection().insertOne(schedule);
     }
 
+    /**
+     * Removes a schedule and attempts to delete the schedule's channel
+     * @param cId (String) ID of channel / schedule (synonymous)
+     */
     public void deleteSchedule(String cId)
     {
         try
@@ -72,6 +82,10 @@ public class ScheduleManager
         Main.getDBDriver().getEventCollection().deleteMany(eq("channelId", cId));
         Main.getDBDriver().getScheduleCollection().deleteOne(eq("_id", cId));
     }
+
+    /*
+     * Getters and Setters (and one boolean checking function)
+     */
 
     public List<String> getSchedulesForGuild(String gId)
     {
@@ -88,7 +102,7 @@ public class ScheduleManager
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
         {
-            return Main.getBotSettings().getAnnounceChan();
+            return Main.getBotSettingsManager().getAnnounceChan();
         }
         return (String) settings.get("announcement_channel");
     }
@@ -98,7 +112,7 @@ public class ScheduleManager
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
         {
-            return Main.getBotSettings().getAnnounceFormat();
+            return Main.getBotSettingsManager().getAnnounceFormat();
         }
         return (String) settings.get("announcement_format");
     }
@@ -108,7 +122,7 @@ public class ScheduleManager
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
         {
-            return Main.getBotSettings().getClockFormat();
+            return Main.getBotSettingsManager().getClockFormat();
         }
         return (String) settings.get("clock_format");
     }
@@ -118,7 +132,7 @@ public class ScheduleManager
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
         {
-            return ZoneId.of(Main.getBotSettings().getTimeZone());
+            return ZoneId.of(Main.getBotSettingsManager().getTimeZone());
         }
         return ZoneId.of((String) settings.get("timezone"));
     }

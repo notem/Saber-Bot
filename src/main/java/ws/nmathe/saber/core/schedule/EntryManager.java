@@ -1,6 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.MessageChannel;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -20,7 +20,7 @@ import static com.mongodb.client.model.Filters.*;
 
 
 /**
- * Manages the schedule of ScheduleEntries for all attached guilds
+ * Manages the full listing of entries for all attached guilds
  * Responsible for checking for expired entries, syncing channels to
  * their respective google calendar address, managing IDs, and removing/creating
  * entries.
@@ -29,14 +29,14 @@ public class EntryManager
 {
     /**
      * creates the scheduledExecutor thread pool and starts schedule timers which
-     * check for expired entries
+     * check for expired entry timers and adjust the message display timer
      */
     public void init()
     {
         // create thread every minute to start/end/remind entries
         ScheduledExecutorService scheduler1 = Executors.newScheduledThreadPool(1);
         scheduler1.scheduleAtFixedRate( new EntryProcessor(0),
-                0, 30, TimeUnit.SECONDS );
+                0, 30, TimeUnit.SECONDS);
 
         // thread to adjust entry display timers
         ScheduledExecutorService scheduler2 = Executors.newScheduledThreadPool(1);
@@ -51,8 +51,18 @@ public class EntryManager
                 30 , 60*3, TimeUnit.SECONDS );
     }
 
-    public void newEntry(String title, ZonedDateTime start, ZonedDateTime end, ArrayList<String> comments,
-                         int repeat, String url, TextChannel channel)
+    /**
+     * Create a new entry on a schedule
+     * @param title     (String) title
+     * @param start     (ZonedDateTime) datetime event starts
+     * @param end       (ZonedDateTime) datetime event ends
+     * @param comments  (List of String)
+     * @param repeat    (int) binary representation of days event repeats
+     * @param url       (String) url for title
+     * @param channel   (MessageChannel) channel to send event's message
+     */
+    public void newEntry(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
+                         int repeat, String url, MessageChannel channel)
     {
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(channel.getId()))
@@ -63,7 +73,7 @@ public class EntryManager
             }
         }
 
-        Integer newId = this.newId(null);
+        Integer newId = this.newId();
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, newId, channel.getId());
 
@@ -90,8 +100,19 @@ public class EntryManager
         });
     }
 
+    /**
+     * Update an entry with a new configuration
+     * @param entryId   (Integer) ID of the entry
+     * @param title     (String) title
+     * @param start     (ZonedDateTime) datetime event starts
+     * @param end       (ZonedDateTime) datetime event ends
+     * @param comments  (List of String)
+     * @param repeat    (int) binary representation of days event repeats
+     * @param url       (String) url for title
+     * @param origMessage (Message) event's message to be updated
+     */
     public void updateEntry(Integer entryId, String title, ZonedDateTime start, ZonedDateTime end,
-                            ArrayList<String> comments, int repeat, String url, Message origMessage)
+                            List<String> comments, int repeat, String url, Message origMessage)
     {
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(origMessage.getChannel().getId()))
@@ -127,6 +148,10 @@ public class EntryManager
         });
     }
 
+    /**
+     * removes an entry by id from the db
+     * @param entryId (Integer) ID of event entry
+     */
     public void removeEntry( Integer entryId )
     {
         Main.getDBDriver().getEventCollection().findOneAndDelete(eq("_id", entryId));
@@ -134,7 +159,6 @@ public class EntryManager
 
     /**
      * regenerates the displayed Message text for a schedule entry
-     *
      * @param eId integer Id
      */
     public void reloadEntry( Integer eId )
@@ -144,14 +168,15 @@ public class EntryManager
         se.adjustTimer();
     }
 
-    private Integer newId( Integer oldId )
+    /**
+     * generates a new ID randomly from a 32bit space
+     * @return (Integer) new, unused id
+     */
+    private Integer newId()
     {
         // try first to use the requested Id
         Integer ID;
-        if (oldId == null)
-            ID = (int) Math.ceil(Math.random() * (Math.pow(2, 32) - 1));
-        else
-            ID = oldId;
+        ID = (int) Math.ceil(Math.random() * (Math.pow(2, 32) - 1));
 
         // if the Id is in use, generate a new one until a free one is found
         while (Main.getDBDriver().getEventCollection().find(eq("_id", ID)).first() != null)
@@ -162,6 +187,11 @@ public class EntryManager
         return ID;
     }
 
+    /**
+     * Finds an event and returns it's newly created class object if it exists
+     * @param entryId (Integer) event ID
+     * @return (EventEntry) of event if exists, otherwise null
+     */
     public ScheduleEntry getEntry(Integer entryId)
     {
         Document entryDocument = Main.getDBDriver().getEventCollection()
@@ -174,6 +204,12 @@ public class EntryManager
             return null;
     }
 
+    /**
+     * Finds an event by id that also belongs to a specific guild
+     * @param entryId (Integer) event ID
+     * @param guildId (String) guild ID
+     * @return (EventEntry) if exists, otherwise null
+     */
     public ScheduleEntry getEntryFromGuild(Integer entryId, String guildId)
     {
         Document entryDocument = Main.getDBDriver().getEventCollection()
@@ -186,9 +222,14 @@ public class EntryManager
             return null;
     }
 
+    /**
+     * has a guild reached it's maximum event limit?
+     * @param gId (String) guild ID
+     * @return (boolean)
+     */
     public boolean isLimitReached(String gId)
     {
         long count = Main.getDBDriver().getEventCollection().count(eq("guildId",gId));
-        return Main.getBotSettings().getMaxEntries() < count;
+        return Main.getBotSettingsManager().getMaxEntries() < count;
     }
 }

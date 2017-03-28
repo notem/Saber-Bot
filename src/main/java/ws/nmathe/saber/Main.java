@@ -1,19 +1,21 @@
 package ws.nmathe.saber;
 
+import com.google.common.collect.Iterables;
 import ws.nmathe.saber.core.command.CommandHandler;
 import ws.nmathe.saber.core.database.Driver;
 import ws.nmathe.saber.core.google.CalendarConverter;
 import ws.nmathe.saber.core.schedule.EntryManager;
-import ws.nmathe.saber.core.settings.BotSettings;
+import ws.nmathe.saber.core.settings.BotSettingsManager;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.entities.SelfUser;
 import ws.nmathe.saber.core.EventListener;
 import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.__out;
+
+import java.util.*;
 
 /**
  *  initializes and maintains the bot
@@ -21,9 +23,9 @@ import ws.nmathe.saber.utils.__out;
  */
 public class Main
 {
-    private static JDA jda;                     // api
-    private static BotSettings botSettings;     // global config botSettings
+    private static JDA jda;
 
+    private static BotSettingsManager botSettingsManager = new BotSettingsManager();
     private static EntryManager entryManager = new EntryManager();
     private static ScheduleManager scheduleManager = new ScheduleManager();
     private static CommandHandler commandHandler = new CommandHandler();
@@ -32,9 +34,7 @@ public class Main
 
     public static void main( String[] args ) throws InterruptedException {
 
-        // get or generate bot settings
-        botSettings = BotSettings.init();
-        if( botSettings == null )
+        if( botSettingsManager.hasSettings() )
         {
             __out.printOut(Main.class, "Created a new java properties file. Add your " +
                     "bot token to the file and restart the bot.\n");
@@ -43,38 +43,38 @@ public class Main
 
         mongoDriver.init();         // ready database
 
-        // build the bot
-        try
+        try // build the bot
         {
             jda = new JDABuilder(AccountType.BOT)
-                    .setToken(botSettings.getToken()) // set token
+                    .setToken(botSettingsManager.getToken())
                     .buildBlocking();
-            // attach listener
             jda.addEventListener(new EventListener());
-            // enable reconnect
             jda.setAutoReconnect(true);
 
-            // set the bot's 'game' message
-            jda.getPresence().setGame(new Game()
+
+            // cycle "now playing" message every 10 seconds
+            Iterator<String> games = Iterables.cycle(botSettingsManager.getNowPlayingList()).iterator();
+            (new Timer()).scheduleAtFixedRate(new TimerTask()
             {
                 @Override
-                public String getName()
+                public void run()
                 {
-                    return "Schedule Bot | " + botSettings.getCommandPrefix() + "help " + botSettings.getCommandPrefix() + "setup";
-                }
+                    jda.getPresence().setGame(new Game()
+                    {
+                        @Override
+                        public String getName()
+                        { return games.next(); }
 
-                @Override
-                public String getUrl()
-                {
-                    return "";
-                }
+                        @Override
+                        public String getUrl()
+                        { return "https://nmathe.ws/bots/saber"; }
 
-                @Override
-                public GameType getType()
-                {
-                    return GameType.DEFAULT;
+                        @Override
+                        public GameType getType()
+                        { return GameType.DEFAULT; }
+                    });
                 }
-            });
+            }, 0, 10*1000);
         }
         catch( Exception e )
         {
@@ -92,19 +92,14 @@ public class Main
     }
 
 
-    public static SelfUser getBotSelfUser()
-    {
-        return jda.getSelfUser();
-    }
-
     public static JDA getBotJda()
     {
         return jda;
     }
 
-    public static BotSettings getBotSettings()
+    public static BotSettingsManager getBotSettingsManager()
     {
-        return botSettings;
+        return botSettingsManager;
     }
 
     public static CommandHandler getCommandHandler()

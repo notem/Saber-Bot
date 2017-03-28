@@ -24,7 +24,7 @@ import static com.mongodb.client.model.Updates.set;
  */
 public class ConfigCommand implements Command
 {
-    private String invoke = Main.getBotSettings().getCommandPrefix() + "config";
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "config";
 
     @Override
     public String help(boolean brief)

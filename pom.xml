@@ -6,7 +6,7 @@
 
     <groupId>ws.nmathe.saber</groupId>
     <artifactId>saber</artifactId>
-    <version>1.0</version>
+    <version>17.03.28</version>
     <name>saber</name>
 
     <properties>
@@ -88,6 +88,16 @@
             <groupId>com.google.oauth-client</groupId>
             <artifactId>google-oauth-client-jetty</artifactId>
             <version>1.22.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>21.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.moandjiezana.toml</groupId>
+            <artifactId>toml4j</artifactId>
+            <version>0.7.1</version>
         </dependency>
     </dependencies>
 

@@ -13,16 +13,16 @@ import java.util.Collection;
  */
 public class HelpCommand implements Command
 {
-    private String prefix = Main.getBotSettings().getCommandPrefix();
+    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
 
-    private String INTRO = "I am **" + Main.getBotSelfUser().getName() + "**, the task scheduling discord bot." +
+    private String INTRO = "I am **" + Main.getBotJda().getSelfUser().getName() + "**, the event scheduling discord bot." +
             " I can provide your discord with basic event schedule management.  Invite me to your discord and create " +
-            "a dedicated command channel named ``" + Main.getBotSettings().getControlChan() + "`` to get started.\n\n" +
+            "a dedicated command channel named **" + Main.getBotSettingsManager().getControlChan() + "** to get started.\n\n" +
 
             "github: <https://github.com/notem/Saber-Bot>\n" +
             "userdocs: <https://nmathe.ws/bots/saber>\n" +
             "support: <https://discord.gg/ZQZnXsC>\n" +
-            "invite: <https://discordapp.com/api/oauth2/authorize?client_id=" + Main.getBotSelfUser().getId() +
+            "invite: <https://discordapp.com/api/oauth2/authorize?client_id=" + Main.getBotJda().getSelfUser().getId() +
             "&scope=bot&permissions=523344>\n\n";
 
     private String USAGE_EXTENDED = "To get detailed information concerning the usage of any of these" +
@@ -58,7 +58,7 @@ public class HelpCommand implements Command
             String commandsBrief = ""; for( Command cmd : commands )
                 commandsBrief += cmd.help( true ) + "\n";
 
-            MessageUtilities.sendPrivateMsg( INTRO + "__**Available commands**__\n" +
+            MessageUtilities.sendPrivateMsg( INTRO + "**Commands**\n================\n" +
                     commandsBrief + "\n" + USAGE_EXTENDED, event.getAuthor(), null );
         }
         else    // otherwise read search the commands for the first arg

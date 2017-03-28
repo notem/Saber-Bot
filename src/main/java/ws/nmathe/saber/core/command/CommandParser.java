@@ -26,10 +26,10 @@ class CommandParser
 
         /// trim off the prefix
         String trimmed;
-        if( raw.startsWith( Main.getBotSettings().getAdminPrefix() ))
-            trimmed = raw.replaceFirst(Main.getBotSettings().getAdminPrefix(), "");
+        if( raw.startsWith( Main.getBotSettingsManager().getAdminPrefix() ))
+            trimmed = raw.replaceFirst(Main.getBotSettingsManager().getAdminPrefix(), "");
         else
-            trimmed = raw.replaceFirst( Main.getBotSettings().getCommandPrefix(), "");
+            trimmed = raw.replaceFirst( Main.getBotSettingsManager().getCommandPrefix(), "");
 
         // split at white spaces (non newlines)
         String[] split = trimmed.split("[^\\S\n\r]+");

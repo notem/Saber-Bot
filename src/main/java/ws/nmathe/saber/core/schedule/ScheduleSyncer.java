@@ -10,6 +10,9 @@ import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Updates.set;
 
 /**
+ * Thread used to resync schedules once a day if that schedule
+ * is configured to sync to a google calendar address.
+ * If the sync fails, the schedule's sync configuration is reset
  */
 class ScheduleSyncer implements Runnable
 {
@@ -28,7 +31,8 @@ class ScheduleSyncer implements Runnable
                     Main.getScheduleManager().getTimeZone(scheduleId)).plusDays(1).toInstant());
 
             // update schedule document with next sync time
-            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", scheduleId), set("sync_time", syncTime));
+            Main.getDBDriver().getScheduleCollection()
+                    .updateOne(eq("_id", scheduleId), set("sync_time", syncTime));
 
             // attempt to sync schedule
             if(Main.getCalendarConverter().checkValidAddress((String) document.get("sync_address")))
@@ -39,7 +43,8 @@ class ScheduleSyncer implements Runnable
             }
             else    // if sync address is not valid, set it to off
             {
-                Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", scheduleId),set("sync_address", "off"));
+                Main.getDBDriver().getScheduleCollection()
+                        .updateOne(eq("_id", scheduleId), set("sync_address", "off"));
             }
         });
     }

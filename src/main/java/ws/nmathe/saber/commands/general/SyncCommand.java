@@ -14,7 +14,7 @@ public class SyncCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String invoke = Main.getBotSettings().getCommandPrefix() + "sync";
+        String invoke = Main.getBotSettingsManager().getCommandPrefix() + "sync";
 
         String USAGE_EXTENDED = "Using ``" + invoke + " <channel> [<calendar address>]`` will replace all events in the specified channel" +
                 "with events imported from a public google calendar. The command imports the next 7 days of events into the channel;" +

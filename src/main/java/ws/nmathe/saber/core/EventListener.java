@@ -5,7 +5,6 @@ import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 
-import ws.nmathe.saber.core.command.CommandHandler;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
@@ -22,10 +21,10 @@ import static com.mongodb.client.model.Filters.eq;
 public class EventListener extends ListenerAdapter
 {
     // store bot settings for easy reference
-    private String prefix = Main.getBotSettings().getCommandPrefix();
-    private String adminPrefix = Main.getBotSettings().getAdminPrefix();
-    private String adminId = Main.getBotSettings().getAdminId();
-    private String controlChan = Main.getBotSettings().getControlChan();
+    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
+    private String adminPrefix = Main.getBotSettingsManager().getAdminPrefix();
+    private String adminId = Main.getBotSettingsManager().getAdminId();
+    private String controlChan = Main.getBotSettingsManager().getControlChan();
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
@@ -33,6 +32,13 @@ public class EventListener extends ListenerAdapter
         // store some properties of the message for use later
         String content = event.getMessage().getContent();   // the raw string the user sent
         String userId = event.getAuthor().getId();          // the ID of the user
+
+        // leave the guild if the message author is black listed
+        if(Main.getBotSettingsManager().getBlackList().contains(userId))
+        {
+            event.getGuild().leave().queue();
+            return;
+        }
 
         // process private commands
         if (event.isFromType(ChannelType.PRIVATE))
@@ -52,6 +58,13 @@ public class EventListener extends ListenerAdapter
             return;
         }
 
+        // leave guild if the guild is blacklisted
+        if(Main.getBotSettingsManager().getBlackList().contains(event.getGuild().getId()))
+        {
+            event.getGuild().leave().queue();
+            return;
+        }
+
         // process a command if it originates in the control channel and with appropriate prefix
         if (event.getChannel().getName().toLowerCase().equals(controlChan) && content.startsWith(prefix))
         {
@@ -65,7 +78,7 @@ public class EventListener extends ListenerAdapter
                 .getSchedulesForGuild(event.getGuild().getId()).contains(event.getChannel().getId()))
         {
             // delete all other user's messages
-            if (!userId.equals(Main.getBotSelfUser().getId()))
+            if (!userId.equals(Main.getBotJda().getSelfUser().getId()))
                 MessageUtilities.deleteMsg(event.getMessage(), null);
         }
     }
@@ -82,6 +95,13 @@ public class EventListener extends ListenerAdapter
     @Override
     public void onGuildJoin( GuildJoinEvent event )
     {
+        // leave guild if guild is blacklisted
+        if(Main.getBotSettingsManager().getBlackList().contains(event.getGuild().getId()))
+        {
+            event.getGuild().leave().queue();
+            return;
+        }
+
         // update web stats
         HttpUtilities.updateStats();
     }
