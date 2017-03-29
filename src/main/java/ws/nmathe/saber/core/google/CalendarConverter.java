@@ -189,7 +189,9 @@ public class CalendarConverter
                 // if the google event already exists as a saber event on the schedule, update it
                 // otherwise add as a new saber event
                 Document doc = Main.getDBDriver().getEventCollection()
-                        .find(eq("googleId", googleId)).first();
+                        .find(and(
+                                eq("channelId", channel.getId()),
+                                eq("googleId", googleId))).first();
                 if(doc != null)
                 {
                     ScheduleEntry se = Main.getEntryManager().getEntry((Integer) doc.get("_id"));
