@@ -14,7 +14,6 @@ import net.dv8tion.jda.core.entities.Game;
 import ws.nmathe.saber.core.EventListener;
 import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.__out;
-
 import java.util.*;
 
 /**
@@ -38,7 +37,7 @@ public class Main
         {
             __out.printOut(Main.class, "Created a new java properties file. Add your " +
                     "bot token to the file and restart the bot.\n");
-            return;
+            System.exit(0);
         }
 
         mongoDriver.init();         // ready database
@@ -50,7 +49,6 @@ public class Main
                     .buildBlocking();
             jda.addEventListener(new EventListener());
             jda.setAutoReconnect(true);
-
 
             // cycle "now playing" message every 10 seconds
             Iterator<String> games = Iterables.cycle(botSettingsManager.getNowPlayingList()).iterator();
@@ -79,7 +77,7 @@ public class Main
         catch( Exception e )
         {
             e.printStackTrace();
-            return;
+            System.exit(1);
         }
 
         calendarConverter.init();   // connect to calendar service

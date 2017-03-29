@@ -115,6 +115,7 @@ public class BotSettingsManager
         String default_time_zone;
         List<String> nowplaying_list;
         Set<String> blacklist;
+        long cooldown_threshold;
 
         BotSettings()
         {
@@ -135,6 +136,7 @@ public class BotSettingsManager
 
             nowplaying_list = new ArrayList<>();
             blacklist = new HashSet<>();
+            cooldown_threshold = 1000;
         }
     }
 
@@ -211,5 +213,10 @@ public class BotSettingsManager
     public Set<String> getBlackList()
     {
         return settings.blacklist;
+    }
+
+    public long getCooldownThreshold()
+    {
+        return settings.cooldown_threshold;
     }
 }

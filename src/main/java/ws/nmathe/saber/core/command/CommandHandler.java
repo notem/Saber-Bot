@@ -19,6 +19,7 @@ public class CommandHandler
 {
     private final CommandParser commandParser = new CommandParser();      // parses command strings into containers
     private final ExecutorService executor = Executors.newCachedThreadPool(); // thread pool for running commands
+    private final RateLimiter rateLimiter = new RateLimiter();
     private HashMap<String, Command> commands;         // maps Command to invoke string
     private HashMap<String, Command> adminCommands;    // ^^ but for admin commands
 
@@ -53,6 +54,14 @@ public class CommandHandler
         CommandParser.CommandContainer cc = commandParser.parse( event );
         if( type == 0 )
         {
+            if(rateLimiter.isOnCooldown(event.getAuthor().getId()) )
+            {
+                __out.printOut(this.getClass(), "@" + event.getAuthor().getName() +
+                        " [" + event.getAuthor().getId() + "] was rate limited on '" +
+                        event.getGuild().getName() +"' [" + event.getGuild().getId() + "] using the '" +
+                        cc.invoke + "' command!");
+                return;
+            }
             handleGeneralCommand( cc );
         }
         else if( type == 1 )
