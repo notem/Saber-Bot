@@ -227,6 +227,6 @@ public class CreateCommand implements Command
             e = e.plusDays(1);
 
         Main.getEntryManager().newEntry(eTitle, s, e, eComments, repeat, url,
-                event.getGuild().getTextChannelById(cId));
+                event.getGuild().getTextChannelById(cId), null);
     }
 }

@@ -62,7 +62,7 @@ public class EntryManager
      * @param channel   (MessageChannel) channel to send event's message
      */
     public void newEntry(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
-                         int repeat, String url, MessageChannel channel)
+                         int repeat, String url, MessageChannel channel, String googleId)
     {
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(channel.getId()))
@@ -94,6 +94,7 @@ public class EntryManager
                             .append("hasStarted", false)
                             .append("messageId", msg.getId())
                             .append("channelId", channelId)
+                            .append("googleId", googleId)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
@@ -112,7 +113,8 @@ public class EntryManager
      * @param origMessage (Message) event's message to be updated
      */
     public void updateEntry(Integer entryId, String title, ZonedDateTime start, ZonedDateTime end,
-                            List<String> comments, int repeat, String url, Message origMessage)
+                            List<String> comments, int repeat, String url, boolean hasStarted,
+                            Message origMessage, String googleId)
     {
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(origMessage.getChannel().getId()))
@@ -125,6 +127,7 @@ public class EntryManager
 
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, entryId, origMessage.getChannel().getId());
+
         MessageUtilities.editMsg(message, origMessage, msg -> {
             String guildId = msg.getGuild().getId();
             String channelId = msg.getChannel().getId();
@@ -139,9 +142,10 @@ public class EntryManager
                             .append("repeat", repeat)
                             .append("reminders", reminders)
                             .append("url", url)
-                            .append("hasStarted", false)
+                            .append("hasStarted", hasStarted)
                             .append("messageId", msg.getId())
                             .append("channelId", channelId)
+                            .append("googleId", googleId)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);

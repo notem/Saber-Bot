@@ -2,29 +2,27 @@ package ws.nmathe.saber.core.google;
 
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
-import com.google.api.services.calendar.model.EventReminder;
 import com.google.api.services.calendar.model.Events;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.__out;
-
 import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.nin;
 
 /**
  * Reads the next 7 days of events on a google calendar and converts
@@ -105,25 +103,11 @@ public class CalendarConverter
             return;
         }
 
-        // purge channel of all entries
-        Main.getDBDriver().getEventCollection()
-                .find(eq("channelId", channel.getId()))
-                .forEach((Consumer<? super Document>) document ->
-                {
-                    ScheduleEntry entry = Main.getEntryManager().getEntry((Integer) document.get("_id"));
-                    Message msg = entry.getMessageObject();
-                    if( msg==null )
-                        return;
-
-                    Main.getEntryManager().removeEntry((Integer) document.get("_id"));
-                    MessageUtilities.deleteMsg(msg, null);
-                });
-
         // change the zone to match the calendar
         ZoneId zone = ZoneId.of( events.getTimeZone() );
         Main.getScheduleManager().setTimeZone( channel.getId(), zone );
 
-        HashSet<String> uniqueEvents = new HashSet<>();
+        HashSet<String> uniqueEvents = new HashSet<>(); // a set of all unique (not child of a recurring event) events
 
         // convert every entry and add it to the scheduleManager
         for(Event event : events.getItems())
@@ -189,11 +173,43 @@ public class CalendarConverter
             }
 
             // add new event entry if the event has not already been added (ie, a repeating event)
-            if(!uniqueEvents.contains(recurrenceId==null ? event.getId() : recurrenceId))
+            String googleId = recurrenceId==null ? event.getId() : recurrenceId;
+            if(!uniqueEvents.contains(googleId))
             {
-                Main.getEntryManager().newEntry(title, start, end, comments, repeat, event.getHtmlLink(), channel);
+                // if the google event already exists as a saber event on the schedule, update it
+                // otherwise add as a new saber event
+                Document doc = Main.getDBDriver().getEventCollection()
+                        .find(eq("googleId", googleId)).first();
+                if(doc != null)
+                {
+                    ScheduleEntry se = Main.getEntryManager().getEntry((Integer) doc.get("_id"));
+                    Main.getEntryManager().updateEntry(se.getId(), title, start, end, comments, repeat,
+                            event.getHtmlLink(), se.hasStarted(), se.getMessageObject(), googleId);
+                }
+                else
+                {
+                    Main.getEntryManager().newEntry(title, start, end, comments, repeat,
+                            event.getHtmlLink(), channel, googleId);
+                }
+
                 uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);
             }
         }
+
+        // purge channel of all entries on schedule that aren't in uniqueEvents
+        Main.getDBDriver().getEventCollection()
+                .find(and(
+                        eq("channelId", channel.getId()),
+                        nin("googleId", uniqueEvents)))
+                .forEach((Consumer<? super Document>) document ->
+                {
+                    ScheduleEntry entry = Main.getEntryManager().getEntry((Integer) document.get("_id"));
+                    Message msg = entry.getMessageObject();
+                    if( msg==null )
+                        return;
+
+                    Main.getEntryManager().removeEntry((Integer) document.get("_id"));
+                    MessageUtilities.deleteMsg(msg, null);
+                });
     }
 }

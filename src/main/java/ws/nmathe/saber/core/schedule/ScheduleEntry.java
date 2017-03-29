@@ -31,6 +31,7 @@ public class ScheduleEntry
     private String msgId;
     private String chanId;
     private String guildId;
+    private String googleId;
 
     private boolean hasStarted;
 
@@ -50,6 +51,7 @@ public class ScheduleEntry
         this.msgId = (String) entryDocument.get("messageId");
         this.chanId = (String) entryDocument.get("channelId");
         this.guildId = (String) entryDocument.get("guildId");
+        this.googleId = (String) entryDocument.get("googleId");
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
     }
 
@@ -128,7 +130,7 @@ public class ScheduleEntry
                     this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
 
             Main.getEntryManager().updateEntry(this.entryId, this.entryTitle, newStart, newEnd, this.entryComments,
-                    this.entryRepeat, this.titleUrl, this.getMessageObject());
+                    this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId);
         }
         else // otherwise remove entry and delete the message
         {
@@ -234,6 +236,11 @@ public class ScheduleEntry
     public List<Date> getReminders()
     {
         return this.reminders;
+    }
+
+    public String getGoogleId()
+    {
+        return this.googleId;
     }
 
     void setMessageObject(Message msg)
