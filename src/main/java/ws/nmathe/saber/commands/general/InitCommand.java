@@ -1,5 +1,6 @@
 package ws.nmathe.saber.commands.general;
 
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -32,7 +33,9 @@ public class InitCommand implements Command
     @Override
     public String verify(String[] args, MessageReceivedEvent event)
     {
-        // TODO check if bot has sufficient permissions on guild
+        if(!event.getGuild().getMember(Main.getBotJda().getSelfUser())
+                .getPermissions().contains(Permission.MANAGE_CHANNEL))
+            return "I need the Manage Channels permission to create a new schedule!";
 
         if(args.length > 1)
             return "That' too many arguments!";

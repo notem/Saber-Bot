@@ -1,5 +1,7 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
@@ -9,11 +11,14 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
@@ -39,11 +44,17 @@ public class ScheduleManager
      */
     public void createSchedule(String gId, String optional)
     {
+        Collection<Permission> channelPerms = Stream.of(Permission.MESSAGE_ADD_REACTION,
+                Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY,
+                Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_ATTACH_FILES)
+                .collect(Collectors.toList());
         String cId;
         try
         {
-            cId = Main.getBotJda().getGuildById(gId)
-                    .getController().createTextChannel(optional!=null ? optional : "new_schedule").complete().getId();
+            Guild guild = Main.getBotJda().getGuildById(gId);
+            cId = guild.getController().createTextChannel(optional!=null ? optional : "new_schedule")
+                    .addPermissionOverride(guild.getMember(Main.getBotJda().getSelfUser()),
+                            channelPerms, new ArrayList<>()).complete().getId();
         }
         catch(PermissionException ignored)
         { return; }
