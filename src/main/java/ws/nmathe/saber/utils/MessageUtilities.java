@@ -112,19 +112,6 @@ public class MessageUtilities
         }
     }
 
-    public static void editEmbedMsg(MessageEmbed embed, Message msg, Consumer<Message> action)
-    {
-        try
-        {
-            msg.editMessage(new MessageBuilder().setEmbed(embed).build()).queue( action, null );
-        }
-        catch( Exception e)
-        {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
-        }
-    }
-
-
     /**
      * attempts to remove a message, asynchronous (non-blocking)
      *

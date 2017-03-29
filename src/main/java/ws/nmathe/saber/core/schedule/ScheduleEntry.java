@@ -6,6 +6,8 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import ws.nmathe.saber.utils.__out;
+
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -99,6 +101,8 @@ public class ScheduleEntry
         {
             MessageUtilities.sendMsg(startMsg, chan, null);
         }
+
+        this.adjustTimer();
     }
 
     /**
@@ -137,6 +141,8 @@ public class ScheduleEntry
             Main.getEntryManager().removeEntry(this.entryId);
             MessageUtilities.deleteMsg( eMsg, null );
         }
+
+        this.adjustTimer();
     }
 
     /**
@@ -163,6 +169,14 @@ public class ScheduleEntry
      */
     private int daysUntilNextOccurrence()
     {
+        // if the eighth bit is flagged, the repeat is a daily interval (ie. every two days)
+        if((this.entryRepeat & 0b10000000) == 0b10000000)
+        {
+            __out.printOut(this.getClass(), "" + (0b10000000 ^ this.entryRepeat));
+            return (0b10000000 ^ this.entryRepeat);
+        }
+
+        // convert to current day of week to binary representation
         int dayOfWeek = ZonedDateTime.now().getDayOfWeek().getValue();
         int dayAsBitSet;
         if( dayOfWeek == 7 ) //sunday
@@ -174,8 +188,9 @@ public class ScheduleEntry
         if( (dayAsBitSet | this.entryRepeat) == dayAsBitSet )
             return 7;
 
-        // else repeats earlier
+        // if the eighth bit is off, the event repeats on fixed days of the week (ie. on tuesday and wednesday)
         int daysTil = 0;
+        // else repeats earlier
         for( int i = 1; i < 7; i++)
         {
             if( dayAsBitSet == 0b1000000 )      //if bitset is SATURDAY, then
@@ -189,7 +204,6 @@ public class ScheduleEntry
                 break;
             }
         }
-
         return daysTil; // if this is zero, eRepeat was zero
     }
 

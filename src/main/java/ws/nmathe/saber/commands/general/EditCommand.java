@@ -7,7 +7,6 @@ import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;

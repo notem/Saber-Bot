@@ -2,6 +2,7 @@ package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
+import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import net.dv8tion.jda.core.entities.Message;
 
@@ -99,7 +100,18 @@ class MessageGenerator
 
         // insert each comment line with a gap line
         for( String comment : eComments )
-            msg += comment.replace("```","`\uFEFF`\uFEFF`") + "\n\n";
+        {
+            // code blocks in comments must be close within the comment
+            int code = StringUtils.countMatches("```", comment);
+            if((code%2) == 1)
+            {
+                msg += comment + " ```" + "\n";
+            }
+            else
+            {
+                msg += comment + "\n\n";
+            }
+        }
 
         msg += "```Markdown\n\n" + zoneLine + "```";
 
@@ -113,52 +125,82 @@ class MessageGenerator
         if( bitset == 0b1111111 )
             return "repeats daily";
 
+        // repeat on interval
+        if((bitset & 0b10000000) == 0b10000000 )
+        {
+            Integer interval = (0b10000000 ^ bitset);
+            String[] spellout = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
+            return "repeats every " + (interval>spellout.length ? interval : spellout[interval-1]) + " days";
+        }
+
+        // repeat on fixed days
         String str = "repeats weekly on ";
         if( (bitset & 1) == 1 )
         {
-            str += "Su";
+            if(bitset==0b0000001)
+                return str + "Sunday";
+
+            str += "Sun";
             if( (bitset>>1) != 0 )
                 str += ", ";
         }
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            str += "Mo";
+            if(bitset==0b0000010)
+                return str + "Monday";
+
+            str += "Mon";
             if( (bitset>>1) != 0 )
                 str += ", ";
         }
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            str += "Tu";
+            if(bitset==0b0000100)
+                return str + "Tuesday";
+
+            str += "Tue";
             if( (bitset>>1) != 0 )
                 str += ", ";
         }
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            str += "We";
+            if(bitset==0b0001000)
+                return str + "Wednesday";
+
+            str += "Wed";
             if( (bitset>>1) != 0 )
                 str += ", ";
         }
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            str += "Th";
+            if(bitset==0b0010000)
+                return str + "Thursday";
+
+            str += "Thu";
             if( (bitset>>1) != 0 )
                 str += ", ";
         }
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            str += "Fr";
+            if(bitset==0b0100000)
+                return str + "Friday";
+
+            str += "Fri";
             if( (bitset>>1) != 0 )
                 str += ", ";
         }
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            str += "Sa";
+            if(bitset==0b1000000)
+                return str + "Saturday";
+
+            str += "Sat";
             if( (bitset>>1) != 0 )
                 str += ", ";
         }
@@ -192,7 +234,8 @@ class MessageGenerator
             }
             else
             {
-                int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now(), start);
+                int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS),
+                        start.truncatedTo(ChronoUnit.DAYS));
                 if( daysTil <= 1)
                     timer += "tomorrow.)";
                 else
@@ -202,7 +245,7 @@ class MessageGenerator
         else // if the event has started
         {
             timer = "(ends ";
-            if( timeTilEnd < 30*60 )
+            if( timeTilEnd < 60*60 )
             {
                 int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
                 if( minutesTil <= 1)
@@ -221,7 +264,7 @@ class MessageGenerator
             }
             else
             {
-                int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now(), end);
+                int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS), end.truncatedTo(ChronoUnit.DAYS));
                 if( daysTil <= 1)
                     timer += "tomorrow.)";
                 else

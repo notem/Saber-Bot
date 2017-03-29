@@ -162,7 +162,17 @@ public class CalendarConverter
                     {
                         String tmp = rule.split("FREQ=")[1].split(";")[0];
                         if( tmp.equals("DAILY" ) )
-                            repeat = 0b1111111;
+                        {
+                            if(rule.contains("INTERVAL"))
+                            {
+                                int interval = Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]);
+                                repeat = (0b10000000 | interval);
+                            }
+                            else
+                            {
+                                repeat = 0b1111111;
+                            }
+                        }
                         else if( tmp.equals("WEEKLY") && rule.contains("BYDAY") )
                         {
                             tmp = rule.split("BYDAY=")[1].split(";")[0];

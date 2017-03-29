@@ -6,7 +6,7 @@
 
     <groupId>ws.nmathe.saber</groupId>
     <artifactId>saber</artifactId>
-    <version>17.03.28</version>
+    <version>17.03.29</version>
     <name>saber</name>
 
     <properties>
@@ -98,6 +98,11 @@
             <groupId>com.moandjiezana.toml</groupId>
             <artifactId>toml4j</artifactId>
             <version>0.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.5</version>
         </dependency>
     </dependencies>
 
