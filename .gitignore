@@ -17,24 +17,8 @@
 hs_err_pid*
 
 .gitignore
-.idea/.name
-.idea/copyright/
-.idea/libraries/Maven__com_neovisionaries_nv_websocket_client_1_30.xml
-.idea/libraries/Maven__net_dv8tion_JDA_3_0_BETA2_108.xml
-.idea/libraries/Maven__net_java_dev_jna_jna_4_2_2.xml
-StoredCredential
-bot.iml
 client_secret.json
-hs_err_pid22438.log
-hs_err_pid2502.log
-hs_err_pid25434.log
-hs_err_pid26267.log
-hs_err_pid32097.log
-hs_err_pid7373.log
 saber-g-id.json
-saber.properties
-saber.properties.old
-src/main/resources/
 target/
 /.idea/
 /saber.toml
