@@ -141,8 +141,6 @@ public class ScheduleEntry
             Main.getEntryManager().removeEntry(this.entryId);
             MessageUtilities.deleteMsg( eMsg, null );
         }
-
-        this.adjustTimer();
     }
 
     /**
