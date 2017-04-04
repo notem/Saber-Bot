@@ -12,6 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +28,13 @@ import static com.mongodb.client.model.Filters.*;
  */
 public class EntryManager
 {
+    private Random generator;
+
+    public EntryManager()
+    {
+        this.generator = new Random(Instant.now().toEpochMilli());
+    }
+
     /**
      * creates the scheduledExecutor thread pool and starts schedule timers which
      * check for expired entry timers and adjust the message display timer
@@ -180,12 +188,12 @@ public class EntryManager
     {
         // try first to use the requested Id
         Integer ID;
-        ID = (int) Math.ceil(Math.random() * (Math.pow(2, 32) - 1));
+        ID = (int) Math.ceil(generator.nextDouble() * (Math.pow(2, 32) - 1));
 
         // if the Id is in use, generate a new one until a free one is found
         while (Main.getDBDriver().getEventCollection().find(eq("_id", ID)).first() != null)
         {
-            ID = (int) Math.ceil(Math.random() * (Math.pow(2, 32) - 1));
+            ID = (int) Math.ceil(generator.nextDouble() * (Math.pow(2, 32) - 1));
         }
 
         return ID;

@@ -175,7 +175,7 @@ public class ScheduleEntry
         }
 
         // convert to current day of week to binary representation
-        int dayOfWeek = ZonedDateTime.now().getDayOfWeek().getValue();
+        int dayOfWeek = entryStart.getDayOfWeek().getValue();
         int dayAsBitSet;
         if( dayOfWeek == 7 ) //sunday
             dayAsBitSet = 1;
