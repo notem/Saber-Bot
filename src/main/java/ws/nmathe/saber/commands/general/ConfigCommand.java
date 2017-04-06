@@ -108,8 +108,8 @@ public class ConfigCommand implements Command
                     List<Integer> list = ParsingUtilities.parseReminderStr(args[index]);
                     if (list.size() <= 0)
                         return "I could not parse out any times!";
-                    if (list.size() > 5)
-                        return "More than 5 reminders are not allowed!";
+                    if (list.size() > 10)
+                        return "More than 10 reminders are not allowed!";
                     for(Integer i : list)
                     {
                         if (i<5)
