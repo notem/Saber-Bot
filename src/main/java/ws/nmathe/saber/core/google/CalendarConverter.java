@@ -12,8 +12,7 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.__out;
 import java.io.IOException;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -118,11 +117,24 @@ public class CalendarConverter
             ArrayList<String> comments = new ArrayList<>();
             int repeat = 0;
 
-            // parse start and end times
-            start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter)
-                    .withZoneSameInstant(zone);
-            end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter)
-                    .withZoneSameInstant(zone);
+            if(event.getStart().getDateTime() == null)
+            { // parse start and end dates for strange events
+                start = ZonedDateTime.of(
+                            LocalDate.parse(event.getStart().getDate().toStringRfc3339()),
+                            LocalTime.MIN,
+                            zone);
+                end = ZonedDateTime.of(
+                        LocalDate.parse(event.getEnd().getDate().toStringRfc3339()),
+                        LocalTime.MIN,
+                        zone);
+            }
+            else
+            { // parse start and end times for normal events
+                start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                        .withZoneSameInstant(zone);
+                end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                        .withZoneSameInstant(zone);
+            }
 
             // get event title
             if( event.getSummary() == null )

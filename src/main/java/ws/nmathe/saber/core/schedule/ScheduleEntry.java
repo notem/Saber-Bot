@@ -170,7 +170,6 @@ public class ScheduleEntry
         // if the eighth bit is flagged, the repeat is a daily interval (ie. every two days)
         if((this.entryRepeat & 0b10000000) == 0b10000000)
         {
-            __out.printOut(this.getClass(), "" + (0b10000000 ^ this.entryRepeat));
             return (0b10000000 ^ this.entryRepeat);
         }
 
