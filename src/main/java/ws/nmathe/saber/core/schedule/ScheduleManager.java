@@ -94,8 +94,30 @@ public class ScheduleManager
         Main.getDBDriver().getScheduleCollection().deleteOne(eq("_id", cId));
     }
 
+    /**
+     * is a channel an initialized schedule?
+     * @param cId (String) channel ID, synonymous to schedule id
+     * @return (boolean) true if channel ID maps to a schedule
+     */
+    public boolean isASchedule(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        return settings != null;
+    }
+
+    /**
+     * has a guild reached it's maximum schedule limit?
+     * @param gId (String) guild ID
+     * @return (boolean) true if guild has reached bot limit on schedule number
+     */
+    public boolean isLimitReached(String gId)
+    {
+        long count = Main.getDBDriver().getScheduleCollection().count(eq("guildId",gId));
+        return Main.getBotSettingsManager().getMaxSchedules() < count;
+    }
+
     /*
-     * Getters and Setters (and one boolean checking function)
+     * Getters and Setters
      */
 
     public List<String> getSchedulesForGuild(String gId)
@@ -219,11 +241,5 @@ public class ScheduleManager
     {
         Main.getDBDriver().getScheduleCollection()
                 .updateOne(eq("_id",cId), set("default_reminders", reminders));
-    }
-
-    public boolean isASchedule(String cId)
-    {
-        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        return settings != null;
     }
 }

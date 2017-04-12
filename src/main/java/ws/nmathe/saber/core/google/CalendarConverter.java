@@ -94,6 +94,7 @@ public class CalendarConverter
                     .setTimeMax(new DateTime(max.format(rfc3339Formatter)))
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
+                    .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
                     .execute();
         }
         catch( IOException e )

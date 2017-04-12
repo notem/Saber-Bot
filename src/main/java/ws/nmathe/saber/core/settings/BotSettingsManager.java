@@ -109,6 +109,7 @@ public class BotSettingsManager
         String admin_id;
         String bot_control_chan;
         int max_entries;
+        int max_schedules;
         String default_announce_chan;
         String default_announce_msg;
         String default_clock_format;
@@ -127,6 +128,7 @@ public class BotSettingsManager
             admin_prefix = "s.";
             admin_id = "ADMIN_USER_ID";
             max_entries = 25;
+            max_schedules = 5;
             bot_control_chan = "saber_control";
 
             default_announce_chan = "general";
@@ -218,5 +220,10 @@ public class BotSettingsManager
     public long getCooldownThreshold()
     {
         return settings.cooldown_threshold;
+    }
+
+    public int getMaxSchedules()
+    {
+        return settings.max_schedules;
     }
 }

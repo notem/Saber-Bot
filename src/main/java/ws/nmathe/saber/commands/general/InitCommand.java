@@ -37,10 +37,13 @@ public class InitCommand implements Command
                 .getPermissions().contains(Permission.MANAGE_CHANNEL))
             return "I need the Manage Channels permission to create a new schedule!";
 
-        if(args.length > 1)
-            return "That' too many arguments!";
+        if(Main.getScheduleManager().isLimitReached(event.getGuild().getId()))
+            return "You have reached the limit for schedules! Please remove one schedule channel before trying again.";
 
-        if(args.length == 1 && args[0].length()>100 && args[0].length()<2)
+        if(args.length > 1)
+            return "That's too many arguments!";
+
+        if(args.length == 1 && (args[0].length()>100 || args[0].length()<2))
             return "Schedule name must be between 2 and 100 characters long!";
 
         return "";

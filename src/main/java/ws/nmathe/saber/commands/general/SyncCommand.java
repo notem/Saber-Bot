@@ -45,8 +45,12 @@ public class SyncCommand implements Command
         if( args.length == 2 && !Main.getCalendarConverter().checkValidAddress( args[1] ) )
             return "I could not connect to google calendar address **" + args[1] + "**";
 
-        if( args.length == 1 && Main.getScheduleManager().getAddress(args[0].replace("<#","").replace(">","")).equals("off"))
+        String url = Main.getScheduleManager().getAddress(args[0].replace("<#","").replace(">",""));
+        if( args.length == 1 && url.equals("off"))
             return "That channel is not configured to sync to any calendar!";
+
+        if( args.length == 1 && !Main.getCalendarConverter().checkValidAddress( url ) )
+            return "I could not connect to google calendar address **" + url + "**";
 
         return "";
     }

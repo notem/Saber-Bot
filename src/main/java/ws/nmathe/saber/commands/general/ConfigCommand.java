@@ -33,6 +33,7 @@ public class ConfigCommand implements Command
                 "change schedule settings. To view a schedule's current settings, supply only the ``<channel>`` argument" +
                 " Options are 'msg' (announcement message format), chan (announcement channel), zone (timezone to use), and clock " +
                 "('12' to use am/pm or '24' for full form). \n\n" +
+                "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config option.\n\n" +
                 "When creating a custom announcement message format the " +
                 "'%' acts as a delimiter for entry parameters such as the title or a comment. %t will cause the entry" +
                 " title to be inserted, %c[1-9] will cause the nth comment to be inserted, %a will insert" +
@@ -83,7 +84,8 @@ public class ConfigCommand implements Command
                         ZoneId.of(args[index]);
                     } catch(Exception e)
                     {
-                        return "Argument **" + args[index] +  "** is not a valid timezone";
+                        return "**" + args[index] +  "** is not a valid timezone! Use the ``zones`` command to learn " +
+                                "what options are available.";
                     }
                     break;
 
@@ -94,11 +96,15 @@ public class ConfigCommand implements Command
                     break;
 
                 case "sync" :
+                    if( args[index].equals("off") )
+                        return "";
+                    if( !Main.getCalendarConverter().checkValidAddress(args[index]) )
+                        return "I cannot sync to **" + args[index] + "**! Provide a valid google calendar url or **off**.";
                     break;
 
                 case "time" :
                     if(!VerifyUtilities.verifyTime(args[index]))
-                        return "I can't parse ``" + args[index] + "`` into a time!";
+                        return "I cannot parse ``" + args[index] + "`` into a time!";
                     break;
 
                 case "remind" :
@@ -118,7 +124,8 @@ public class ConfigCommand implements Command
                     break;
 
                 default:
-                    return "Argument **" + args[index-1] + "** is not a configurable setting!";
+                    return "Argument **" + args[index-1] + "** is not a configurable setting! Options are **msg**, " +
+                            "**chan**, **zone**, **clock**, **sync**, **time**, and **remind**.";
             }
         }
 
