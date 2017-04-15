@@ -56,7 +56,8 @@ class MessageGenerator
             }
         }
 
-        List<Role> roles = Main.getBotJda().getGuildById(guildId).getMember(Main.getBotJda().getSelfUser()).getRoles();
+        List<Role> roles = new ArrayList<>(Main.getBotJda().getGuildById(guildId)
+                .getMember(Main.getBotJda().getSelfUser()).getRoles());
         Color color = Color.DARK_GRAY;
         while(!roles.isEmpty())
         {
