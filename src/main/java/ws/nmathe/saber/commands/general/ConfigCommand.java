@@ -146,10 +146,12 @@ public class ConfigCommand implements Command
         {
             switch (args[index++])
             {
+                case "message":
                 case "msg":
                     Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), args[index]);
                     break;
 
+                case "channel":
                 case "chan":
                     TextChannel tmp = event.getGuild()
                             .getTextChannelById(args[index].replace("<#","").replace(">",""));
@@ -158,6 +160,7 @@ public class ConfigCommand implements Command
                     Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
                     break;
 
+                case "timezone":
                 case "zone":
                     ZoneId zone = ZoneId.of(args[index]);
                     Main.getScheduleManager().setTimeZone(scheduleChan.getId(), zone);
@@ -205,6 +208,9 @@ public class ConfigCommand implements Command
 
                     Main.getScheduleManager().setSyncTime(cId, Date.from(syncTime.toInstant()));
                     break;
+
+                case "reminder":
+                case "reminders":
                 case "remind":
                     List<Integer> rem;
                     if(args[index].toLowerCase().equals("off"))

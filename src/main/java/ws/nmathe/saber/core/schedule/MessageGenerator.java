@@ -2,6 +2,8 @@ package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Role;
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import net.dv8tion.jda.core.entities.Message;
@@ -21,7 +23,7 @@ import java.util.List;
 class MessageGenerator
 {
     static Message generate(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
-                            int repeat, String url, List<Date> reminders, Integer eId, String cId)
+                            int repeat, String url, List<Date> reminders, Integer eId, String cId, String guildId)
     {
         String titleUrl = url != null ? url : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
@@ -54,9 +56,24 @@ class MessageGenerator
             }
         }
 
+        List<Role> roles = Main.getBotJda().getGuildById(guildId).getMember(Main.getBotJda().getSelfUser()).getRoles();
+        Color color = Color.DARK_GRAY;
+        while(!roles.isEmpty())
+        {
+            if(roles.get(0).isHoisted())
+            {
+                color = roles.get(0).getColor();
+                break;
+            }
+            else
+            {
+                roles.remove(0);
+            }
+        }
+
         EmbedBuilder builder = new EmbedBuilder();
         builder.setDescription(generateDesc(start, end, cId, repeat, comments))
-                .setColor(Color.DARK_GRAY)
+                .setColor(color)
                 .setAuthor(title, titleUrl, titleImage)
                 .setFooter(footerStr, null);
 
@@ -82,7 +99,10 @@ class MessageGenerator
         }
         else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
         {
-            timeLine += " from " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
+            if( eStart.toLocalTime().equals(LocalTime.MIN) && eStart.toLocalTime().equals(LocalTime.MIN) )
+                timeLine += " to " + eEnd.format(DateTimeFormatter.ofPattern("< MMM d >")) + "\n";
+            else
+                timeLine += " at " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
                     " to " + eEnd.format(DateTimeFormatter.ofPattern("< MMM d >")) + " at " +
                     eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }

@@ -4,7 +4,7 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -80,7 +80,7 @@ public class CalendarConverter
      * @param address (String) valid address of calendar
      * @param channel (MessageChannel) channel to sync with
      */
-    public void syncCalendar(String address, MessageChannel channel)
+    public void syncCalendar(String address, TextChannel channel)
     {
         Events events;
 

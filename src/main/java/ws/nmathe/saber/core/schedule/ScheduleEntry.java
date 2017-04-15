@@ -154,7 +154,7 @@ public class ScheduleEntry
 
         MessageUtilities.editMsg(
                 MessageGenerator.generate(this.entryTitle, this.entryStart, this.entryEnd, this.entryComments,
-                        this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId),
+                        this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId, this.guildId),
                 msg,
                 null);
     }

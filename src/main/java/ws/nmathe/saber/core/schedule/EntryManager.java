@@ -1,6 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
-import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -70,7 +70,7 @@ public class EntryManager
      * @param channel   (MessageChannel) channel to send event's message
      */
     public void newEntry(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
-                         int repeat, String url, MessageChannel channel, String googleId)
+                         int repeat, String url, TextChannel channel, String googleId)
     {
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(channel.getId()))
@@ -83,7 +83,7 @@ public class EntryManager
 
         Integer newId = this.newId();
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
-                url, reminders, newId, channel.getId());
+                url, reminders, newId, channel.getId(), channel.getGuild().getId());
 
         MessageUtilities.sendMsg(message, channel, msg -> {
             String guildId = msg.getGuild().getId();
@@ -134,7 +134,7 @@ public class EntryManager
         }
 
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
-                url, reminders, entryId, origMessage.getChannel().getId());
+                url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId());
 
         MessageUtilities.editMsg(message, origMessage, msg -> {
             String guildId = msg.getGuild().getId();
