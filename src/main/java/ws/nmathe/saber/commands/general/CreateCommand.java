@@ -5,6 +5,7 @@ import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
@@ -18,33 +19,41 @@ import java.util.Arrays;
  */
 public class CreateCommand implements Command
 {
-    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "create";
 
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + prefix + "create <channel> <title> <start> [<end> <extra>]`` will add a" +
+        String USAGE_EXTENDED = "``" + invoke + " <channel> <title> <start> [<end> <extra>]`` will add a" +
                 " new entry to a schedule. Entries MUST be initialized with a title, and a start " +
                 "time. The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
                 "optional am/pm appended on the end." +
                 "\n\n" +
-                "Entries can optionally be configured with comments, repeat, and a start date. \nAdding ``repeat " +
-                "<no|daily|\"Su,Mo,Tu,We,Th,Fr,Sa\">`` to ``<extra>`` will configure the event to repeat with the " +
-                "given interval; default behavior is no repeat. \nAdding ``date MM/dd`` to " +
-                "``<extra>`` will set the events start date; default behavior is to use the current date or the " +
-                "next day depending on if the current time is greater than the start time. \nComments may be added by" +
-                " adding ``\"YOUR COMMENT\"`` in ``<extra>``; any number of comments may be added in ``<extra>``." +
+                "Optionally, events can be configured with comments, repeat settings, and a start/end dates." +
                 "\n\n" +
-                "If your title, comment, or channel includes any space characters, the phrase my be enclosed in " +
+                "Repeat settings can be configured by adding ``repeat <daily|\"Su,Mo,Tu,We,Th,Fr,Sa\">`` to ``<extra>``" +
+                " to cause the event to repeat on the given days. Default behavior is no repeat. An event can instead " +
+                "be configured to repeat on a daily interval by adding ``interval <number>`` to ``<extra>``" +
+                "\n\n" +
+                "Adding ``date <MM/dd>`` to ``<extra>`` will set the event's start and end date. For more granular " +
+                "control you can instead use ``start-date <MM/dd>`` and ``end-date <MM/dd>`` in place of ``date``." +
+                "Default behavior is to use the current date or the " +
+                "next day depending on if the current time is greater than the start time." +
+                "\n\n" +
+                "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``. " +
+                "Up to 10 of comments may be added in ``<extra>``." +
+                "\n\n" +
+                "If your title, comment, or channel includes any space characters, the phrase must be enclosed in " +
                 "quotations (see examples).";
 
         String EXAMPLES = "" +
-                "Ex1. ``!create #event_schedule \"Party in the Guild Hall\" 19:00 02:00``" +
-                "\nEx2. ``!create \"#guild_reminders\" \"Sign up for Raids\" 4:00pm 4:00pm``" +
-                "\nEx3. ``!create \"#raid_schedule\" \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and " +
-                "tanks always in demand.\" \"PM our raid captain with your role and level if attending.\"``";
+                "Ex1. ``" + invoke + " #event_schedule \"Party in the Guild Hall\" 19:00 02:00``" +
+                "\nEx2. ``" + invoke + " #guild_reminders \"Sign up for Raids\" 4:00pm interval 2``" +
+                "\nEx3. ``" + invoke + " #raid_schedule \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and " +
+                "tanks always in demand.\" \"PM our raid captain with your role and level if attending.\"``" +
+                "\nEx4. ``" + invoke + " #competition \"Capture the Flag\" 10:00am start-date 10/20 end-date 10/23``";
 
-        String USAGE_BRIEF = "``" + prefix + "create`` - add an event to a schedule";
+        String USAGE_BRIEF = "``" + invoke + "`` - add an event to a schedule";
 
         if( brief )
             return USAGE_BRIEF;
@@ -60,7 +69,7 @@ public class CreateCommand implements Command
             return "That's not enough arguments!";
 
         if( !Main.getScheduleManager().isASchedule(args[index].replace("<#","").replace(">","")) )
-            return "Channel " + args[index] + " is not schedule for your guild. " +
+            return "Channel " + args[index] + " is not a schedule for your guild. " +
                     "You can use the ``init`` command to create a new schedule.";
 
         index++;
@@ -92,28 +101,55 @@ public class CreateCommand implements Command
 
             boolean dateFlag = false;
             boolean urlFlag = false;
+            boolean intervalFlag = false;
 
             for (String arg : argsRemaining)
             {
                 if (dateFlag)
                 {
                     if (!VerifyUtilities.verifyDate(arg))
-                        return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                        return "I could not understand **" + arg + "** as a date! Please use the format M/d.";
                     dateFlag = false;
                 }
                 else if (urlFlag)
                 {
                     if (!VerifyUtilities.verifyUrl(arg))
-                        return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
+                        return "**" + arg + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
                     urlFlag = false;
                 }
-                else if (arg.equals("date"))
+                else if (intervalFlag)
                 {
-                    dateFlag = true;
+                    if (!VerifyUtilities.verifyInteger(arg))
+                        return "**" + arg + "** is not a number!";
+                    if(Integer.parseInt(arg) < 1)
+                        return "Your repeat interval can't be negative!";
+                    intervalFlag = false;
                 }
-                else if (arg.equals("url"))
+                else
                 {
-                    urlFlag = true;
+                    switch(arg.toLowerCase())
+                    {
+                        case "d":
+                        case "sd":
+                        case "ed":
+                        case "date":
+                        case "end date":
+                        case "start date":
+                        case "end-date":
+                        case "start-date":
+                            dateFlag = true;
+                            break;
+
+                        case "u":
+                        case "url":
+                            urlFlag = true;
+                            break;
+
+                        case "i":
+                        case "interval":
+                            intervalFlag = true;
+                            break;
+                    }
                 }
             }
         }
@@ -130,23 +166,28 @@ public class CreateCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        String eTitle = "";
-
-        LocalTime eStart = LocalTime.now().plusMinutes(1);    //
-        LocalTime eEnd = null;                  //
-        ArrayList<String> eComments = new ArrayList<>();      // defaults initialized
-        int repeat = 0;                                       //
-        LocalDate eDate = LocalDate.now();                    //
+        // Initialize variables with safe defaults
+        String title = "";
+        LocalTime startTime = LocalTime.now().plusMinutes(1);
+        LocalTime endTime = null;
+        ArrayList<String> comments = new ArrayList<>();
+        int repeat = 0;
+        LocalDate startDate = LocalDate.now().plusDays(1);
+        LocalDate endDate = null;
         String url = null;
+
         String cId = args[0].replace("<#","").replace(">","");
 
-        boolean channelFlag = false;  // true if the channel name arg has been grabbed
-        boolean titleFlag = false;    // true if eTitle has been grabbed from args
-        boolean startFlag = false;    // true if eStart has been grabbed from args
-        boolean endFlag = false;      // true if eEnd has been grabbed from args
-        boolean repeatFlag = false;   // true if a 'repeat' arg has been grabbed
+        boolean channelFlag = false;
+        boolean titleFlag = false;
+        boolean startFlag = false;
+        boolean endFlag = false;
+        boolean repeatFlag = false;
         boolean dateFlag = false;
+        boolean startDateFlag = false;
+        boolean endDateFlag = false;
         boolean urlFlag = false;
+        boolean intervalFlag = false;
 
         for( String arg : args )
         {
@@ -157,23 +198,24 @@ public class CreateCommand implements Command
             else if(!titleFlag)
             {
                 titleFlag = true;
-                eTitle = arg;
+                title = arg;
             }
             else if(!startFlag)
             {
                 startFlag = true;
-                eStart = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
+                startTime = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
             }
             else if(!endFlag && VerifyUtilities.verifyTime(arg))
             {
                 endFlag = true;
-                eEnd = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
+                endTime = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
             }
             else
             {
-                if (!endFlag)
+                if (!endFlag) // skip end if not provided at this point
+                {
                     endFlag = true;
-
+                }
                 if (repeatFlag)
                 {
                     repeat = ParsingUtilities.parseWeeklyRepeat(arg.toLowerCase());
@@ -181,52 +223,108 @@ public class CreateCommand implements Command
                 }
                 else if (dateFlag)
                 {
-                    eDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                    startDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                    endDate = startDate;
                     dateFlag = false;
+                }
+                else if (startDateFlag)
+                {
+                    startDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                    startDateFlag = false;
+                }
+                else if (endDateFlag)
+                {
+                    endDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                    endDateFlag = false;
                 }
                 else if (urlFlag)
                 {
                     url = arg;
                     urlFlag = false;
                 }
-                else if(arg.toLowerCase().equals("repeats") ||
-                        arg.toLowerCase().equals("repeat"))
+                else if (intervalFlag)
                 {
-                    repeatFlag = true;
-                }
-                else if (arg.toLowerCase().equals("date"))
-                {
-                    dateFlag = true;
-                }
-                else if (arg.toLowerCase().equals("url"))
-                {
-                    urlFlag = true;
+                    repeat = 0b10000000 | Integer.parseInt(arg);
+                    intervalFlag = false;
                 }
                 else
                 {
-                    eComments.add(arg);
+                    switch(arg.toLowerCase())
+                    {
+                        case "r":
+                        case "repeat":
+                        case "repeats":
+                            repeatFlag = true;
+                            break;
+
+                        case "d":
+                        case "date":
+                            dateFlag = true;
+                            break;
+
+                        case "ed":
+                        case "end date":
+                        case "end-date":
+                            endDateFlag = true;
+                            break;
+
+                        case "sd":
+                        case "start date":
+                        case "start-date":
+                            startDateFlag = true;
+                            break;
+
+                        case "u":
+                            urlFlag = true;
+                            break;
+
+                        case "i":
+                        case "interval":
+                            intervalFlag = true;
+                            break;
+
+                        default:
+                            comments.add(arg);
+                            break;
+                    }
                 }
             }
         }
 
-        if(eEnd == null)
+        // if the end time has not been filled, copy start time
+        if(endTime == null)
         {
-            eEnd = LocalTime.from(eStart);
+            endTime = LocalTime.from(startTime);
         }
 
-        ZonedDateTime s = ZonedDateTime.of( eDate, eStart, Main.getScheduleManager().getTimeZone(cId) );
-        ZonedDateTime e = ZonedDateTime.of( eDate, eEnd, Main.getScheduleManager().getTimeZone(cId) );
-
-        if(ZonedDateTime.now().isAfter(s)) //add a day if the time has already passed
+        // if the end date has not been filled, copy start date
+        if(endDate == null)
         {
-            s = s.plusDays(1);
-            e = e.plusDays(1);
+            endDate = LocalDate.from(startDate);
         }
 
-        if(s.isAfter(e))        //add a day to end if end is after start
-            e = e.plusDays(1);
+        // create the zoned date time using the schedule's timezone
+        ZonedDateTime start = ZonedDateTime.of( startDate, startTime, Main.getScheduleManager().getTimeZone(cId) );
+        ZonedDateTime end = ZonedDateTime.of( endDate, endTime, Main.getScheduleManager().getTimeZone(cId) );
 
-        Main.getEntryManager().newEntry(eTitle, s, e, eComments, repeat, url,
+        // add a year to the date if the provided date is past current time
+        Instant now = Instant.now();
+        if(now.isAfter(start.toInstant()))
+        {
+            start = start.plusYears(1);
+        }
+        if(now.isAfter(end.toInstant()))
+        {
+            end = end.plusYears(1);
+        }
+
+        // add a day to end if end is after start
+        if(start.isAfter(end))
+        {
+            end = start.plusDays(1);
+        }
+
+        Main.getEntryManager().newEntry(title, start, end, comments, repeat, url,
                 event.getGuild().getTextChannelById(cId), null);
     }
 }

@@ -72,13 +72,18 @@ public class ConfigCommand implements Command
 
             switch( args[index++] )
             {
-                case "msg" :
+                case "m":
+                case "msg":
+                case "message":
                     break;
 
-                case "chan" :
+                case "ch":
+                case "chan":
+                case "channel":
                     break;
 
-                case "zone" :
+                case "z":
+                case "zone":
                     try
                     {
                         ZoneId.of(args[index]);
@@ -89,25 +94,31 @@ public class ConfigCommand implements Command
                     }
                     break;
 
-                case "clock" :
+                case "cl":
+                case "clock":
                     if( !args[index].equals("24") && !args[index].equals("12"))
                         return "Argument **" + args[index] +  "** is not a valid option. Argument must be **24** " +
                                 "or **12**";
                     break;
 
-                case "sync" :
+                case "s":
+                case "sync":
                     if( args[index].equals("off") )
                         return "";
                     if( !Main.getCalendarConverter().checkValidAddress(args[index]) )
                         return "I cannot sync to **" + args[index] + "**! Provide a valid google calendar url or **off**.";
                     break;
 
-                case "time" :
+                case "t":
+                case "time":
                     if(!VerifyUtilities.verifyTime(args[index]))
                         return "I cannot parse ``" + args[index] + "`` into a time!";
                     break;
 
-                case "remind" :
+                case "r":
+                case "remind":
+                case "reminder":
+                case "reminders":
                     if(args[index].toLowerCase().equals("off"))
                         return "";
 
@@ -146,13 +157,15 @@ public class ConfigCommand implements Command
         {
             switch (args[index++])
             {
-                case "message":
+                case "m":
                 case "msg":
+                case "message":
                     Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), args[index]);
                     break;
 
-                case "channel":
+                case "ch":
                 case "chan":
+                case "channel":
                     TextChannel tmp = event.getGuild()
                             .getTextChannelById(args[index].replace("<#","").replace(">",""));
                     String chanName = (tmp==null) ? args[index] : tmp.getName();
@@ -160,7 +173,7 @@ public class ConfigCommand implements Command
                     Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
                     break;
 
-                case "timezone":
+                case "z":
                 case "zone":
                     ZoneId zone = ZoneId.of(args[index]);
                     Main.getScheduleManager().setTimeZone(scheduleChan.getId(), zone);
@@ -178,6 +191,7 @@ public class ConfigCommand implements Command
 
                     break;
 
+                case "cl":
                 case "clock":
                     Main.getScheduleManager().setClockFormat(scheduleChan.getId(), args[index]);
 
@@ -189,6 +203,7 @@ public class ConfigCommand implements Command
                             });
                     break;
 
+                case "s":
                 case "sync":
                     if( Main.getCalendarConverter().checkValidAddress(args[index]) )
                         Main.getScheduleManager().setAddress(scheduleChan.getId(), args[index]);
@@ -196,6 +211,7 @@ public class ConfigCommand implements Command
                         Main.getScheduleManager().setAddress(scheduleChan.getId(), "off");
                     break;
 
+                case "t":
                 case "time":
                     ZonedDateTime syncTime = ParsingUtilities.parseTime(
                             ZonedDateTime.now().withZoneSameLocal(Main.getScheduleManager().getTimeZone(cId)),
@@ -209,9 +225,10 @@ public class ConfigCommand implements Command
                     Main.getScheduleManager().setSyncTime(cId, Date.from(syncTime.toInstant()));
                     break;
 
+                case "r":
+                case "remind":
                 case "reminder":
                 case "reminders":
-                case "remind":
                     List<Integer> rem;
                     if(args[index].toLowerCase().equals("off"))
                         rem = new ArrayList<>();
@@ -246,7 +263,7 @@ public class ConfigCommand implements Command
             }
         }
 
-        // always message out the schedule configuration
+        // always output the schedule configuration
 
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
         Date syncTime = Main.getScheduleManager().getSyncTime(cId);
@@ -273,14 +290,20 @@ public class ConfigCommand implements Command
         }
 
         String content = "<#" + cId + "> **" + (args.length>1?"New":"Current") + " Configuration**\n```js\n" +
-                "Message Format    (msg): " + "\"" +
+                "[msg]  | Format for start/end/reminder messages\n " + "\"" +
                     Main.getScheduleManager().getAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
-                "Announce Channel (chan): " + "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
-                "Timezone         (zone): " + "\"" + zone + "\"\n" +
-                "Clock Format    (clock): " + "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
-                "Calendar Sync    (sync): " + "\"" + Main.getScheduleManager().getAddress(cId) + "\"\n" +
-                "Time to Sync     (time): " + "\"" + sync_time_display + "\"\n" +
-                "Reminders      (remind): " + "\"" + reminderStr + "\"\n" +
+                "\n[chan] | Announce start/end/reminders to channel\n " +
+                "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
+                "\n[zone] | Display events in this timezone\n " +
+                "\"" + zone + "\"\n" +
+                "\n[clock]| Display events using this clock format\n " +
+                "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
+                "\n[sync] | Sync to google calendar address\n " +
+                "\"" + Main.getScheduleManager().getAddress(cId) + "\"\n" +
+                "\n[time] | Time of day to sync calendar\n " +
+                "\"" + sync_time_display + "\"\n" +
+                "\nSend reminders at before event begins [remind]\n " +
+                "\"" + reminderStr + "\"\n" +
                 "```";
 
         MessageUtilities.sendMsg(content, event.getChannel(), null);

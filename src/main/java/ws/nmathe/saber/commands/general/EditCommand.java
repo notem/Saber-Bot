@@ -16,25 +16,28 @@ import java.util.ArrayList;
  */
 public class EditCommand implements Command
 {
-    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "edit";
 
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``!edit <ID> <option> <arg>`` will allow you to change an" +
-                " entry's title, start time, start date, end time, comments," +
-                " and repeat parameters.\n\n" +
-                " The possible arguments are ``title <title>``, ``start <h:mm>``, ``end <h:mm>``, ``date MM/dd``, " +
-                "``repeat <no|daily|Su,Mo,Tu. . .>``, and ``comment add|remove <comment>``. When " +
-                "removing a comment, either the comment copied verbatim or the comment number needs to be supplied.";
+        String USAGE_EXTENDED = "``" + invoke + " <ID> <option> <arg>`` will allow you to change an event's settings." +
+                "``<option>`` is to contain which attribute of the event you wish to edit. ``<arg>`` should be the" +
+                " new configuration.\n\n" +
+                "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment <add|remove>``, ``date``, " +
+                "``start-date``, ``end-date``, ``repeat``, ``interval``, and ``url``.\n\n" +
+                "For further explanation as for what are valid arguments for each options, reference the ``help`` information" +
+                " for the ``create`` command.";
 
         String EXAMPLES = "" +
-                "Ex1: ``!edit 3fa0 comment add \"Attendance is mandatory\"``" +
-                "\nEx2: ``!edit 0abf start 21:15``" +
-                "\nEx3: ``!edit 49af end 2:15pm``" +
-                "\nEx4: ``!edit 80c0 comment remove 1``";
+                "Ex1: ``" + invoke + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
+                "\nEx2: ``" + invoke + " 0abf2991 start 21:15``" +
+                "\nEx3: ``" + invoke + " 49afaf2 end 2:15pm``" +
+                "\nEx4: ``" + invoke + " 409fa22 start-date 10/9``" +
+                "\nEx5: ``" + invoke + " a00af9a repeat \"Su, Tu, Fr\"``" +
+                "\nEx6: ``" + invoke + " 80c0sd09 comment remove 1``";
 
-        String USAGE_BRIEF = "``" + prefix + "edit`` - modify an event";
+        String USAGE_BRIEF = "``" + invoke + "`` - modify an event";
 
         if( brief )
             return USAGE_BRIEF;
@@ -65,11 +68,14 @@ public class EditCommand implements Command
         // check later args
         switch( args[index++].toLowerCase() )
         {
+            case "c":
             case "comment":
                 switch (args[index++])
                 {
+                    case "a":
                     case "add":
                         break;
+                    case "r":
                     case "remove":
                         if(Character.isDigit(args[index].charAt(0)) &&
                                 !VerifyUtilities.verifyInteger(args[index]))
@@ -80,6 +86,7 @@ public class EditCommand implements Command
                 }
                 break;
 
+            case "s":
             case "starts":
             case "start":
                 if(args.length > 3)
@@ -90,6 +97,7 @@ public class EditCommand implements Command
                     return "You cannot modify the start time after the event has already started.";
                 break;
 
+            case "e":
             case "ends":
             case "end":
                 if(args.length > 3)
@@ -98,11 +106,13 @@ public class EditCommand implements Command
                     return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                 break;
 
+            case "t":
             case "title":
                 if( args[index].length() > 255 )
                     return "Your title can be at most 255 characters!";
                 break;
 
+            case "d":
             case "date":
                 if(args.length > 3)
                     return "That's too many arguments for **date**!";
@@ -112,12 +122,44 @@ public class EditCommand implements Command
                     return "You cannot modify the date of events which have already started!";
                 break;
 
+            case "sd":
+            case "start date":
+            case "start-date":
+                if(args.length > 3)
+                    return "That's too many arguments for **date**!";
+                if( !VerifyUtilities.verifyDate( args[index] ) )
+                    return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                if(entry.hasStarted())
+                    return "You cannot modify the date of events which have already started!";
+                break;
+
+            case "ed":
+            case "end date":
+            case "end-date":
+                if(args.length > 3)
+                    return "That's too many arguments for **date**!";
+                if( !VerifyUtilities.verifyDate( args[index] ) )
+                    return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                break;
+
+            case "r":
             case "repeats":
             case "repeat":
                 if(args.length > 3)
                     return "That's too many arguments for **repeat**!";
                 break;
 
+            case "i":
+            case "interval":
+                if(args.length > 3)
+                    return "That's too many arguments for **interval**!";
+                if(!VerifyUtilities.verifyInteger(args[index]))
+                    return "**" + args[index] + "** is not a number!";
+                if(Integer.parseInt(args[index]) < 1)
+                    return "Your repeat interval can't be negative!";
+                break;
+
+            case "u":
             case "url":
                 if (args.length > 3)
                     return "That's too many arguments for **repeat**!";
@@ -126,8 +168,7 @@ public class EditCommand implements Command
                 break;
 
             default:
-                return "**" + args[index] + "** is not an option I know of! Please use ``" +
-                        prefix + "help edit`` to see available options!";
+                return "**" + args[index] + "** is not an option I know of! Please use the ``help`` command to see available options!";
         }
 
         return ""; // return valid
@@ -156,12 +197,15 @@ public class EditCommand implements Command
 
         switch( args[index++] )     // 2
         {
+            case "c":
             case "comment":
                 switch( args[index++] )   // 3
                 {
+                    case "a":
                     case "add" :
                         comments.add( args[index] );
                         break;
+                    case "r":
                     case "remove" :
                         if( VerifyUtilities.verifyInteger(args[index]) )
                         {
@@ -173,6 +217,7 @@ public class EditCommand implements Command
                 }
                 break;
 
+            case "s":
             case "starts":
             case "start":
                 start = ParsingUtilities.parseTime( start, args[index] );
@@ -187,6 +232,7 @@ public class EditCommand implements Command
                 }
                 break;
 
+            case "e":
             case "ends":
             case "end":
                 end = ParsingUtilities.parseTime( end, args[index] );
@@ -201,10 +247,12 @@ public class EditCommand implements Command
                 }
                 break;
 
+            case "t":
             case "title":
                 title = args[index];
                 break;
 
+            case "d":
             case "date":
                 LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
@@ -219,15 +267,53 @@ public class EditCommand implements Command
                     start.plusYears(1);
                 if(Instant.now().isAfter(end.toInstant()))
                     start.plusYears(1);
-
                 break;
 
+            case "sd":
+            case "start date":
+            case "start-date":
+                LocalDate sdate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+
+                start = start.withMonth(sdate.getMonthValue())
+                        .withDayOfMonth(sdate.getDayOfMonth());
+
+                if(end.isBefore(start))
+                    end.plusDays(1);
+                if(Instant.now().isAfter(start.toInstant()))
+                    start.plusYears(1);
+                if(Instant.now().isAfter(end.toInstant()))
+                    start.plusYears(1);
+                break;
+
+            case "ed":
+            case "end date":
+            case "end-date":
+                LocalDate edate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+
+                end = end.withMonth(edate.getMonthValue())
+                        .withDayOfMonth(edate.getDayOfMonth());
+
+                if(Instant.now().isAfter(start.toInstant()))
+                    start.plusYears(1);
+                if(Instant.now().isAfter(end.toInstant()))
+                    start.plusYears(1);
+                if(end.isBefore(start))
+                    end.plusYears(1);
+                break;
+
+            case "r":
             case "repeats":
             case "repeat":
                 String tmp = args[index].toLowerCase();
                 repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
                 break;
 
+            case "i":
+            case "interval":
+                repeat = 0b10000000 | Integer.parseInt(args[index]);
+                break;
+
+            case "u":
             case "url":
                 url = args[index];
                 break;
