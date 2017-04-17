@@ -290,19 +290,19 @@ public class ConfigCommand implements Command
         }
 
         String content = "<#" + cId + "> **" + (args.length>1?"New":"Current") + " Configuration**\n```js\n" +
-                "[msg]  | Format for start/end/reminder messages\n " + "\"" +
+                "[msg]    Format for start/end/reminder messages\n " + "\"" +
                     Main.getScheduleManager().getAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
-                "\n[chan] | Announce start/end/reminders to channel\n " +
+                "\n[chan]   Announce start/end/reminders to channel\n " +
                 "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
-                "\n[zone] | Display events in this timezone\n " +
+                "\n[zone]   Display events in this timezone\n " +
                 "\"" + zone + "\"\n" +
-                "\n[clock]| Display events using this clock format\n " +
+                "\n[clock]  Display events using this clock format\n " +
                 "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
-                "\n[sync] | Sync to google calendar address\n " +
+                "\n[sync]   Sync to google calendar address\n " +
                 "\"" + Main.getScheduleManager().getAddress(cId) + "\"\n" +
-                "\n[time] | Time of day to sync calendar\n " +
+                "\n[time]   Time of day to sync calendar\n " +
                 "\"" + sync_time_display + "\"\n" +
-                "\nSend reminders at before event begins [remind]\n " +
+                "\n[remind] Send reminders at before event begins\n " +
                 "\"" + reminderStr + "\"\n" +
                 "```";
 

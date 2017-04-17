@@ -66,9 +66,9 @@ public class ParsingUtilities
                             ch = format.charAt(i+1);
                             if( Character.isDigit( ch ) )
                             {
-                                int x = Integer.parseInt("" + ch);
                                 i++;
-                                if(entry.getComments().size()>=x && x!='0')
+                                int x = Integer.parseInt("" + ch);
+                                if(entry.getComments().size()>=x && x!=0)
                                 {
                                     announceMsg += entry.getComments().get(x-1);
                                 }
