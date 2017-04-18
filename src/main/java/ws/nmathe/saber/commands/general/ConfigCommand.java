@@ -1,5 +1,6 @@
 package ws.nmathe.saber.commands.general;
 
+import net.dv8tion.jda.core.events.Event;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -57,7 +58,7 @@ public class ConfigCommand implements Command
         int index = 0;
 
         if (args.length < 1)
-            return "That's not enough arguments";
+            return "That's not enough arguments! Use ``" + invoke + " <channel> [<option> <new config>]``";
 
         if( !Main.getScheduleManager().isASchedule(args[index].replace("<#","").replace(">","")) )
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
@@ -68,7 +69,7 @@ public class ConfigCommand implements Command
         if (args.length > 1)
         {
             if (args.length < 3)
-                return "That's not enough arguments!";
+                return "That's not enough arguments! Use ``" + invoke + " <channel> [<option> <new config>]``";
 
             switch( args[index++] )
             {
@@ -161,6 +162,7 @@ public class ConfigCommand implements Command
                 case "msg":
                 case "message":
                     Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), args[index]);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
                     break;
 
                 case "ch":
@@ -171,6 +173,8 @@ public class ConfigCommand implements Command
                     String chanName = (tmp==null) ? args[index] : tmp.getName();
 
                     Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
+
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
                     break;
 
                 case "z":
@@ -189,6 +193,7 @@ public class ConfigCommand implements Command
                                 Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
                             });
 
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
                     break;
 
                 case "cl":
@@ -201,6 +206,8 @@ public class ConfigCommand implements Command
                             {
                                 Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
                             });
+
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
                     break;
 
                 case "s":
@@ -209,6 +216,8 @@ public class ConfigCommand implements Command
                         Main.getScheduleManager().setAddress(scheduleChan.getId(), args[index]);
                     else
                         Main.getScheduleManager().setAddress(scheduleChan.getId(), "off");
+
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
                     break;
 
                 case "t":
@@ -223,6 +232,8 @@ public class ConfigCommand implements Command
                         syncTime.plusDays(1);
 
                     Main.getScheduleManager().setSyncTime(cId, Date.from(syncTime.toInstant()));
+
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
                     break;
 
                 case "r":
@@ -259,53 +270,83 @@ public class ConfigCommand implements Command
                                 // reload displayed message
                                 Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
                             });
+
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
                     break;
             }
         }
+        else    // print out all settings
+        {
+            MessageUtilities.sendMsg(this.genMsgStr(cId, 0), event.getChannel(), null);
+        }
+    }
 
-        // always output the schedule configuration
-
+    private String genMsgStr(String cId, int type)
+    {
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
-        Date syncTime = Main.getScheduleManager().getSyncTime(cId);
+        String content = "**Configuration for** <#" + cId + ">\n";
 
-        OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
-                .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
-
-        List<Integer> reminders = Main.getScheduleManager().getDefaultReminders(cId);
-        String reminderStr = "";
-        if(reminders.isEmpty())
+        switch(type)
         {
-            reminderStr = "off";
-        }
-        else
-        {
-            reminderStr += reminders.get(0);
-            for (int i=1; i<reminders.size()-1; i++)
-            {
-                reminderStr += ", " + reminders.get(i) ;
-            }
-            if(reminders.size() > 1)
-                reminderStr += " and " + reminders.get(reminders.size()-1);
-            reminderStr += " minutes";
+            default:
+            case 1:
+                List<Integer> reminders = Main.getScheduleManager().getDefaultReminders(cId);
+                String reminderStr = "";
+                if(reminders.isEmpty())
+                {
+                    reminderStr = "off";
+                } else
+                {
+                    reminderStr += reminders.get(0);
+                    for (int i=1; i<reminders.size()-1; i++)
+                    {
+                        reminderStr += ", " + reminders.get(i) ;
+                    }
+                    if(reminders.size() > 1)
+                        reminderStr += " and " + reminders.get(reminders.size()-1);
+                    reminderStr += " minutes";
+                }
+
+                content += "```js\n" +
+                        "// Event Announcement Settings\n" +
+                        "[msg] Format for start/end/reminder messages\n " + "\"" +
+                        Main.getScheduleManager().getAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
+                        "\n[chan] Announce start/end/reminders to channel\n " +
+                        "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
+                        "\n[remind] Send reminders before event begins\n " +
+                        "\"" + reminderStr + "\"\n" +
+                        "```";
+
+                if(type == 1)
+                    break;
+            case 2:
+                content += "```js\n" +
+                        "// Event Display Settings\n" +
+                        "[zone] Display events in this timezone\n " +
+                        "\"" + zone + "\"\n" +
+                        "\n[clock] Display events using this clock format\n " +
+                        "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
+                        "```";
+
+                if(type == 2)
+                    break;
+            case 3:
+                Date syncTime = Main.getScheduleManager().getSyncTime(cId);
+                OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
+                        .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
+
+                content += "```js\n" +
+                        "// Schedule Sync Settings\n" +
+                        "[sync] Sync to Google calendar address\n " +
+                        "\"" + Main.getScheduleManager().getAddress(cId) + "\"\n" +
+                        "\n[time] Time of day to sync calendar\n " +
+                        "\"" + sync_time_display + "\"\n" +
+                        "```";
+
+                if(type == 3)
+                    break;
         }
 
-        String content = "<#" + cId + "> **" + (args.length>1?"New":"Current") + " Configuration**\n```js\n" +
-                "[msg]    Format for start/end/reminder messages\n " + "\"" +
-                    Main.getScheduleManager().getAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
-                "\n[chan]   Announce start/end/reminders to channel\n " +
-                "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
-                "\n[zone]   Display events in this timezone\n " +
-                "\"" + zone + "\"\n" +
-                "\n[clock]  Display events using this clock format\n " +
-                "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
-                "\n[sync]   Sync to google calendar address\n " +
-                "\"" + Main.getScheduleManager().getAddress(cId) + "\"\n" +
-                "\n[time]   Time of day to sync calendar\n " +
-                "\"" + sync_time_display + "\"\n" +
-                "\n[remind] Send reminders at before event begins\n " +
-                "\"" + reminderStr + "\"\n" +
-                "```";
-
-        MessageUtilities.sendMsg(content, event.getChannel(), null);
+        return content;
     }
 }

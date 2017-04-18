@@ -51,7 +51,7 @@ public class EditCommand implements Command
         int index = 0;
 
         if( args.length < 3 )
-            return "That's not enough arguments!";
+            return "That's not enough arguments! Use ``" + invoke + " <ID> <option> <arg>``";
 
         // check first arg
         if( !VerifyUtilities.verifyHex(args[index]) )

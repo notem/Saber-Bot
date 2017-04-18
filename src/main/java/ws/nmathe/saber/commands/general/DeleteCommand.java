@@ -12,21 +12,21 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  */
 public class DeleteCommand implements Command
 {
-    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "delete";
 
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``!delete <argument>`` can be used to delete schedules or events. " +
+        String USAGE_EXTENDED = "``" + invoke + " <ID|channel|'all'>`` can be used to delete schedules or events. " +
                 "``<argument>`` may be an entry's ID, a schedule's channel, or ``all``. " +
                 "If ``all`` is used all schedules will be deleted, use with caution.";
 
-        String USAGE_BRIEF = "``" + prefix + "delete`` - remove schedules or events ";
+        String USAGE_BRIEF = "``" + invoke + "delete`` - remove schedules or events ";
 
         String USAGE_EXAMPLES = "" +
-                "Ex1: ``!delete 084c``" +
-                "\nEx2: ``!delete all``" +
-                "\nEx3: ``!delete #events``";
+                "Ex1: ``" + invoke + " 084c``" +
+                "\nEx2: ``" + invoke + " all``" +
+                "\nEx3: ``" + invoke + " #events``";
 
         if( brief )
             return USAGE_BRIEF;
@@ -38,9 +38,9 @@ public class DeleteCommand implements Command
     public String verify(String[] args, MessageReceivedEvent event)
     {
         if (args.length>1)
-            return "Too many arguments!";
+            return "Too many arguments! Use ``" + invoke + " <ID|channel|'all'>``";
         if (args.length==0)
-            return "Not enough arguments!";
+            return "Not enough arguments! Use ``" + invoke + " <ID|channel|'all'>``";
 
         // pass if "all"
         if (args[0].equals("all"))

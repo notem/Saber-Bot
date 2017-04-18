@@ -13,19 +13,19 @@ import ws.nmathe.saber.utils.VerifyUtilities;
  */
 public class TestCommand implements Command
 {
-    private String cmd = Main.getBotSettingsManager().getCommandPrefix() + "test";
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "test";
 
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + cmd + " <ID>`` will send an test announcement for the event to **#"
+        String USAGE_EXTENDED = "``" + invoke + " <ID>`` will send an test announcement for the event to **#"
                 + Main.getBotSettingsManager().getControlChan() + "**.\n The announcement message for an event is " +
                 "controlled by the schedule to which the event belongs to, and can be changed using the ``config``" +
                 " command.";
 
-        String EXAMPLES = "Ex. ``" + cmd + " 7fffffff``";
+        String EXAMPLES = "Ex. ``" + invoke + " 7fffffff``";
 
-        String USAGE_BRIEF = "``" + cmd + "`` - test an event's announcement message";
+        String USAGE_BRIEF = "``" + invoke + "`` - test an event's announcement message";
 
         if( brief )
             return USAGE_BRIEF;
@@ -38,8 +38,10 @@ public class TestCommand implements Command
     {
         int index = 0;
 
+        if( args.length < 1 )
+            return "That's not enough arguments! Use ``" + invoke + " <ID>``";
         if( args.length > 1 )
-            return "That's too many arguments!";
+            return "That's too many arguments! Use ``" + invoke + " <ID>``";
 
         // check first arg
         if( !VerifyUtilities.verifyHex(args[index]) )

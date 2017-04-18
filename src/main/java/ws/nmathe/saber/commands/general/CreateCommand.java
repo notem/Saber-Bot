@@ -66,7 +66,7 @@ public class CreateCommand implements Command
         int index = 0;
 
         if (args.length < 3)
-            return "That's not enough arguments!";
+            return "That's not enough arguments! Use ``" + invoke + " <channel> <title> <start> [<end> <extra>]``";
 
         if( !Main.getScheduleManager().isASchedule(args[index].replace("<#","").replace(">","")) )
             return "Channel " + args[index] + " is not a schedule for your guild. " +

@@ -10,12 +10,11 @@ import ws.nmathe.saber.commands.Command;
  */
 public class SyncCommand implements Command
 {
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "sync";
 
     @Override
     public String help(boolean brief)
     {
-        String invoke = Main.getBotSettingsManager().getCommandPrefix() + "sync";
-
         String USAGE_EXTENDED = "Using ``" + invoke + " <channel> [<calendar address>]`` will replace all events in the specified channel" +
                 "with events imported from a public google calendar. The command imports the next 7 days of events into the channel;" +
                 " the channel will then automatically re-sync once every day. If ``<calendar address>`` is not included, " +
@@ -35,9 +34,9 @@ public class SyncCommand implements Command
     public String verify(String[] args, MessageReceivedEvent event)
     {
         if( args.length < 1 )
-            return "That's not enough arguments";
+            return "That's not enough arguments! Use ``" + invoke + " <channel> [<calendar address>]``";
         if( args.length > 2)
-            return "That's too many arguments";
+            return "That's too many arguments! Use ``" + invoke + " <channel> [<calendar address>]``";
 
         if( !Main.getScheduleManager().isASchedule(args[0].replace("<#","").replace(">","")))
             return "Channel " + args[0] + " is not on my list of schedule channels for your guild.";

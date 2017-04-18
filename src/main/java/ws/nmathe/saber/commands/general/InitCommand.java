@@ -7,22 +7,22 @@ import ws.nmathe.saber.commands.Command;
 
 public class InitCommand implements Command
 {
-    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "init";
 
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + prefix + "init [<schedule name>]`` will create a new schedule that events may be" +
+        String USAGE_EXTENDED = "``" + invoke + " [<name>]`` will create a new schedule that events may be" +
                 "added to via the ``create`` command or synchronized to a google calendar via ``sync``. Every schedule" +
                 " is initialized with a schedule channel. Either delete the channel or use the ``delete`` command to " +
                 "remove a schedule. The ``<schedule name>`` argument is optional. If omitted, new schedules will be named" +
                 " new_schedule.";
 
         String EXAMPLES = "" +
-                "Ex1. ``" + prefix + "init``\n" +
-                "Ex2. ``" + prefix + "init \"Guild Events\"``";
+                "Ex1. ``" + invoke + "``\n" +
+                "Ex2. ``" + invoke + " \"Guild Events\"``";
 
-        String USAGE_BRIEF = "``" + prefix + "init`` - initialize a new schedule";
+        String USAGE_BRIEF = "``" + invoke + "`` - initialize a new schedule";
 
         if( brief )
             return USAGE_BRIEF;
@@ -41,7 +41,7 @@ public class InitCommand implements Command
             return "You have reached the limit for schedules! Please remove one schedule channel before trying again.";
 
         if(args.length > 1)
-            return "That's too many arguments!";
+            return "That's too many arguments! Use ``" + invoke + " [<name>]``";
 
         if(args.length == 1 && (args[0].length()>100 || args[0].length()<2))
             return "Schedule name must be between 2 and 100 characters long!";

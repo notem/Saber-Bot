@@ -12,11 +12,11 @@ import java.util.Set;
  */
 public class TimeZonesCommand implements Command
 {
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "zones";
+
     @Override
     public String help(boolean brief)
     {
-        String invoke = Main.getBotSettingsManager().getCommandPrefix() + "zones";
-
         String USAGE_EXTENDED = "``" + invoke + " <filter>`` to list timezone options. " +
                 "A search filter argument is required (eg. ``us``).";
 
@@ -33,7 +33,7 @@ public class TimeZonesCommand implements Command
     @Override
     public String verify(String[] args, MessageReceivedEvent event)
     {
-        return args.length==1 ? "" : "Incorrect amount of arguments!";
+        return args.length==1 ? "" : "Incorrect amount of arguments! Use ``" + invoke + " <filter>``";
     }
 
     @Override
