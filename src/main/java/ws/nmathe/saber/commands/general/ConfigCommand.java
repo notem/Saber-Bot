@@ -1,6 +1,5 @@
 package ws.nmathe.saber.commands.general;
 
-import net.dv8tion.jda.core.events.Event;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -135,6 +134,14 @@ public class ConfigCommand implements Command
                     }
                     break;
 
+                case "rm":
+                case "remind-msg":
+                    break;
+
+                case "rch":
+                case "remind-chan":
+                    break;
+
                 default:
                     return "Argument **" + args[index-1] + "** is not a configurable setting! Options are **msg**, " +
                             "**chan**, **zone**, **clock**, **sync**, **time**, and **remind**.";
@@ -160,14 +167,12 @@ public class ConfigCommand implements Command
             {
                 case "m":
                 case "msg":
-                case "message":
                     Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), args[index]);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
                     break;
 
                 case "ch":
                 case "chan":
-                case "channel":
                     TextChannel tmp = event.getGuild()
                             .getTextChannelById(args[index].replace("<#","").replace(">",""));
                     String chanName = (tmp==null) ? args[index] : tmp.getName();
@@ -233,13 +238,11 @@ public class ConfigCommand implements Command
 
                     Main.getScheduleManager().setSyncTime(cId, Date.from(syncTime.toInstant()));
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 4), event.getChannel(), null);
                     break;
 
                 case "r":
                 case "remind":
-                case "reminder":
-                case "reminders":
                     List<Integer> rem;
                     if(args[index].toLowerCase().equals("off"))
                         rem = new ArrayList<>();
@@ -271,7 +274,24 @@ public class ConfigCommand implements Command
                                 Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
                             });
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                    break;
+
+                case "rm":
+                case "remind-msg":
+                    Main.getScheduleManager().setReminderFormat(scheduleChan.getId(), args[index]);
+
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                    break;
+
+                case "rc":
+                case "remind-chan":
+                    TextChannel tmp2 = event.getGuild().getTextChannelById(args[index].replace("<#","").replace(">",""));
+                    String chanName2 = (tmp2==null) ? args[index] : tmp2.getName();
+
+                    Main.getScheduleManager().setReminderChan(scheduleChan.getId(), chanName2);
+
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
                     break;
             }
         }
@@ -290,6 +310,17 @@ public class ConfigCommand implements Command
         {
             default:
             case 1:
+                content += "```js\n" +
+                        "// Event Announcement Settings\n" +
+                        "[msg] Format for start/end messages\n " + "\"" +
+                        Main.getScheduleManager().getAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
+                        "\n[chan] Announce start/end to channel\n " +
+                        "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
+                        "```";
+
+                if(type == 1)
+                    break;
+            case 2:
                 List<Integer> reminders = Main.getScheduleManager().getDefaultReminders(cId);
                 String reminderStr = "";
                 if(reminders.isEmpty())
@@ -308,18 +339,18 @@ public class ConfigCommand implements Command
                 }
 
                 content += "```js\n" +
-                        "// Event Announcement Settings\n" +
-                        "[msg] Format for start/end/reminder messages\n " + "\"" +
-                        Main.getScheduleManager().getAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
-                        "\n[chan] Announce start/end/reminders to channel\n " +
-                        "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
-                        "\n[remind] Send reminders before event begins\n " +
+                        "// Event Reminder Settings\n" +
+                        "[remind] Send reminders before event begins\n " +
                         "\"" + reminderStr + "\"\n" +
+                        "\n[remind-msg] Format for reminder messages\n " + "\"" +
+                        Main.getScheduleManager().getReminderFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
+                        "\n[remind-chan] Announce reminder to channel\n " +
+                        "\"" + Main.getScheduleManager().getReminderChan(cId) + "\"\n" +
                         "```";
 
-                if(type == 1)
+                if(type == 2)
                     break;
-            case 2:
+            case 3:
                 content += "```js\n" +
                         "// Event Display Settings\n" +
                         "[zone] Display events in this timezone\n " +
@@ -328,9 +359,9 @@ public class ConfigCommand implements Command
                         "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
                         "```";
 
-                if(type == 2)
+                if(type == 3)
                     break;
-            case 3:
+            case 4:
                 Date syncTime = Main.getScheduleManager().getSyncTime(cId);
                 OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
                         .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
@@ -343,7 +374,7 @@ public class ConfigCommand implements Command
                         "\"" + sync_time_display + "\"\n" +
                         "```";
 
-                if(type == 3)
+                if(type == 4)
                     break;
         }
 

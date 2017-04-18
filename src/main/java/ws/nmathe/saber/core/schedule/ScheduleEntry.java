@@ -67,9 +67,9 @@ public class ScheduleEntry
 
         // send the remind announcement
         String remindMsg = ParsingUtilities.
-                parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
+                parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
         for( TextChannel chan : msg.getGuild().
-                getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
+                getTextChannelsByName(Main.getScheduleManager().getReminderChan(this.chanId), true) )
         {
             MessageUtilities.sendMsg(remindMsg, chan, null);
         }

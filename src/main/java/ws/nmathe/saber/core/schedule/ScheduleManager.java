@@ -201,6 +201,42 @@ public class ScheduleManager
         return (List<Integer>) settings.get("default_reminders");
     }
 
+    public String getReminderChan(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+        {
+            return Main.getBotSettingsManager().getAnnounceChan();
+        }
+        String chan_name = (String) settings.get("reminder_channel");
+        if(chan_name == null )
+        {
+            return (String) settings.get("announcement_channel");
+        }
+        else
+        {
+            return chan_name;
+        }
+
+    }
+
+    public String getReminderFormat(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+        {
+            return Main.getBotSettingsManager().getAnnounceFormat();
+        }
+        String format = (String) settings.get("reminder_format");
+        if(format == null )
+        {
+            return (String) settings.get("announcement_format");
+        }
+        else
+        {
+            return format;
+        }
+    }
     public void setAnnounceChan(String cId, String chan )
     {
         Main.getDBDriver().getScheduleCollection()
@@ -241,5 +277,17 @@ public class ScheduleManager
     {
         Main.getDBDriver().getScheduleCollection()
                 .updateOne(eq("_id",cId), set("default_reminders", reminders));
+    }
+
+    public void setReminderChan(String cId, String chan )
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("reminder_channel", chan));
+    }
+
+    public void setReminderFormat(String cId, String format )
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("reminder_format", format));
     }
 }
