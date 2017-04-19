@@ -154,6 +154,7 @@ public class ScheduleManager
                 Main.getDBDriver().getEventCollection().updateOne(
                         eq("_id", min.getId()),
                         new Document("$set", new Document("messageId", tmp.getId())));
+                min.reloadDisplay();
             }
         }
     }
