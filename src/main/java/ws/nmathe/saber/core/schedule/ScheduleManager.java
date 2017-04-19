@@ -2,21 +2,22 @@ package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.exceptions.PermissionException;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.utils.__out;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -116,8 +117,52 @@ public class ScheduleManager
         return Main.getBotSettingsManager().getMaxSchedules() < count;
     }
 
+    /**
+     * Reorders the schedule so that entries are displayed by start datetime ascending order in
+     * the discord schedule channel
+     * @param cId schedule ID
+     */
+    void sortSchedule(String cId)
+    {
+        LinkedList<ScheduleEntry> unsortedEntries = new LinkedList<>();
+        Main.getDBDriver().getEventCollection().find(eq("channelId", cId)).sort(new Document("start", 1))
+                .forEach((Consumer<? super Document>) document -> unsortedEntries.add(new ScheduleEntry(document)));
+
+        // selection sort the entries by timestamp
+        while (!unsortedEntries.isEmpty())
+        {
+            ScheduleEntry top = unsortedEntries.pop();
+            ScheduleEntry min = top;
+            for (ScheduleEntry cur : unsortedEntries)
+            {
+                if (min.getMessageObject().getCreationTime().isAfter(cur.getMessageObject().getCreationTime()))
+                {
+                    min = cur;
+                }
+            }
+            // swap messages, update db and reload display
+            if(!(min==top))
+            {
+                Message tmp = top.getMessageObject();
+                top.setMessageObject(min.getMessageObject());
+                Main.getDBDriver().getEventCollection().updateOne(
+                        eq("_id", top.getId()),
+                        new Document("$set", new Document("messageId", min.getMessageObject().getId())));
+                top.reloadDisplay();
+
+                min.setMessageObject(tmp);
+                Main.getDBDriver().getEventCollection().updateOne(
+                        eq("_id", min.getId()),
+                        new Document("$set", new Document("messageId", tmp.getId())));
+            }
+        }
+    }
+
+
     /*
+     *
      * Getters and Setters
+     *
      */
 
     public List<String> getSchedulesForGuild(String gId)
@@ -237,6 +282,11 @@ public class ScheduleManager
             return format;
         }
     }
+
+    /*
+     *
+     */
+
     public void setAnnounceChan(String cId, String chan )
     {
         Main.getDBDriver().getScheduleCollection()

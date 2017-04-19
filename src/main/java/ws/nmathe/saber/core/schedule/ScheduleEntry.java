@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
  * start and end functions are to be triggered upon the scheduled starting time and ending time.
- * adjustTimer is used to update the displayed 'time until' timer
+ * reloadDisplay is used to update the displayed 'time until' timer
  */
 public class ScheduleEntry
 {
@@ -101,7 +101,7 @@ public class ScheduleEntry
             MessageUtilities.sendMsg(startMsg, chan, null);
         }
 
-        this.adjustTimer();
+        this.reloadDisplay();
     }
 
     /**
@@ -146,7 +146,7 @@ public class ScheduleEntry
      * Edits the displayed Message to indicate the time remaining until
      * the entry is scheduled to begin/end
      */
-    void adjustTimer()
+    void reloadDisplay()
     {
         Message msg = this.getMessageObject();
         if( msg == null )
@@ -155,8 +155,7 @@ public class ScheduleEntry
         MessageUtilities.editMsg(
                 MessageGenerator.generate(this.entryTitle, this.entryStart, this.entryEnd, this.entryComments,
                         this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId, this.guildId),
-                msg,
-                null);
+                        msg, null);
     }
 
     /**

@@ -56,9 +56,9 @@ class MessageGenerator
             }
         }
 
+        Color color = Color.DARK_GRAY;
         List<Role> roles = new ArrayList<>(Main.getBotJda().getGuildById(guildId)
                 .getMember(Main.getBotJda().getSelfUser()).getRoles());
-        Color color = Color.DARK_GRAY;
         while(!roles.isEmpty())
         {
             if(roles.get(0).isHoisted())
@@ -70,6 +70,10 @@ class MessageGenerator
             {
                 roles.remove(0);
             }
+        }
+        if(Instant.now().isAfter(start.toInstant()))
+        {
+            color = new Color(255-color.getRed(), 255-color.getGreen(), 255-color.getBlue());
         }
 
         EmbedBuilder builder = new EmbedBuilder();

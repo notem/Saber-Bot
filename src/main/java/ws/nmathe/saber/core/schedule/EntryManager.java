@@ -106,6 +106,7 @@ public class EntryManager
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
+            Main.getScheduleManager().sortSchedule(channelId);
         });
     }
 
@@ -157,6 +158,7 @@ public class EntryManager
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);
+            Main.getScheduleManager().sortSchedule(channelId);
         });
     }
 
@@ -177,7 +179,7 @@ public class EntryManager
     {
         ScheduleEntry se = getEntry( eId );
         if( se == null ) return;
-        se.adjustTimer();
+        se.reloadDisplay();
     }
 
     /**

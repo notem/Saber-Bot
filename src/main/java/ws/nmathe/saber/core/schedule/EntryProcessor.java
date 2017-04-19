@@ -77,7 +77,7 @@ class EntryProcessor implements Runnable
                                         eq("_id", document.get("_id")),
                                         set("reminders", reminders));
 
-                        (new ScheduleEntry(document)).adjustTimer();
+                        (new ScheduleEntry(document)).reloadDisplay();
                     });
         }
         else if( level == 1 )   // few minute check
@@ -94,7 +94,7 @@ class EntryProcessor implements Runnable
                     .forEach((Consumer<? super Document>) document ->
                     {
                         // convert to scheduleEntry object and start
-                        (new ScheduleEntry(document)).adjustTimer();
+                        (new ScheduleEntry(document)).reloadDisplay();
                     });
         }
         else if( level == 2 )   // hourly check
@@ -111,7 +111,7 @@ class EntryProcessor implements Runnable
                     .forEach((Consumer<? super Document>) document ->
                     {
                         // convert to scheduleEntry object and start
-                        (new ScheduleEntry(document)).adjustTimer();
+                        (new ScheduleEntry(document)).reloadDisplay();
                     });
         }
         else if( level == 3 )   // daily check
@@ -128,7 +128,7 @@ class EntryProcessor implements Runnable
                     .forEach((Consumer<? super Document>) document ->
                     {
                         // convert to scheduleEntry object and start
-                        (new ScheduleEntry(document)).adjustTimer();
+                        (new ScheduleEntry(document)).reloadDisplay();
                     });
         }
     }
