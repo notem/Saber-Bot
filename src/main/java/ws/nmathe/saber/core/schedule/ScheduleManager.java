@@ -9,10 +9,7 @@ import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.__out;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -131,11 +128,20 @@ public class ScheduleManager
         // selection sort the entries by timestamp
         while (!unsortedEntries.isEmpty())
         {
+            __out.printOut(this.getClass(), "sorting " + cId);
             ScheduleEntry top = unsortedEntries.pop();
             ScheduleEntry min = top;
             for (ScheduleEntry cur : unsortedEntries)
             {
-                if (min.getMessageObject().getCreationTime().isAfter(cur.getMessageObject().getCreationTime()))
+                OffsetDateTime a = min.getMessageObject().getCreationTime();
+                OffsetDateTime b = cur.getMessageObject().getCreationTime();
+                if(a==null || b==null)
+                { // to avoid bad things
+                    __out.printOut(this.getClass(), "sorting broke!");
+                    return;
+                }
+
+                if (a.isAfter(b))
                 {
                     min = cur;
                 }

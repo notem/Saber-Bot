@@ -29,6 +29,7 @@ class MessageGenerator
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
         String footerStr = "ID: " + Integer.toHexString(eId);
 
+        // generate reminder footer
         if (!reminders.isEmpty())
         {
             footerStr += " | remind in ";
@@ -56,6 +57,7 @@ class MessageGenerator
             }
         }
 
+        // get embed color from first hoisted bot role
         Color color = Color.DARK_GRAY;
         List<Role> roles = new ArrayList<>(Main.getBotJda().getGuildById(guildId)
                 .getMember(Main.getBotJda().getSelfUser()).getRoles());
@@ -71,10 +73,13 @@ class MessageGenerator
                 roles.remove(0);
             }
         }
+
+        /*  Invert color if event has started
         if(Instant.now().isAfter(start.toInstant()))
         {
             color = new Color(255-color.getRed(), 255-color.getGreen(), 255-color.getBlue());
         }
+        */
 
         EmbedBuilder builder = new EmbedBuilder();
         builder.setDescription(generateDesc(start, end, cId, repeat, comments))
