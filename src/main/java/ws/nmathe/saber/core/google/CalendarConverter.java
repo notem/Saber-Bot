@@ -236,5 +236,8 @@ public class CalendarConverter
                     Main.getEntryManager().removeEntry((Integer) document.get("_id"));
                     MessageUtilities.deleteMsg(msg, null);
                 });
+
+        // sort
+        Main.getScheduleManager().sortSchedule(channel.getId());
     }
 }

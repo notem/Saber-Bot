@@ -119,7 +119,7 @@ public class ScheduleManager
      * the discord schedule channel
      * @param cId schedule ID
      */
-    void sortSchedule(String cId)
+    public void sortSchedule(String cId)
     {
         LinkedList<ScheduleEntry> unsortedEntries = new LinkedList<>();
         Main.getDBDriver().getEventCollection().find(eq("channelId", cId)).sort(new Document("start", 1))
@@ -128,19 +128,12 @@ public class ScheduleManager
         // selection sort the entries by timestamp
         while (!unsortedEntries.isEmpty())
         {
-            __out.printOut(this.getClass(), "sorting " + cId);
             ScheduleEntry top = unsortedEntries.pop();
             ScheduleEntry min = top;
             for (ScheduleEntry cur : unsortedEntries)
             {
                 OffsetDateTime a = min.getMessageObject().getCreationTime();
                 OffsetDateTime b = cur.getMessageObject().getCreationTime();
-                if(a==null || b==null)
-                { // to avoid bad things
-                    __out.printOut(this.getClass(), "sorting broke!");
-                    return;
-                }
-
                 if (a.isAfter(b))
                 {
                     min = cur;

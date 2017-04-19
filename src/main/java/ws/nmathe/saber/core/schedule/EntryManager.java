@@ -85,29 +85,27 @@ public class EntryManager
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, newId, channel.getId(), channel.getGuild().getId());
 
-        MessageUtilities.sendMsg(message, channel, msg -> {
-            String guildId = msg.getGuild().getId();
-            String channelId = msg.getChannel().getId();
+        Message msg = MessageUtilities.sendMsg(message, channel);
+        String guildId = msg.getGuild().getId();
+        String channelId = msg.getChannel().getId();
 
-            Document entryDocument =
-                    new Document("_id", newId)
-                            .append("title", title)
-                            .append("start", Date.from(start.toInstant()))
-                            .append("end", Date.from(end.toInstant()))
-                            .append("zone", start.getZone().getId())
-                            .append("comments", comments)
-                            .append("repeat", repeat)
-                            .append("reminders", reminders)
-                            .append("url", url)
-                            .append("hasStarted", false)
-                            .append("messageId", msg.getId())
-                            .append("channelId", channelId)
-                            .append("googleId", googleId)
-                            .append("guildId", guildId);
+        Document entryDocument =
+                new Document("_id", newId)
+                        .append("title", title)
+                        .append("start", Date.from(start.toInstant()))
+                        .append("end", Date.from(end.toInstant()))
+                        .append("zone", start.getZone().getId())
+                        .append("comments", comments)
+                        .append("repeat", repeat)
+                        .append("reminders", reminders)
+                        .append("url", url)
+                        .append("hasStarted", false)
+                        .append("messageId", msg.getId())
+                        .append("channelId", channelId)
+                        .append("googleId", googleId)
+                        .append("guildId", guildId);
 
-            Main.getDBDriver().getEventCollection().insertOne(entryDocument);
-            Main.getScheduleManager().sortSchedule(channelId);
-        });
+        Main.getDBDriver().getEventCollection().insertOne(entryDocument);
     }
 
     /**
@@ -137,29 +135,27 @@ public class EntryManager
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId());
 
-        MessageUtilities.editMsg(message, origMessage, msg -> {
-            String guildId = msg.getGuild().getId();
-            String channelId = msg.getChannel().getId();
+        Message msg = MessageUtilities.editMsg(message, origMessage);
+        String guildId = msg.getGuild().getId();
+        String channelId = msg.getChannel().getId();
 
-            Document entryDocument =
-                    new Document("_id", entryId)
-                            .append("title", title)
-                            .append("start", Date.from(start.toInstant()))
-                            .append("end", Date.from(end.toInstant()))
-                            .append("zone", start.getZone().getId())
-                            .append("comments", comments)
-                            .append("repeat", repeat)
-                            .append("reminders", reminders)
-                            .append("url", url)
-                            .append("hasStarted", hasStarted)
-                            .append("messageId", msg.getId())
-                            .append("channelId", channelId)
-                            .append("googleId", googleId)
-                            .append("guildId", guildId);
+        Document entryDocument =
+                new Document("_id", entryId)
+                        .append("title", title)
+                        .append("start", Date.from(start.toInstant()))
+                        .append("end", Date.from(end.toInstant()))
+                        .append("zone", start.getZone().getId())
+                        .append("comments", comments)
+                        .append("repeat", repeat)
+                        .append("reminders", reminders)
+                        .append("url", url)
+                        .append("hasStarted", hasStarted)
+                        .append("messageId", msg.getId())
+                        .append("channelId", channelId)
+                        .append("googleId", googleId)
+                        .append("guildId", guildId);
 
-            Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);
-            Main.getScheduleManager().sortSchedule(channelId);
-        });
+        Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);
     }
 
     /**

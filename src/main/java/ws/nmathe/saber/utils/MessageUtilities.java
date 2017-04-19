@@ -110,6 +110,19 @@ public class MessageUtilities
         }
     }
 
+    public static Message editMsg(Message newMsg, Message msg)
+    {
+        try
+        {
+            return msg.editMessage(newMsg).complete();
+        }
+        catch( Exception e)
+        {
+            __out.printOut( MessageUtilities.class, e.getMessage() );
+            return null;
+        }
+    }
+
     /**
      * attempts to remove a message, asynchronous (non-blocking)
      *
