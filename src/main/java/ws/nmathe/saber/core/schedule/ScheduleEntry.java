@@ -252,6 +252,11 @@ public class ScheduleEntry
         return this.googleId;
     }
 
+    public String getScheduleID()
+    {
+        return this.chanId;
+    }
+
     void setMessageObject(Message msg)
     {
         this.chanId = msg.getChannel().getId();

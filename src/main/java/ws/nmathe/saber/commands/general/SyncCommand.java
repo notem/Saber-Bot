@@ -38,8 +38,13 @@ public class SyncCommand implements Command
         if( args.length > 2)
             return "That's too many arguments! Use ``" + invoke + " <channel> [<calendar address>]``";
 
-        if( !Main.getScheduleManager().isASchedule(args[0].replace("<#","").replace(">","")))
+        String cId = args[0].replace("<#","").replace(">","");
+        if( !Main.getScheduleManager().isASchedule(cId))
             return "Channel " + args[0] + " is not on my list of schedule channels for your guild.";
+
+        if(Main.getScheduleManager().isLocked(cId))
+            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes. " +
+                    "(If this does not go away ping @notem in the support server)";
 
         if( args.length == 2 && !Main.getCalendarConverter().checkValidAddress( args[1] ) )
             return "I could not connect to google calendar address **" + args[1] + "**";

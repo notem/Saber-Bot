@@ -26,6 +26,8 @@ import static com.mongodb.client.model.Updates.set;
  */
 public class ScheduleManager
 {
+    private Set<String> locks = new HashSet<>(); // locks channels from running multiple sorts simultaneously
+
     public void init()
     {
         // every 15 minutes create a thread to check for schedules to sync
@@ -115,12 +117,44 @@ public class ScheduleManager
     }
 
     /**
+     * check to see if the channel is locked
+     * @param cId (String) channel ID
+     * @return (boolean) true if the channel is locked for sorting
+     */
+    public boolean isLocked(String cId)
+    {
+        return this.locks.contains(cId);
+    }
+
+    /**
+     * locks a schedule (user cannot add/edit new events)
+     * @param cId (String) channel ID
+     */
+    public void lock(String cId)
+    {
+        this.locks.add(cId); // lock the channel
+    }
+
+    /**
+     * unlocks a schedule (user is free to add/edit events)
+     * @param cId (String) channel ID
+     */
+    public void unlock(String cId)
+    {
+        this.locks.remove(cId); // unlock the channel
+    }
+
+    /**
      * Reorders the schedule so that entries are displayed by start datetime ascending order in
      * the discord schedule channel
      * @param cId schedule ID
      */
     public void sortSchedule(String cId)
     {
+        if(this.isLocked(cId))
+            return;
+        this.lock(cId); // lock the channel
+
         LinkedList<ScheduleEntry> unsortedEntries = new LinkedList<>();
         Main.getDBDriver().getEventCollection().find(eq("channelId", cId)).sort(new Document("start", 1))
                 .forEach((Consumer<? super Document>) document -> unsortedEntries.add(new ScheduleEntry(document)));
@@ -139,7 +173,7 @@ public class ScheduleManager
                     min = cur;
                 }
             }
-            // swap messages, update db and reload display
+            // swap messages and update db
             if(!(min==top))
             {
                 Message tmp = top.getMessageObject();
@@ -147,15 +181,18 @@ public class ScheduleManager
                 Main.getDBDriver().getEventCollection().updateOne(
                         eq("_id", top.getId()),
                         new Document("$set", new Document("messageId", min.getMessageObject().getId())));
-                top.reloadDisplay();
 
                 min.setMessageObject(tmp);
                 Main.getDBDriver().getEventCollection().updateOne(
                         eq("_id", min.getId()),
                         new Document("$set", new Document("messageId", tmp.getId())));
-                min.reloadDisplay();
             }
+
+            // reload display
+            top.reloadDisplay();
         }
+
+        this.unlock(cId);
     }
 
 

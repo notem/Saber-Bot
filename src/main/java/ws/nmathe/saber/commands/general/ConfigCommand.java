@@ -59,9 +59,14 @@ public class ConfigCommand implements Command
         if (args.length < 1)
             return "That's not enough arguments! Use ``" + invoke + " <channel> [<option> <new config>]``";
 
-        if( !Main.getScheduleManager().isASchedule(args[index].replace("<#","").replace(">","")) )
+        String cId = args[index].replace("<#","").replace(">","");
+        if( !Main.getScheduleManager().isASchedule(cId) )
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
                     "Use the ``!init`` command to create a new schedule!";
+
+        if(Main.getScheduleManager().isLocked(cId))
+            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes. " +
+                    "(If this does not go away ping @notem in the support server)";
 
         index++;
 

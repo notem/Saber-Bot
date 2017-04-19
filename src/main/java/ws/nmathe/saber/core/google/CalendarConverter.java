@@ -103,6 +103,9 @@ public class CalendarConverter
             return;
         }
 
+        // lock the schedule for syncing
+        Main.getScheduleManager().lock(channel.getId());
+
         // change the zone to match the calendar
         ZoneId zone = ZoneId.of( events.getTimeZone() );
         Main.getScheduleManager().setTimeZone( channel.getId(), zone );
@@ -237,7 +240,8 @@ public class CalendarConverter
                     MessageUtilities.deleteMsg(msg, null);
                 });
 
-        // sort
-        Main.getScheduleManager().sortSchedule(channel.getId());
+        Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
+
+        Main.getScheduleManager().sortSchedule(channel.getId()); // sort the entries
     }
 }

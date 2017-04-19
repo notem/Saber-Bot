@@ -63,6 +63,10 @@ public class EditCommand implements Command
         if(entry == null)
             return "I could not find an entry with that ID!";
 
+        if(Main.getScheduleManager().isLocked(entry.getScheduleID()))
+            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes. " +
+                    "(If this does not go away ping @notem in the support server)";
+
         index++;
 
         // check later args
