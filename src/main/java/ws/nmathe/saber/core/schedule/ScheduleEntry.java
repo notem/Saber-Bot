@@ -134,6 +134,8 @@ public class ScheduleEntry
 
             Main.getEntryManager().updateEntry(this.entryId, this.entryTitle, newStart, newEnd, this.entryComments,
                     this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId);
+
+            Main.getScheduleManager().sortSchedule(this.chanId);
         }
         else // otherwise remove entry and delete the message
         {
