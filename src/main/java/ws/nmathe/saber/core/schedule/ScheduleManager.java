@@ -116,6 +116,11 @@ public class ScheduleManager
         return Main.getBotSettingsManager().getMaxSchedules() < count;
     }
 
+    public long getScheduleSize(String cId)
+    {
+        return Main.getDBDriver().getScheduleCollection().count(eq("channelId",cId));
+    }
+
     /**
      * check to see if the channel is locked
      * @param cId (String) channel ID
@@ -151,6 +156,8 @@ public class ScheduleManager
      */
     public void sortSchedule(String cId)
     {
+        if(this.getScheduleSize(cId) > 7)
+            return;
         if(this.isLocked(cId))
             return;
         this.lock(cId); // lock the channel

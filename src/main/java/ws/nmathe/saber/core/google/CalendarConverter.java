@@ -99,7 +99,6 @@ public class CalendarConverter
         }
         catch( IOException e )
         {
-            e.printStackTrace();
             return;
         }
 
