@@ -3,6 +3,7 @@ package ws.nmathe.saber.core.schedule;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.BsonDocument;
 import org.bson.Document;
@@ -162,6 +163,10 @@ public class ScheduleManager
             return;
         this.lock(cId); // lock the channel
 
+        // find the message channel and send the 'is typing' while processing
+        MessageChannel chan = Main.getBotJda().getTextChannelById(cId);
+        chan.sendTyping().complete();
+
         LinkedList<ScheduleEntry> unsortedEntries = new LinkedList<>();
         Main.getDBDriver().getEventCollection().find(eq("channelId", cId)).sort(new Document("start", 1))
                 .forEach((Consumer<? super Document>) document -> unsortedEntries.add(new ScheduleEntry(document)));
@@ -169,6 +174,8 @@ public class ScheduleManager
         // selection sort the entries by timestamp
         while (!unsortedEntries.isEmpty())
         {
+            chan.sendTyping().complete();   // continue to send 'is typing'
+
             ScheduleEntry top = unsortedEntries.pop();
             ScheduleEntry min = top;
             for (ScheduleEntry cur : unsortedEntries)

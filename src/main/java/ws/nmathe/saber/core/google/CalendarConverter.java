@@ -104,6 +104,7 @@ public class CalendarConverter
 
         // lock the schedule for syncing
         Main.getScheduleManager().lock(channel.getId());
+        channel.sendTyping();   // send 'is typing' while the sync is in progress
 
         // change the zone to match the calendar
         ZoneId zone = ZoneId.of( events.getTimeZone() );
@@ -114,6 +115,8 @@ public class CalendarConverter
         // convert every entry and add it to the scheduleManager
         for(Event event : events.getItems())
         {
+            channel.sendTyping();   // continue to send 'is typing'
+
             ZonedDateTime start;
             ZonedDateTime end;
             String title;
@@ -240,7 +243,6 @@ public class CalendarConverter
                 });
 
         Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
-
         Main.getScheduleManager().sortSchedule(channel.getId()); // sort the entries
     }
 }
