@@ -43,6 +43,7 @@ public class CommandHandler
         commands.put("config", new ConfigCommand());
         commands.put("zones", new TimeZonesCommand());
         commands.put("test", new TestCommand());
+        commands.put("sort", new SortCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put("announcement", new GlobalMsgCommand());
