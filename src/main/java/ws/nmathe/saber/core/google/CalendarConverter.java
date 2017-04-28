@@ -243,6 +243,6 @@ public class CalendarConverter
                 });
 
         Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
-        Main.getScheduleManager().sortSchedule(channel.getId()); // sort the entries
+        //Main.getScheduleManager().sortSchedule(channel.getId()); // sort the entries
     }
 }

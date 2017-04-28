@@ -47,7 +47,7 @@ public class EntryManager
                 0, 30, TimeUnit.SECONDS);
 
         // thread to adjust entry display timers
-        ScheduledExecutorService scheduler2 = Executors.newScheduledThreadPool(1);
+        ScheduledExecutorService scheduler2 = Executors.newScheduledThreadPool(3);
         // 1 day timer
         scheduler2.scheduleAtFixedRate( new EntryProcessor(3),
                 0, 24*60*60, TimeUnit.SECONDS);

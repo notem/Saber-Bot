@@ -331,6 +331,6 @@ public class CreateCommand implements Command
 
         Main.getEntryManager().newEntry(title, start, end, comments, repeat, url,
                 event.getGuild().getTextChannelById(cId), null);
-        Main.getScheduleManager().sortSchedule(cId);
+        //Main.getScheduleManager().sortSchedule(cId);
     }
 }
