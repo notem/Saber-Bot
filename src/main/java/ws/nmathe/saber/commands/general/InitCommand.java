@@ -14,10 +14,12 @@ public class InitCommand implements Command
     {
         String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " [<name>]```\n" +
                 " The init command will create a new schedule that events may be" +
-                "added to via the ``create`` command or synchronized to a google calendar via ``sync``. Every schedule" +
-                " is initialized with a schedule channel. Either delete the channel or use the ``delete`` command to " +
-                "remove a schedule. The ``<schedule name>`` argument is optional. If omitted, new schedules will be named" +
-                " new_schedule.";
+                "added to via the ``create`` command or synchronized to a google calendar via ``sync``.\n Every schedule" +
+                " is initialized with a schedule channel." +
+                "\n\n" +
+                " Either delete the channel or use the ``delete`` command to " +
+                "remove a schedule. The ``<schedule name>`` argument is optional.\n If omitted, new schedules will be named" +
+                " 'new_schedule'.";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + invoke + "``\n" +

@@ -25,22 +25,22 @@ public class CreateCommand implements Command
     public String help(boolean brief)
     {
         String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel> <title> <start> [<end> <extra>]```\n" +
-                "The create command will add a" +
-                " new entry to a schedule. Entries MUST be initialized with a title, and a start " +
-                "time. The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
-                "optional am/pm appended on the end." +
+                "The create command will add a new entry to a schedule.\n" +
+                " Entries MUST be initialized with a title, and a start time.\n" +
+                " The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
+                "optional am/pm appended on the end.\n" +
                 "Optionally, events can be configured with comments, repeat settings, and a start/end dates." +
                 "\n\n```diff\n+ Repeat on weekdays or interval ```\n" +
                 "Repeat settings can be configured by adding ``repeat <daily|\"Su,Mo,Tu,We,Th,Fr,Sa\">`` to ``<extra>``" +
-                " to cause the event to repeat on the given days. Default behavior is no repeat. An event can instead " +
+                " to cause the event to repeat on the given days.\n Default behavior is no repeat.\n An event can instead " +
                 "be configured to repeat on a daily interval by adding ``interval <number>`` to ``<extra>``" +
                 "\n\n```diff\n+ Start and end date ```\n" +
-                "Adding ``date <MM/dd>`` to ``<extra>`` will set the event's start and end date. For more granular " +
-                "control you can instead use ``start-date <MM/dd>`` and ``end-date <MM/dd>`` in place of ``date``." +
+                "Adding ``date <MM/dd>`` to ``<extra>`` will set the event's start and end date.\n For more granular " +
+                "control you can instead use ``start-date <MM/dd>`` and ``end-date <MM/dd>`` in place of ``date``.\n" +
                 "Default behavior is to use the current date or the " +
                 "next day depending on if the current time is greater than the start time." +
                 "\n\n```diff\n+ Event description ```\n" +
-                "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``. " +
+                "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``.\n" +
                 "Up to 10 of comments may be added in ``<extra>``." +
                 "\n" +
                 "If your title, comment, or channel includes any space characters, the phrase must be enclosed in " +

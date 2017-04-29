@@ -18,7 +18,7 @@ public class DeleteCommand implements Command
     public String help(boolean brief)
     {
         String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <ID|channel|'all'>```\n" +
-                "The delete command can be used to delete schedules or events. " +
+                "The delete command can be used to delete schedules or events.\n" +
                 "``<argument>`` may be an entry's ID, a schedule's channel, or ``all``. " +
                 "If ``all`` is used all schedules will be deleted, use with caution.\n\n" +
                 "The delete command is not required. Manually deleting the event's message on the schedule channel" +

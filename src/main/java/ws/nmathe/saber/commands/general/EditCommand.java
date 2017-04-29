@@ -22,7 +22,8 @@ public class EditCommand implements Command
     public String help(boolean brief)
     {
         String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <ID> <option> <arg>```\n" +
-                " The edit command will allow you to change an event's settings." +
+                "The edit command will allow you to change an event's settings." +
+                "\n\n" +
                 "``<option>`` is to contain which attribute of the event you wish to edit. ``<arg>`` should be the" +
                 " new configuration." +
                 "\n\n```diff\n+ Options ```\n" +

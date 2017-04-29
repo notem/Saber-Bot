@@ -31,22 +31,22 @@ public class ConfigCommand implements Command
     {
         String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel> [<option> <new config>]```\n" +
                 "The config command can be used to both view and " +
-                "change schedule settings. To view a schedule's current settings, supply only the ``<channel>`` argument" +
-                " Options are 'msg' (announcement message format), chan (announcement channel), zone (timezone to use), and clock " +
+                "change schedule settings. To view a schedule's current settings, supply only the ``<channel>`` argument.\n" +
+                "Options are 'msg' (announcement message format), chan (announcement channel), zone (timezone to use), and clock " +
                 "('12' to use am/pm or '24' for full form)." +
                 "\n\n" +
                 "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config option." +
                 "\n\n```diff\n+ Event Reminders```\n" +
-                "Events can be configured to send reminder announcements at configured thresholds before an event begins." +
-                " To configure the times at which events on the schedule should send reminders, use the 'remind' with an " +
-                "argument containing the relative times to remind delimited by spaces (see examples). " +
+                "Events can be configured to send reminder announcements at configured thresholds before an event begins.\n" +
+                "To configure the times at which events on the schedule should send reminders, use the 'remind' with an " +
+                "argument containing the relative times to remind delimited by spaces (see examples).\n" +
                 "Reminder messages are defined by a configured format, see below." +
                 "\n\n```diff\n+ Custom announcements and reminders```\n" +
-                "When an event begins or ends an announcement message is sent to the configured channel. " +
+                "When an event begins or ends an announcement message is sent to the configured channel.\n" +
                 "The message that is sent is determined from the message format the schedule is configured to use." +
                 "\n\n" +
                 "When creating a custom announcement message format the " +
-                "'%' acts as a delimiter for entry parameters such as the title or a comment. \n" +
+                "'%' acts as a delimiter for entry parameters such as the title or a comment.\n" +
                 "**%t** will cause the entry title to be inserted\n**%c[1-9]** will cause the nth comment to be inserted\n**%a** will insert" +
                 " 'begins' or 'ends'\n**%%** will insert %." +
                 "\n\n" +
@@ -215,9 +215,7 @@ public class ConfigCommand implements Command
                     // reload the schedule display
                     Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
                             .forEach((Consumer<? super Document>) document ->
-                            {
-                                Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
-                            });
+                                    Main.getEntryManager().reloadEntry((Integer) document.get("_id")));
 
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
                     break;
@@ -229,9 +227,7 @@ public class ConfigCommand implements Command
                     // reload the schedule display
                     Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
                             .forEach((Consumer<? super Document>) document ->
-                            {
-                                Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
-                            });
+                                    Main.getEntryManager().reloadEntry((Integer) document.get("_id")));
 
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
                     break;
