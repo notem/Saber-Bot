@@ -329,6 +329,6 @@ public class EditCommand implements Command
 
         Main.getEntryManager().updateEntry(entryId, title, start, end, comments,
                 repeat, url, entry.hasStarted(), msg, entry.getGoogleId());
-        Main.getScheduleManager().sortSchedule(msg.getChannel().getId());
+        //Main.getScheduleManager().sortSchedule(msg.getChannel().getId());
     }
 }

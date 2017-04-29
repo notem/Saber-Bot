@@ -150,6 +150,12 @@ public class ScheduleManager
         this.locks.remove(cId); // unlock the channel
     }
 
+    // band-aid
+    public void clearLocks()
+    {
+        this.locks = new HashSet<>();
+    }
+
     /**
      * Reorders the schedule so that entries are displayed by start datetime ascending order in
      * the discord schedule channel
@@ -157,7 +163,7 @@ public class ScheduleManager
      */
     public void sortSchedule(String cId)
     {
-        if(this.getScheduleSize(cId) > 7)
+        if(this.getScheduleSize(cId) > 10)
             return;
         if(this.isLocked(cId))
             return;

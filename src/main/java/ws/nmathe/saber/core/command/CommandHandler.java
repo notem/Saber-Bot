@@ -49,6 +49,7 @@ public class CommandHandler
         adminCommands.put("announcement", new GlobalMsgCommand());
         adminCommands.put("stats", new StatsCommand());
         adminCommands.put("reload", new ReloadSettingsCommand());
+        adminCommands.put("clear", new ClearLocksCommand());
     }
 
     public void handleCommand( MessageReceivedEvent event, Integer type )
