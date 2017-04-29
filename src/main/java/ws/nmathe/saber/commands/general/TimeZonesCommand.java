@@ -17,12 +17,15 @@ public class TimeZonesCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + invoke + " <filter>`` to list timezone options. " +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <filter>```\n" +
+                "The zones command will provide a list of valid timezone strings for schedule configuration. " +
                 "A search filter argument is required (eg. ``us``).";
 
         String USAGE_BRIEF = "``" + invoke + "`` - show available timezones";
 
-        String EXAMPLES = "Ex: ``" + invoke + " america``";
+        String EXAMPLES = "```diff\n- Examples```\n" +
+                "``" + invoke + " america``" +
+                "\n``" + invoke + " tokyo``";
 
         if( brief )
             return USAGE_BRIEF;

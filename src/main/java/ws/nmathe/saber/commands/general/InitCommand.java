@@ -12,15 +12,16 @@ public class InitCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + invoke + " [<name>]`` will create a new schedule that events may be" +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " [<name>]```\n" +
+                " The init command will create a new schedule that events may be" +
                 "added to via the ``create`` command or synchronized to a google calendar via ``sync``. Every schedule" +
                 " is initialized with a schedule channel. Either delete the channel or use the ``delete`` command to " +
                 "remove a schedule. The ``<schedule name>`` argument is optional. If omitted, new schedules will be named" +
                 " new_schedule.";
 
-        String EXAMPLES = "" +
-                "Ex1. ``" + invoke + "``\n" +
-                "Ex2. ``" + invoke + " \"Guild Events\"``";
+        String EXAMPLES = "```diff\n- Examples```\n" +
+                "``" + invoke + "``\n" +
+                "``" + invoke + " \"Guild Events\"``";
 
         String USAGE_BRIEF = "``" + invoke + "`` - initialize a new schedule";
 

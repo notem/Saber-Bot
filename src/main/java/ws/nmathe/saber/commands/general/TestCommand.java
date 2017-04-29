@@ -18,12 +18,14 @@ public class TestCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + invoke + " <ID>`` will send an test announcement for the event to **#"
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <ID>```\n" +
+                "The test command will send an test announcement for the event to **#"
                 + Main.getBotSettingsManager().getControlChan() + "**.\n The announcement message for an event is " +
                 "controlled by the schedule to which the event belongs to, and can be changed using the ``config``" +
                 " command.";
 
-        String EXAMPLES = "Ex. ``" + invoke + " 7fffffff``";
+        String EXAMPLES = "```diff\n- Examples```\n" +
+                "``" + invoke + " 7fffffff``";
 
         String USAGE_BRIEF = "``" + invoke + "`` - test an event's announcement message";
 

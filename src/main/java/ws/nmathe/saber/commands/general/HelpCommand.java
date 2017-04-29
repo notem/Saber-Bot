@@ -15,7 +15,7 @@ public class HelpCommand implements Command
 {
     private String prefix = Main.getBotSettingsManager().getCommandPrefix();
 
-    private String INTRO = "I am **" + Main.getBotJda().getSelfUser().getName() + "**, the event scheduling discord bot." +
+    private String INTRO = "```diff\n- Intro```\nI am **" + Main.getBotJda().getSelfUser().getName() + "**, the event scheduling discord bot." +
             " I can provide your discord with basic event schedule management.  Invite me to your discord and create " +
             "a dedicated command channel named **" + Main.getBotSettingsManager().getControlChan() + "** to get started.\n\n" +
 
@@ -58,7 +58,7 @@ public class HelpCommand implements Command
             String commandsBrief = ""; for( Command cmd : commands )
                 commandsBrief += cmd.help( true ) + "\n";
 
-            MessageUtilities.sendPrivateMsg( INTRO + "**Commands**\n================\n" +
+            MessageUtilities.sendPrivateMsg( INTRO + "```diff\n- Command List```\n" +
                     commandsBrief + "\n" + USAGE_EXTENDED, event.getAuthor(), null );
         }
         else    // otherwise read search the commands for the first arg

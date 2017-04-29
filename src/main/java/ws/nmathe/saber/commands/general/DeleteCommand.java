@@ -17,16 +17,19 @@ public class DeleteCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + invoke + " <ID|channel|'all'>`` can be used to delete schedules or events. " +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <ID|channel|'all'>```\n" +
+                "The delete command can be used to delete schedules or events. " +
                 "``<argument>`` may be an entry's ID, a schedule's channel, or ``all``. " +
-                "If ``all`` is used all schedules will be deleted, use with caution.";
+                "If ``all`` is used all schedules will be deleted, use with caution.\n\n" +
+                "The delete command is not required. Manually deleting the event's message on the schedule channel" +
+                " or deleting the entire schedule channel through discord suffices.";
 
-        String USAGE_BRIEF = "``" + invoke + "delete`` - remove schedules or events ";
+        String USAGE_BRIEF = "``" + invoke + "`` - remove schedules or events ";
 
-        String USAGE_EXAMPLES = "" +
-                "Ex1: ``" + invoke + " 084c``" +
-                "\nEx2: ``" + invoke + " all``" +
-                "\nEx3: ``" + invoke + " #events``";
+        String USAGE_EXAMPLES = "```diff\n- Examples```\n" +
+                "``" + invoke + " 084c``" +
+                "\n``" + invoke + " all``" +
+                "\n``" + invoke + " #events``";
 
         if( brief )
             return USAGE_BRIEF;

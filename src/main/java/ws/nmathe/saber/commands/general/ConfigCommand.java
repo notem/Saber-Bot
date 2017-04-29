@@ -29,21 +29,37 @@ public class ConfigCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + invoke + " <channel> [<option> <new config>]`` can be used to both view and " +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel> [<option> <new config>]```\n" +
+                "The config command can be used to both view and " +
                 "change schedule settings. To view a schedule's current settings, supply only the ``<channel>`` argument" +
                 " Options are 'msg' (announcement message format), chan (announcement channel), zone (timezone to use), and clock " +
-                "('12' to use am/pm or '24' for full form). \n\n" +
-                "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config option.\n\n" +
+                "('12' to use am/pm or '24' for full form)." +
+                "\n\n" +
+                "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config option." +
+                "\n\n```diff\n+ Event Reminders```\n" +
+                "Events can be configured to send reminder announcements at configured thresholds before an event begins." +
+                " To configure the times at which events on the schedule should send reminders, use the 'remind' with an " +
+                "argument containing the relative times to remind delimited by spaces (see examples). " +
+                "Reminder messages are defined by a configured format, see below." +
+                "\n\n```diff\n+ Custom announcements and reminders```\n" +
+                "When an event begins or ends an announcement message is sent to the configured channel. " +
+                "The message that is sent is determined from the message format the schedule is configured to use." +
+                "\n\n" +
                 "When creating a custom announcement message format the " +
-                "'%' acts as a delimiter for entry parameters such as the title or a comment. %t will cause the entry" +
-                " title to be inserted, %c[1-9] will cause the nth comment to be inserted, %a will insert" +
-                " 'begins' or 'ends', and %% will insert %.";
+                "'%' acts as a delimiter for entry parameters such as the title or a comment. \n" +
+                "**%t** will cause the entry title to be inserted\n**%c[1-9]** will cause the nth comment to be inserted\n**%a** will insert" +
+                " 'begins' or 'ends'\n**%%** will insert %." +
+                "\n\n" +
+                "If you wish to create a multi-line message like the default message format, new lines can be entered using" +
+                " SHIFT+Enter. However, be sure to encapsulate the entire string (new lines included) in quotations.";
 
         String USAGE_BRIEF = "``" + invoke + "`` - configure a schedule's settings";
 
-        String EXAMPLES = "Ex1: ``" + invoke + " #schedule``\n" +
-                "Ex2: ``" + invoke + " #guild_events msg \"@here The event %t %a.\"``\n" +
-                "Ex3: ``" + invoke + " #events_channel chan \"general\"``";
+        String EXAMPLES = "```diff\n- Examples```\n" +
+                "``" + invoke + " #schedule``\n" +
+                "``" + invoke + " #guild_events msg \"@here The event %t %a. %c1\"``\n" +
+                "``" + invoke + " #guild_events remind \"10, 20, 30 min\"``\n" +
+                "``" + invoke + " #events_channel chan \"general\"``";
 
         if( brief )
             return USAGE_BRIEF;
@@ -62,7 +78,7 @@ public class ConfigCommand implements Command
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
-                    "Use the ``!init`` command to create a new schedule!";
+                    "Use the ``" + invoke + "`` command to create a new schedule!";
 
         if(Main.getScheduleManager().isLocked(cId))
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes. " +

@@ -13,14 +13,15 @@ public class SortCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + invoke + " <channel>`` where <channel> is an initialized " +
-                "schedule channel to sort the entries in a schedule.  Entries are reordered so that " +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel>```\n" +
+                "The sort command will re-sort the entries in a schedule.  Entries are reordered so that " +
                 "the top event entry is the next event to begin. The schedule cannot be modified while" +
-                " in the process of sorting.";
+                " in the process of sorting.  Schedules with more than 10 entries will not be sorted.";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - sort the schedule by start";
+        String USAGE_BRIEF = "``" + invoke + "`` - reorder the schedule by start time";
 
-        String EXAMPLES = "Ex1: ``" + invoke + " #schedule``\n";
+        String EXAMPLES = "```diff\n- Examples```\n" +
+                "``" + invoke + " #schedule``\n";
 
         if( brief )
             return USAGE_BRIEF;
@@ -39,7 +40,7 @@ public class SortCommand implements Command
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
-                    "Use the ``!init`` command to create a new schedule!";
+                    "Use the ``" + invoke + "`` command to create a new schedule!";
 
         if(Main.getScheduleManager().isLocked(cId))
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes. " +

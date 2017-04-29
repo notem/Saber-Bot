@@ -21,21 +21,23 @@ public class EditCommand implements Command
     @Override
     public String help(boolean brief)
     {
-        String USAGE_EXTENDED = "``" + invoke + " <ID> <option> <arg>`` will allow you to change an event's settings." +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <ID> <option> <arg>```\n" +
+                " The edit command will allow you to change an event's settings." +
                 "``<option>`` is to contain which attribute of the event you wish to edit. ``<arg>`` should be the" +
-                " new configuration.\n\n" +
+                " new configuration." +
+                "\n\n```diff\n+ Options ```\n" +
                 "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment <add|remove>``, ``date``, " +
                 "``start-date``, ``end-date``, ``repeat``, ``interval``, and ``url``.\n\n" +
                 "For further explanation as for what are valid arguments for each options, reference the ``help`` information" +
                 " for the ``create`` command.";
 
-        String EXAMPLES = "" +
-                "Ex1: ``" + invoke + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
-                "\nEx2: ``" + invoke + " 0abf2991 start 21:15``" +
-                "\nEx3: ``" + invoke + " 49afaf2 end 2:15pm``" +
-                "\nEx4: ``" + invoke + " 409fa22 start-date 10/9``" +
-                "\nEx5: ``" + invoke + " a00af9a repeat \"Su, Tu, Fr\"``" +
-                "\nEx6: ``" + invoke + " 80c0sd09 comment remove 1``";
+        String EXAMPLES = "```diff\n- Examples```\n" +
+                "``" + invoke + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
+                "\n``" + invoke + " 0abf2991 start 21:15``" +
+                "\n``" + invoke + " 49afaf2 end 2:15pm``" +
+                "\n``" + invoke + " 409fa22 start-date 10/9``" +
+                "\n``" + invoke + " a00af9a repeat \"Su, Tu, Fr\"``" +
+                "\n``" + invoke + " 80c0sd09 comment remove 1``";
 
         String USAGE_BRIEF = "``" + invoke + "`` - modify an event";
 
@@ -326,6 +328,6 @@ public class EditCommand implements Command
 
         Main.getEntryManager().updateEntry(entryId, title, start, end, comments,
                 repeat, url, entry.hasStarted(), msg, entry.getGoogleId());
-        //Main.getScheduleManager().sortSchedule(msg.getChannel().getId());
+        Main.getScheduleManager().sortSchedule(msg.getChannel().getId());
     }
 }

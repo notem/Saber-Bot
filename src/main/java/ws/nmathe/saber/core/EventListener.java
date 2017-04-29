@@ -87,7 +87,6 @@ public class EventListener extends ListenerAdapter
     public void onMessageDelete( MessageDeleteEvent event )
     {
         // delete the event if the delete message was an event message
-        // TODO watch for performance issues
         Main.getDBDriver().getEventCollection()
                 .findOneAndDelete(eq("messageId", event.getMessageId()));
     }
