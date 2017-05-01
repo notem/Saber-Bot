@@ -47,9 +47,9 @@ public class CreateCommand implements Command
                 "quotations (see examples).";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + " #event_schedule \"Party in the Guild Hall\" 19:00 02:00``" +
+                "``" + invoke + " #event_schedule \"Party in the Guild Hall\" 19:00 2:00``" +
                 "\n``" + invoke + " #guild_reminders \"Sign up for Raids\" 4:00pm interval 2``" +
-                "\n``" + invoke + " #raid_schedule \"Weekly Raid Event\" 7:00pm 12:00pm repeat weekly \"Healers and " +
+                "\n``" + invoke + " #raid_schedule \"Weekly Raid Event\" 7:00pm 12:00pm repeat Sunday \"Healers and " +
                 "tanks always in demand.\" \"PM our raid captain with your role and level if attending.\"``" +
                 "\n``" + invoke + " #competition \"Capture the Flag\" 10:00am start-date 10/20 end-date 10/23``";
 
@@ -331,6 +331,5 @@ public class CreateCommand implements Command
 
         Main.getEntryManager().newEntry(title, start, end, comments, repeat, url,
                 event.getGuild().getTextChannelById(cId), null);
-        //Main.getScheduleManager().sortSchedule(cId);
     }
 }

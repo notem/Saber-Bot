@@ -169,7 +169,7 @@ public class CalendarConverter
                 }
                 catch( IOException e )
                 {
-                    e.printStackTrace();
+                    continue; // skip this event (I don't know what happened!)
                 }
             }
             if( recurrence != null )
@@ -243,6 +243,5 @@ public class CalendarConverter
                 });
 
         Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
-        //Main.getScheduleManager().sortSchedule(channel.getId()); // sort the entries
     }
 }

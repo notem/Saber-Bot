@@ -11,6 +11,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.__out;
 
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -60,7 +61,7 @@ public class ScheduleManager
         catch(PermissionException ignored)
         { return; }
 
-        List<Integer> default_reminders = new ArrayList<Integer>();
+        List<Integer> default_reminders = new ArrayList<>();
         default_reminders.add(10);
 
         Document schedule =
@@ -71,7 +72,7 @@ public class ScheduleManager
                         .append("clock_format", Main.getBotSettingsManager().getClockFormat())
                         .append("timezone", Main.getBotSettingsManager().getTimeZone())
                         .append("sync_time", Date.from(ZonedDateTime.of(LocalDate.now().plusDays(1),
-                                LocalTime.MIDNIGHT, ZoneId.systemDefault()).toInstant()))
+                                LocalTime.now().truncatedTo(ChronoUnit.HOURS), ZoneId.systemDefault()).toInstant()))
                         .append("default_reminders", default_reminders)
                         .append("sync_address", "off");
 

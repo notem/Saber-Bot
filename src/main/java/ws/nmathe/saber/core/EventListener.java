@@ -44,7 +44,7 @@ public class EventListener extends ListenerAdapter
         if (event.isFromType(ChannelType.PRIVATE))
         {
             // help and setup general commands
-            if (content.startsWith(prefix + "help"))
+            if (content.startsWith(prefix + "help") || content.startsWith("help"))
             {
                 Main.getCommandHandler().handleCommand(event, 0);
                 return;

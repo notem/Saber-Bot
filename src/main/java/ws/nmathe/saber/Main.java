@@ -35,7 +35,7 @@ public class Main
 
         if( botSettingsManager.hasSettings() )
         {
-            __out.printOut(Main.class, "Created a new saber.toml configuration file. Add your " +
+            __out.printOut(Main.class, "A 'saber.toml' configuration file has been created. Add your " +
                     "bot token to the file and restart the bot.\n");
             System.exit(0);
         }

@@ -91,8 +91,29 @@ public class ParsingUtilities
                         {
                             announceMsg += "ends";
                         }
+                        break;
 
+                    case 'b' :
+                        if( !entry.hasStarted() )
+                        {
+                            announceMsg += "begins";
+                        }
+                        else
+                        {
+                            announceMsg += "ends";
+                        }
+                        break;
 
+                    case 'x' :
+                        if( !entry.hasStarted() )
+                        {
+                            if(!entry.getReminders().isEmpty())
+                            {
+                                announceMsg += " in " +
+                                        (ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES)+1) +
+                                        " minutes";
+                            }
+                        }
                         break;
 
                     case 't' :

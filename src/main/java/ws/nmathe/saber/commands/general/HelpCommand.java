@@ -16,7 +16,7 @@ public class HelpCommand implements Command
     private String prefix = Main.getBotSettingsManager().getCommandPrefix();
 
     private String INTRO = "```diff\n- Intro```\nI am **" + Main.getBotJda().getSelfUser().getName() + "**, the event scheduling discord bot." +
-            " I can provide your discord with basic event schedule management.  Invite me to your discord and create " +
+            " I can provide your discord with basic event schedule management.\nInvite me to your discord and create " +
             "a dedicated command channel named **" + Main.getBotSettingsManager().getControlChan() + "** to get started.\n\n" +
 
             "github: <https://github.com/notem/Saber-Bot>\n" +
