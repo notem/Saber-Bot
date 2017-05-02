@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.command;
 
+import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.entities.User;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -61,6 +62,12 @@ public class CommandHandler
         {
             if(rateLimiter.isOnCooldown(event.getAuthor().getId()) )
             {
+                if(event.getChannelType().equals(ChannelType.PRIVATE))
+                {
+                    // don't alert private message
+                    return;
+                }
+
                 String alert = "@" + event.getAuthor().getName() +
                         " [" + event.getAuthor().getId() + "] was rate limited on '" +
                         event.getGuild().getName() +"' [" + event.getGuild().getId() + "] using the '" +
