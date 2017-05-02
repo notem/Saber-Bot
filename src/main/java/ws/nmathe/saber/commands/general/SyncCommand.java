@@ -17,7 +17,7 @@ public class SyncCommand implements Command
     {
         String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel> [<calendar address>]```\n" +
                 "The sync command will replace all events in the specified channel" +
-                "with events imported from a public google calendar.\n\n" +
+                "with events imported from a public google calendar.\n" +
                 "The command imports the next 7 days of events into the channel;" +
                 " the channel will then automatically re-sync once every day.\n\n" +
                 "If ``<calendar address>`` is not included, " +

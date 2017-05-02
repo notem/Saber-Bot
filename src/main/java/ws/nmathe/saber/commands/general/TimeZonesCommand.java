@@ -18,8 +18,8 @@ public class TimeZonesCommand implements Command
     public String help(boolean brief)
     {
         String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <filter>```\n" +
-                "The zones command will provide a list of valid timezone strings for schedule configuration. " +
-                "A search filter argument is required (eg. ``us``).";
+                "The zones command will provide a list of valid timezone strings for schedule configuration." +
+                "\nA search filter argument is required (eg. ``us``).";
 
         String USAGE_BRIEF = "``" + invoke + "`` - show available timezones";
 

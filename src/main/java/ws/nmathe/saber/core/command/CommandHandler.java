@@ -1,5 +1,7 @@
 package ws.nmathe.saber.core.command;
 
+import net.dv8tion.jda.core.entities.User;
+import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.admin.*;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -20,8 +22,8 @@ public class CommandHandler
     private final CommandParser commandParser = new CommandParser();      // parses command strings into containers
     private final ExecutorService executor = Executors.newCachedThreadPool(); // thread pool for running commands
     private final RateLimiter rateLimiter = new RateLimiter();
-    private HashMap<String, Command> commands;         // maps Command to invoke string
-    private HashMap<String, Command> adminCommands;    // ^^ but for admin commands
+    private final HashMap<String, Command> commands;         // maps Command to invoke string
+    private final HashMap<String, Command> adminCommands;    // ^^ but for admin commands
 
     public CommandHandler()
     {
@@ -59,10 +61,17 @@ public class CommandHandler
         {
             if(rateLimiter.isOnCooldown(event.getAuthor().getId()) )
             {
-                __out.printOut(this.getClass(), "@" + event.getAuthor().getName() +
+                String alert = "@" + event.getAuthor().getName() +
                         " [" + event.getAuthor().getId() + "] was rate limited on '" +
                         event.getGuild().getName() +"' [" + event.getGuild().getId() + "] using the '" +
-                        cc.invoke + "' command!");
+                        cc.invoke + "' command!";
+
+                __out.printOut(this.getClass(), alert);
+                User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+                if(admin != null)
+                {
+                    MessageUtilities.sendPrivateMsg(alert, admin, null);
+                }
                 return;
             }
             handleGeneralCommand( cc );
@@ -92,7 +101,11 @@ public class CommandHandler
                     }
                     catch(Exception e)
                     {
-                        __out.printOut(this.getClass(), e.getLocalizedMessage());
+                        User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+                        if(admin != null)
+                        {
+                            MessageUtilities.sendPrivateMsg(e.getMessage(), admin, null);
+                        }
                         e.printStackTrace();
                     }
                 });
@@ -130,7 +143,11 @@ public class CommandHandler
                     }
                     catch(Exception e)
                     {
-                        __out.printOut(e.getClass(), e.getLocalizedMessage());
+                        User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+                        if(admin != null)
+                        {
+                            MessageUtilities.sendPrivateMsg(e.getMessage(), admin, null);
+                        }
                         e.printStackTrace();
                     }
                 });

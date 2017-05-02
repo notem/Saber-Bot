@@ -14,11 +14,11 @@ public class SortCommand implements Command
     public String help(boolean brief)
     {
         String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel>```\n" +
-                "The sort command will re-sort the entries in a schedule. Entries are reordered so that " +
-                "the top event entry is the next event to begin." +
+                "The sort command will re-sort the entries in a schedule." +
+                "\nEntries are reordered so that the top event entry is the next event to begin." +
                 "\n\n" +
-                "The schedule cannot be modified while" +
-                " in the process of sorting. Schedules with more than 10 entries will not be sorted.";
+                "The schedule cannot be modified while in the process of sorting.\n" +
+                "Schedules with more than 10 entries will not be sorted.";
 
         String USAGE_BRIEF = "``" + invoke + "`` - reorder the schedule by start time";
 
