@@ -95,33 +95,30 @@ public class CommandHandler
         // if the invoking command appears in commands
         if(commands.containsKey(cc.invoke))
         {
-            String err = commands.get(cc.invoke).verify(cc.args, cc.event);
+            try // catch any errors which occur while parsing user input
+            {
+                String err = commands.get(cc.invoke).verify(cc.args, cc.event);
 
-            // do command action if valid arguments
-            if(err.isEmpty())
-            {
-                executor.submit( () ->
+                // do command action if valid arguments
+                if(err.isEmpty())
                 {
-                    try
-                    {
-                        commands.get(cc.invoke).action(cc.args, cc.event);
-                    }
-                    catch(Exception e)
-                    {
-                        User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
-                        if(admin != null)
-                        {
-                            MessageUtilities.sendPrivateMsg(e.getMessage(), admin, null);
-                        }
-                        e.printStackTrace();
-                    }
-                });
+                    executor.submit( () -> commands.get(cc.invoke).action(cc.args, cc.event));
+                }
+                // otherwise send error message
+                else
+                {
+                    String msg = "**Error** : " + err;
+                    MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
+                }
             }
-            // otherwise send error message
-            else
+            catch(Exception e)
             {
-                String msg = "**Error** : " + err;
-                MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
+                User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+                if(admin != null)
+                {
+                    MessageUtilities.sendPrivateMsg(e.toString(), admin, null);
+                }
+                e.printStackTrace();
             }
         }
         // else the invoking command is invalid
@@ -137,27 +134,24 @@ public class CommandHandler
         // for admin commands
         if(adminCommands.containsKey(cc.invoke))
         {
-            String err = adminCommands.get(cc.invoke).verify(cc.args, cc.event);
-
-            // do command action if valid arguments
-            if (err.equals(""))
+            try // catch any errors which occur while parsing user input
             {
-                executor.submit( () ->
+                String err = adminCommands.get(cc.invoke).verify(cc.args, cc.event);
+
+                // do command action if valid arguments
+                if (err.equals(""))
                 {
-                    try
-                    {
-                        adminCommands.get(cc.invoke).action(cc.args, cc.event);
-                    }
-                    catch(Exception e)
-                    {
-                        User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
-                        if(admin != null)
-                        {
-                            MessageUtilities.sendPrivateMsg(e.getMessage(), admin, null);
-                        }
-                        e.printStackTrace();
-                    }
-                });
+                    executor.submit( () -> adminCommands.get(cc.invoke).action(cc.args, cc.event));
+                }
+            }
+            catch(Exception e)
+            {
+                User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+                if(admin != null)
+                {
+                    MessageUtilities.sendPrivateMsg(e.getLocalizedMessage(), admin, null);
+                }
+                e.printStackTrace();
             }
         }
     }

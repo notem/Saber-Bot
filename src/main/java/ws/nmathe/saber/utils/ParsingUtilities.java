@@ -188,7 +188,20 @@ public class ParsingUtilities
 
             default:
                 String[] splt = arg.split("[^0-9]+");
-                return LocalDate.of(LocalDate.now().getYear(), Integer.parseInt(splt[0]), Integer.parseInt(splt[1]));
+                LocalDate date = LocalDate.now().plusDays(1);
+                if(splt.length == 1)
+                {
+                    date = LocalDate.of(LocalDate.now().getYear(), LocalDate.now().getMonth(), Integer.parseInt(splt[0]));
+                }
+                else if(splt.length == 2)
+                {
+                    date = LocalDate.of(LocalDate.now().getYear(), Integer.parseInt(splt[0]), Integer.parseInt(splt[1]));
+                }
+                else if(splt.length == 3)
+                {
+                    date = LocalDate.of(Integer.parseInt(splt[0]), Integer.parseInt(splt[1]), Integer.parseInt(splt[2]));
+                }
+                return date;
         }
     }
 }

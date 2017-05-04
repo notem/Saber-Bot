@@ -5,10 +5,8 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.exceptions.PermissionException;
-import org.bson.BsonDocument;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
-import ws.nmathe.saber.utils.__out;
 
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -118,7 +116,7 @@ public class ScheduleManager
         return Main.getBotSettingsManager().getMaxSchedules() < count;
     }
 
-    public long getScheduleSize(String cId)
+    private long getScheduleSize(String cId)
     {
         return Main.getDBDriver().getScheduleCollection().count(eq("channelId",cId));
     }

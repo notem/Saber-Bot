@@ -61,9 +61,27 @@ public class VerifyUtilities
         try
         {
             String[] splt = arg.split("[^0-9]+");
-            if(splt.length != 2)
+            if(splt.length == 1)
+            {
+                LocalDate.of(LocalDate.now().getYear(), LocalDate.now().getMonth(), Integer.parseInt(splt[0]));
+            }
+            else if(splt.length == 2)
+            {
+                LocalDate.of(LocalDate.now().getYear(), Integer.parseInt(splt[0]), Integer.parseInt(splt[1]));
+            }
+            else if(splt.length == 3)
+            {
+                LocalDate date =
+                        LocalDate.of(Integer.parseInt(splt[0]), Integer.parseInt(splt[1]), Integer.parseInt(splt[2]));
+                if(LocalDate.now().isAfter(date))
+                {
+                    return false;
+                }
+            }
+            else
+            {
                 return false;
-            LocalDate.of(LocalDate.now().getYear(), Integer.parseInt(splt[0]), Integer.parseInt(splt[1]));
+            }
             return true;
         }
         catch(DateTimeException e)
@@ -72,6 +90,7 @@ public class VerifyUtilities
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static boolean verifyHex(String arg)
     {
         try
@@ -86,6 +105,7 @@ public class VerifyUtilities
         return true;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static boolean verifyInteger(String arg)
     {
         try

@@ -5,10 +5,7 @@ import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -35,10 +32,12 @@ public class CreateCommand implements Command
                 " to cause the event to repeat on the given days.\n Default behavior is no repeat.\n An event can instead " +
                 "be configured to repeat on a daily interval by adding ``interval <number>`` to ``<extra>``" +
                 "\n\n```diff\n+ Start and end date ```\n" +
-                "Adding ``date <MM/dd>`` to ``<extra>`` will set the event's start and end date.\n For more granular " +
-                "control you can instead use ``start-date <MM/dd>`` and ``end-date <MM/dd>`` in place of ``date``.\n" +
-                "Default behavior is to use the current date or the " +
-                "next day depending on if the current time is greater than the start time." +
+                "Adding ``date <yyyy/MM/dd>`` to ``<extra>`` will set the event's start and end date.\n For more granular " +
+                "control you can instead use ``start-date <yyyy/MM/dd>`` and ``end-date <yyyy/MM/dd>`` in place of ``date``.\n" +
+                "The date must be formatted like year/month/day, however year and month can be omitted " +
+                "('month/day' and 'day' are valid). The omitted values will be inherited from the current date.\n" +
+                "Dates which are in a non-number format (such as '10 May') are not acceptable.\n" +
+                "Default behavior is to use the next day as the event's date." +
                 "\n\n```diff\n+ Event description ```\n" +
                 "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``.\n" +
                 "Up to 10 of comments may be added in ``<extra>``." +
@@ -171,17 +170,18 @@ public class CreateCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
+        String cId = args[0].replace("<#","").replace(">","");
+        ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
+
         // Initialize variables with safe defaults
         String title = "";
-        LocalTime startTime = LocalTime.now().plusMinutes(1);
+        LocalTime startTime = ZonedDateTime.now(zone).toLocalTime();
         LocalTime endTime = null;
         ArrayList<String> comments = new ArrayList<>();
         int repeat = 0;
-        LocalDate startDate = LocalDate.now().plusDays(1);
+        LocalDate startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
         LocalDate endDate = null;
         String url = null;
-
-        String cId = args[0].replace("<#","").replace(">","");
 
         boolean channelFlag = false;
         boolean titleFlag = false;
@@ -309,8 +309,8 @@ public class CreateCommand implements Command
         }
 
         // create the zoned date time using the schedule's timezone
-        ZonedDateTime start = ZonedDateTime.of( startDate, startTime, Main.getScheduleManager().getTimeZone(cId) );
-        ZonedDateTime end = ZonedDateTime.of( endDate, endTime, Main.getScheduleManager().getTimeZone(cId) );
+        ZonedDateTime start = ZonedDateTime.of( startDate, startTime, zone );
+        ZonedDateTime end = ZonedDateTime.of( endDate, endTime, zone );
 
         // add a year to the date if the provided date is past current time
         Instant now = Instant.now();
