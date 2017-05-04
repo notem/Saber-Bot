@@ -9,10 +9,7 @@ import net.dv8tion.jda.core.entities.Message;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -81,9 +78,16 @@ public class EntryManager
             }
         }
 
-        Integer newId = this.newId();
+        // is rsvp enabled on the channel? if so, create the entry with an empty list. otherwise set list to null
+        List<String> rsvpList;
+        if( Main.getScheduleManager().isRSVPEnabled(channel.getId()) )
+            rsvpList = new ArrayList<>();
+        else
+            rsvpList = null;
+
+        Integer newId = this.newId();   // generate a new, unused ID
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
-                url, reminders, newId, channel.getId(), channel.getGuild().getId());
+                url, reminders, newId, channel.getId(), channel.getGuild().getId(), rsvpList);
 
         Message msg = MessageUtilities.sendMsg(message, channel);
         String guildId = msg.getGuild().getId();
@@ -103,6 +107,7 @@ public class EntryManager
                         .append("messageId", msg.getId())
                         .append("channelId", channelId)
                         .append("googleId", googleId)
+                        .append("rsvpList", rsvpList)
                         .append("guildId", guildId);
 
         Main.getDBDriver().getEventCollection().insertOne(entryDocument);
@@ -121,7 +126,7 @@ public class EntryManager
      */
     public void updateEntry(Integer entryId, String title, ZonedDateTime start, ZonedDateTime end,
                             List<String> comments, int repeat, String url, boolean hasStarted,
-                            Message origMessage, String googleId)
+                            Message origMessage, String googleId, List<String> rsvpList)
     {
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(origMessage.getChannel().getId()))
@@ -133,7 +138,7 @@ public class EntryManager
         }
 
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
-                url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId());
+                url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId(), rsvpList);
 
         Message msg = MessageUtilities.editMsg(message, origMessage);
         String guildId = msg.getGuild().getId();
@@ -153,6 +158,7 @@ public class EntryManager
                         .append("messageId", msg.getId())
                         .append("channelId", channelId)
                         .append("googleId", googleId)
+                        .append("rsvpList", rsvpList)
                         .append("guildId", guildId);
 
         Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);

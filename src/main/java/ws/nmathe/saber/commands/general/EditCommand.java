@@ -67,8 +67,7 @@ public class EditCommand implements Command
             return "I could not find an entry with that ID!";
 
         if(Main.getScheduleManager().isLocked(entry.getScheduleID()))
-            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes. " +
-                    "(If this does not go away ping @notem in the support server)";
+            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
 
         index++;
 
@@ -328,6 +327,6 @@ public class EditCommand implements Command
         }
 
         Main.getEntryManager().updateEntry(entryId, title, start, end, comments,
-                repeat, url, entry.hasStarted(), msg, entry.getGoogleId());
+                repeat, url, entry.hasStarted(), msg, entry.getGoogleId(), entry.getRsvpList());
     }
 }

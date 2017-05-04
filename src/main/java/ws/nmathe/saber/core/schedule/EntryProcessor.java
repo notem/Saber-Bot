@@ -30,7 +30,6 @@ class EntryProcessor implements Runnable
     {
         if( level == 0 )    // minute check
         {
-            __out.printOut(this.getClass(), "Processing events for start/end/remind. . .");
             // process entries which are ending
             Main.getDBDriver().getEventCollection().
                     find(and(
@@ -82,7 +81,6 @@ class EntryProcessor implements Runnable
 
                         (new ScheduleEntry(document)).reloadDisplay();
                     });
-            __out.printOut(this.getClass(), "Finished processing. . .");
         }
         else if( level == 1 )   // few minute check
         {

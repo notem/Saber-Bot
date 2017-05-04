@@ -45,8 +45,7 @@ public class SortCommand implements Command
                     "Use the ``" + invoke + "`` command to create a new schedule!";
 
         if(Main.getScheduleManager().isLocked(cId))
-            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes. " +
-                    "(If this does not go away ping @notem in the support server)";
+            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
 
         return "";
     }

@@ -72,6 +72,7 @@ public class ScheduleManager
                         .append("sync_time", Date.from(ZonedDateTime.of(LocalDate.now().plusDays(1),
                                 LocalTime.now().truncatedTo(ChronoUnit.HOURS), ZoneId.systemDefault()).toInstant()))
                         .append("default_reminders", default_reminders)
+                        .append("rsvp_enabled", false)
                         .append("sync_address", "off");
 
         Main.getDBDriver().getScheduleCollection().insertOne(schedule);
@@ -220,6 +221,14 @@ public class ScheduleManager
      * Getters and Setters
      *
      */
+
+    public boolean isRSVPEnabled(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+            return false;
+        return (Boolean) settings.get("rsvp_enabled");
+    }
 
     public List<String> getSchedulesForGuild(String gId)
     {
@@ -395,5 +404,11 @@ public class ScheduleManager
     {
         Main.getDBDriver().getScheduleCollection()
                 .updateOne(eq("_id",cId), set("reminder_format", format));
+    }
+
+    public void setRSVPEnable(String cId, boolean value)
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("rsvp_enabled", value));
     }
 }

@@ -81,8 +81,7 @@ public class ConfigCommand implements Command
                     "Use the ``" + invoke + "`` command to create a new schedule!";
 
         if(Main.getScheduleManager().isLocked(cId))
-            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes. " +
-                    "(If this does not go away ping @notem in the support server)";
+            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
 
         index++;
 
@@ -161,6 +160,9 @@ public class ConfigCommand implements Command
 
                 case "rch":
                 case "remind-chan":
+                    break;
+
+                case "rsvp":
                     break;
 
                 default:
@@ -310,6 +312,44 @@ public class ConfigCommand implements Command
 
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
                     break;
+
+                case "rsvp":
+                    boolean enabled = Main.getScheduleManager().isRSVPEnabled(cId);
+
+                    boolean new_enabled;
+                    switch(args[index].toLowerCase())
+                    {
+                        case "on":
+                        case "true":
+                        case "yes":
+                        case "y":
+                            new_enabled = true;
+                            break;
+
+                        default:
+                            new_enabled = false;
+                            break;
+                    }
+
+                    if(enabled != new_enabled)
+                    {
+                        if(new_enabled)
+                        {
+                            Main.getDBDriver().getEventCollection().updateMany(
+                                    eq("channelId", scheduleChan.getId()),
+                                    set("rsvpList", new ArrayList<String>()));
+                        }
+                        else
+                        {
+                            Main.getDBDriver().getEventCollection().updateMany(
+                                    eq("channelId", scheduleChan.getId()),
+                                    set("rsvpList", null));
+                        }
+                        Main.getScheduleManager().setRSVPEnable(cId, new_enabled);
+                    }
+
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                    break;
             }
         }
         else    // print out all settings
@@ -369,11 +409,13 @@ public class ConfigCommand implements Command
                     break;
             case 3:
                 content += "```js\n" +
-                        "// Event Display Settings\n" +
+                        "// Misc. Settings\n" +
                         "[zone] Display events in this timezone\n " +
                         "\"" + zone + "\"\n" +
                         "\n[clock] Display events using this clock format\n " +
                         "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
+                        "\n[rsvp] Allow users to RSVP to events (on|off)\n " +
+                        "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"\n" +
                         "```";
 
                 if(type == 3)

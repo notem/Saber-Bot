@@ -48,19 +48,7 @@ public class SyncCommand implements Command
             return "Channel " + args[0] + " is not on my list of schedule channels for your guild.";
 
         if(Main.getScheduleManager().isLocked(cId))
-            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes. " +
-                    "(If this does not go away ping @notem in the support server)";
-
-        if( args.length == 2 && !Main.getCalendarConverter().checkValidAddress( args[1] ) )
-            return "I could not connect to google calendar address **" + args[1] + "**";
-
-        String url = Main.getScheduleManager().getAddress(args[0].replace("<#","").replace(">",""));
-        if( args.length == 1 && url.equals("off"))
-            return "That channel is not configured to sync to any calendar!";
-
-        if( args.length == 1 && !Main.getCalendarConverter().checkValidAddress( url ) )
-            return "I could not connect to google calendar address **" + url + "**";
-
+            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
         return "";
     }
 

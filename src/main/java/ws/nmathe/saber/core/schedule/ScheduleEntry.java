@@ -28,6 +28,7 @@ public class ScheduleEntry
     private Integer entryRepeat;
     private String titleUrl;
     private List<Date> reminders;
+    private List<String> rsvpList;
 
     private String msgId;
     private String chanId;
@@ -48,6 +49,7 @@ public class ScheduleEntry
         this.entryRepeat = (Integer) entryDocument.get("repeat");
         this.titleUrl = (String) entryDocument.get("url");
         this.reminders = (List<Date>) entryDocument.get("reminders");
+        this.rsvpList = (List<String>) entryDocument.get("rsvpList");
 
         this.msgId = (String) entryDocument.get("messageId");
         this.chanId = (String) entryDocument.get("channelId");
@@ -133,7 +135,7 @@ public class ScheduleEntry
                     this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
 
             Main.getEntryManager().updateEntry(this.entryId, this.entryTitle, newStart, newEnd, this.entryComments,
-                    this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId);
+                    this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId, this.rsvpList);
 
             Main.getScheduleManager().sortSchedule(this.chanId);
         }
@@ -156,7 +158,8 @@ public class ScheduleEntry
 
         MessageUtilities.editMsg(
                 MessageGenerator.generate(this.entryTitle, this.entryStart, this.entryEnd, this.entryComments,
-                        this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId, this.guildId),
+                        this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId, this.guildId,
+                        this.rsvpList),
                         msg, null);
     }
 
@@ -257,6 +260,11 @@ public class ScheduleEntry
     public String getScheduleID()
     {
         return this.chanId;
+    }
+
+    public List<String> getRsvpList()
+    {
+        return this.rsvpList;
     }
 
     void setMessageObject(Message msg)
