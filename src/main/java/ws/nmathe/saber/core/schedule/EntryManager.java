@@ -52,8 +52,8 @@ public class EntryManager
         scheduler2.scheduleAtFixedRate( new EntryProcessor(2),
                 0, 60*30, TimeUnit.SECONDS);
         // 5 min timer
-        scheduler2.scheduleAtFixedRate( new EntryProcessor(1),
-                30 , 60*5, TimeUnit.SECONDS );
+        //scheduler2.scheduleAtFixedRate( new EntryProcessor(1),
+        //      30 , 60*5, TimeUnit.SECONDS );
     }
 
     /**
