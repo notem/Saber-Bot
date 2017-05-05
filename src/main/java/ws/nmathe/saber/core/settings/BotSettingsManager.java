@@ -143,9 +143,9 @@ public class BotSettingsManager
             blacklist = new HashSet<>();
             cooldown_threshold = 1000;
 
-            rsvp_yes = "✅";
-            rsvp_no = "❌";
-            rsvp_clear = "❔";
+            rsvp_yes = "\u2705";
+            rsvp_no = "\u274c";
+            rsvp_clear = "\u2754";
         }
     }
 
