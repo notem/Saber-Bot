@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.utils.__out;
 
+import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -64,13 +65,13 @@ public class ScheduleEntry
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
     }
 
-    private void checkDelay(LocalTime time)
+    private void checkDelay(Instant time)
     {
-        int diff =  LocalTime.now().toSecondOfDay() - time.plusMinutes(3).toSecondOfDay();
+        long diff =  Instant.now().toEpochMilli() - time.plusSeconds(60*3).toEpochMilli();
         if(diff > 0)
         {
             User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
-            MessageUtilities.sendPrivateMsg("An event notification was sent " + diff/60 + "minutes late!",
+            MessageUtilities.sendPrivateMsg("An event notification was sent " + diff/(60*1000) + "minutes late!",
                     admin, null);
         }
     }
@@ -90,7 +91,7 @@ public class ScheduleEntry
         for( TextChannel chan : msg.getGuild().
                 getTextChannelsByName(Main.getScheduleManager().getReminderChan(this.chanId), true) )
         {
-            MessageUtilities.sendMsg(remindMsg, chan, null);
+            MessageUtilities.sendMsg(remindMsg, chan, message -> this.checkDelay(Instant.now()));
         }
     }
 
@@ -117,7 +118,7 @@ public class ScheduleEntry
         for( TextChannel chan : msg.getGuild()
                 .getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
         {
-            MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toLocalTime()));
+            MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant()));
         }
 
         this.reloadDisplay();
@@ -140,7 +141,7 @@ public class ScheduleEntry
         for( TextChannel chan : eMsg.getGuild().
                 getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true))
         {
-            MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toLocalTime()));
+            MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant()));
         }
 
         if( this.entryRepeat != 0 ) // find next repeat date and edit the message
@@ -165,7 +166,7 @@ public class ScheduleEntry
             MessageUtilities.deleteMsg( eMsg, null );
         }
         __out.printOut(this.getClass(), "Ended event " + this.getTitle() + " at " +
-                this.getStart().toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString());
+                this.getEnd().toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString());
     }
 
     /**
