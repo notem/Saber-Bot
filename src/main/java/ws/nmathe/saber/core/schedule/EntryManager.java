@@ -47,10 +47,10 @@ public class EntryManager
         ScheduledExecutorService scheduler2 = Executors.newScheduledThreadPool(3);
         // 1 day timer
         scheduler2.scheduleAtFixedRate( new EntryProcessor(3),
-                0, 24*60*60, TimeUnit.SECONDS);
+                0, 12*60*60, TimeUnit.SECONDS);
         // 1 hour timer
         scheduler2.scheduleAtFixedRate( new EntryProcessor(2),
-                0, 60*60, TimeUnit.SECONDS);
+                0, 60*30, TimeUnit.SECONDS);
         // 5 min timer
         scheduler2.scheduleAtFixedRate( new EntryProcessor(1),
                 30 , 60*5, TimeUnit.SECONDS );

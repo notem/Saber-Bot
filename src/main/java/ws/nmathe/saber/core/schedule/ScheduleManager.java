@@ -227,7 +227,10 @@ public class ScheduleManager
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
             return false;
-        return (Boolean) settings.get("rsvp_enabled");
+        Object obj = settings.get("rsvp_enabled");
+        if(obj == null)
+            return false;
+        return (Boolean) obj;
     }
 
     public List<String> getSchedulesForGuild(String gId)
