@@ -80,6 +80,8 @@ public class Main
             System.exit(1);
         }
 
+        Thread.sleep(10000); // delay before starting modules
+
         calendarConverter.init();   // connect to calendar service
         entryManager.init();        // start timers
         scheduleManager.init();     // start auto-sync

@@ -257,11 +257,12 @@ class MessageGenerator
             timer = "(begins ";
             if( timeTilStart < 60 * 60 )
             {
-                int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
-                if( minutesTil <= 1)
-                    timer += "in a minute.)";
-                else
-                    timer += "in " + minutesTil + " minutes.)";
+               // int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
+               // if( minutesTil <= 1)
+               //     timer += "in a minute.)";
+               // else
+               //     timer += "in " + minutesTil + " minutes.)";
+                timer += "within the hour.)";
             }
             else if( timeTilStart < 24 * 60 * 60 )
             {
@@ -286,11 +287,12 @@ class MessageGenerator
             timer = "(ends ";
             if( timeTilEnd < 60*60 )
             {
-                int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
-                if( minutesTil <= 1)
-                    timer += "in a minute.)";
-                else
-                    timer += "in " + minutesTil + " minutes.)";
+               // int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
+               // if( minutesTil <= 1)
+               //     timer += "in a minute.)";
+               // else
+               //     timer += "in " + minutesTil + " minutes.)";
+                timer += "within one hour.)";
             }
 
             else if( timeTilEnd < 24 * 60 * 60 )

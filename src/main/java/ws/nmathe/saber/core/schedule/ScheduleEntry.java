@@ -1,14 +1,18 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import ws.nmathe.saber.utils.__out;
 
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -60,6 +64,17 @@ public class ScheduleEntry
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
     }
 
+    private void checkDelay(LocalTime time)
+    {
+        int diff =  LocalTime.now().toSecondOfDay() - time.plusMinutes(3).toSecondOfDay();
+        if(diff > 0)
+        {
+            User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+            MessageUtilities.sendPrivateMsg("An event notification was sent " + diff/60 + "minutes late!",
+                    admin, null);
+        }
+    }
+
     /**
      * send an event reminder announcement
      */
@@ -102,10 +117,12 @@ public class ScheduleEntry
         for( TextChannel chan : msg.getGuild()
                 .getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
         {
-            MessageUtilities.sendMsg(startMsg, chan, null);
+            MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toLocalTime()));
         }
 
         this.reloadDisplay();
+        __out.printOut(this.getClass(), "Started event " + this.getTitle() + " at " +
+                this.getStart().toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString());
     }
 
     /**
@@ -123,7 +140,7 @@ public class ScheduleEntry
         for( TextChannel chan : eMsg.getGuild().
                 getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true))
         {
-            MessageUtilities.sendMsg(endMsg, chan, null);
+            MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toLocalTime()));
         }
 
         if( this.entryRepeat != 0 ) // find next repeat date and edit the message
@@ -147,6 +164,8 @@ public class ScheduleEntry
             Main.getEntryManager().removeEntry(this.entryId);
             MessageUtilities.deleteMsg( eMsg, null );
         }
+        __out.printOut(this.getClass(), "Ended event " + this.getTitle() + " at " +
+                this.getStart().toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString());
     }
 
     /**

@@ -5,6 +5,7 @@ import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
+import ws.nmathe.saber.utils.__out;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -38,6 +39,8 @@ public class EntryManager
      */
     public void init()
     {
+        __out.printOut(this.getClass(), "Starting event timers. . .");
+
         // create thread every minute to start/end/remind entries
         ScheduledExecutorService scheduler1 = Executors.newScheduledThreadPool(1);
         scheduler1.scheduleAtFixedRate( new EntryProcessor(0),
@@ -51,6 +54,7 @@ public class EntryManager
         // 1 hour timer
         scheduler2.scheduleAtFixedRate( new EntryProcessor(2),
                 0, 60*30, TimeUnit.SECONDS);
+
         // 5 min timer
         //scheduler2.scheduleAtFixedRate( new EntryProcessor(1),
         //      30 , 60*5, TimeUnit.SECONDS );
