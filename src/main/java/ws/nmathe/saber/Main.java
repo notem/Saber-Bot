@@ -30,6 +30,7 @@ public class Main
     private static CommandHandler commandHandler = new CommandHandler();
     private static CalendarConverter calendarConverter = new CalendarConverter();
     private static Driver mongoDriver = new Driver();
+    private static Iterator<String> games;
 
     public static void main( String[] args ) throws InterruptedException {
 
@@ -46,12 +47,13 @@ public class Main
         {
             jda = new JDABuilder(AccountType.BOT)
                     .setToken(botSettingsManager.getToken())
+                    .setCorePoolSize(20)
                     .buildBlocking();
             jda.addEventListener(new EventListener());
             jda.setAutoReconnect(true);
 
             // cycle "now playing" message every 10 seconds
-            Iterator<String> games = Iterables.cycle(botSettingsManager.getNowPlayingList()).iterator();
+            games = Iterables.cycle(botSettingsManager.getNowPlayingList()).iterator();
             (new Timer()).scheduleAtFixedRate(new TimerTask()
             {
                 @Override
@@ -72,15 +74,13 @@ public class Main
                         { return GameType.DEFAULT; }
                     });
                 }
-            }, 0, 10*1000);
+            }, 0, 20*1000);
         }
         catch( Exception e )
         {
             e.printStackTrace();
             System.exit(1);
         }
-
-        Thread.sleep(10000); // delay before starting modules
 
         calendarConverter.init();   // connect to calendar service
         entryManager.init();        // start timers
@@ -125,5 +125,10 @@ public class Main
     public static Driver getDBDriver()
     {
         return mongoDriver;
+    }
+
+    public static void reloadNowPlayingList()
+    {
+        games = Iterables.cycle(botSettingsManager.getNowPlayingList()).iterator();
     }
 }
