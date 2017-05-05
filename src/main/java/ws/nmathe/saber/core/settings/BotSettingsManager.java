@@ -117,6 +117,9 @@ public class BotSettingsManager
         List<String> nowplaying_list;
         Set<String> blacklist;
         long cooldown_threshold;
+        String rsvp_yes;
+        String rsvp_no;
+        String rsvp_clear;
 
         BotSettings()
         {
@@ -139,6 +142,10 @@ public class BotSettingsManager
             nowplaying_list = new ArrayList<>();
             blacklist = new HashSet<>();
             cooldown_threshold = 1000;
+
+            rsvp_yes = "✅";
+            rsvp_no = "❌";
+            rsvp_clear = "❔";
         }
     }
 
@@ -225,5 +232,20 @@ public class BotSettingsManager
     public int getMaxSchedules()
     {
         return settings.max_schedules;
+    }
+
+    public String getYesEmoji()
+    {
+        return settings.rsvp_yes;
+    }
+
+    public String getNoEmoji()
+    {
+        return settings.rsvp_no;
+    }
+
+    public String getClearEmoji()
+    {
+        return settings.rsvp_clear;
     }
 }

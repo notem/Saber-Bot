@@ -2,6 +2,7 @@ package ws.nmathe.saber.core;
 
 import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 
@@ -12,7 +13,10 @@ import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+import java.util.List;
+
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.set;
 
 /**
  * Listens for new messages and performs actions during it's own
@@ -25,6 +29,8 @@ public class EventListener extends ListenerAdapter
     private String adminPrefix = Main.getBotSettingsManager().getAdminPrefix();
     private String adminId = Main.getBotSettingsManager().getAdminId();
     private String controlChan = Main.getBotSettingsManager().getControlChan();
+
+    private final RateLimiter reactionLimiter = new RateLimiter(2000);
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
@@ -146,6 +152,86 @@ public class EventListener extends ListenerAdapter
         {
             Main.getDBDriver().getEventCollection().deleteMany(eq("channelId", cId));
             Main.getDBDriver().getScheduleCollection().deleteOne(eq("_id", cId));
+        }
+    }
+
+    @Override
+    public void onMessageReactionAdd(MessageReactionAddEvent event)
+    {
+        if(event.getUser().isBot())
+            return;
+
+        if(reactionLimiter.isOnCooldown(event.getUser().getId()))
+            return;
+
+        if(Main.getScheduleManager().isRSVPEnabled(event.getChannel().getId()))
+        {
+            Document doc = Main.getDBDriver().getEventCollection()
+                    .find(eq("messageId", event.getMessageId())).first();
+
+            if(doc == null) // shouldn't happen, but if it does
+                return;
+
+            Integer entryId = doc.getInteger("_id");
+
+            List<String> rsvpYes = (List<String>) doc.get("rsvp_yes");
+            List<String> rsvpNo = (List<String>) doc.get("rsvp_no");
+
+            MessageReaction.ReactionEmote emote = event.getReaction().getEmote();
+            if(emote.getName().equals(Main.getBotSettingsManager().getYesEmoji()))
+            {
+                if(!rsvpYes.contains(event.getUser().getId()))
+                {
+                    rsvpYes.add(event.getUser().getId());
+                    Main.getDBDriver().getEventCollection()
+                            .updateOne(eq("_id", entryId), set("rsvp_yes", rsvpYes));
+                }
+                if(rsvpNo.contains(event.getUser().getId()))
+                {
+                    rsvpNo.remove(event.getUser().getId());
+                    Main.getDBDriver().getEventCollection()
+                            .updateOne(eq("_id", entryId), set("rsvp_no", rsvpNo));
+                }
+
+                Main.getEntryManager().reloadEntry(entryId);
+                event.getReaction().removeReaction(event.getUser()).queue();
+            }
+            else if(emote.getName().equals(Main.getBotSettingsManager().getNoEmoji()))
+            {
+                if(!rsvpNo.contains(event.getUser().getId()))
+                {
+                    rsvpNo.add(event.getUser().getId());
+                    Main.getDBDriver().getEventCollection()
+                            .updateOne(eq("_id", entryId), set("rsvp_no", rsvpNo));
+                }
+                if(rsvpYes.contains(event.getUser().getId()))
+                {
+                    rsvpYes.remove(event.getUser().getId());
+                    Main.getDBDriver().getEventCollection()
+                            .updateOne(eq("_id", entryId), set("rsvp_yes", rsvpYes));
+                }
+
+                Main.getEntryManager().reloadEntry(entryId);
+                event.getReaction().removeReaction(event.getUser()).queue();
+            }
+            else if(emote.getName().equals(Main.getBotSettingsManager().getClearEmoji()))
+            {
+                if(rsvpYes.contains(event.getUser().getId()))
+                {
+                    rsvpYes.remove(event.getUser().getId());
+                    Main.getDBDriver().getEventCollection()
+                            .updateOne(eq("_id", entryId), set("rsvp_yes", rsvpYes));
+                }
+                if(rsvpNo.contains(event.getUser().getId()))
+                {
+                    rsvpNo.remove(event.getUser().getId());
+                    Main.getDBDriver().getEventCollection()
+                            .updateOne(eq("_id", entryId), set("rsvp_no", rsvpNo));
+                }
+
+                Main.getEntryManager().reloadEntry(entryId);
+                event.getReaction().removeReaction(event.getUser()).queue();
+            }
         }
     }
 }

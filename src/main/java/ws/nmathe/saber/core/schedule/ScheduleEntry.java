@@ -28,7 +28,8 @@ public class ScheduleEntry
     private Integer entryRepeat;
     private String titleUrl;
     private List<Date> reminders;
-    private List<String> rsvpList;
+    private List<String> rsvpYes;
+    private List<String> rsvpNo;
 
     private String msgId;
     private String chanId;
@@ -49,7 +50,8 @@ public class ScheduleEntry
         this.entryRepeat = (Integer) entryDocument.get("repeat");
         this.titleUrl = (String) entryDocument.get("url");
         this.reminders = (List<Date>) entryDocument.get("reminders");
-        this.rsvpList = (List<String>) entryDocument.get("rsvpList");
+        this.rsvpYes = (List<String>) entryDocument.get("rsvp_yes");
+        this.rsvpNo = (List<String>) entryDocument.get("rsvp_no");
 
         this.msgId = (String) entryDocument.get("messageId");
         this.chanId = (String) entryDocument.get("channelId");
@@ -135,7 +137,8 @@ public class ScheduleEntry
                     this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
 
             Main.getEntryManager().updateEntry(this.entryId, this.entryTitle, newStart, newEnd, this.entryComments,
-                    this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId, this.rsvpList);
+                    this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId,
+                    this.rsvpYes, this.rsvpNo);
 
             Main.getScheduleManager().sortSchedule(this.chanId);
         }
@@ -159,7 +162,7 @@ public class ScheduleEntry
         MessageUtilities.editMsg(
                 MessageGenerator.generate(this.entryTitle, this.entryStart, this.entryEnd, this.entryComments,
                         this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId, this.guildId,
-                        this.rsvpList),
+                        this.rsvpYes, this.rsvpNo),
                         msg, null);
     }
 
@@ -262,9 +265,14 @@ public class ScheduleEntry
         return this.chanId;
     }
 
-    public List<String> getRsvpList()
+    public List<String> getRsvpYes()
     {
-        return this.rsvpList;
+        return this.rsvpYes;
+    }
+
+    public List<String> getRsvpNo()
+    {
+        return this.rsvpNo;
     }
 
     void setMessageObject(Message msg)

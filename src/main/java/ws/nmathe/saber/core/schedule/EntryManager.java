@@ -69,6 +69,7 @@ public class EntryManager
     public void newEntry(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
                          int repeat, String url, TextChannel channel, String googleId)
     {
+        // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(channel.getId()))
         {
@@ -85,14 +86,26 @@ public class EntryManager
         else
             rsvpList = null;
 
+        // generate event display message
         Integer newId = this.newId();   // generate a new, unused ID
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
-                url, reminders, newId, channel.getId(), channel.getGuild().getId(), rsvpList);
+                url, reminders, newId, channel.getId(), channel.getGuild().getId(),
+                rsvpList, rsvpList);
 
+        // send message to schedule
         Message msg = MessageUtilities.sendMsg(message, channel);
         String guildId = msg.getGuild().getId();
         String channelId = msg.getChannel().getId();
 
+        // add reaction options if rsvp is enabled
+        if( Main.getScheduleManager().isRSVPEnabled(channelId) )
+        {
+            msg.addReaction(Main.getBotSettingsManager().getYesEmoji()).queue();
+            msg.addReaction(Main.getBotSettingsManager().getNoEmoji()).queue();
+            msg.addReaction(Main.getBotSettingsManager().getClearEmoji()).queue();
+        }
+
+        // add new document
         Document entryDocument =
                 new Document("_id", newId)
                         .append("title", title)
@@ -107,7 +120,8 @@ public class EntryManager
                         .append("messageId", msg.getId())
                         .append("channelId", channelId)
                         .append("googleId", googleId)
-                        .append("rsvpList", rsvpList)
+                        .append("rsvp_yes", rsvpList)
+                        .append("rsvp_no", rsvpList)
                         .append("guildId", guildId);
 
         Main.getDBDriver().getEventCollection().insertOne(entryDocument);
@@ -126,8 +140,9 @@ public class EntryManager
      */
     public void updateEntry(Integer entryId, String title, ZonedDateTime start, ZonedDateTime end,
                             List<String> comments, int repeat, String url, boolean hasStarted,
-                            Message origMessage, String googleId, List<String> rsvpList)
+                            Message origMessage, String googleId, List<String> rsvpYes, List<String> rsvpNo)
     {
+        // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(origMessage.getChannel().getId()))
         {
@@ -137,13 +152,17 @@ public class EntryManager
             }
         }
 
+        // generate event display message
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
-                url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId(), rsvpList);
+                url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId(),
+                rsvpYes, rsvpNo);
 
+        // update message display
         Message msg = MessageUtilities.editMsg(message, origMessage);
         String guildId = msg.getGuild().getId();
         String channelId = msg.getChannel().getId();
 
+        // replace whole document
         Document entryDocument =
                 new Document("_id", entryId)
                         .append("title", title)
@@ -158,7 +177,8 @@ public class EntryManager
                         .append("messageId", msg.getId())
                         .append("channelId", channelId)
                         .append("googleId", googleId)
-                        .append("rsvpList", rsvpList)
+                        .append("rsvp_yes", rsvpYes)
+                        .append("rsvp_no", rsvpNo)
                         .append("guildId", guildId);
 
         Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);

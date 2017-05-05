@@ -327,6 +327,6 @@ public class EditCommand implements Command
         }
 
         Main.getEntryManager().updateEntry(entryId, title, start, end, comments,
-                repeat, url, entry.hasStarted(), msg, entry.getGoogleId(), entry.getRsvpList());
+                repeat, url, entry.hasStarted(), msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo());
     }
 }

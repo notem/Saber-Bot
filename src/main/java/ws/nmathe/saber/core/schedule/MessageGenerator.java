@@ -23,7 +23,7 @@ class MessageGenerator
 {
     static Message generate(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
                             int repeat, String url, List<Date> reminders, Integer eId, String cId, String guildId,
-                            List<String> rsvps)
+                            List<String> rsvpYes, List<String> rsvpNo)
     {
         String titleUrl = url != null ? url : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
@@ -82,7 +82,7 @@ class MessageGenerator
         */
 
         EmbedBuilder builder = new EmbedBuilder();
-        builder.setDescription(generateDesc(start, end, cId, repeat, comments, rsvps))
+        builder.setDescription(generateDesc(start, end, cId, repeat, comments, rsvpYes, rsvpNo))
                 .setColor(color)
                 .setAuthor(title, titleUrl, titleImage)
                 .setFooter(footerStr, null);
@@ -91,7 +91,7 @@ class MessageGenerator
     }
 
     private static String generateDesc(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
-                                       int eRepeat, List<String> eComments, List<String> rsvps)
+                                       int eRepeat, List<String> eComments, List<String> rsvpYes, List<String> rsvpNo)
     {
         String timeFormatter;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
@@ -143,10 +143,10 @@ class MessageGenerator
             }
         }
 
-        // if rsvp is enabled, show the number of rsvps
-        if(rsvps != null)
+        // if rsvp is enabled, show the number of rsvp
+        if(rsvpYes != null && rsvpNo != null)
         {
-            String rsvpLine = "[" + rsvps.size() + "][] <RSVP>\n";
+            String rsvpLine = "- RSVP: <Yes " + rsvpYes.size() + "> <No " + rsvpNo.size() + ">\n";
             msg += "```Markdown\n\n" + zoneLine + rsvpLine + "```";
         }
         else

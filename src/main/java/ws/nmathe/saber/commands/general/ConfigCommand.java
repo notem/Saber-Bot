@@ -1,10 +1,12 @@
 package ws.nmathe.saber.commands.general;
 
+import net.dv8tion.jda.core.entities.Message;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
@@ -16,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
 
@@ -335,17 +338,55 @@ public class ConfigCommand implements Command
                     {
                         if(new_enabled)
                         {
+                            // update every entry on the schedule
                             Main.getDBDriver().getEventCollection().updateMany(
                                     eq("channelId", scheduleChan.getId()),
-                                    set("rsvpList", new ArrayList<String>()));
+                                    and(set("rsvp_yes", new ArrayList<>()), set("rsvp_no", new ArrayList<>())));
+
+                            // for each entry on the schedule
+                            Main.getDBDriver().getEventCollection()
+                                    .find(eq("channelId", scheduleChan.getId()))
+                                    .forEach((Consumer<? super Document>) document ->
+                                    {
+                                        // add reaction options
+                                        Message msg = event.getGuild()
+                                                .getTextChannelById(document.getString("channelId"))
+                                                .getMessageById(document.getString("messageId"))
+                                                .complete();
+
+                                        msg.addReaction(Main.getBotSettingsManager().getYesEmoji()).queue();
+                                        msg.addReaction(Main.getBotSettingsManager().getNoEmoji()).queue();
+                                        msg.addReaction(Main.getBotSettingsManager().getClearEmoji()).queue();
+                                    });
                         }
                         else
                         {
+                            // update every entry on the schedule
                             Main.getDBDriver().getEventCollection().updateMany(
                                     eq("channelId", scheduleChan.getId()),
-                                    set("rsvpList", null));
+                                    and(set("rsvp_yes", null), set("rsvp_no", null)));
+
+                            // for each entry on the schedule
+                            Main.getDBDriver().getEventCollection()
+                                    .find(eq("channelId", scheduleChan.getId()))
+                                    .forEach((Consumer<? super Document>) document ->
+                                    {
+                                        // clear reactions
+                                        event.getGuild().getTextChannelById(document.getString("channelId"))
+                                                .getMessageById(document.getString("messageId")).complete()
+                                                .clearReactions().queue();
+                                    });
                         }
+
+                        // set schedule settings
                         Main.getScheduleManager().setRSVPEnable(cId, new_enabled);
+
+                        // for each entry on the schedule
+                        Main.getDBDriver().getEventCollection()
+                                .find(eq("channelId", scheduleChan.getId()))
+                                .forEach((Consumer<? super Document>) document ->
+                                        Main.getEntryManager().reloadEntry(document.getInteger("_id"))
+                                );
                     }
 
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);

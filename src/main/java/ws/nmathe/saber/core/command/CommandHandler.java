@@ -5,6 +5,7 @@ import net.dv8tion.jda.core.entities.User;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.admin.*;
+import ws.nmathe.saber.core.RateLimiter;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.commands.general.*;
@@ -47,6 +48,7 @@ public class CommandHandler
         commands.put("zones", new TimeZonesCommand());
         commands.put("test", new TestCommand());
         commands.put("sort", new SortCommand());
+        commands.put("list", new ListCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put("announcement", new GlobalMsgCommand());

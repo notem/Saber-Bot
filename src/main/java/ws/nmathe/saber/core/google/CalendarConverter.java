@@ -214,7 +214,8 @@ public class CalendarConverter
                 {
                     ScheduleEntry se = Main.getEntryManager().getEntry((Integer) doc.get("_id"));
                     Main.getEntryManager().updateEntry(se.getId(), title, start, end, comments, repeat,
-                            event.getHtmlLink(), se.hasStarted(), se.getMessageObject(), googleId, se.getRsvpList());
+                            event.getHtmlLink(), se.hasStarted(), se.getMessageObject(), googleId,
+                            se.getRsvpYes(), se.getRsvpNo());
                 }
                 else
                 {
