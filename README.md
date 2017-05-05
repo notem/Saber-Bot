@@ -14,6 +14,7 @@
 + Send reminders before an event begins.
 + Configure timezone per schedule.
 + Sync schedules to Google Calendars
++ RSVP for events
 
 ### Dependencies
 
