@@ -22,7 +22,9 @@ import static com.mongodb.client.model.Updates.set;
  */
 class EntryProcessor implements Runnable
 {
-    private ExecutorService executor = Executors.newCachedThreadPool(); // temporary thread pool
+    // thread pool for level 0 processing
+    private static ExecutorService executor = Executors.newCachedThreadPool();
+
     private int level;
     EntryProcessor(int level)
     {
