@@ -213,14 +213,26 @@ public class ConfigCommand implements Command
                     ZoneId zone = ZoneId.of(args[index]);
                     Main.getScheduleManager().setTimeZone(scheduleChan.getId(), zone);
 
-                    // update schedule entries with new timezone
-                    Main.getDBDriver().getEventCollection()
-                            .updateMany(eq("channelId", scheduleChan.getId()), set("zone",zone.toString()));
-
-                    // reload the schedule display
+                    // correct/reload the event displays
                     Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
                             .forEach((Consumer<? super Document>) document ->
-                                    Main.getEntryManager().reloadEntry((Integer) document.get("_id")));
+                                    {
+                                        Integer id = document.getInteger("_id");
+
+                                        // if the timezone conversion causes the end go past 24:00
+                                        // the date needs to be corrected
+                                        ScheduleEntry se = Main.getEntryManager().getEntry(id);
+                                        if(se.getStart().isAfter(se.getEnd()))
+                                        {
+                                            Main.getDBDriver().getEventCollection().updateOne(
+                                                    eq("_id", id),
+                                                    set("end", Date.from(se.getEnd().plusDays(1).toInstant()))
+                                            );
+                                        }
+
+                                        // reload the entry's display to match new timezone
+                                        Main.getEntryManager().reloadEntry(id);
+                                    });
 
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
                     break;
