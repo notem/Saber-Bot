@@ -39,8 +39,6 @@ public class EntryManager
      */
     public void init()
     {
-        __out.printOut(this.getClass(), "Starting event timers. . .");
-
         // create thread every minute to start/end/remind entries
         ScheduledExecutorService scheduler1 = Executors.newScheduledThreadPool(1);
         scheduler1.scheduleAtFixedRate( new EntryProcessor(0),

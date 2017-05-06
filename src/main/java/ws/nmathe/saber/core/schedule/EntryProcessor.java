@@ -30,6 +30,7 @@ class EntryProcessor implements Runnable
     {
         if( level == 0 )    // minute check
         {
+            __out.printOut(this.getClass(), "Processing entries at level 0. . .");
             // process entries which are ending
             Main.getDBDriver().getEventCollection().
                     find(and(
@@ -84,6 +85,7 @@ class EntryProcessor implements Runnable
         }
         else if( level == 1 )   // few minute check
         {
+            __out.printOut(this.getClass(), "Processing entries at level 1. . .");
             // adjust timers for entries starting/ending within the next hour
             Main.getDBDriver().getEventCollection().
                     find(or(
@@ -101,6 +103,7 @@ class EntryProcessor implements Runnable
         }
         else if( level == 2 )   // hourly check
         {
+            __out.printOut(this.getClass(), "Processing entries at level 2. . .");
             // adjust timers for entries starting/ending within the next Day
             Main.getDBDriver().getEventCollection().
                     find(or(
@@ -118,6 +121,7 @@ class EntryProcessor implements Runnable
         }
         else if( level == 3 )   // daily check
         {
+            __out.printOut(this.getClass(), "Processing entries at level 3. . .");
             // adjust timers for entries that aren't starting/ending within the next day
             Main.getDBDriver().getEventCollection().
                     find(or(

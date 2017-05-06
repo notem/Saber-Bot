@@ -75,6 +75,7 @@ public class CommandHandler
                         event.getGuild().getName() +"' [" + event.getGuild().getId() + "] using the '" +
                         cc.invoke + "' command!";
 
+                // alert admin
                 __out.printOut(this.getClass(), alert);
                 User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
                 if(admin != null)
@@ -126,7 +127,7 @@ public class CommandHandler
         // else the invoking command is invalid
         else
         {
-            String msg = "``" + cc.invoke + "`` is not a command!";
+            String msg = "**" + cc.invoke + "** is not a command!";
             MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
         }
     }

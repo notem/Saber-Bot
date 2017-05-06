@@ -7,7 +7,6 @@ import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
-import ws.nmathe.saber.utils.__out;
 
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -31,8 +30,6 @@ public class ScheduleManager
 
     public void init()
     {
-        __out.printOut(this.getClass(), "Starting schedule sync timer. . .");
-
         // every 15 minutes create a thread to check for schedules to sync
         ScheduledExecutorService syncScheduler = Executors.newScheduledThreadPool(1);
         syncScheduler.scheduleAtFixedRate( new ScheduleSyncer(),

@@ -32,8 +32,8 @@ public class Main
     private static Driver mongoDriver = new Driver();
     private static Iterator<String> games;
 
-    public static void main( String[] args ) throws InterruptedException {
-
+    public static void main( String[] args )
+    {
         if( botSettingsManager.hasSettings() )
         {
             __out.printOut(Main.class, "A 'saber.toml' configuration file has been created. Add your " +
@@ -85,7 +85,6 @@ public class Main
         calendarConverter.init();   // connect to calendar service
         entryManager.init();        // start timers
         scheduleManager.init();     // start auto-sync
-
         commandHandler.init();      // ready commands
 
         HttpUtilities.updateStats();

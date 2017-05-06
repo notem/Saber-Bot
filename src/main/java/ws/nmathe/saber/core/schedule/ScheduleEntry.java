@@ -9,10 +9,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.utils.__out;
 
-import java.time.Instant;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
@@ -67,12 +64,12 @@ public class ScheduleEntry
 
     private void checkDelay(Instant time)
     {
-        long diff =  Instant.now().toEpochMilli() - time.plusSeconds(60*3).toEpochMilli();
+        long diff =  Instant.now().getEpochSecond() - time.plusSeconds(60*3).getEpochSecond();
         if(diff > 0)
         {
             User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
-            MessageUtilities.sendPrivateMsg("An event notification was sent " + diff/(60*1000) + "minutes late!",
-                    admin, null);
+            MessageUtilities.sendPrivateMsg("Event *" + this.entryTitle + "*'s notification was sent **"
+                            + diff/60 + "** minutes late! [" + this.guildId + "]", admin, null);
         }
     }
 
@@ -119,11 +116,12 @@ public class ScheduleEntry
                 .getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
         {
             MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant()));
+            __out.printOut(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
+                    this.getStart().withZoneSameLocal(ZoneId.systemDefault())
+                            .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
         }
 
         this.reloadDisplay();
-        __out.printOut(this.getClass(), "Started event " + this.getTitle() + " at " +
-                this.getStart().toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString());
     }
 
     /**
@@ -142,6 +140,9 @@ public class ScheduleEntry
                 getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true))
         {
             MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant()));
+            __out.printOut(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
+                    this.getEnd().withZoneSameLocal(ZoneId.systemDefault())
+                            .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
         }
 
         if( this.entryRepeat != 0 ) // find next repeat date and edit the message
@@ -165,8 +166,6 @@ public class ScheduleEntry
             Main.getEntryManager().removeEntry(this.entryId);
             MessageUtilities.deleteMsg( eMsg, null );
         }
-        __out.printOut(this.getClass(), "Ended event " + this.getTitle() + " at " +
-                this.getEnd().toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString());
     }
 
     /**
