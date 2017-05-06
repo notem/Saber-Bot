@@ -7,6 +7,8 @@ import ws.nmathe.saber.utils.__out;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.*;
@@ -20,6 +22,7 @@ import static com.mongodb.client.model.Updates.set;
  */
 class EntryProcessor implements Runnable
 {
+    private ExecutorService executor = Executors.newCachedThreadPool(); // temporary thread pool
     private int level;
     EntryProcessor(int level)
     {
@@ -38,8 +41,10 @@ class EntryProcessor implements Runnable
                             lte("end", new Date())))
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        // convert to scheduleEntry object and start
-                        (new ScheduleEntry(document)).end();
+                        executor.submit(() ->
+                                // convert to scheduleEntry object and start
+                                (new ScheduleEntry(document)).end()
+                        );
                     });
 
             // process entries which are starting
@@ -49,15 +54,17 @@ class EntryProcessor implements Runnable
                             lte("start", new Date())))
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        // convert to POJO and start
-                        (new ScheduleEntry(document)).start();
+                        executor.submit(() -> {
+                            // convert to POJO and start
+                            (new ScheduleEntry(document)).start();
 
-                        // if the entry isn't the special exception, update the db entry as started
-                        if(!document.get("start").equals(document.get("end")))
-                        {
-                            Main.getDBDriver().getEventCollection()
-                                    .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
-                        }
+                            // if the entry isn't the special exception, update the db entry as started
+                            if(!document.get("start").equals(document.get("end")))
+                            {
+                                Main.getDBDriver().getEventCollection()
+                                        .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
+                            }
+                        });
                     });
 
             // process entries with reminders
@@ -67,20 +74,22 @@ class EntryProcessor implements Runnable
                             lte("reminders", new Date())))
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        // convert to POJO and send a remind
-                        (new ScheduleEntry(document)).remind();
+                        executor.submit(() -> {
+                            // convert to POJO and send a remind
+                            (new ScheduleEntry(document)).remind();
 
-                        // remove expired reminders
-                        List<Date> reminders = (List<Date>) document.get("reminders");
-                        reminders.removeIf(date -> date.before(new Date()));
+                            // remove expired reminders
+                            List<Date> reminders = (List<Date>) document.get("reminders");
+                            reminders.removeIf(date -> date.before(new Date()));
 
-                        // update document
-                        Main.getDBDriver().getEventCollection()
-                                .updateOne(
-                                        eq("_id", document.get("_id")),
-                                        set("reminders", reminders));
+                            // update document
+                            Main.getDBDriver().getEventCollection()
+                                    .updateOne(
+                                            eq("_id", document.get("_id")),
+                                            set("reminders", reminders));
 
-                        (new ScheduleEntry(document)).reloadDisplay();
+                            (new ScheduleEntry(document)).reloadDisplay();
+                        });
                     });
         }
         else if( level == 1 )   // few minute check

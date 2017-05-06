@@ -5,12 +5,12 @@ import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
-import ws.nmathe.saber.utils.__out;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -95,38 +95,39 @@ public class EntryManager
                 rsvpList, rsvpList);
 
         // send message to schedule
-        Message msg = MessageUtilities.sendMsg(message, channel);
-        String guildId = msg.getGuild().getId();
-        String channelId = msg.getChannel().getId();
+        MessageUtilities.sendMsg(message, channel, msg -> {
+            String guildId = msg.getGuild().getId();
+            String channelId = msg.getChannel().getId();
 
-        // add reaction options if rsvp is enabled
-        if( Main.getScheduleManager().isRSVPEnabled(channelId) )
-        {
-            msg.addReaction(Main.getBotSettingsManager().getYesEmoji()).queue();
-            msg.addReaction(Main.getBotSettingsManager().getNoEmoji()).queue();
-            msg.addReaction(Main.getBotSettingsManager().getClearEmoji()).queue();
-        }
+            // add reaction options if rsvp is enabled
+            if( Main.getScheduleManager().isRSVPEnabled(channelId) )
+            {
+                msg.addReaction(Main.getBotSettingsManager().getYesEmoji()).queue();
+                msg.addReaction(Main.getBotSettingsManager().getNoEmoji()).queue();
+                msg.addReaction(Main.getBotSettingsManager().getClearEmoji()).queue();
+            }
 
-        // add new document
-        Document entryDocument =
-                new Document("_id", newId)
-                        .append("title", title)
-                        .append("start", Date.from(start.toInstant()))
-                        .append("end", Date.from(end.toInstant()))
-                        .append("zone", start.getZone().getId())
-                        .append("comments", comments)
-                        .append("repeat", repeat)
-                        .append("reminders", reminders)
-                        .append("url", url)
-                        .append("hasStarted", false)
-                        .append("messageId", msg.getId())
-                        .append("channelId", channelId)
-                        .append("googleId", googleId)
-                        .append("rsvp_yes", rsvpList)
-                        .append("rsvp_no", rsvpList)
-                        .append("guildId", guildId);
+            // add new document
+            Document entryDocument =
+                    new Document("_id", newId)
+                            .append("title", title)
+                            .append("start", Date.from(start.toInstant()))
+                            .append("end", Date.from(end.toInstant()))
+                            .append("zone", start.getZone().getId())
+                            .append("comments", comments)
+                            .append("repeat", repeat)
+                            .append("reminders", reminders)
+                            .append("url", url)
+                            .append("hasStarted", false)
+                            .append("messageId", msg.getId())
+                            .append("channelId", channelId)
+                            .append("googleId", googleId)
+                            .append("rsvp_yes", rsvpList)
+                            .append("rsvp_no", rsvpList)
+                            .append("guildId", guildId);
 
-        Main.getDBDriver().getEventCollection().insertOne(entryDocument);
+            Main.getDBDriver().getEventCollection().insertOne(entryDocument);
+        });
     }
 
     /**
@@ -160,30 +161,31 @@ public class EntryManager
                 rsvpYes, rsvpNo);
 
         // update message display
-        Message msg = MessageUtilities.editMsg(message, origMessage);
-        String guildId = msg.getGuild().getId();
-        String channelId = msg.getChannel().getId();
+        MessageUtilities.editMsg(message, origMessage, msg -> {
+            String guildId = msg.getGuild().getId();
+            String channelId = msg.getChannel().getId();
 
-        // replace whole document
-        Document entryDocument =
-                new Document("_id", entryId)
-                        .append("title", title)
-                        .append("start", Date.from(start.toInstant()))
-                        .append("end", Date.from(end.toInstant()))
-                        .append("zone", start.getZone().getId())
-                        .append("comments", comments)
-                        .append("repeat", repeat)
-                        .append("reminders", reminders)
-                        .append("url", url)
-                        .append("hasStarted", hasStarted)
-                        .append("messageId", msg.getId())
-                        .append("channelId", channelId)
-                        .append("googleId", googleId)
-                        .append("rsvp_yes", rsvpYes)
-                        .append("rsvp_no", rsvpNo)
-                        .append("guildId", guildId);
+            // replace whole document
+            Document entryDocument =
+                    new Document("_id", entryId)
+                            .append("title", title)
+                            .append("start", Date.from(start.toInstant()))
+                            .append("end", Date.from(end.toInstant()))
+                            .append("zone", start.getZone().getId())
+                            .append("comments", comments)
+                            .append("repeat", repeat)
+                            .append("reminders", reminders)
+                            .append("url", url)
+                            .append("hasStarted", hasStarted)
+                            .append("messageId", msg.getId())
+                            .append("channelId", channelId)
+                            .append("googleId", googleId)
+                            .append("rsvp_yes", rsvpYes)
+                            .append("rsvp_no", rsvpNo)
+                            .append("guildId", guildId);
 
-        Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);
+            Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);
+        });
     }
 
     /**
