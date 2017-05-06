@@ -117,7 +117,7 @@ public class ScheduleEntry
         {
             MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant()));
             __out.printOut(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
-                    this.getStart().withZoneSameLocal(ZoneId.systemDefault())
+                    this.getStart().withZoneSameInstant(ZoneId.systemDefault())
                             .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
         }
 
@@ -141,7 +141,7 @@ public class ScheduleEntry
         {
             MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant()));
             __out.printOut(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
-                    this.getEnd().withZoneSameLocal(ZoneId.systemDefault())
+                    this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
                             .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
         }
 
