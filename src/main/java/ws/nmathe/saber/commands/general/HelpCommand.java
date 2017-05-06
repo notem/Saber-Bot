@@ -67,7 +67,18 @@ public class HelpCommand implements Command
             if( cmd != null )
             {
                 String helpMsg = cmd.help(false);
-                MessageUtilities.sendPrivateMsg(helpMsg, event.getAuthor(), null);
+                if(helpMsg.length() > 1900)
+                {
+                    String[] split = helpMsg.split("splithere");
+                    for(int i=0; i<split.length; i++)
+                    {
+                        MessageUtilities.sendPrivateMsg(split[i], event.getAuthor(), null);
+                    }
+                }
+                else
+                {
+                    MessageUtilities.sendPrivateMsg(helpMsg, event.getAuthor(), null);
+                }
             }
         }
     }

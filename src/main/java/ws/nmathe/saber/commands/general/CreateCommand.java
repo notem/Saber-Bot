@@ -33,11 +33,11 @@ public class CreateCommand implements Command
                 "be configured to repeat on a daily interval by adding ``interval <number>`` to ``<extra>``" +
                 "\n\n```diff\n+ Start and end date ```\n" +
                 "Adding ``date <yyyy/MM/dd>`` to ``<extra>`` will set the event's start and end date.\n For more granular " +
-                "control you can instead use ``start-date <yyyy/MM/dd>`` and ``end-date <yyyy/MM/dd>`` in place of ``date``.\n" +
+                "control you can instead use ``start-date <yyyy/MM/dd>`` and ``end-date <yyyy/MM/dd>`` in place of ``date``.\n\n" +
                 "The date must be formatted like year/month/day, however year and month can be omitted " +
-                "('month/day' and 'day' are valid). The omitted values will be inherited from the current date.\n" +
+                "('month/day' and 'day' are valid).\nThe omitted values will be inherited from the current date.\n" +
                 "Dates which are in a non-number format (such as '10 May') are not acceptable.\n" +
-                "Default behavior is to use the next day as the event's date." +
+                "Default behavior is to use the next day as the event's date. splithere" +
                 "\n\n```diff\n+ Event description ```\n" +
                 "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``.\n" +
                 "Up to 10 of comments may be added in ``<extra>``." +
