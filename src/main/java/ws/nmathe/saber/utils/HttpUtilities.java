@@ -1,6 +1,7 @@
 package ws.nmathe.saber.utils;
 
 import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import org.json.JSONObject;
 import ws.nmathe.saber.Main;
 
@@ -28,10 +29,15 @@ public class HttpUtilities
         {
             JSONObject json = new JSONObject().put("server_count", i);
 
-            Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotJda().getSelfUser().getId() + "/stats")
-                    .header("Authorization", auth)
-                    .header("Content-Type", "application/json")
-                    .body(json);
+            try
+            {
+                Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotJda().getSelfUser().getId() + "/stats")
+                        .header("Authorization", auth)
+                        .header("Content-Type", "application/json")
+                        .body(json).asJson();
+            }
+            catch (UnirestException ignored)
+            { }
         }
     }
 }
