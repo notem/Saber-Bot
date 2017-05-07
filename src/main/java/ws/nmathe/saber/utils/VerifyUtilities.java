@@ -71,12 +71,7 @@ public class VerifyUtilities
             }
             else if(splt.length == 3)
             {
-                LocalDate date =
-                        LocalDate.of(Integer.parseInt(splt[0]), Integer.parseInt(splt[1]), Integer.parseInt(splt[2]));
-                if(LocalDate.now().isAfter(date))
-                {
-                    return false;
-                }
+                LocalDate.of(Integer.parseInt(splt[0]), Integer.parseInt(splt[1]), Integer.parseInt(splt[2]));
             }
             else
             {

@@ -111,7 +111,9 @@ public class CreateCommand implements Command
                 if (dateFlag)
                 {
                     if (!VerifyUtilities.verifyDate(arg))
-                        return "I could not understand **" + arg + "** as a date! Please use the format M/d.";
+                        return "I could not understand **" + arg + "** as a date! Please use the format yyyy/MM/dd.";
+                    if(ParsingUtilities.parseDateStr(arg).isBefore(LocalDate.now()))
+                        return "That date is in the past!";
                     dateFlag = false;
                 }
                 else if (urlFlag)

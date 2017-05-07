@@ -120,32 +120,18 @@ public class EditCommand implements Command
 
             case "d":
             case "date":
-                if(args.length > 3)
-                    return "That's too many arguments for **date**!";
-                if( !VerifyUtilities.verifyDate( args[index] ) )
-                    return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
-                if(entry.hasStarted())
-                    return "You cannot modify the date of events which have already started!";
-                break;
-
             case "sd":
-            case "start date":
             case "start-date":
-                if(args.length > 3)
-                    return "That's too many arguments for **date**!";
-                if( !VerifyUtilities.verifyDate( args[index] ) )
-                    return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
-                if(entry.hasStarted())
-                    return "You cannot modify the date of events which have already started!";
-                break;
-
             case "ed":
-            case "end date":
             case "end-date":
                 if(args.length > 3)
                     return "That's too many arguments for **date**!";
                 if( !VerifyUtilities.verifyDate( args[index] ) )
                     return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                if(ParsingUtilities.parseDateStr(args[index]).isBefore(LocalDate.now()))
+                    return "That date is in the past!";
+                if(entry.hasStarted())
+                    return "You cannot modify the date of events which have already started!";
                 break;
 
             case "r":
@@ -266,13 +252,6 @@ public class EditCommand implements Command
                         .withDayOfMonth(date.getDayOfMonth());
                 end = end.withMonth(date.getMonthValue())
                         .withDayOfMonth(date.getDayOfMonth());
-
-                if(end.isBefore(start))
-                    end.plusDays(1);
-                if(Instant.now().isAfter(start.toInstant()))
-                    start.plusYears(1);
-                if(Instant.now().isAfter(end.toInstant()))
-                    start.plusYears(1);
                 break;
 
             case "sd":
@@ -284,11 +263,7 @@ public class EditCommand implements Command
                         .withDayOfMonth(sdate.getDayOfMonth());
 
                 if(end.isBefore(start))
-                    end.plusDays(1);
-                if(Instant.now().isAfter(start.toInstant()))
-                    start.plusYears(1);
-                if(Instant.now().isAfter(end.toInstant()))
-                    start.plusYears(1);
+                    end = start.plusDays(1);
                 break;
 
             case "ed":
@@ -298,13 +273,6 @@ public class EditCommand implements Command
 
                 end = end.withMonth(edate.getMonthValue())
                         .withDayOfMonth(edate.getDayOfMonth());
-
-                if(Instant.now().isAfter(start.toInstant()))
-                    start.plusYears(1);
-                if(Instant.now().isAfter(end.toInstant()))
-                    start.plusYears(1);
-                if(end.isBefore(start))
-                    end.plusYears(1);
                 break;
 
             case "r":
