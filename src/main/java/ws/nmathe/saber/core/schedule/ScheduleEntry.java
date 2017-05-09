@@ -42,7 +42,11 @@ public class ScheduleEntry
 
     ScheduleEntry(Document entryDocument)
     {
-        ZoneId zone = ZoneId.of((String) entryDocument.get("zone"));
+        this.msgId = (String) entryDocument.get("messageId");
+        this.chanId = (String) entryDocument.get("channelId");
+        this.guildId = (String) entryDocument.get("guildId");
+
+        ZoneId zone = Main.getScheduleManager().getTimeZone(this.chanId);
 
         this.entryId = (Integer) entryDocument.get("_id");
         this.entryTitle = (String) entryDocument.get("title");
@@ -55,9 +59,6 @@ public class ScheduleEntry
         this.rsvpYes = (List<String>) entryDocument.get("rsvp_yes");
         this.rsvpNo = (List<String>) entryDocument.get("rsvp_no");
 
-        this.msgId = (String) entryDocument.get("messageId");
-        this.chanId = (String) entryDocument.get("channelId");
-        this.guildId = (String) entryDocument.get("guildId");
         this.googleId = (String) entryDocument.get("googleId");
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
     }

@@ -238,7 +238,7 @@ public class ConfigCommand implements Command
                                         Main.getEntryManager().reloadEntry(id);
                                     });
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
                     break;
 
                 case "cl":
