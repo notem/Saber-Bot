@@ -81,8 +81,15 @@ class MessageGenerator
         }
         */
 
+        String bodyContent;
+        if(Main.getScheduleManager().getStyle(cId).toLowerCase().equals("narrow"))
+            bodyContent = generateBodyNarrow(start, end, cId, repeat, comments, rsvpYes, rsvpNo);
+        else
+            bodyContent = generateBodyFull(start, end, cId, repeat, comments, rsvpYes, rsvpNo);
+
+
         EmbedBuilder builder = new EmbedBuilder();
-        builder.setDescription(generateDesc(start, end, cId, repeat, comments, rsvpYes, rsvpNo))
+        builder.setDescription(bodyContent)
                 .setColor(color)
                 .setAuthor(title, titleUrl, titleImage)
                 .setFooter(footerStr, null);
@@ -90,8 +97,9 @@ class MessageGenerator
         return new MessageBuilder().setEmbed(builder.build()).build();
     }
 
-    private static String generateDesc(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
-                                       int eRepeat, List<String> eComments, List<String> rsvpYes, List<String> rsvpNo)
+    private static String generateBodyFull(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
+                                           int eRepeat, List<String> eComments, List<String> rsvpYes,
+                                           List<String> rsvpNo)
     {
         String timeFormatter;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
@@ -122,7 +130,7 @@ class MessageGenerator
                     " to " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
         }
 
-        String repeatLine = "> " + getRepeatString( eRepeat ) + "\n";
+        String repeatLine = "> " + getRepeatString( eRepeat, false ) + "\n";
         String zoneLine = "[" + eStart.getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "]" +
                 MessageGenerator.genTimer(eStart,eEnd) + "\n";
 
@@ -157,23 +165,91 @@ class MessageGenerator
         return msg;
     }
 
-    private static String getRepeatString(int bitset)
+    private static String generateBodyNarrow(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
+                                           int eRepeat, List<String> eComments, List<String> rsvpYes,
+                                           List<String> rsvpNo)
     {
-        if( bitset == 0 )
-            return "does not repeat";
-        if( bitset == 0b1111111 )
-            return "repeats daily";
+        // determine the formatting for clock
+        String timeFormatter;
+        if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
+            timeFormatter = "H:mm";
+        else
+            timeFormatter = "h:mm a";
 
-        // repeat on interval
-        if((bitset & 0b10000000) == 0b10000000 )
+        // create the first line of the body
+        String timeLine = "< " + eStart.format(DateTimeFormatter.ofPattern("MMM d"));
+        if( eStart.until(eEnd, ChronoUnit.SECONDS)==0 )
         {
-            Integer interval = (0b10000000 ^ bitset);
-            String[] spellout = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
-            return "repeats every " + (interval>spellout.length ? interval : spellout[interval-1]) + " days";
+            timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+        }
+        else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
+        {
+            if( eStart.toLocalTime().equals(LocalTime.MIN) && eStart.toLocalTime().equals(LocalTime.MIN) )
+                timeLine += " – " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + " >\n";
+            else
+                timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                        " – " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
+                        eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+        }
+        else
+        {
+            timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                    " – " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
         }
 
-        // repeat on fixed days
-        String str = "repeats weekly on ";
+        // create the second line of the body
+        String lineTwo = "[" + eStart.getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
+                "](" + getRepeatString( eRepeat, true ) + ")";
+
+        // if rsvp is enabled, show the number of rsvps
+        if(rsvpYes != null && rsvpNo != null)
+            lineTwo += " RSVP: <Yes " + rsvpYes.size() + "> <No " + rsvpNo.size() + ">\n";
+        else
+            lineTwo += "\n";
+
+        return "```Markdown\n\n" + timeLine + lineTwo + "```\n";
+    }
+
+    private static String getRepeatString(int bitset, boolean isNarrow)
+    {
+        String str;
+        if(isNarrow)
+        {
+            if( bitset == 0 )
+                return "once";
+            if( bitset == 0b1111111 || bitset == 0b10000001)
+                return "every day";
+
+            // repeat on interval
+            if((bitset & 0b10000000) == 0b10000000 )
+            {
+                Integer interval = (0b10000000 ^ bitset);
+                String[] spellout = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
+                return "every " + (interval>spellout.length ? interval : spellout[interval-1]) + " days";
+            }
+
+            // repeat on fixed days
+            str = "every ";
+        }
+        else
+        {
+            if( bitset == 0 )
+                return "does not repeat";
+            if( bitset == 0b1111111 )
+                return "repeats daily";
+
+            // repeat on interval
+            if((bitset & 0b10000000) == 0b10000000 )
+            {
+                Integer interval = (0b10000000 ^ bitset);
+                String[] spellout = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
+                return "repeats every " + (interval>spellout.length ? interval : spellout[interval-1]) + " days";
+            }
+
+            // repeat on fixed days
+            str = "repeats weekly on ";
+        }
+
         if( (bitset & 1) == 1 )
         {
             if(bitset==0b0000001)

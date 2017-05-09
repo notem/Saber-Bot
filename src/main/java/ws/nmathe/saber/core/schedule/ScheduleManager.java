@@ -73,6 +73,7 @@ public class ScheduleManager
                                 LocalTime.now().truncatedTo(ChronoUnit.HOURS), ZoneId.systemDefault()).toInstant()))
                         .append("default_reminders", default_reminders)
                         .append("rsvp_enabled", false)
+                        .append("style", "FULL")
                         .append("sync_address", "off");
 
         Main.getDBDriver().getScheduleCollection().insertOne(schedule);
@@ -237,9 +238,7 @@ public class ScheduleManager
     {
         List<String> list = new ArrayList<>();
         for (Document document : Main.getDBDriver().getScheduleCollection().find(eq("guildId", gId)))
-        {
             list.add((String) document.get("_id"));
-        }
         return list;
     }
 
@@ -247,9 +246,7 @@ public class ScheduleManager
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
-        {
             return Main.getBotSettingsManager().getAnnounceChan();
-        }
         return (String) settings.get("announcement_channel");
     }
 
@@ -257,9 +254,7 @@ public class ScheduleManager
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
-        {
             return Main.getBotSettingsManager().getAnnounceFormat();
-        }
         return (String) settings.get("announcement_format");
     }
 
@@ -267,9 +262,7 @@ public class ScheduleManager
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
-        {
             return Main.getBotSettingsManager().getClockFormat();
-        }
         return (String) settings.get("clock_format");
     }
 
@@ -277,9 +270,7 @@ public class ScheduleManager
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
-        {
             return ZoneId.of(Main.getBotSettingsManager().getTimeZone());
-        }
         return ZoneId.of((String) settings.get("timezone"));
     }
 
@@ -287,9 +278,7 @@ public class ScheduleManager
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
-        {
             return "off";
-        }
         return (String) settings.get("sync_address");
     }
 
@@ -297,10 +286,8 @@ public class ScheduleManager
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
-        {
             return Date.from(ZonedDateTime.of(LocalDate.now().plusDays(1),
                     LocalTime.MIDNIGHT, ZoneId.systemDefault()).toInstant());
-        }
         return (Date) settings.get("sync_time");
     }
 
@@ -308,9 +295,7 @@ public class ScheduleManager
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
-        {
             return new ArrayList<>(10);
-        }
         return (List<Integer>) settings.get("default_reminders");
     }
 
@@ -318,18 +303,13 @@ public class ScheduleManager
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
-        {
             return Main.getBotSettingsManager().getAnnounceChan();
-        }
+
         String chan_name = (String) settings.get("reminder_channel");
         if(chan_name == null )
-        {
             return (String) settings.get("announcement_channel");
-        }
         else
-        {
             return chan_name;
-        }
 
     }
 
@@ -337,18 +317,26 @@ public class ScheduleManager
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
-        {
             return Main.getBotSettingsManager().getAnnounceFormat();
-        }
+
         String format = (String) settings.get("reminder_format");
         if(format == null )
-        {
             return (String) settings.get("announcement_format");
-        }
         else
-        {
             return format;
-        }
+    }
+
+    public String getStyle(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if(settings == null)
+            return "FULL";
+
+        String style = (String) settings.get("display_style");
+        if(style == null)
+            return "FULL";
+        else
+            return style;
     }
 
     /*
@@ -413,5 +401,11 @@ public class ScheduleManager
     {
         Main.getDBDriver().getScheduleCollection()
                 .updateOne(eq("_id",cId), set("rsvp_enabled", value));
+    }
+
+    public void setStyle(String cId, String style)
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("display_style", style));
     }
 }

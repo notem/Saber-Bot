@@ -124,7 +124,7 @@ public class ConfigCommand implements Command
                                 "or **12**";
                     break;
 
-                case "s":
+                case "sy":
                 case "sync":
                     if( args[index].equals("off") )
                         return "";
@@ -166,6 +166,10 @@ public class ConfigCommand implements Command
                     break;
 
                 case "rsvp":
+                    break;
+
+                case "st":
+                case "style":
                     break;
 
                 default:
@@ -403,6 +407,14 @@ public class ConfigCommand implements Command
 
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
                     break;
+
+                case "st":
+                case "style":
+                    String style = args[index].toLowerCase();
+                    if(style.equals("full"))
+                        Main.getScheduleManager().setStyle(cId, style);
+                    else if(style.equals("narrow"))
+                        Main.getScheduleManager().setStyle(cId, style);
             }
         }
         else    // print out all settings
