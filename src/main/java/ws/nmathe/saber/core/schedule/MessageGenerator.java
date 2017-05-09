@@ -169,6 +169,8 @@ class MessageGenerator
                                            int eRepeat, List<String> eComments, List<String> rsvpYes,
                                            List<String> rsvpNo)
     {
+        String dash = "\u2014";
+
         // determine the formatting for clock
         String timeFormatter;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
@@ -185,16 +187,16 @@ class MessageGenerator
         else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
         {
             if( eStart.toLocalTime().equals(LocalTime.MIN) && eStart.toLocalTime().equals(LocalTime.MIN) )
-                timeLine += " – " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + " >\n";
+                timeLine += " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + " >\n";
             else
                 timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                        " – " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
+                        " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
                         eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
         }
         else
         {
             timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " – " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+                    " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
         }
 
         // create the second line of the body
