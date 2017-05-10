@@ -74,6 +74,7 @@ public class ScheduleManager
                         .append("default_reminders", default_reminders)
                         .append("rsvp_enabled", false)
                         .append("style", "FULL")
+                        .append("sync_length", 7)
                         .append("sync_address", "off");
 
         Main.getDBDriver().getScheduleCollection().insertOne(schedule);
@@ -339,6 +340,18 @@ public class ScheduleManager
             return style;
     }
 
+    public int getSyncLength(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if(settings == null)
+            return 7;
+
+        Integer len = (Integer) settings.get("sync_length");
+        if(len == null)
+            return 7;
+        else
+            return len;
+    }
     /*
      *
      */
@@ -407,5 +420,11 @@ public class ScheduleManager
     {
         Main.getDBDriver().getScheduleCollection()
                 .updateOne(eq("_id",cId), set("display_style", style));
+    }
+
+    public void setSyncLength(String cId, int len)
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("sync_length", len));
     }
 }

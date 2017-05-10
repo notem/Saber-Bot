@@ -110,24 +110,25 @@ class MessageGenerator
         // the 'actual' first line (and last line) define format
         String msg = "";
 
-        String timeLine = eStart.format(DateTimeFormatter.ofPattern("< MMM d >"));
+        String dash = "\u2014";
+        String timeLine = "< " + eStart.format(DateTimeFormatter.ofPattern("MMM d"));
         if( eStart.until(eEnd, ChronoUnit.SECONDS)==0 )
         {
-            timeLine += " at " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
+            timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
         }
         else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
         {
             if( eStart.toLocalTime().equals(LocalTime.MIN) && eStart.toLocalTime().equals(LocalTime.MIN) )
-                timeLine += " to " + eEnd.format(DateTimeFormatter.ofPattern("< MMM d >")) + "\n";
+                timeLine += " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + " >\n";
             else
-                timeLine += " at " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " to " + eEnd.format(DateTimeFormatter.ofPattern("< MMM d >")) + " at " +
-                    eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
+                timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                        " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
+                        eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
         }
         else
         {
-            timeLine += " from " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " to " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + "\n";
+            timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                    " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
         }
 
         String repeatLine = "> " + getRepeatString( eRepeat, false ) + "\n";
@@ -169,8 +170,6 @@ class MessageGenerator
                                            int eRepeat, List<String> eComments, List<String> rsvpYes,
                                            List<String> rsvpNo)
     {
-        String dash = "\u2014";
-
         // determine the formatting for clock
         String timeFormatter;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
@@ -179,6 +178,7 @@ class MessageGenerator
             timeFormatter = "h:mm a";
 
         // create the first line of the body
+        String dash = "\u2014";
         String timeLine = "< " + eStart.format(DateTimeFormatter.ofPattern("MMM d"));
         if( eStart.until(eEnd, ChronoUnit.SECONDS)==0 )
         {
@@ -335,12 +335,12 @@ class MessageGenerator
             timer = "(begins ";
             if( timeTilStart < 60 * 60 )
             {
-               // int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
-               // if( minutesTil <= 1)
-               //     timer += "in a minute.)";
-               // else
-               //     timer += "in " + minutesTil + " minutes.)";
-                timer += "within the hour.)";
+                int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
+                if( minutesTil <= 1)
+                    timer += "in a minute.)";
+                else
+                    timer += "in " + minutesTil + " minutes.)";
+                //timer += "within the hour.)";
             }
             else if( timeTilStart < 24 * 60 * 60 )
             {
@@ -365,12 +365,12 @@ class MessageGenerator
             timer = "(ends ";
             if( timeTilEnd < 60*60 )
             {
-               // int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
-               // if( minutesTil <= 1)
-               //     timer += "in a minute.)";
-               // else
-               //     timer += "in " + minutesTil + " minutes.)";
-                timer += "within one hour.)";
+                int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
+                if( minutesTil <= 1)
+                    timer += "in a minute.)";
+                else
+                    timer += "in " + minutesTil + " minutes.)";
+                //timer += "within one hour.)";
             }
 
             else if( timeTilEnd < 24 * 60 * 60 )

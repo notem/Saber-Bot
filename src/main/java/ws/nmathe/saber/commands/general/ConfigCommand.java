@@ -172,6 +172,16 @@ public class ConfigCommand implements Command
                 case "style":
                     break;
 
+                case "l":
+                case "len":
+                case "length":
+                    if(!VerifyUtilities.verifyInteger(args[index]))
+                        return "*" + args[index] + "*" + " is not an integer!";
+                    Integer len = Integer.parseInt(args[index]);
+                    if(len>7 || len<1)
+                        return "The sync length must be an integer between 1 and 7!";
+                    break;
+
                 default:
                     return "Argument **" + args[index-1] + "** is not a configurable setting! Options are **msg**, " +
                             "**chan**, **zone**, **clock**, **sync**, **time**, and **remind**.";
@@ -415,6 +425,20 @@ public class ConfigCommand implements Command
                         Main.getScheduleManager().setStyle(cId, style);
                     else if(style.equals("narrow"))
                         Main.getScheduleManager().setStyle(cId, style);
+
+                    // for each entry on the schedule
+                    Main.getDBDriver().getEventCollection()
+                            .find(eq("channelId", scheduleChan.getId()))
+                            .forEach((Consumer<? super Document>) document ->
+                                    Main.getEntryManager().reloadEntry(document.getInteger("_id"))
+                            );
+                    break;
+
+                case "l":
+                case "len":
+                case "length":
+                    Main.getScheduleManager().setSyncLength(cId, Integer.parseInt(args[index]));
+                    break;
             }
         }
         else    // print out all settings
@@ -496,6 +520,8 @@ public class ConfigCommand implements Command
                         "\"" + Main.getScheduleManager().getAddress(cId) + "\"\n" +
                         "\n[time] Time of day to sync calendar\n " +
                         "\"" + sync_time_display + "\"\n" +
+                        "\n[length] How many days to sync\n " +
+                        "\"" + Main.getScheduleManager().getSyncLength(cId) + "\"\n" +
                         "```";
 
                 if(type == 4)

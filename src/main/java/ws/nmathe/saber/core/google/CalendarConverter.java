@@ -88,7 +88,7 @@ public class CalendarConverter
         try
         {
             ZonedDateTime min = ZonedDateTime.now();
-            ZonedDateTime max = min.plusDays(7);
+            ZonedDateTime max = min.plusDays(Main.getScheduleManager().getSyncLength(channel.getId()));
 
             events = service.events().list(address)
                     .setTimeMin(new DateTime(min.format(rfc3339Formatter)))
