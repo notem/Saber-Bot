@@ -438,6 +438,7 @@ public class ConfigCommand implements Command
                 case "len":
                 case "length":
                     Main.getScheduleManager().setSyncLength(cId, Integer.parseInt(args[index]));
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 4), event.getChannel(), null);
                     break;
             }
         }
