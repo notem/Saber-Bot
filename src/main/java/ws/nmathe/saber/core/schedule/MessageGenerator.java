@@ -103,9 +103,9 @@ class MessageGenerator
     {
         String timeFormatter;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
-            timeFormatter = "< H:mm >";
+            timeFormatter = "H:mm";
         else
-            timeFormatter = "< h:mm a >";
+            timeFormatter = "h:mm a";
 
         // the 'actual' first line (and last line) define format
         String msg = "";
