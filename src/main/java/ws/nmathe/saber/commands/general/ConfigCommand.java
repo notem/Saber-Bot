@@ -213,9 +213,20 @@ public class ConfigCommand implements Command
 
                 case "ch":
                 case "chan":
-                    TextChannel tmp = event.getGuild()
-                            .getTextChannelById(args[index].replace("<#","").replace(">",""));
-                    String chanName = (tmp==null) ? args[index] : tmp.getName();
+                    String chanName;
+                    String chanID = args[index].replace("<#","").replace(">","");
+                    try
+                    {
+                        TextChannel tmp = event.getGuild().getTextChannelById(chanID);
+                        if(tmp!=null)
+                            chanName = tmp.getName();
+                        else
+                            chanName = args[index];
+                    }
+                    catch(Exception e)
+                    {
+                        chanName = args[index];
+                    }
 
                     Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
 
@@ -334,8 +345,20 @@ public class ConfigCommand implements Command
 
                 case "rc":
                 case "remind-chan":
-                    TextChannel tmp2 = event.getGuild().getTextChannelById(args[index].replace("<#","").replace(">",""));
-                    String chanName2 = (tmp2==null) ? args[index] : tmp2.getName();
+                    String chanName2;
+                    String chanID2 = args[index].replace("<#","").replace(">","");
+                    try
+                    {
+                        TextChannel tmp2 = event.getGuild().getTextChannelById(chanID2);
+                        if(tmp2!=null)
+                            chanName2 = tmp2.getName();
+                        else
+                            chanName2 = args[index];
+                    }
+                    catch(Exception e)
+                    {
+                        chanName2 = args[index];
+                    }
 
                     Main.getScheduleManager().setReminderChan(scheduleChan.getId(), chanName2);
 
