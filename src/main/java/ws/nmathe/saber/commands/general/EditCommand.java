@@ -76,6 +76,9 @@ public class EditCommand implements Command
         {
             case "c":
             case "comment":
+                if(args.length <= index+1)
+                    return "That's not enough arguments for *comment*! Use ``"+ invoke +" [id] comment [add|remove] \"comment\"``";
+
                 switch (args[index++])
                 {
                     case "a":
