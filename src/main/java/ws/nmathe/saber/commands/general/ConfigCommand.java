@@ -455,6 +455,7 @@ public class ConfigCommand implements Command
                             .forEach((Consumer<? super Document>) document ->
                                     Main.getEntryManager().reloadEntry(document.getInteger("_id"))
                             );
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
                     break;
 
                 case "l":
@@ -529,6 +530,8 @@ public class ConfigCommand implements Command
                         "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
                         "\n[rsvp] Allow users to RSVP to events (on|off)\n " +
                         "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"\n" +
+                        "\n[style] Display style of the events (full|narrow)\n " +
+                        "\"" + Main.getScheduleManager().getStyle(cId) + "\"\n" +
                         "```";
 
                 if(type == 3)
