@@ -19,7 +19,7 @@ import java.util.List;
  *  This class is responsible for both parsing a discord message containing information that creates a ScheduleEvent,
  *  as well as is responsible for generating the message that is to be used as the parsable discord schedule entry
  */
-class MessageGenerator
+public class MessageGenerator
 {
     static Message generate(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
                             int repeat, String url, List<Date> reminders, Integer eId, String cId, String guildId,
@@ -212,7 +212,7 @@ class MessageGenerator
         return "```Markdown\n\n" + timeLine + lineTwo + "```\n";
     }
 
-    private static String getRepeatString(int bitset, boolean isNarrow)
+    public static String getRepeatString(int bitset, boolean isNarrow)
     {
         String str;
         if(isNarrow)

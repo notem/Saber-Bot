@@ -220,8 +220,9 @@ public class CalendarConverter
                 }
                 else
                 {
+                    boolean hasStarted = !start.isAfter(ZonedDateTime.now());
                     Main.getEntryManager().newEntry(title, start, end, comments, repeat,
-                            event.getHtmlLink(), channel, googleId);
+                            event.getHtmlLink(), channel, googleId, hasStarted);
                 }
 
                 uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);

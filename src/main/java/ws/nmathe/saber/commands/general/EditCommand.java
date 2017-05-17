@@ -3,11 +3,12 @@ package ws.nmathe.saber.commands.general;
 import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.core.schedule.MessageGenerator;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -299,5 +300,26 @@ public class EditCommand implements Command
 
         Main.getEntryManager().updateEntry(entryId, title, start, end, comments,
                 repeat, url, entry.hasStarted(), msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo());
+
+        // send the event summary to the command channel
+        String body = "Updated event :id: **"+ Integer.toHexString(entryId) +"** on <#" + entry.getScheduleID() + ">\n```js\n" +
+                "Title:  \"" + title + "\"\n" +
+                "Start:  " + start + "\n" +
+                "End:    " + end + "\n" +
+                "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n" ;
+
+        if(url!=null)
+            body += "Url: \"" + url + "\"\n";
+
+        if(!comments.isEmpty())
+            body += "// Comments\n";
+
+        for(int i=1; i<comments.size()+1; i++)
+        {
+            body += "[" + i + "] \"" + comments.get(i-1) + "\"\n";
+        }
+        body += "```";
+
+        MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }

@@ -2,6 +2,7 @@ package ws.nmathe.saber.commands.general;
 
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.core.schedule.MessageGenerator;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -23,25 +24,31 @@ public class CreateCommand implements Command
     {
         String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel> <title> <start> [<end> <extra>]```\n" +
                 "The create command will add a new entry to a schedule.\n" +
-                " Entries MUST be initialized with a title, and a start time.\n" +
-                " The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
+                "Entries MUST be initialized with a title, and a start time.\n" +
+                "The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
                 "optional am/pm appended on the end.\n" +
                 "Optionally, events can be configured with comments, repeat settings, and a start/end dates." +
+
                 "\n\n```diff\n+ Repeat on weekdays or interval ```\n" +
                 "Repeat settings can be configured by adding ``repeat <daily|\"Su,Mo,Tu,We,Th,Fr,Sa\">`` to ``<extra>``" +
                 " to cause the event to repeat on the given days.\n Default behavior is no repeat.\n An event can instead " +
                 "be configured to repeat on a daily interval by adding ``interval <number>`` to ``<extra>``" +
+
                 "\n\n```diff\n+ Start and end date ```\n" +
                 "Adding ``date <yyyy/MM/dd>`` to ``<extra>`` will set the event's start and end date.\n For more granular " +
-                "control you can instead use ``start-date <yyyy/MM/dd>`` and ``end-date <yyyy/MM/dd>`` in place of ``date``.\n\n" +
+                "control you can instead use ``start-date <yyyy/MM/dd>`` and ``end-date <yyyy/MM/dd>`` in place of ``date``." +
+                "\n\n" +
                 "The date must be formatted like year/month/day, however year and month can be omitted " +
-                "('month/day' and 'day' are valid).\nThe omitted values will be inherited from the current date.\n" +
+                "('month/day' and 'day' are valid).\nThe omitted values will be inherited from the current date." +
+                "\n\n" +
                 "Dates which are in a non-number format (such as '10 May') are not acceptable.\n" +
-                "Default behavior is to use the next day as the event's date. splithere" +
+                "Default behavior is to use the next day as the event's date. " +
+
+                "splithere" +
+
                 "\n\n```diff\n+ Event description ```\n" +
                 "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``.\n" +
-                "Up to 10 of comments may be added in ``<extra>``." +
-                "\n" +
+                "Up to 10 of comments may be added in ``<extra>``.\n" +
                 "If your title, comment, or channel includes any space characters, the phrase must be enclosed in " +
                 "quotations (see examples).";
 
@@ -330,7 +337,29 @@ public class CreateCommand implements Command
             end = start.plusDays(1);
         }
 
-        Main.getEntryManager().newEntry(title, start, end, comments, repeat, url,
-                event.getGuild().getTextChannelById(cId), null);
+
+        // send the event summary to the command channel
+        Integer entryId = Main.getEntryManager().newEntry(title, start, end, comments, repeat, url,
+                event.getGuild().getTextChannelById(cId), null, false);
+
+        String body = "New event created :id: **"+ Integer.toHexString(entryId) +"** on <#" + cId + ">\n```js\n" +
+                "Title:  \"" + title + "\"\n" +
+                "Start:  " + start + "\n" +
+                "End:    " + end + "\n" +
+                "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n" ;
+
+        if(url!=null)
+            body += "Url: \"" + url + "\"\n";
+
+        if(!comments.isEmpty())
+            body += "// Comments\n";
+
+        for(int i=1; i<comments.size()+1; i++)
+        {
+            body += "[" + i + "] \"" + comments.get(i-1) + "\"\n";
+        }
+        body += "```";
+
+        MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }

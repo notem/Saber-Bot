@@ -68,8 +68,8 @@ public class EntryManager
      * @param url       (String) url for title
      * @param channel   (MessageChannel) channel to send event's message
      */
-    public void newEntry(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
-                         int repeat, String url, TextChannel channel, String googleId)
+    public Integer newEntry(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
+                         int repeat, String url, TextChannel channel, String googleId, boolean hasStarted)
     {
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
@@ -117,7 +117,7 @@ public class EntryManager
                             .append("repeat", repeat)
                             .append("reminders", reminders)
                             .append("url", url)
-                            .append("hasStarted", false)
+                            .append("hasStarted", hasStarted)
                             .append("messageId", msg.getId())
                             .append("channelId", channelId)
                             .append("googleId", googleId)
@@ -127,6 +127,8 @@ public class EntryManager
 
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
         });
+
+        return newId;
     }
 
     /**
