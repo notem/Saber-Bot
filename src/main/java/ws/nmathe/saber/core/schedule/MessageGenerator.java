@@ -206,7 +206,7 @@ public class MessageGenerator
 
         // if rsvp is enabled, show the number of rsvps
         if(rsvpYes != null && rsvpNo != null)
-            lineTwo += " RSVP: <Y " + rsvpYes.size() + "> <N " + rsvpNo.size() + "> <U " + rsvpUndecided.size() + ">\n";
+            lineTwo += " <Y " + rsvpYes.size() + "> <N " + rsvpNo.size() + "> <U " + rsvpUndecided.size() + ">\n";
         else
             lineTwo += "\n";
 
