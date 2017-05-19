@@ -298,8 +298,8 @@ public class EditCommand implements Command
 
         }
 
-        Main.getEntryManager().updateEntry(entryId, title, start, end, comments,
-                repeat, url, entry.hasStarted(), msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo());
+        Main.getEntryManager().updateEntry(entryId, title, start, end, comments, repeat, url, entry.hasStarted(),
+                msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo(), entry.getRsvpUndecided());
 
         // send the event summary to the command channel
         String body = "Updated event :id: **"+ Integer.toHexString(entryId) +"** on <#" + entry.getScheduleID() + ">\n```js\n" +

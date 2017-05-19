@@ -30,7 +30,7 @@ public class ListCommand implements Command
                 "\nThe schedule holding the event must have 'rsvp' turned on in the configuration settings.\n" +
                 "RSVP can be enabled on a channel using the config command as followed, ``" +
                 Main.getBotSettingsManager().getCommandPrefix() + "config #channel rsvp on``\n" +
-                "\nThe list may be filtered by either users or roles by appending \"r: @role\" or \"u: @user\" to the command\n" +
+                "\nThe list may be filtered by either users or roles by appending \"r: @role\", \"u: @user\", or \"t: [type]\" to the command\n" +
                 "Any number of filters may be appended.";
 
         String USAGE_BRIEF = "``" + invoke + "`` - show an event's rsvp list";
@@ -77,6 +77,7 @@ public class ListCommand implements Command
             }
 
             String filterType = filter[0].trim();
+            String filterValue = filter[1].trim();
             switch(filterType)
             {
                 case "r":
@@ -87,8 +88,25 @@ public class ListCommand implements Command
                 case "user":
                     break;
 
+                case "t":
+                case "type":
+                    switch(filterValue)
+                    {
+                        case "no":
+                        case "yes":
+                        case "undecided":
+                        case "no-input":
+                            break;
+
+                        default:
+                            return "Invalid [type] for type filter!" +
+                                    "\nPossible filter types are \"no\", \"yes\", \"undecided\", or \"no-input\".";
+                    }
+                    break;
+
                 default:
-                    return "Invalid filter ``" + args[index] + "``!\nFilters must be of the form \"r: @role\" or \"u: @user\"";
+                    return "Invalid filter ``" + args[index] + "``!" +
+                            "\nFilters must be of the form \"r: @role\", \"u: @user\", or \"t: [type]\"";
             }
         }
 
@@ -104,10 +122,16 @@ public class ListCommand implements Command
 
         List<String> rsvpYes = entry.getRsvpYes();
         List<String> rsvpNo = entry.getRsvpNo();
+        List<String> rsvpUndecided = entry.getRsvpUndecided();
         String content = "";
 
         List<String> userFilters = new ArrayList<>();
         List<String> roleFilters = new ArrayList<>();
+        boolean filterByType = false;
+        boolean typeYes = false;
+        boolean typeNo = false;
+        boolean typeUndecided = false;
+        boolean typeNoInput = false;
         for(; index<args.length; index++)
         {
             String filterType = args[index].toLowerCase().split(":")[0].trim();
@@ -123,62 +147,110 @@ public class ListCommand implements Command
                 case "user":
                     userFilters.add(filterValue.replace("<@","").replace(">",""));
                     break;
+
+                case "t":
+                case "type":
+                    filterByType = true;
+                    switch(filterValue)
+                    {
+                        case "no":
+                            typeNo = true;
+                            break;
+                        case "yes":
+                            typeYes = true;
+                            break;
+                        case "undecided":
+                            typeUndecided = true;
+                            break;
+                        case "no-input":
+                            typeNoInput = true;
+                            break;
+                    }
             }
         }
 
-        content += "RSVP'ed \"Yes\"\n======================\n";
-        for(String id : rsvpYes)
+        if(!filterByType || typeYes)
         {
-            if(content.length() > 1900)
+            content += "RSVP'ed \"Yes\"\n======================\n";
+            for(String id : rsvpYes)
             {
-                MessageUtilities.sendMsg(content, event.getChannel(), null);
-                content = "*continued. . .* \n";
+                if(content.length() > 1900)
+                {
+                    MessageUtilities.sendMsg(content, event.getChannel(), null);
+                    content = "*continued. . .* \n";
+                }
+                Member member = event.getGuild().getMemberById(id);
+                if(this.checkMember(member, userFilters, roleFilters))
+                {
+                    content += " <@" + id + ">\n";
+                }
             }
-            Member member = event.getGuild().getMemberById(id);
-            if(this.checkMember(member, userFilters, roleFilters))
+        }
+
+        if(!filterByType || typeNo)
+        {
+            content += "\nRSVP'ed \"No\"\n======================\n";
+            for(String id : rsvpNo)
             {
+                if(content.length() > 1900)
+                {
+                    MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
+                            (new EmbedBuilder()).setDescription(content).build()
+                    ).build(), event.getChannel(), null);
+                    content = "*continued. . .* \n";
+                }
+                Member member = event.getGuild().getMemberById(id);
+                if(this.checkMember(member, userFilters, roleFilters))
+                {
+                    content += " <@" + id + ">\n";
+                }
+            }
+        }
+
+        if(!filterByType || typeUndecided)
+        {
+            content += "\nRSVP'ed \"Undecided\"\n======================\n";
+            for(String id : rsvpUndecided)
+            {
+                if(content.length() > 1900)
+                {
+                    MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
+                            (new EmbedBuilder()).setDescription(content).build()
+                    ).build(), event.getChannel(), null);
+                    content = "*continued. . .* \n";
+                }
+                Member member = event.getGuild().getMemberById(id);
+                if(this.checkMember(member, userFilters, roleFilters))
+                {
+                    content += " <@" + id + ">\n";
+                }
+            }
+        }
+
+        if(!filterByType || typeNoInput)
+        {
+            List<String> undecided = event.getGuild().getMembers().stream()
+                    .filter(member -> checkMember(member, userFilters, roleFilters))
+                    .map(member -> member.getUser().getId()).collect(Collectors.toList());
+            undecided.removeAll(rsvpYes);
+            undecided.removeAll(rsvpNo);
+
+            content += "\nNo input\n======================\n";
+            if(!filterByType & undecided.size() > 10)
+            {
+                content += " Too many users to show: " + undecided.size() + " users with no rsvp\n";
+            }
+            else for(String id : undecided)
+            {
+                if(content.length() > 1900)
+                {
+                    MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
+                            (new EmbedBuilder()).setDescription(content).build()
+                    ).build(), event.getChannel(), null);
+                    content = "*continued. . .* \n";
+                }
                 content += " <@" + id + ">\n";
             }
-        }
-
-        content += "\nRSVP'ed \"No\"\n======================\n";
-        for(String id : rsvpNo)
-        {
-            if(content.length() > 1900)
-            {
-                MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
-                                (new EmbedBuilder()).setDescription(content).build()
-                ).build(), event.getChannel(), null);
-                content = "*continued. . .* \n";
-            }
-            Member member = event.getGuild().getMemberById(id);
-            if(this.checkMember(member, userFilters, roleFilters))
-            {
-                content += " <@" + id + ">\n";
-            }
-        }
-
-        List<String> undecided = event.getGuild().getMembers().stream()
-                .filter(member -> checkMember(member, userFilters, roleFilters))
-                .map(member -> member.getUser().getId()).collect(Collectors.toList());
-        undecided.removeAll(rsvpYes);
-        undecided.removeAll(rsvpNo);
-
-        content += "\nNo input\n======================\n";
-        if(undecided.size() > 30)
-        {
-            content += " Too many users to show: " + undecided.size() + " users with no rsvp\n";
-        }
-        else for(String id : undecided)
-        {
-            if(content.length() > 1900)
-            {
-                MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
-                        (new EmbedBuilder()).setDescription(content).build()
-                ).build(), event.getChannel(), null);
-                content = "*continued. . .* \n";
-            }
-            content += " <@" + id + ">\n";
         }
 
         MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(

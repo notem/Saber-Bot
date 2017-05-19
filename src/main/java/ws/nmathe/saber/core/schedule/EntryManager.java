@@ -55,7 +55,7 @@ public class EntryManager
 
         // 5 min timer
         scheduler2.scheduleAtFixedRate( new EntryProcessor(1),
-              30 , 60*5, TimeUnit.SECONDS );
+              30 , 60*3, TimeUnit.SECONDS );
     }
 
     /**
@@ -92,7 +92,7 @@ public class EntryManager
         Integer newId = this.newId();   // generate a new, unused ID
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, newId, channel.getId(), channel.getGuild().getId(),
-                rsvpList, rsvpList);
+                rsvpList, rsvpList, rsvpList);
 
         // send message to schedule
         MessageUtilities.sendMsg(message, channel, msg -> {
@@ -123,6 +123,7 @@ public class EntryManager
                             .append("googleId", googleId)
                             .append("rsvp_yes", rsvpList)
                             .append("rsvp_no", rsvpList)
+                            .append("rsvp_undecided", rsvpList)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
@@ -144,7 +145,8 @@ public class EntryManager
      */
     public void updateEntry(Integer entryId, String title, ZonedDateTime start, ZonedDateTime end,
                             List<String> comments, int repeat, String url, boolean hasStarted,
-                            Message origMessage, String googleId, List<String> rsvpYes, List<String> rsvpNo)
+                            Message origMessage, String googleId, List<String> rsvpYes,
+                            List<String> rsvpNo, List<String> rsvpUndecided)
     {
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
@@ -159,7 +161,7 @@ public class EntryManager
         // generate event display message
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId(),
-                rsvpYes, rsvpNo);
+                rsvpYes, rsvpNo, rsvpUndecided);
 
         // update message display
         MessageUtilities.editMsg(message, origMessage, msg -> {
@@ -182,6 +184,7 @@ public class EntryManager
                             .append("googleId", googleId)
                             .append("rsvp_yes", rsvpYes)
                             .append("rsvp_no", rsvpNo)
+                            .append("rsvp_undecided", rsvpUndecided)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);

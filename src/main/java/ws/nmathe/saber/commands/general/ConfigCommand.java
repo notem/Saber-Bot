@@ -390,7 +390,8 @@ public class ConfigCommand implements Command
                             // update every entry on the schedule
                             Main.getDBDriver().getEventCollection().updateMany(
                                     eq("channelId", scheduleChan.getId()),
-                                    and(set("rsvp_yes", new ArrayList<>()), set("rsvp_no", new ArrayList<>())));
+                                    and(set("rsvp_yes", new ArrayList<>()), set("rsvp_no", new ArrayList<>()),
+                                            set("rsvp_undecided", new ArrayList<>())));
 
                             // for each entry on the schedule
                             Main.getDBDriver().getEventCollection()
@@ -413,7 +414,7 @@ public class ConfigCommand implements Command
                             // update every entry on the schedule
                             Main.getDBDriver().getEventCollection().updateMany(
                                     eq("channelId", scheduleChan.getId()),
-                                    and(set("rsvp_yes", null), set("rsvp_no", null)));
+                                    and(set("rsvp_yes", null), set("rsvp_no", null), set("rsvp_undecided", null)));
 
                             // for each entry on the schedule
                             Main.getDBDriver().getEventCollection()

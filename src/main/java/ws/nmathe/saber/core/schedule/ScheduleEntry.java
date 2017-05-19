@@ -32,6 +32,7 @@ public class ScheduleEntry
     private List<Date> reminders;
     private List<String> rsvpYes;
     private List<String> rsvpNo;
+    private List<String> rsvpUndecided;
 
     private String msgId;
     private String chanId;
@@ -58,6 +59,7 @@ public class ScheduleEntry
         this.reminders = (List<Date>) entryDocument.get("reminders");
         this.rsvpYes = (List<String>) entryDocument.get("rsvp_yes");
         this.rsvpNo = (List<String>) entryDocument.get("rsvp_no");
+        this.rsvpUndecided = (List<String>) entryDocument.get("rsvp_undecided");
 
         this.googleId = (String) entryDocument.get("googleId");
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
@@ -158,7 +160,8 @@ public class ScheduleEntry
 
             Main.getEntryManager().updateEntry(this.entryId, this.entryTitle, newStart, newEnd, this.entryComments,
                     this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId,
-                    (this.rsvpYes==null ? null:new ArrayList<>()), (this.rsvpNo==null ? null:new ArrayList<>()));
+                    (this.rsvpYes==null ? null:new ArrayList<>()), (this.rsvpNo==null ? null:new ArrayList<>()),
+                    (this.rsvpUndecided==null ? null:new ArrayList<>()));
         }
         else // otherwise remove entry and delete the message
         {
@@ -180,7 +183,7 @@ public class ScheduleEntry
         MessageUtilities.editMsg(
                 MessageGenerator.generate(this.entryTitle, this.entryStart, this.entryEnd, this.entryComments,
                         this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId, this.guildId,
-                        this.rsvpYes, this.rsvpNo),
+                        this.rsvpYes, this.rsvpNo, this.rsvpUndecided),
                         msg, null);
     }
 
@@ -291,6 +294,11 @@ public class ScheduleEntry
     public List<String> getRsvpNo()
     {
         return this.rsvpNo;
+    }
+
+    public List<String> getRsvpUndecided()
+    {
+        return this.rsvpUndecided;
     }
 
     void setMessageObject(Message msg)
