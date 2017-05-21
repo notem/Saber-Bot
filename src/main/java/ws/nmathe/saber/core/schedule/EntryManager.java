@@ -190,7 +190,7 @@ public class EntryManager
                             .append("rsvp_no", rsvpNo)
                             .append("rsvp_undecided", rsvpUndecided)
                             .append("start_disabled", quietStart)
-                            .append("end_disabled", quietStart)
+                            .append("end_disabled", quietEnd)
                             .append("reminders_disabled", quietRemind)
                             .append("guildId", guildId);
 
