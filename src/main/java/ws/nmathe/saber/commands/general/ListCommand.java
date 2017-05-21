@@ -171,7 +171,7 @@ public class ListCommand implements Command
 
         if(!filterByType || typeYes)
         {
-            content += "RSVP'ed \"Yes\"\n======================\n";
+            content += "**RSVP'ed \"Yes\"\n======================**\n";
             for(String id : rsvpYes)
             {
                 if(content.length() > 1900)
@@ -189,7 +189,7 @@ public class ListCommand implements Command
 
         if(!filterByType || typeNo)
         {
-            content += "\nRSVP'ed \"No\"\n======================\n";
+            content += "\n**RSVP'ed \"No\"\n======================**\n";
             for(String id : rsvpNo)
             {
                 if(content.length() > 1900)
@@ -209,7 +209,7 @@ public class ListCommand implements Command
 
         if(!filterByType || typeUndecided)
         {
-            content += "\nRSVP'ed \"Undecided\"\n======================\n";
+            content += "**\nRSVP'ed \"Undecided\"\n======================**\n";
             for(String id : rsvpUndecided)
             {
                 if(content.length() > 1900)
@@ -235,7 +235,7 @@ public class ListCommand implements Command
             undecided.removeAll(rsvpYes);
             undecided.removeAll(rsvpNo);
 
-            content += "\nNo input\n======================\n";
+            content += "**\nNo input\n======================\n**";
             if(!filterByType & undecided.size() > 10)
             {
                 content += " Too many users to show: " + undecided.size() + " users with no rsvp\n";
@@ -253,8 +253,13 @@ public class ListCommand implements Command
             }
         }
 
+        String titleUrl = entry.getTitleUrl()==null?"https://nnmathe.ws/saber":entry.getTitleUrl();
+        String title = entry.getTitle()+" ["+Integer.toHexString(entryId)+"]";
         MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
-                (new EmbedBuilder()).setDescription(content).build()
+                (new EmbedBuilder())
+                        .setDescription(content)
+                        .setTitle(title, titleUrl)
+                        .build()
         ).build(), event.getChannel(), null);
     }
 

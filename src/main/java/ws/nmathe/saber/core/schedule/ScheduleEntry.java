@@ -39,6 +39,9 @@ public class ScheduleEntry
     private String guildId;
     private String googleId;
 
+    private boolean quietStart;
+    private boolean quietEnd;
+    private boolean quietRemind;
     private boolean hasStarted;
 
     ScheduleEntry(Document entryDocument)
@@ -60,6 +63,9 @@ public class ScheduleEntry
         this.rsvpYes = (List<String>) entryDocument.get("rsvp_yes");
         this.rsvpNo = (List<String>) entryDocument.get("rsvp_no");
         this.rsvpUndecided = (List<String>) entryDocument.get("rsvp_undecided");
+        this.quietStart = (boolean) entryDocument.get("start_disabled");
+        this.quietEnd = (boolean) entryDocument.get("end_disabled");
+        this.quietRemind = (boolean) entryDocument.get("reminders_disabled");
 
         this.googleId = (String) entryDocument.get("googleId");
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
@@ -82,7 +88,9 @@ public class ScheduleEntry
     public void remind()
     {
         Message msg = this.getMessageObject();
-        if( msg == null )
+        if(msg == null)
+            return;
+        if(this.quietRemind)
             return;
 
         // send the remind announcement
@@ -106,22 +114,25 @@ public class ScheduleEntry
 
         // if the entry's start time is the same as it's end
         // skip to end
-        if( this.entryStart.isEqual(this.entryEnd) )
+        if(this.entryStart.isEqual(this.entryEnd))
         {
             this.end();
             return;
         }
 
-        // send the start announcement
-        String startMsg = ParsingUtilities
-                .parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
-        for( TextChannel chan : msg.getGuild()
-                .getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
+        if(!this.quietStart)
         {
-            MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant()));
-            __out.printOut(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
-                    this.getStart().withZoneSameInstant(ZoneId.systemDefault())
-                            .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+            // send the start announcement
+            String startMsg = ParsingUtilities
+                    .parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
+            for( TextChannel chan : msg.getGuild()
+                    .getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
+            {
+                MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant()));
+                __out.printOut(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
+                        this.getStart().withZoneSameInstant(ZoneId.systemDefault())
+                                .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+            }
         }
 
         this.reloadDisplay();
@@ -136,16 +147,20 @@ public class ScheduleEntry
         if( eMsg==null )
             return;
 
-        // send the end announcement
-        String endMsg = ParsingUtilities
-                .parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
-        for( TextChannel chan : eMsg.getGuild().
-                getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true))
+        if((!this.entryStart.isEqual(this.entryEnd) && !this.quietEnd) ||
+                (this.entryStart.isEqual(this.entryEnd) && !this.quietStart))
         {
-            MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant()));
-            __out.printOut(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
-                    this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
-                            .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+            // send the end announcement
+            String endMsg = ParsingUtilities
+                    .parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
+            for( TextChannel chan : eMsg.getGuild().
+                    getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true))
+            {
+                MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant()));
+                __out.printOut(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
+                        this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
+                                .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+            }
         }
 
         if( this.entryRepeat != 0 ) // find next repeat date and edit the message
@@ -161,7 +176,8 @@ public class ScheduleEntry
             Main.getEntryManager().updateEntry(this.entryId, this.entryTitle, newStart, newEnd, this.entryComments,
                     this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId,
                     (this.rsvpYes==null ? null:new ArrayList<>()), (this.rsvpNo==null ? null:new ArrayList<>()),
-                    (this.rsvpUndecided==null ? null:new ArrayList<>()));
+                    (this.rsvpUndecided==null ? null:new ArrayList<>()), this.quietStart, this.quietEnd,
+                    this.quietRemind);
         }
         else // otherwise remove entry and delete the message
         {
@@ -299,6 +315,21 @@ public class ScheduleEntry
     public List<String> getRsvpUndecided()
     {
         return this.rsvpUndecided;
+    }
+
+    public boolean isQuietStart()
+    {
+        return this.quietStart;
+    }
+
+    public boolean isQuietEnd()
+    {
+        return this.quietEnd;
+    }
+
+    public boolean isQuietRemind()
+    {
+        return this.quietRemind;
     }
 
     void setMessageObject(Message msg)

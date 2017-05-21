@@ -171,7 +171,8 @@ public class ParsingUtilities
     {
         List<Integer> list = new ArrayList<>();
         Matcher matcher = Pattern.compile("\\d+").matcher(arg);
-        while (matcher.find()) {
+        while (matcher.find())
+        {
             list.add(Integer.parseInt(matcher.group()));
         }
         return list;
@@ -179,7 +180,8 @@ public class ParsingUtilities
 
     public static LocalDate parseDateStr(String arg)
     {
-        switch (arg) {
+        switch (arg)
+        {
             case "today":
                 return LocalDate.now();
 

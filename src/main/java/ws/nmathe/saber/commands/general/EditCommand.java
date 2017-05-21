@@ -31,7 +31,9 @@ public class EditCommand implements Command
                 "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment <add|remove>``, ``date``, " +
                 "``start-date``, ``end-date``, ``repeat``, ``interval``, and ``url``.\n\n" +
                 "For further explanation as for what are valid arguments for each options, reference the ``help`` information" +
-                " for the ``create`` command.";
+                " for the ``create`` command.\n\n" +
+                "Announcements for individual events can be toggled on-off using any of these three options: " +
+                "**quiet-start**, **quiet-end**, **quiet-remind**\n";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + invoke + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
@@ -54,7 +56,7 @@ public class EditCommand implements Command
     {
         int index = 0;
 
-        if( args.length < 3 )
+        if( args.length < 2 )
             return "That's not enough arguments! Use ``" + invoke + " <ID> <option> <arg>``";
 
         // check first arg
@@ -163,6 +165,16 @@ public class EditCommand implements Command
                     return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
                 break;
 
+            case "qs":
+            case "quiet-start":
+            case "qe":
+            case "quiet-end":
+            case "qr":
+            case "quiet-remind":
+                if (args.length > 2)
+                    return "That's too many arguments for **quiet**!";
+                break;
+
             default:
                 return "**" + args[index] + "** is not an option I know of! Please use the ``help`` command to see available options!";
         }
@@ -188,6 +200,10 @@ public class EditCommand implements Command
         ZonedDateTime end = entry.getEnd();                 //
         int repeat = entry.getRepeat();                     //
         String url = entry.getTitleUrl();                   //
+
+        boolean quietStart = entry.isQuietStart();
+        boolean quietEnd = entry.isQuietEnd();
+        boolean quietRemind = entry.isQuietRemind();
 
         index++;    // 1
 
@@ -296,12 +312,30 @@ public class EditCommand implements Command
                 url = args[index];
                 break;
 
+            case "qs":
+            case "quiet-start":
+                quietStart = !quietStart;
+                break;
+
+            case "qe":
+            case "quiet-end":
+                quietEnd = !quietEnd;
+                break;
+
+
+            case "qr":
+            case "quiet-remind":
+                quietRemind = !quietRemind;
+                break;
         }
 
         Main.getEntryManager().updateEntry(entryId, title, start, end, comments, repeat, url, entry.hasStarted(),
-                msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo(), entry.getRsvpUndecided());
+                msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo(), entry.getRsvpUndecided(),
+                quietStart, quietEnd, quietRemind);
 
+        //
         // send the event summary to the command channel
+        //
         String body = "Updated event :id: **"+ Integer.toHexString(entryId) +"** on <#" + entry.getScheduleID() + ">\n```js\n" +
                 "Title:  \"" + title + "\"\n" +
                 "Start:  " + start + "\n" +
@@ -310,6 +344,30 @@ public class EditCommand implements Command
 
         if(url!=null)
             body += "Url: \"" + url + "\"\n";
+
+        if(quietStart | quietEnd | quietRemind)
+        {
+            body += "Quiet: ";
+            if(quietStart)
+            {
+                body += "start";
+                if(quietEnd & quietRemind)
+                    body += ", ";
+                else if(quietEnd | quietRemind)
+                    body += " and ";
+            }
+            if(quietEnd)
+            {
+                body += "end";
+                if(quietRemind)
+                    body += " and ";
+            }
+            if(quietRemind)
+            {
+                body += "reminders";
+            }
+            body += " disabled\n";
+        }
 
         if(!comments.isEmpty())
             body += "// Comments\n";

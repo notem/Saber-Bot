@@ -124,6 +124,9 @@ public class EntryManager
                             .append("rsvp_yes", rsvpList)
                             .append("rsvp_no", rsvpList)
                             .append("rsvp_undecided", rsvpList)
+                            .append("start_disabled", false)
+                            .append("end_disabled", false)
+                            .append("reminders_disabled", false)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
@@ -145,8 +148,9 @@ public class EntryManager
      */
     public void updateEntry(Integer entryId, String title, ZonedDateTime start, ZonedDateTime end,
                             List<String> comments, int repeat, String url, boolean hasStarted,
-                            Message origMessage, String googleId, List<String> rsvpYes,
-                            List<String> rsvpNo, List<String> rsvpUndecided)
+                            Message origMessage, String googleId, List<String> rsvpYes, List<String> rsvpNo,
+                            List<String> rsvpUndecided, boolean quietStart, boolean quietEnd,
+                            boolean quietRemind)
     {
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
@@ -185,6 +189,9 @@ public class EntryManager
                             .append("rsvp_yes", rsvpYes)
                             .append("rsvp_no", rsvpNo)
                             .append("rsvp_undecided", rsvpUndecided)
+                            .append("start_disabled", quietStart)
+                            .append("end_disabled", quietStart)
+                            .append("reminders_disabled", quietRemind)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);
