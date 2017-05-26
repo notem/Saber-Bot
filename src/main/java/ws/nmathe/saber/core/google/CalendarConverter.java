@@ -247,5 +247,16 @@ public class CalendarConverter
                 });
 
         Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
+
+        // auto-sort
+        int sortType = Main.getScheduleManager().getAutoSort(channel.getId());
+        if(sortType == 1)
+        {
+            Main.getScheduleManager().sortSchedule(channel.getId(), false);
+        }
+        if(sortType == 2)
+        {
+            Main.getScheduleManager().sortSchedule(channel.getId(), true);
+        }
     }
 }

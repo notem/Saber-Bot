@@ -182,6 +182,19 @@ public class ConfigCommand implements Command
                         return "The sync length must be an integer between 1 and 7!";
                     break;
 
+                case "so":
+                case "sort":
+                    switch(args[index])
+                    {
+                        case "disabled":
+                        case "off":
+                        case "desc":
+                        case "asc":
+                            return "";
+                        default:
+                            return "*" + args[index] + "* is not a valid sort option! Use *off*, *desc*, or *asc*.";
+                    }
+
                 default:
                     return "Argument **" + args[index-1] + "** is not a configurable setting! Options are **msg**, " +
                             "**chan**, **zone**, **clock**, **sync**, **time**, and **remind**.";
@@ -465,6 +478,36 @@ public class ConfigCommand implements Command
                     Main.getScheduleManager().setSyncLength(cId, Integer.parseInt(args[index]));
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 4), event.getChannel(), null);
                     break;
+
+                case "so":
+                case "sort":
+                    int sortType;
+                    switch(args[index])
+                    {
+                        case "on":
+                        case "asc":
+                            sortType = 1;
+                            break;
+                        case "desc":
+                            sortType = 2;
+                            break;
+                        default:
+                            sortType = 0;
+                            break;
+                    }
+                    Main.getScheduleManager().setAutoSort(cId, sortType);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+
+                    // now sort the schedule
+                    if(sortType == 1)
+                    {
+                        Main.getScheduleManager().sortSchedule(cId, false);
+                    }
+                    if(sortType == 2)
+                    {
+                        Main.getScheduleManager().sortSchedule(cId, true);
+                    }
+                    break;
             }
         }
         else    // print out all settings
@@ -473,6 +516,18 @@ public class ConfigCommand implements Command
         }
     }
 
+
+    /**
+     * Generates the schedule config message to display to the user
+     * type codes:  0 - full message
+     *              1 - announcement settings
+     *              2 - reminder settings
+     *              3 - miscellaneous settings
+     *              4 - sync settings
+     * @param cId (String) the ID of the schedule/channel
+     * @param type (int) the type code for the message to generate
+     * @return (String) the message to display
+     */
     private String genMsgStr(String cId, int type)
     {
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
@@ -485,9 +540,9 @@ public class ConfigCommand implements Command
                 content += "```js\n" +
                         "// Event Announcement Settings\n" +
                         "[msg] Format for start/end messages\n " + "\"" +
-                        Main.getScheduleManager().getAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
+                        Main.getScheduleManager().getAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"" +
                         "\n[chan] Announce start/end to channel\n " +
-                        "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"\n" +
+                        "\"" + Main.getScheduleManager().getAnnounceChan(cId) + "\"" +
                         "```";
 
                 if(type == 1)
@@ -503,7 +558,7 @@ public class ConfigCommand implements Command
                     reminderStr += reminders.get(0);
                     for (int i=1; i<reminders.size()-1; i++)
                     {
-                        reminderStr += ", " + reminders.get(i) ;
+                        reminderStr += ", " + reminders.get(i);
                     }
                     if(reminders.size() > 1)
                         reminderStr += " and " + reminders.get(reminders.size()-1);
@@ -513,26 +568,43 @@ public class ConfigCommand implements Command
                 content += "```js\n" +
                         "// Event Reminder Settings\n" +
                         "[remind] Send reminders before event begins\n " +
-                        "\"" + reminderStr + "\"\n" +
+                        "\"" + reminderStr + "\"" +
                         "\n[remind-msg] Format for reminder messages\n " + "\"" +
-                        Main.getScheduleManager().getReminderFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"\n" +
+                        Main.getScheduleManager().getReminderFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"" +
                         "\n[remind-chan] Announce reminder to channel\n " +
-                        "\"" + Main.getScheduleManager().getReminderChan(cId) + "\"\n" +
+                        "\"" + Main.getScheduleManager().getReminderChan(cId) + "\"" +
                         "```";
 
                 if(type == 2)
                     break;
             case 3:
+                int sortType = Main.getScheduleManager().getAutoSort(cId);
+                String sort = "";
+                switch(sortType)
+                {
+                    case 0:
+                        sort = "disabled";
+                        break;
+                    case 1:
+                        sort = "ascending order";
+                        break;
+                    case 2:
+                        sort = "descending order";
+                        break;
+                }
+
                 content += "```js\n" +
                         "// Misc. Settings\n" +
                         "[zone] Display events in this timezone\n " +
-                        "\"" + zone + "\"\n" +
+                        "\"" + zone + "\"" +
                         "\n[clock] Display events using this clock format\n " +
-                        "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"\n" +
+                        "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"" +
                         "\n[rsvp] Allow users to RSVP to events (on|off)\n " +
-                        "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"\n" +
+                        "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"" +
                         "\n[style] Display style of the events (full|narrow)\n " +
-                        "\"" + Main.getScheduleManager().getStyle(cId) + "\"\n" +
+                        "\"" + Main.getScheduleManager().getStyle(cId) + "\"" +
+                        "\n[sort] Automatically sort the schedule (off|desc|asc)\n " +
+                        "\"" + sort + "\"" +
                         "```";
 
                 if(type == 3)
@@ -545,11 +617,11 @@ public class ConfigCommand implements Command
                 content += "```js\n" +
                         "// Schedule Sync Settings\n" +
                         "[sync] Sync to Google calendar address\n " +
-                        "\"" + Main.getScheduleManager().getAddress(cId) + "\"\n" +
+                        "\"" + Main.getScheduleManager().getAddress(cId) + "\"" +
                         "\n[time] Time of day to sync calendar\n " +
-                        "\"" + sync_time_display + "\"\n" +
+                        "\"" + sync_time_display + "\"" +
                         "\n[length] How many days to sync\n " +
-                        "\"" + Main.getScheduleManager().getSyncLength(cId) + "\"\n" +
+                        "\"" + Main.getScheduleManager().getSyncLength(cId) + "\"" +
                         "```";
 
                 if(type == 4)

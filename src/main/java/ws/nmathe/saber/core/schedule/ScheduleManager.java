@@ -117,6 +117,7 @@ public class ScheduleManager
                         .append("rsvp_enabled", false)
                         .append("style", "FULL")
                         .append("sync_length", 7)
+                        .append("auto_sort", 0)
                         .append("sync_address", "off");
 
         Main.getDBDriver().getScheduleCollection().insertOne(schedule);
@@ -399,6 +400,20 @@ public class ScheduleManager
         else
             return len;
     }
+
+    public int getAutoSort(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if(settings == null)
+            return 0;
+
+        Integer sort = (Integer) settings.get("auto_sort");
+        if(sort == null)
+            return 0;
+        else
+            return sort;
+    }
+
     /*
      *
      */
@@ -473,5 +488,11 @@ public class ScheduleManager
     {
         Main.getDBDriver().getScheduleCollection()
                 .updateOne(eq("_id",cId), set("sync_length", len));
+    }
+
+    public void setAutoSort(String cId, int type)
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("auto_sort", type));
     }
 }
