@@ -204,10 +204,11 @@ public class ScheduleManager
      * Reorders the schedule so that entries are displayed by start datetime ascending order in
      * the discord schedule channel
      * @param cId schedule ID
+     * @param reverseOrder (boolean) whether or not to reverse the sort order
      */
-    public void sortSchedule(String cId)
+    public void sortSchedule(String cId, boolean reverseOrder)
     {
-        if(this.getScheduleSize(cId) > 10)
+        if(this.getScheduleSize(cId) > 15)
             return;
         if(this.isLocked(cId))
             return;
@@ -217,8 +218,12 @@ public class ScheduleManager
         MessageChannel chan = Main.getBotJda().getTextChannelById(cId);
         chan.sendTyping().queue();
 
+        int sortOrder = 1;
+        if(reverseOrder)
+            sortOrder = -1;
+
         LinkedList<ScheduleEntry> unsortedEntries = new LinkedList<>();
-        Main.getDBDriver().getEventCollection().find(eq("channelId", cId)).sort(new Document("start", 1))
+        Main.getDBDriver().getEventCollection().find(eq("channelId", cId)).sort(new Document("start", sortOrder))
                 .forEach((Consumer<? super Document>) document -> unsortedEntries.add(new ScheduleEntry(document)));
 
         // selection sort the entries by timestamp

@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.utils.MessageUtilities;
 
 /**
  * Sets a channel to sync to a google calendar address
@@ -48,23 +49,28 @@ public class SyncCommand implements Command
             return "Channel " + args[0] + " is not on my list of schedule channels for your guild.";
 
         if(Main.getScheduleManager().isLocked(cId))
-            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
+            return "Schedule is locked while sorting or syncing. Please try again after I finish.";
         return "";
     }
 
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
-        TextChannel channel = event.getGuild().getTextChannelById( args[0].replace("<#","").replace(">","") );
+        String cId = args[0].replace("<#","").replace(">","");
+        TextChannel channel = event.getGuild().getTextChannelById(cId);
+
         String address;
         if( args.length == 1 )
-            address = Main.getScheduleManager().getAddress(channel.getId());
+            address = Main.getScheduleManager().getAddress(cId);
         else
         {
             address = args[1];
         }
 
         Main.getCalendarConverter().syncCalendar(address, channel);
-        Main.getScheduleManager().setAddress(channel.getId(),address);
+        Main.getScheduleManager().setAddress(cId,address);
+
+        String content = "I have finished syncing <#" + cId + ">!";
+        MessageUtilities.sendMsg(content, event.getChannel(), null);
     }
 }

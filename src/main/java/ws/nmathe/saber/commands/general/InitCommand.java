@@ -6,6 +6,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.util.List;
 
@@ -71,6 +72,7 @@ public class InitCommand implements Command
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
+        String body;
         if(args.length > 0)
         {
             String chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
@@ -80,15 +82,22 @@ public class InitCommand implements Command
             {
                 String chanTitle = args[0].replaceAll("[^A-Za-z0-9_ ]","").replace(" ","_");
                 Main.getScheduleManager().createSchedule(event.getGuild().getId(), chanTitle);
+                body = "A new schedule channel named **" + chanTitle.toLowerCase() + "** has been created!";
             }
             else
             {
                 Main.getScheduleManager().createSchedule(chan);
+                body = "The channel <@" + chanId + "> has been converted to a schedule channel!";
             }
         }
         else
         {
             Main.getScheduleManager().createSchedule(event.getGuild().getId(), null);
+            body = "A new schedule channel named **new_schedule** has been created!";
         }
+
+        body += "\nYou can now use the create command to create events on that schedule, or the sync command to sync " +
+                "that schedule to a Google Calendar.";
+        MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }
