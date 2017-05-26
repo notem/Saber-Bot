@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
@@ -65,6 +66,47 @@ public class ScheduleManager
         Document schedule =
                 new Document("_id", cId)
                         .append("guildId", gId)
+                        .append("announcement_channel", Main.getBotSettingsManager().getAnnounceChan())
+                        .append("announcement_format", Main.getBotSettingsManager().getAnnounceFormat())
+                        .append("clock_format", Main.getBotSettingsManager().getClockFormat())
+                        .append("timezone", Main.getBotSettingsManager().getTimeZone())
+                        .append("sync_time", Date.from(ZonedDateTime.of(LocalDate.now().plusDays(1),
+                                LocalTime.now().truncatedTo(ChronoUnit.HOURS), ZoneId.systemDefault()).toInstant()))
+                        .append("default_reminders", default_reminders)
+                        .append("rsvp_enabled", false)
+                        .append("style", "FULL")
+                        .append("sync_length", 7)
+                        .append("sync_address", "off");
+
+        Main.getDBDriver().getScheduleCollection().insertOne(schedule);
+    }
+
+
+    /**
+     * Convert a pre-existing discord channel to a new saber schedule channel
+     * @param channel (TextChannel) a pre-existing channel to convert to a schedule
+     */
+    public void createSchedule(TextChannel channel)
+    {
+        // attempt to set the channel permissions
+        Collection<Permission> channelPerms = Stream.of(Permission.MESSAGE_ADD_REACTION,
+                Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY,
+                Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_ATTACH_FILES)
+                .collect(Collectors.toList());
+        try
+        {
+            channel.createPermissionOverride(channel.getGuild().getMember(Main.getBotJda().getSelfUser()))
+                    .setAllow(channelPerms);
+        }
+        catch(PermissionException ignored)
+        {} // if Saber does not have the permissions, continue on. . .
+
+        List<Integer> default_reminders = new ArrayList<>();
+        default_reminders.add(10);
+
+        Document schedule =
+                new Document("_id", channel.getId())
+                        .append("guildId", channel.getGuild().getId())
                         .append("announcement_channel", Main.getBotSettingsManager().getAnnounceChan())
                         .append("announcement_format", Main.getBotSettingsManager().getAnnounceFormat())
                         .append("clock_format", Main.getBotSettingsManager().getClockFormat())

@@ -56,8 +56,8 @@ public class EditCommand implements Command
     {
         int index = 0;
 
-        if( args.length < 2 )
-            return "That's not enough arguments! Use ``" + invoke + " <ID> <option> <arg>``";
+        if( args.length < 1 )
+            return "That's not enough arguments! Use ``" + invoke + " <ID> [<option> <arg>]``";
 
         // check first arg
         if( !VerifyUtilities.verifyHex(args[index]) )
@@ -71,6 +71,9 @@ public class EditCommand implements Command
 
         if(Main.getScheduleManager().isLocked(entry.getScheduleID()))
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
+
+        if(args.length == 1)
+            return "";
 
         index++;
 
@@ -205,133 +208,139 @@ public class EditCommand implements Command
         boolean quietEnd = entry.isQuietEnd();
         boolean quietRemind = entry.isQuietRemind();
 
-        index++;    // 1
-
-        switch( args[index++] )     // 2
+        //
+        // edit the event if command contains more arguments than the event ID,
+        // otherwise skip this and print out the event configuration
+        if(args.length > 1)
         {
-            case "c":
-            case "comment":
-                switch( args[index++] )   // 3
-                {
-                    case "a":
-                    case "add" :
-                        comments.add( args[index] );
-                        break;
-                    case "r":
-                    case "remove" :
-                        if( VerifyUtilities.verifyInteger(args[index]) )
-                        {
-                            comments.remove( Integer.parseInt(args[index])-1 );
-                        }
-                        else
-                            comments.remove(args[index]);
-                        break;
-                }
-                break;
+            index++;    // 1
 
-            case "s":
-            case "starts":
-            case "start":
-                start = ParsingUtilities.parseTime( start, args[index] );
+            switch( args[index++] )     // 2
+            {
+                case "c":
+                case "comment":
+                    switch( args[index++] )   // 3
+                    {
+                        case "a":
+                        case "add" :
+                            comments.add( args[index] );
+                            break;
+                        case "r":
+                        case "remove" :
+                            if( VerifyUtilities.verifyInteger(args[index]) )
+                            {
+                                comments.remove( Integer.parseInt(args[index])-1 );
+                            }
+                            else
+                                comments.remove(args[index]);
+                            break;
+                    }
+                    break;
 
-                if(ZonedDateTime.now().isAfter(start)) //add a day if the time has already passed
-                {
-                    start = start.plusDays(1);
-                }
-                if(start.isAfter(end))        //add a day to end if end is after start
-                {
-                    end = end.plusDays(1);
-                }
-                break;
+                case "s":
+                case "starts":
+                case "start":
+                    start = ParsingUtilities.parseTime( start, args[index] );
 
-            case "e":
-            case "ends":
-            case "end":
-                end = ParsingUtilities.parseTime( end, args[index] );
+                    if(ZonedDateTime.now().isAfter(start)) //add a day if the time has already passed
+                    {
+                        start = start.plusDays(1);
+                    }
+                    if(start.isAfter(end))        //add a day to end if end is after start
+                    {
+                        end = end.plusDays(1);
+                    }
+                    break;
 
-                if(ZonedDateTime.now().isAfter(end)) //add a day if the time has already passed
-                {
-                    end = end.plusDays(1);
-                }
-                if(start.isAfter(end))        //add a day to end if end is after start
-                {
-                    end = end.plusDays(1);
-                }
-                break;
+                case "e":
+                case "ends":
+                case "end":
+                    end = ParsingUtilities.parseTime( end, args[index] );
 
-            case "t":
-            case "title":
-                title = args[index];
-                break;
+                    if(ZonedDateTime.now().isAfter(end)) //add a day if the time has already passed
+                    {
+                        end = end.plusDays(1);
+                    }
+                    if(start.isAfter(end))        //add a day to end if end is after start
+                    {
+                        end = end.plusDays(1);
+                    }
+                    break;
 
-            case "d":
-            case "date":
-                LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                case "t":
+                case "title":
+                    title = args[index];
+                    break;
 
-                start = start.withMonth(date.getMonthValue())
-                        .withDayOfMonth(date.getDayOfMonth());
-                end = end.withMonth(date.getMonthValue())
-                        .withDayOfMonth(date.getDayOfMonth());
-                break;
+                case "d":
+                case "date":
+                    LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-            case "sd":
-            case "start date":
-            case "start-date":
-                LocalDate sdate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                    start = start.withMonth(date.getMonthValue())
+                            .withDayOfMonth(date.getDayOfMonth());
+                    end = end.withMonth(date.getMonthValue())
+                            .withDayOfMonth(date.getDayOfMonth());
+                    break;
 
-                start = start.withMonth(sdate.getMonthValue())
-                        .withDayOfMonth(sdate.getDayOfMonth());
+                case "sd":
+                case "start date":
+                case "start-date":
+                    LocalDate sdate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                if(end.isBefore(start))
-                    end = start.plusDays(1);
-                break;
+                    start = start.withMonth(sdate.getMonthValue())
+                            .withDayOfMonth(sdate.getDayOfMonth());
 
-            case "ed":
-            case "end date":
-            case "end-date":
-                LocalDate edate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                    if(end.isBefore(start))
+                        end = start.plusDays(1);
+                    break;
 
-                end = end.withMonth(edate.getMonthValue())
-                        .withDayOfMonth(edate.getDayOfMonth());
-                break;
+                case "ed":
+                case "end date":
+                case "end-date":
+                    LocalDate edate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-            case "r":
-            case "repeats":
-            case "repeat":
-                String tmp = args[index].toLowerCase();
-                repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
-                break;
+                    end = end.withMonth(edate.getMonthValue())
+                            .withDayOfMonth(edate.getDayOfMonth());
+                    break;
 
-            case "i":
-            case "interval":
-                repeat = 0b10000000 | Integer.parseInt(args[index]);
-                break;
+                case "r":
+                case "repeats":
+                case "repeat":
+                    String tmp = args[index].toLowerCase();
+                    repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
+                    break;
 
-            case "u":
-            case "url":
-                url = args[index];
-                break;
+                case "i":
+                case "interval":
+                    repeat = 0b10000000 | Integer.parseInt(args[index]);
+                    break;
 
-            case "qs":
-            case "quiet-start":
-                quietStart = !quietStart;
-                break;
+                case "u":
+                case "url":
+                    url = args[index];
+                    break;
 
-            case "qe":
-            case "quiet-end":
-                quietEnd = !quietEnd;
-                break;
+                case "qs":
+                case "quiet-start":
+                    quietStart = !quietStart;
+                    break;
+
+                case "qe":
+                case "quiet-end":
+                    quietEnd = !quietEnd;
+                    break;
 
 
-            case "qr":
-            case "quiet-remind":
-                quietRemind = !quietRemind;
-                break;
+                case "qr":
+                case "quiet-remind":
+                    quietRemind = !quietRemind;
+                    break;
+            }
+
+            Main.getEntryManager().updateEntry(entryId, title, start, end, comments, repeat, url, entry.hasStarted(),
+                    msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo(), entry.getRsvpUndecided(),
+                    quietStart, quietEnd, quietRemind);
         }
-
-        Main.getEntryManager().updateEntry(entryId, title, start, end, comments, repeat, url, entry.hasStarted(),
-                msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo(), entry.getRsvpUndecided(),
-                quietStart, quietEnd, quietRemind);
 
         //
         // send the event summary to the command channel
