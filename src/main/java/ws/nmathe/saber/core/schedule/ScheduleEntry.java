@@ -63,9 +63,12 @@ public class ScheduleEntry
         this.rsvpYes = (List<String>) entryDocument.get("rsvp_yes");
         this.rsvpNo = (List<String>) entryDocument.get("rsvp_no");
         this.rsvpUndecided = (List<String>) entryDocument.get("rsvp_undecided");
-        this.quietStart = (boolean) entryDocument.get("start_disabled");
-        this.quietEnd = (boolean) entryDocument.get("end_disabled");
-        this.quietRemind = (boolean) entryDocument.get("reminders_disabled");
+        this.quietStart = (boolean) (entryDocument.get("start_disabled")!=null ?
+                entryDocument.get("start_disabled") : false);
+        this.quietEnd = (boolean) (entryDocument.get("end_disabled")!=null ?
+                entryDocument.get("end_disabled") : false);
+        this.quietRemind = (boolean) (entryDocument.get("remind_disabled")!=null ?
+                entryDocument.get("remind_disabled") : false);
 
         this.googleId = (String) entryDocument.get("googleId");
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
