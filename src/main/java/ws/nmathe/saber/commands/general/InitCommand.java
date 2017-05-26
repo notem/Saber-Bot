@@ -53,13 +53,16 @@ public class InitCommand implements Command
         if(args.length > 1)
             return "That's too many arguments! Use ``" + invoke + " [<name>]``";
 
-        if(args.length == 1 && (args[0].length()>100 || args[0].length()<2))
-            return "Schedule name must be between 2 and 100 characters long!";
-
-        String chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
-        if(event.getGuild().getPublicChannel().getId().equals(chanId))
+        if(args.length == 1)
         {
-            return "Your public guild's public channel cannot be converted to a schedule!";
+            if(args[0].length()>100 || args[0].length()<2)
+                return "Schedule name must be between 2 and 100 characters long!";
+
+            String chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
+            if(event.getGuild().getPublicChannel().getId().equals(chanId))
+            {
+                return "Your public guild's public channel cannot be converted to a schedule!";
+            }
         }
 
         return "";
