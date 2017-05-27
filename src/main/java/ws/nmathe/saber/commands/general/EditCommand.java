@@ -104,8 +104,9 @@ public class EditCommand implements Command
             case "s":
             case "starts":
             case "start":
-                if(args.length > 3)
-                    return "That's too many arguments for **start**!";
+                if(args.length != 3)
+                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [start time]``";
                 if( !VerifyUtilities.verifyTime( args[index] ) )
                     return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                 if( entry.hasStarted() )
@@ -115,8 +116,9 @@ public class EditCommand implements Command
             case "e":
             case "ends":
             case "end":
-                if(args.length > 3)
-                    return "That's too many arguments for **end**!";
+                if(args.length != 3)
+                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [end time]``";
                 if( !VerifyUtilities.verifyTime( args[index] ) )
                     return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                 break;
@@ -133,8 +135,9 @@ public class EditCommand implements Command
             case "start-date":
             case "ed":
             case "end-date":
-                if(args.length > 3)
-                    return "That's too many arguments for **date**!";
+                if(args.length != 3)
+                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [date]``";
                 if( !VerifyUtilities.verifyDate( args[index] ) )
                     return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
                 if(ParsingUtilities.parseDateStr(args[index]).isBefore(LocalDate.now()))
@@ -146,14 +149,16 @@ public class EditCommand implements Command
             case "r":
             case "repeats":
             case "repeat":
-                if(args.length > 3)
-                    return "That's too many arguments for **repeat**!";
+                if(args.length != 3)
+                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [repeat]``";
                 break;
 
             case "i":
             case "interval":
-                if(args.length > 3)
-                    return "That's too many arguments for **interval**!";
+                if(args.length != 3)
+                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [number]``";
                 if(!VerifyUtilities.verifyInteger(args[index]))
                     return "**" + args[index] + "** is not a number!";
                 if(Integer.parseInt(args[index]) < 1)
@@ -162,8 +167,9 @@ public class EditCommand implements Command
 
             case "u":
             case "url":
-                if (args.length > 3)
-                    return "That's too many arguments for **repeat**!";
+                if(args.length != 3)
+                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [url]``";
                 if (!VerifyUtilities.verifyUrl(args[index]))
                     return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
                 break;
@@ -175,7 +181,7 @@ public class EditCommand implements Command
             case "qr":
             case "quiet-remind":
                 if (args.length > 2)
-                    return "That's too many arguments for **quiet**!";
+                    return "That's too many arguments for **"+args[index-1]+"**!";
                 break;
 
             default:
