@@ -33,7 +33,7 @@ public class EventListener extends ListenerAdapter
     private String adminId = Main.getBotSettingsManager().getAdminId();
     private String controlChan = Main.getBotSettingsManager().getControlChan();
 
-    private final RateLimiter reactionLimiter = new RateLimiter(2000);
+    private final RateLimiter reactionLimiter = new RateLimiter(Main.getBotSettingsManager().getCooldownThreshold());
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
