@@ -75,17 +75,17 @@ public class EditCommand implements Command
         if(args.length == 1)
             return "";
 
-        index++;
+        index++; // 1
 
         // check later args
-        switch( args[index++].toLowerCase() )
+        switch( args[index++].toLowerCase() ) // 2
         {
             case "c":
             case "comment":
                 if(args.length <= index+1)
                     return "That's not enough arguments for *comment*! Use ``"+ invoke +" [id] comment [add|remove] \"comment\"``";
 
-                switch (args[index++])
+                switch (args[index++]) // 3
                 {
                     case "a":
                     case "add":
@@ -125,6 +125,9 @@ public class EditCommand implements Command
 
             case "t":
             case "title":
+                if(args.length != 3)
+                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [\"title\"]``";
                 if( args[index].length() > 255 )
                     return "Your title can be at most 255 characters!";
                 break;
