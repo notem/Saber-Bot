@@ -67,8 +67,8 @@ public class ScheduleEntry
                 entryDocument.get("start_disabled") : false);
         this.quietEnd = (boolean) (entryDocument.get("end_disabled")!=null ?
                 entryDocument.get("end_disabled") : false);
-        this.quietRemind = (boolean) (entryDocument.get("remind_disabled")!=null ?
-                entryDocument.get("remind_disabled") : false);
+        this.quietRemind = (boolean) (entryDocument.get("reminders_disabled")!=null ?
+                entryDocument.get("reminders_disabled") : false);
 
         this.googleId = (String) entryDocument.get("googleId");
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
