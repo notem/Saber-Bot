@@ -10,7 +10,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
-import ws.nmathe.saber.utils.__out;
+import ws.nmathe.saber.utils.Logging;
 
 import java.io.IOException;
 import java.time.*;
@@ -49,7 +49,7 @@ public class CalendarConverter
         }
         catch( IOException e )
         {
-            __out.printOut(this.getClass(), e.getMessage());
+            Logging.warn(this.getClass(), e.getMessage());
         }
     }
 

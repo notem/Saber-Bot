@@ -13,7 +13,7 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import ws.nmathe.saber.core.EventListener;
 import ws.nmathe.saber.utils.HttpUtilities;
-import ws.nmathe.saber.utils.__out;
+import ws.nmathe.saber.utils.Logging;
 import java.util.*;
 
 /**
@@ -36,7 +36,7 @@ public class Main
     {
         if( botSettingsManager.hasSettings() )
         {
-            __out.printOut(Main.class, "A 'saber.toml' configuration file has been created. Add your " +
+            Logging.info(Main.class, "A 'saber.toml' configuration file has been created. Add your " +
                     "bot token to the file and restart the bot.\n");
             System.exit(0);
         }

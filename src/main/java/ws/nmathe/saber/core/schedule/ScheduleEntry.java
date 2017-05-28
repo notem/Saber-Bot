@@ -7,7 +7,7 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
-import ws.nmathe.saber.utils.__out;
+import ws.nmathe.saber.utils.Logging;
 
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -132,7 +132,7 @@ public class ScheduleEntry
                     .getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
             {
                 MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant()));
-                __out.printOut(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
+                Logging.info(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
                         this.getStart().withZoneSameInstant(ZoneId.systemDefault())
                                 .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
             }
@@ -160,7 +160,7 @@ public class ScheduleEntry
                     getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true))
             {
                 MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant()));
-                __out.printOut(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
+                Logging.info(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
                         this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
                                 .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
             }

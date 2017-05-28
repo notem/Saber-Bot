@@ -300,7 +300,7 @@ public class ConfigCommand implements Command
                 case "t":
                 case "time":
                     ZonedDateTime syncTime = ParsingUtilities.parseTime(
-                            ZonedDateTime.now().withZoneSameLocal(Main.getScheduleManager().getTimeZone(cId)),
+                            ZonedDateTime.now(Main.getScheduleManager().getTimeZone(cId)),
                             args[index]
                     );
 

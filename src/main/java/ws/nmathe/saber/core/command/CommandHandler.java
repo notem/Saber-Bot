@@ -9,7 +9,7 @@ import ws.nmathe.saber.core.RateLimiter;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.commands.general.*;
-import ws.nmathe.saber.utils.__out;
+import ws.nmathe.saber.utils.Logging;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -76,7 +76,7 @@ public class CommandHandler
                         cc.invoke + "' command!";
 
                 // alert admin
-                __out.printOut(this.getClass(), alert);
+                Logging.warn(this.getClass(), alert);
                 User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
                 if(admin != null)
                 {

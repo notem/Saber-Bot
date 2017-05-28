@@ -28,7 +28,7 @@ public class MessageUtilities
         }
         catch( Exception e)
         {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
+            Logging.warn(MessageUtilities.class, e.getMessage());
         }
     }
 
@@ -41,7 +41,7 @@ public class MessageUtilities
         }
         catch( Exception e)
         {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
+            Logging.warn( MessageUtilities.class, e.getMessage() );
         }
     }
 
@@ -54,7 +54,7 @@ public class MessageUtilities
         }
         catch( Exception e)
         {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
+            Logging.warn( MessageUtilities.class, e.getMessage() );
             return null;
         }
     }
@@ -75,7 +75,7 @@ public class MessageUtilities
         }
         catch( Exception e)
         {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
+            Logging.warn( MessageUtilities.class, e.getMessage() );
         }
     }
 
@@ -94,7 +94,7 @@ public class MessageUtilities
         }
         catch( Exception e)
         {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
+            Logging.warn( MessageUtilities.class, e.getMessage() );
         }
     }
 
@@ -106,7 +106,7 @@ public class MessageUtilities
         }
         catch( Exception e)
         {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
+            Logging.warn( MessageUtilities.class, e.getMessage() );
         }
     }
 
@@ -118,7 +118,7 @@ public class MessageUtilities
         }
         catch( Exception e)
         {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
+            Logging.warn( MessageUtilities.class, e.getMessage() );
             return null;
         }
     }
@@ -137,7 +137,7 @@ public class MessageUtilities
         }
         catch( Exception e)
         {
-            __out.printOut( MessageUtilities.class, e.getMessage() );
+            Logging.warn( MessageUtilities.class, e.getMessage() );
         }
     }
 }

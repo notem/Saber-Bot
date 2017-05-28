@@ -1,14 +1,19 @@
 package ws.nmathe.saber.commands.general;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
+import ws.nmathe.saber.utils.VerifyUtilities;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class InitCommand implements Command
 {
@@ -76,21 +81,25 @@ public class InitCommand implements Command
         if(args.length > 0)
         {
             String chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
-            TextChannel chan = event.getGuild().getTextChannelById(chanId);
 
-            if(chan == null)
+            List<TextChannel> chans = event.getGuild().getTextChannels().stream()
+                    .filter(chan -> chan.getId().equals(chanId))
+                    .collect(Collectors.toList());
+
+            if(chans.isEmpty()) // use the argument as the new channel's name
             {
                 String chanTitle = args[0].replaceAll("[^A-Za-z0-9_ ]","").replace(" ","_");
                 Main.getScheduleManager().createSchedule(event.getGuild().getId(), chanTitle);
                 body = "A new schedule channel named **" + chanTitle.toLowerCase() + "** has been created!";
             }
-            else
+            else // convert the channel to a schedule
             {
+                TextChannel chan = chans.get(0);
                 Main.getScheduleManager().createSchedule(chan);
-                body = "The channel <@" + chanId + "> has been converted to a schedule channel!";
+                body = "The channel <#" + chanId + "> has been converted to a schedule channel!";
             }
         }
-        else
+        else // create a new schedule using the default name
         {
             Main.getScheduleManager().createSchedule(event.getGuild().getId(), null);
             body = "A new schedule channel named **new_schedule** has been created!";
