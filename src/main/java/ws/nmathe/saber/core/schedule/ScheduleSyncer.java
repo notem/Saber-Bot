@@ -7,6 +7,8 @@ import ws.nmathe.saber.utils.Logging;
 
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.*;
@@ -19,6 +21,9 @@ import static com.mongodb.client.model.Updates.set;
  */
 class ScheduleSyncer implements Runnable
 {
+    // thread pool for sync jobs
+    private static ExecutorService executor = Executors.newCachedThreadPool();
+
     public void run()
     {
         Logging.info(this.getClass(), "Running schedule syncer. . .");
@@ -28,33 +33,35 @@ class ScheduleSyncer implements Runnable
                         lte("sync_time", new Date())))
                 .forEach((Consumer<? super Document>) document ->
         {
-            String scheduleId = (String) document.get("_id");
+            executor.submit(() -> {
+                String scheduleId = (String) document.get("_id");
 
-            // add one day to sync_time
-            Date syncTime = Date.from(ZonedDateTime.ofInstant(document.getDate("sync_time").toInstant(),
-                    Main.getScheduleManager().getTimeZone(scheduleId)).plusDays(1).toInstant());
+                // add one day to sync_time
+                Date syncTime = Date.from(ZonedDateTime.ofInstant(document.getDate("sync_time").toInstant(),
+                        Main.getScheduleManager().getTimeZone(scheduleId)).plusDays(1).toInstant());
 
-            // update schedule document with next sync time
-            Main.getDBDriver().getScheduleCollection()
-                    .updateOne(eq("_id", scheduleId), set("sync_time", syncTime));
-
-            // attempt to sync schedule
-            if(Main.getCalendarConverter().checkValidAddress(document.getString("sync_address")))
-            {
-                Main.getCalendarConverter().syncCalendar(
-                        (String) document.get("sync_address"),
-                        Main.getBotJda().getTextChannelById(document.getString("_id")));
-
-                TextChannel channel = Main.getBotJda().getTextChannelById(document.getString("_id"));
-                Logging.info(this.getClass(), "Synchronized schedule #" + channel.getName() + " [" +
-                        document.getString("_id") + "] on '" + channel.getGuild().getName() + "' [" +
-                        channel.getGuild().getId() + "]");
-            }
-            else    // if sync address is not valid, set it to off
-            {
+                // update schedule document with next sync time
                 Main.getDBDriver().getScheduleCollection()
-                        .updateOne(eq("_id", scheduleId), set("sync_address", "off"));
-            }
+                        .updateOne(eq("_id", scheduleId), set("sync_time", syncTime));
+
+                // attempt to sync schedule
+                if(Main.getCalendarConverter().checkValidAddress(document.getString("sync_address")))
+                {
+                    Main.getCalendarConverter().syncCalendar(
+                            (String) document.get("sync_address"),
+                            Main.getBotJda().getTextChannelById(document.getString("_id")));
+
+                    TextChannel channel = Main.getBotJda().getTextChannelById(document.getString("_id"));
+                    Logging.info(this.getClass(), "Synchronized schedule #" + channel.getName() + " [" +
+                            document.getString("_id") + "] on '" + channel.getGuild().getName() + "' [" +
+                            channel.getGuild().getId() + "]");
+                }
+                else    // if sync address is not valid, set it to off
+                {
+                    Main.getDBDriver().getScheduleCollection()
+                            .updateOne(eq("_id", scheduleId), set("sync_address", "off"));
+                }
+            });
         });
     }
 }
