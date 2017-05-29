@@ -178,8 +178,8 @@ public class ConfigCommand implements Command
                     if(!VerifyUtilities.verifyInteger(args[index]))
                         return "*" + args[index] + "*" + " is not an integer!";
                     Integer len = Integer.parseInt(args[index]);
-                    if(len>7 || len<1)
-                        return "The sync length must be an integer between 1 and 7!";
+                    if(len>30 || len<1)
+                        return "The sync length must be an integer between 1 and 30!";
                     break;
 
                 case "so":
