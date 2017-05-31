@@ -283,6 +283,50 @@ public class ScheduleManager
         return (Boolean) obj;
     }
 
+    public boolean isEndFormatOverridden(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+            return false;
+
+        String format = (String) settings.get("announcement_format_end");
+        return !(format == null);
+    }
+
+    public boolean isEndChannelOverridden(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+            return false;
+
+        String format = (String) settings.get("announcement_channel_end");
+        return !(format == null);
+    }
+
+    public boolean isRemindFormatOverridden(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+            return false;
+
+        String format = (String) settings.get("reminder_format");
+        return !(format == null);
+    }
+
+    public boolean isRemindChanOverridden(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+            return false;
+
+        String format = (String) settings.get("reminder_channel");
+        return !(format == null);
+    }
+
+    /*
+     *
+     */
+
     public List<String> getSchedulesForGuild(String gId)
     {
         List<String> list = new ArrayList<>();
@@ -291,7 +335,7 @@ public class ScheduleManager
         return list;
     }
 
-    public String getAnnounceChan(String cId)
+    public String getStartAnnounceChan(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
@@ -299,12 +343,36 @@ public class ScheduleManager
         return (String) settings.get("announcement_channel");
     }
 
-    public String getAnnounceFormat(String cId)
+    public String getStartAnnounceFormat(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
             return Main.getBotSettingsManager().getAnnounceFormat();
         return (String) settings.get("announcement_format");
+    }
+
+    public String getEndAnnounceChan(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+            return Main.getBotSettingsManager().getAnnounceChan();
+        String chan = settings.getString("announcement_channel_end");
+        if(chan == null)
+            return (String) settings.get("announcement_format");
+        else
+            return chan;
+    }
+
+    public String getEndAnnounceFormat(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
+            return Main.getBotSettingsManager().getAnnounceFormat();
+        String format = settings.getString("announcement_format_end");
+        if(format == null)
+            return (String) settings.get("announcement_format");
+        else
+            return format;
     }
 
     public String getClockFormat(String cId)
@@ -428,6 +496,18 @@ public class ScheduleManager
     {
         Main.getDBDriver().getScheduleCollection()
                 .updateOne(eq("_id",cId), set("announcement_format", format));
+    }
+
+    public void setEndAnnounceChan(String cId, String chan )
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("announcement_channel_end", chan));
+    }
+
+    public void setEndAnnounceFormat(String cId, String format )
+    {
+        Main.getDBDriver().getScheduleCollection()
+                .updateOne(eq("_id",cId), set("announcement_format_end", format));
     }
 
     public void setClockFormat(String cId, String clock )

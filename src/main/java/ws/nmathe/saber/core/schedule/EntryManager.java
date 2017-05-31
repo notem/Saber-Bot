@@ -132,17 +132,14 @@ public class EntryManager
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
 
             // auto-sort
-            if(googleId == null) // only auto-sort non google events (sorting google events are handled by calendar converter)
+            int sortType = Main.getScheduleManager().getAutoSort(channelId);
+            if(sortType == 1)
             {
-                int sortType = Main.getScheduleManager().getAutoSort(channelId);
-                if(sortType == 1)
-                {
-                    Main.getScheduleManager().sortSchedule(channelId, false);
-                }
-                if(sortType == 2)
-                {
-                    Main.getScheduleManager().sortSchedule(channelId, true);
-                }
+                Main.getScheduleManager().sortSchedule(channelId, false);
+            }
+            if(sortType == 2)
+            {
+                Main.getScheduleManager().sortSchedule(channelId, true);
             }
         });
 
@@ -211,17 +208,14 @@ public class EntryManager
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);
 
             // auto-sort
-            if(googleId == null) // only auto-sort non google events (sorting google events are handled by calendar converter)
+            int sortType = Main.getScheduleManager().getAutoSort(channelId);
+            if(sortType == 1)
             {
-                int sortType = Main.getScheduleManager().getAutoSort(channelId);
-                if(sortType == 1)
-                {
-                    Main.getScheduleManager().sortSchedule(channelId, false);
-                }
-                if(sortType == 2)
-                {
-                    Main.getScheduleManager().sortSchedule(channelId, true);
-                }
+                Main.getScheduleManager().sortSchedule(channelId, false);
+            }
+            if(sortType == 2)
+            {
+                Main.getScheduleManager().sortSchedule(channelId, true);
             }
         });
     }

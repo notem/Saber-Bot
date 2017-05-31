@@ -250,15 +250,14 @@ public class CalendarConverter
                 });
 
         channel.getManager().setTopic(calLink).queue();
-
         Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
 
         // auto-sort
         int sortType = Main.getScheduleManager().getAutoSort(channel.getId());
         if(!(sortType == 0))
         {
-            try // sleep for 1s before auto-sorting
-            { Thread.sleep(1000); }
+            try // sleep for 2s before auto-sorting
+            { Thread.sleep(2000); }
             catch (InterruptedException e)
             { Logging.warn(this.getClass(), e.getMessage()); }
 

@@ -97,10 +97,12 @@ public class ScheduleEntry
             return;
 
         // send the remind announcement
-        String remindMsg = ParsingUtilities.
-                parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
-        for( TextChannel chan : msg.getGuild().
-                getTextChannelsByName(Main.getScheduleManager().getReminderChan(this.chanId), true) )
+        String remindMsg =
+                ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
+        List<TextChannel> channels =
+                msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getReminderChan(this.chanId), true);
+
+        for( TextChannel chan : channels )
         {
             MessageUtilities.sendMsg(remindMsg, chan, message -> this.checkDelay(Instant.now()));
         }
@@ -115,21 +117,14 @@ public class ScheduleEntry
         if( msg == null )
             return;
 
-        // if the entry's start time is the same as it's end
-        // skip to end
-        if(this.entryStart.isEqual(this.entryEnd))
-        {
-            this.end();
-            return;
-        }
-
         if(!this.quietStart)
-        {
-            // send the start announcement
-            String startMsg = ParsingUtilities
-                    .parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
-            for( TextChannel chan : msg.getGuild()
-                    .getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true) )
+        { // send the start announcement
+            String startMsg =
+                    ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
+            List<TextChannel> channels =
+                    msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getStartAnnounceChan(this.chanId), true);
+
+            for( TextChannel chan : channels )
             {
                 MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant()));
                 Logging.info(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
@@ -138,7 +133,16 @@ public class ScheduleEntry
             }
         }
 
-        this.reloadDisplay();
+        // if the entry's start time is the same as it's end
+        // skip to end
+        if(this.entryStart.isEqual(this.entryEnd))
+        {
+            this.repeat();
+        }
+        else
+        {
+            this.reloadDisplay();
+        }
     }
 
     /**
@@ -150,14 +154,15 @@ public class ScheduleEntry
         if( eMsg==null )
             return;
 
-        if((!this.entryStart.isEqual(this.entryEnd) && !this.quietEnd) ||
-                (this.entryStart.isEqual(this.entryEnd) && !this.quietStart))
+        if(!this.quietEnd)
         {
             // send the end announcement
-            String endMsg = ParsingUtilities
-                    .parseMsgFormat(Main.getScheduleManager().getAnnounceFormat(this.chanId), this);
-            for( TextChannel chan : eMsg.getGuild().
-                    getTextChannelsByName(Main.getScheduleManager().getAnnounceChan(this.chanId), true))
+            String endMsg =
+                    ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
+            List<TextChannel> channels =
+                    eMsg.getGuild().getTextChannelsByName(Main.getScheduleManager().getEndAnnounceChan(this.chanId), true);
+
+            for( TextChannel chan : channels)
             {
                 MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant()));
                 Logging.info(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
@@ -166,13 +171,25 @@ public class ScheduleEntry
             }
         }
 
+        this.repeat();
+    }
+
+    /**
+     *
+     */
+    private void repeat()
+    {
+        Message msg = this.getMessageObject();
+        if( msg==null )
+            return;
+
         if( this.entryRepeat != 0 ) // find next repeat date and edit the message
         {
             int days = this.daysUntilNextOccurrence();
 
             // fixes wrap-around at new years
             ZonedDateTime newStart = this.entryStart.plusDays(days).isAfter(this.entryStart) ?
-                            this.entryStart.plusDays(days) : this.entryStart.plusDays(days).plusYears(1);
+                    this.entryStart.plusDays(days) : this.entryStart.plusDays(days).plusYears(1);
             ZonedDateTime newEnd = this.entryEnd.plusDays(days).isAfter(this.entryEnd) ?
                     this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
 
@@ -185,7 +202,7 @@ public class ScheduleEntry
         else // otherwise remove entry and delete the message
         {
             Main.getEntryManager().removeEntry(this.entryId);
-            MessageUtilities.deleteMsg( eMsg, null );
+            MessageUtilities.deleteMsg( msg, null );
         }
     }
 

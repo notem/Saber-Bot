@@ -33,8 +33,8 @@ public class EditCommand implements Command
                 "``start-date``, ``end-date``, ``repeat``, ``interval``, and ``url``.\n\n" +
                 "For further explanation as for what are valid arguments for each options, reference the ``help`` information" +
                 " for the ``create`` command.\n\n" +
-                "Announcements for individual events can be toggled on-off using any of these three options: " +
-                "**quiet-start**, **quiet-end**, **quiet-remind**\n";
+                "Also, announcements for individual events can be toggled on-off using any of these three options: " +
+                "``quiet-start``, ``quiet-end``, ``quiet-remind``\n";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + invoke + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
@@ -42,7 +42,8 @@ public class EditCommand implements Command
                 "\n``" + invoke + " 49afaf2 end 2:15pm``" +
                 "\n``" + invoke + " 409fa22 start-date 10/9``" +
                 "\n``" + invoke + " a00af9a repeat \"Su, Tu, Fr\"``" +
-                "\n``" + invoke + " 80c0sd09 comment remove 1``";
+                "\n``" + invoke + " 80c0sd09 comment remove 1``" +
+                "\n``" + invoke + " 0912af9 quiet-start``";
 
         String USAGE_BRIEF = "``" + invoke + "`` - modify an event";
 

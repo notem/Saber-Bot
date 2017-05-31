@@ -70,8 +70,8 @@ public class TestCommand implements Command
         if( msg==null )
             return;
 
-        String remindMsg = ParsingUtilities.parseMsgFormat(
-                Main.getScheduleManager().getAnnounceFormat(entry.getMessageObject().getChannel().getId()), entry);
+        String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getMessageObject().getChannel().getId());
+        String remindMsg = ParsingUtilities.parseMsgFormat(format, entry);
         MessageUtilities.sendMsg(remindMsg, event.getChannel(), null);
     }
 }
