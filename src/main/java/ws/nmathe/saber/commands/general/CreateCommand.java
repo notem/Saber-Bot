@@ -7,6 +7,7 @@ import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -342,10 +343,16 @@ public class CreateCommand implements Command
         Integer entryId = Main.getEntryManager().newEntry(title, start, end, comments, repeat, url,
                 event.getGuild().getTextChannelById(cId), null, false);
 
+        DateTimeFormatter dtf;
+        if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
+            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
+        else
+            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mm a [z]");
+
         String body = "New event created :id: **"+ Integer.toHexString(entryId) +"** on <#" + cId + ">\n```js\n" +
                 "Title:  \"" + title + "\"\n" +
-                "Start:  " + start + "\n" +
-                "End:    " + end + "\n" +
+                "Start:  " + start.format(dtf) + "\n" +
+                "End:    " + end.format(dtf) + "\n" +
                 "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n" ;
 
         if(url!=null)

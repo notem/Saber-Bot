@@ -11,6 +11,7 @@ import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
@@ -188,7 +189,7 @@ public class EditCommand implements Command
                 break;
 
             default:
-                return "**" + args[index] + "** is not an option I know of! Please use the ``help`` command to see available options!";
+                return "**" + args[index-1] + "** is not an option I know of! Please use the ``help`` command to see available options!";
         }
 
         return ""; // return valid
@@ -354,10 +355,16 @@ public class EditCommand implements Command
         //
         // send the event summary to the command channel
         //
+        DateTimeFormatter dtf;
+        if(Main.getScheduleManager().getClockFormat(entry.getScheduleID()).equals("24"))
+            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
+        else
+            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mma [z]");
+
         String body = "Updated event :id: **"+ Integer.toHexString(entryId) +"** on <#" + entry.getScheduleID() + ">\n```js\n" +
                 "Title:  \"" + title + "\"\n" +
-                "Start:  " + start + "\n" +
-                "End:    " + end + "\n" +
+                "Start:  " + start.format(dtf) + "\n" +
+                "End:    " + end.format(dtf) + "\n" +
                 "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n" ;
 
         if(url!=null)

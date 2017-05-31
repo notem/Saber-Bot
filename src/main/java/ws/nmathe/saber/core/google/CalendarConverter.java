@@ -84,6 +84,7 @@ public class CalendarConverter
     public void syncCalendar(String address, TextChannel channel)
     {
         Events events;
+        String calLink;
 
         try
         {
@@ -97,6 +98,8 @@ public class CalendarConverter
                     .setSingleEvents(true)
                     .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
                     .execute();
+
+            calLink = "https://calendar.google.com/calendar/embed?src=" + address;
         }
         catch( IOException e )
         {
@@ -246,17 +249,23 @@ public class CalendarConverter
                     MessageUtilities.deleteMsg(msg, null);
                 });
 
+        channel.getManager().setTopic(calLink).queue();
+
         Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
 
         // auto-sort
         int sortType = Main.getScheduleManager().getAutoSort(channel.getId());
-        if(sortType == 1)
+        if(!(sortType == 0))
         {
-            Main.getScheduleManager().sortSchedule(channel.getId(), false);
-        }
-        if(sortType == 2)
-        {
-            Main.getScheduleManager().sortSchedule(channel.getId(), true);
+            try // sleep for 1s before auto-sorting
+            { Thread.sleep(1000); }
+            catch (InterruptedException e)
+            { Logging.warn(this.getClass(), e.getMessage()); }
+
+            if(sortType == 1)
+                Main.getScheduleManager().sortSchedule(channel.getId(), false);
+            if(sortType == 2)
+                Main.getScheduleManager().sortSchedule(channel.getId(), true);
         }
     }
 }
