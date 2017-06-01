@@ -174,7 +174,10 @@ public class ScheduleManager
      */
     public boolean isLocked(String cId)
     {
+        return false;
+        /* TODO
         return this.locks.contains(cId);
+        */
     }
 
     /**

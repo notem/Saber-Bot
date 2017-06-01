@@ -6,6 +6,7 @@ import com.google.api.services.calendar.model.Events;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -255,7 +256,14 @@ public class CalendarConverter
                 .hasPermission(channel, Permission.MANAGE_CHANNEL);
         if(hasPerms)
         {
-            channel.getManager().setTopic(calLink).queue();
+            try
+            {
+                channel.getManager().setTopic(calLink).queue();
+            }
+            catch(PermissionException e)
+            {
+                Logging.warn(this.getClass(), e.getMessage());
+            }
         }
 
         Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
