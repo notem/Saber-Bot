@@ -132,6 +132,7 @@ public class EntryManager
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
 
             // auto-sort
+            /*
             int sortType = Main.getScheduleManager().getAutoSort(channelId);
             if(sortType == 1)
             {
@@ -141,6 +142,7 @@ public class EntryManager
             {
                 Main.getScheduleManager().sortSchedule(channelId, true);
             }
+            */
         });
 
         return newId;
@@ -208,6 +210,7 @@ public class EntryManager
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);
 
             // auto-sort
+            /*
             int sortType = Main.getScheduleManager().getAutoSort(channelId);
             if(sortType == 1)
             {
@@ -217,6 +220,7 @@ public class EntryManager
             {
                 Main.getScheduleManager().sortSchedule(channelId, true);
             }
+            */
         });
     }
 
