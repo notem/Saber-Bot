@@ -74,7 +74,7 @@ public class ScheduleManager
                                 LocalTime.now().truncatedTo(ChronoUnit.HOURS), ZoneId.systemDefault()).toInstant()))
                         .append("default_reminders", default_reminders)
                         .append("rsvp_enabled", false)
-                        .append("style", "FULL")
+                        .append("display_style", "full")
                         .append("sync_length", 7)
                         .append("sync_address", "off");
 
@@ -115,7 +115,7 @@ public class ScheduleManager
                                 LocalTime.now().truncatedTo(ChronoUnit.HOURS), ZoneId.systemDefault()).toInstant()))
                         .append("default_reminders", default_reminders)
                         .append("rsvp_enabled", false)
-                        .append("style", "FULL")
+                        .append("display_style", "full")
                         .append("sync_length", 7)
                         .append("auto_sort", 0)
                         .append("sync_address", "off");
