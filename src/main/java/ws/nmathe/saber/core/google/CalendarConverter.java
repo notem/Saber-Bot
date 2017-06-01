@@ -3,6 +3,7 @@ package ws.nmathe.saber.core.google;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
@@ -249,10 +250,16 @@ public class CalendarConverter
                     MessageUtilities.deleteMsg(msg, null);
                 });
 
-        channel.getManager().setTopic(calLink).queue();
+        // set channel topic
+        boolean hasPerms = channel.getGuild().getMember(Main.getBotJda().getSelfUser())
+                .hasPermission(channel, Permission.MANAGE_CHANNEL);
+        if(hasPerms)
+        {
+            channel.getManager().setTopic(calLink).queue();
+        }
+
         Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
 
-        /*
         // auto-sort
         int sortType = Main.getScheduleManager().getAutoSort(channel.getId());
         if(!(sortType == 0))
@@ -267,6 +274,5 @@ public class CalendarConverter
             if(sortType == 2)
                 Main.getScheduleManager().sortSchedule(channel.getId(), true);
         }
-        */
     }
 }
