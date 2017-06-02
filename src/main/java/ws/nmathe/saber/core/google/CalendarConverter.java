@@ -110,163 +110,174 @@ public class CalendarConverter
 
         // lock the schedule for syncing
         Main.getScheduleManager().lock(channel.getId());
-        channel.sendTyping();   // send 'is typing' while the sync is in progress
 
-        // change the zone to match the calendar
-        ZoneId zone = ZoneId.of( events.getTimeZone() );
-        Main.getScheduleManager().setTimeZone( channel.getId(), zone );
-
-        HashSet<String> uniqueEvents = new HashSet<>(); // a set of all unique (not child of a recurring event) events
-
-        // convert every entry and add it to the scheduleManager
-        for(Event event : events.getItems())
+        try
         {
-            channel.sendTyping();   // continue to send 'is typing'
+            channel.sendTyping();   // send 'is typing' while the sync is in progress
 
-            ZonedDateTime start;
-            ZonedDateTime end;
-            String title;
-            ArrayList<String> comments = new ArrayList<>();
-            int repeat = 0;
+            // change the zone to match the calendar
+            ZoneId zone = ZoneId.of( events.getTimeZone() );
+            Main.getScheduleManager().setTimeZone( channel.getId(), zone );
 
-            if(event.getStart().getDateTime() == null)
-            { // parse start and end dates for strange events
-                start = ZonedDateTime.of(
+            HashSet<String> uniqueEvents = new HashSet<>(); // a set of all unique (not child of a recurring event) events
+
+            // convert every entry and add it to the scheduleManager
+            for(Event event : events.getItems())
+            {
+                channel.sendTyping();   // continue to send 'is typing'
+
+                ZonedDateTime start;
+                ZonedDateTime end;
+                String title;
+                ArrayList<String> comments = new ArrayList<>();
+                int repeat = 0;
+
+                if(event.getStart().getDateTime() == null)
+                { // parse start and end dates for strange events
+                    start = ZonedDateTime.of(
                             LocalDate.parse(event.getStart().getDate().toStringRfc3339()),
                             LocalTime.MIN,
                             zone);
-                end = ZonedDateTime.of(
-                        LocalDate.parse(event.getEnd().getDate().toStringRfc3339()),
-                        LocalTime.MIN,
-                        zone);
-            }
-            else
-            { // parse start and end times for normal events
-                start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter)
-                        .withZoneSameInstant(zone);
-                end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter)
-                        .withZoneSameInstant(zone);
-            }
-
-            // get event title
-            if( event.getSummary() == null )
-                title = "(No title)";
-            else
-                title = event.getSummary();
-
-            // process event description into event comments
-            if( event.getDescription() != null )
-            {
-                for( String comment : event.getDescription().split("\n") )
-                {
-                    if( !comment.trim().isEmpty() )
-                        comments.add( comment );
+                    end = ZonedDateTime.of(
+                            LocalDate.parse(event.getEnd().getDate().toStringRfc3339()),
+                            LocalTime.MIN,
+                            zone);
                 }
-            }
+                else
+                { // parse start and end times for normal events
+                    start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                            .withZoneSameInstant(zone);
+                    end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                            .withZoneSameInstant(zone);
+                }
 
-            // handle event repeat/recurrence
-            List<String> recurrence = event.getRecurrence();
-            String recurrenceId = event.getRecurringEventId();
-            if( recurrenceId != null )
-            {
-                try
+                // get event title
+                if( event.getSummary() == null )
+                    title = "(No title)";
+                else
+                    title = event.getSummary();
+
+                // process event description into event comments
+                if( event.getDescription() != null )
                 {
-                    recurrence = service.events().get(address, recurrenceId).execute().getRecurrence();
-                }
-                catch( IOException e )
-                {
-                    continue; // skip this event (I don't know what happened!)
-                }
-            }
-            if( recurrence != null )
-            {
-                for( String rule : recurrence )
-                {
-                    if( rule.startsWith("RRULE") && rule.contains("FREQ" ) )
+                    for( String comment : event.getDescription().split("\n") )
                     {
-                        String tmp = rule.split("FREQ=")[1].split(";")[0];
-                        if( tmp.equals("DAILY" ) )
+                        if( !comment.trim().isEmpty() )
+                            comments.add( comment );
+                    }
+                }
+
+                // handle event repeat/recurrence
+                List<String> recurrence = event.getRecurrence();
+                String recurrenceId = event.getRecurringEventId();
+                if( recurrenceId != null )
+                {
+                    try
+                    {
+                        recurrence = service.events().get(address, recurrenceId).execute().getRecurrence();
+                    }
+                    catch( IOException e )
+                    {
+                        continue; // skip this event (I don't know what happened!)
+                    }
+                }
+                if( recurrence != null )
+                {
+                    for( String rule : recurrence )
+                    {
+                        if( rule.startsWith("RRULE") && rule.contains("FREQ" ) )
                         {
-                            if(rule.contains("INTERVAL"))
+                            String tmp = rule.split("FREQ=")[1].split(";")[0];
+                            if( tmp.equals("DAILY" ) )
                             {
-                                int interval = Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]);
-                                repeat = (0b10000000 | interval);
+                                if(rule.contains("INTERVAL"))
+                                {
+                                    int interval = Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]);
+                                    repeat = (0b10000000 | interval);
+                                }
+                                else
+                                {
+                                    repeat = 0b1111111;
+                                }
                             }
-                            else
+                            else if( tmp.equals("WEEKLY") && rule.contains("BYDAY") )
                             {
-                                repeat = 0b1111111;
+                                tmp = rule.split("BYDAY=")[1].split(";")[0];
+                                repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
                             }
-                        }
-                        else if( tmp.equals("WEEKLY") && rule.contains("BYDAY") )
-                        {
-                            tmp = rule.split("BYDAY=")[1].split(";")[0];
-                            repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
                         }
                     }
                 }
+
+                // add new event entry if the event has not already been added (ie, a repeating event)
+                String googleId = recurrenceId==null ? event.getId() : recurrenceId;
+                if(!uniqueEvents.contains(googleId))
+                {
+                    // if the google event already exists as a saber event on the schedule, update it
+                    // otherwise add as a new saber event
+                    Document doc = Main.getDBDriver().getEventCollection()
+                            .find(and(
+                                    eq("channelId", channel.getId()),
+                                    eq("googleId", googleId))).first();
+                    if(doc != null)
+                    {
+                        ScheduleEntry se = Main.getEntryManager().getEntry((Integer) doc.get("_id"));
+                        Main.getEntryManager().updateEntry(se.getId(), title, start, end, comments, repeat,
+                                event.getHtmlLink(), se.hasStarted(), se.getMessageObject(), googleId,
+                                se.getRsvpYes(), se.getRsvpNo(), se.getRsvpUndecided(), se.isQuietStart(),
+                                se.isQuietEnd(), se.isQuietRemind());
+                    }
+                    else
+                    {
+                        boolean hasStarted = !start.isAfter(ZonedDateTime.now());
+                        Main.getEntryManager().newEntry(title, start, end, comments, repeat,
+                                event.getHtmlLink(), channel, googleId, hasStarted);
+                    }
+
+                    uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);
+                }
             }
 
-            // add new event entry if the event has not already been added (ie, a repeating event)
-            String googleId = recurrenceId==null ? event.getId() : recurrenceId;
-            if(!uniqueEvents.contains(googleId))
+            // purge channel of all entries on schedule that aren't in uniqueEvents
+            Main.getDBDriver().getEventCollection()
+                    .find(and(
+                            eq("channelId", channel.getId()),
+                            nin("googleId", uniqueEvents)))
+                    .forEach((Consumer<? super Document>) document ->
+                    {
+                        ScheduleEntry entry = Main.getEntryManager().getEntry((Integer) document.get("_id"));
+                        Message msg = entry.getMessageObject();
+                        if( msg==null )
+                            return;
+
+                        Main.getEntryManager().removeEntry((Integer) document.get("_id"));
+                        MessageUtilities.deleteMsg(msg, null);
+                    });
+
+            // set channel topic
+            boolean hasPerms = channel.getGuild().getMember(Main.getBotJda().getSelfUser())
+                    .hasPermission(channel, Permission.MANAGE_CHANNEL);
+            if(hasPerms)
             {
-                // if the google event already exists as a saber event on the schedule, update it
-                // otherwise add as a new saber event
-                Document doc = Main.getDBDriver().getEventCollection()
-                        .find(and(
-                                eq("channelId", channel.getId()),
-                                eq("googleId", googleId))).first();
-                if(doc != null)
+                try
                 {
-                    ScheduleEntry se = Main.getEntryManager().getEntry((Integer) doc.get("_id"));
-                    Main.getEntryManager().updateEntry(se.getId(), title, start, end, comments, repeat,
-                            event.getHtmlLink(), se.hasStarted(), se.getMessageObject(), googleId,
-                            se.getRsvpYes(), se.getRsvpNo(), se.getRsvpUndecided(), se.isQuietStart(),
-                            se.isQuietEnd(), se.isQuietRemind());
+                    channel.getManager().setTopic(calLink).queue();
                 }
-                else
+                catch(PermissionException e)
                 {
-                    boolean hasStarted = !start.isAfter(ZonedDateTime.now());
-                    Main.getEntryManager().newEntry(title, start, end, comments, repeat,
-                            event.getHtmlLink(), channel, googleId, hasStarted);
+                    Logging.warn(this.getClass(), e.getMessage());
                 }
-
-                uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);
             }
+
         }
-
-        // purge channel of all entries on schedule that aren't in uniqueEvents
-        Main.getDBDriver().getEventCollection()
-                .find(and(
-                        eq("channelId", channel.getId()),
-                        nin("googleId", uniqueEvents)))
-                .forEach((Consumer<? super Document>) document ->
-                {
-                    ScheduleEntry entry = Main.getEntryManager().getEntry((Integer) document.get("_id"));
-                    Message msg = entry.getMessageObject();
-                    if( msg==null )
-                        return;
-
-                    Main.getEntryManager().removeEntry((Integer) document.get("_id"));
-                    MessageUtilities.deleteMsg(msg, null);
-                });
-
-        // set channel topic
-        boolean hasPerms = channel.getGuild().getMember(Main.getBotJda().getSelfUser())
-                .hasPermission(channel, Permission.MANAGE_CHANNEL);
-        if(hasPerms)
+        catch(Exception e)
         {
-            try
-            {
-                channel.getManager().setTopic(calLink).queue();
-            }
-            catch(PermissionException e)
-            {
-                Logging.warn(this.getClass(), e.getMessage());
-            }
+            Logging.warn(this.getClass(), e.getMessage());
         }
-
-        Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
+        finally
+        {
+            Main.getScheduleManager().unlock(channel.getId()); // syncing done, unlock the channel
+        }
 
         // auto-sort
         int sortType = Main.getScheduleManager().getAutoSort(channel.getId());

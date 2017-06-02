@@ -79,7 +79,7 @@ public class VerifyUtilities
             }
             return true;
         }
-        catch(DateTimeException e)
+        catch(Exception e)
         {
             return false;
         }
@@ -92,7 +92,7 @@ public class VerifyUtilities
         {
             Integer.decode("0x"+arg);
         }
-        catch( Exception e )
+        catch(Exception e)
         {
             return false;
         }

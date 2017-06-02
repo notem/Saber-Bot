@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.utils.Logging;
 
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -174,10 +175,7 @@ public class ScheduleManager
      */
     public boolean isLocked(String cId)
     {
-        return false;
-        /* TODO
         return this.locks.contains(cId);
-        */
     }
 
     /**
@@ -216,56 +214,68 @@ public class ScheduleManager
             return;
         if(this.isLocked(cId))
             return;
+
         this.lock(cId); // lock the channel
 
-        // find the message channel and send the 'is typing' while processing
-        MessageChannel chan = Main.getBotJda().getTextChannelById(cId);
-        chan.sendTyping().queue();
-
-        int sortOrder = 1;
-        if(reverseOrder)
-            sortOrder = -1;
-
-        LinkedList<ScheduleEntry> unsortedEntries = new LinkedList<>();
-        Main.getDBDriver().getEventCollection().find(eq("channelId", cId)).sort(new Document("start", sortOrder))
-                .forEach((Consumer<? super Document>) document -> unsortedEntries.add(new ScheduleEntry(document)));
-
-        // selection sort the entries by timestamp
-        while (!unsortedEntries.isEmpty())
+        // encapsulate in try block,
+        // always unlock the schedule at finish regardless of success or failure
+        try
         {
-            chan.sendTyping().queue();   // continue to send 'is typing'
+            // find the message channel and send the 'is typing' while processing
+            MessageChannel chan = Main.getBotJda().getTextChannelById(cId);
+            chan.sendTyping().queue();
 
-            ScheduleEntry top = unsortedEntries.pop();
-            ScheduleEntry min = top;
-            for (ScheduleEntry cur : unsortedEntries)
+            int sortOrder = 1;
+            if(reverseOrder)
+                sortOrder = -1;
+
+            LinkedList<ScheduleEntry> unsortedEntries = new LinkedList<>();
+            Main.getDBDriver().getEventCollection().find(eq("channelId", cId)).sort(new Document("start", sortOrder))
+                    .forEach((Consumer<? super Document>) document -> unsortedEntries.add(new ScheduleEntry(document)));
+
+            // selection sort the entries by timestamp
+            while (!unsortedEntries.isEmpty())
             {
-                OffsetDateTime a = min.getMessageObject().getCreationTime();
-                OffsetDateTime b = cur.getMessageObject().getCreationTime();
-                if (a.isAfter(b))
+                chan.sendTyping().queue();   // continue to send 'is typing'
+
+                ScheduleEntry top = unsortedEntries.pop();
+                ScheduleEntry min = top;
+                for (ScheduleEntry cur : unsortedEntries)
                 {
-                    min = cur;
+                    OffsetDateTime a = min.getMessageObject().getCreationTime();
+                    OffsetDateTime b = cur.getMessageObject().getCreationTime();
+                    if (a.isAfter(b))
+                    {
+                        min = cur;
+                    }
                 }
-            }
-            // swap messages and update db
-            if(!(min==top))
-            {
-                Message tmp = top.getMessageObject();
-                top.setMessageObject(min.getMessageObject());
-                Main.getDBDriver().getEventCollection().updateOne(
-                        eq("_id", top.getId()),
-                        new Document("$set", new Document("messageId", min.getMessageObject().getId())));
+                // swap messages and update db
+                if(!(min==top))
+                {
+                    Message tmp = top.getMessageObject();
+                    top.setMessageObject(min.getMessageObject());
+                    Main.getDBDriver().getEventCollection().updateOne(
+                            eq("_id", top.getId()),
+                            new Document("$set", new Document("messageId", min.getMessageObject().getId())));
 
-                min.setMessageObject(tmp);
-                Main.getDBDriver().getEventCollection().updateOne(
-                        eq("_id", min.getId()),
-                        new Document("$set", new Document("messageId", tmp.getId())));
-            }
+                    min.setMessageObject(tmp);
+                    Main.getDBDriver().getEventCollection().updateOne(
+                            eq("_id", min.getId()),
+                            new Document("$set", new Document("messageId", tmp.getId())));
+                }
 
-            // reload display
-            top.reloadDisplay();
+                // reload display
+                top.reloadDisplay();
+            }
         }
-
-        this.unlock(cId);
+        catch(Exception e)
+        {
+            Logging.warn(this.getClass(), e.getMessage());
+        }
+        finally
+        {
+            this.unlock(cId); // always unlock
+        }
     }
 
 
