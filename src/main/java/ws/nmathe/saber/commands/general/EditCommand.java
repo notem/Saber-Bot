@@ -30,11 +30,17 @@ public class EditCommand implements Command
                 " new configuration." +
                 "\n\n```diff\n+ Options ```\n" +
                 "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment <add|remove>``, ``date``, " +
-                "``start-date``, ``end-date``, ``repeat``, ``interval``, and ``url``.\n\n" +
-                "For further explanation as for what are valid arguments for each options, reference the ``help`` information" +
-                " for the ``create`` command.\n\n" +
-                "Also, announcements for individual events can be toggled on-off using any of these three options: " +
-                "``quiet-start``, ``quiet-end``, ``quiet-remind``\n";
+                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``," +
+                " and ``max``.\n\n" +
+                "Most of the options listed above accept the same arguments as the ``create`` command." +
+                "\nReference the ``help`` information for the ``create`` command for more information.\n\n" +
+                "Announcements for individual events can be toggled on-off using any of these three options: " +
+                "``quiet-start``, ``quiet-end``, ``quiet-remind``\n" +
+                "No additional arguments need to be provided when using one of the ``quiet-`` options.\n\n" +
+                "If the schedule that the event is placed on is rsvp enabled (which may be turned on using the ``config`` command)" +
+                " a limit to the number of users who may rsvp 'yes' can be set using the ``max`` option.\n" +
+                "The ``max`` option requires one additional argument, which is the maximum number of players allowed to rsvp for the event.\n" +
+                "Use \"off\" as the argument to remove a previously set limit.";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + invoke + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
@@ -186,7 +192,19 @@ public class EditCommand implements Command
             case "qr":
             case "quiet-remind":
                 if (args.length > 2)
-                    return "That's too many arguments for **"+args[index-1]+"**!";
+                    return "That's too many arguments for **"+args[index-1]+"**!" +
+                            " Just use ``" + invoke + args[index-2] + args[index-1] + "``!";
+                break;
+
+            case "max":
+            case "m":
+                if (args.length > 3)
+                    return "That's too many arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+ invoke + " " + args[index-2] + " " + args[index-1] + " [rsvp max]``";
+                if (!VerifyUtilities.verifyInteger(args[index]))
+                    return "The rsvp max must be a number!";
+                if (Integer.valueOf(args[index])<0)
+                    return "The rsvp max cannot be negative!";
                 break;
 
             default:
@@ -196,6 +214,7 @@ public class EditCommand implements Command
         return ""; // return valid
     }
 
+    // TODO consider reworking the updateEntry command to only update the required attribute
     @Override
     public void action(String[] args, MessageReceivedEvent event)
     {
@@ -214,6 +233,7 @@ public class EditCommand implements Command
         ZonedDateTime end = entry.getEnd();                 //
         int repeat = entry.getRepeat();                     //
         String url = entry.getTitleUrl();                   //
+        Integer rsvpMax = entry.getRsvpMax();
 
         boolean quietStart = entry.isQuietStart();
         boolean quietEnd = entry.isQuietEnd();
@@ -246,6 +266,8 @@ public class EditCommand implements Command
                                 comments.remove(args[index]);
                             break;
                     }
+
+                    //Main.getEntryManager().updateEntryComments(entryId, comments);
                     break;
 
                 case "s":
@@ -261,6 +283,8 @@ public class EditCommand implements Command
                     {
                         end = end.plusDays(1);
                     }
+
+                    //Main.getEntryManager().updateEntryStartTime(entryId, start);
                     break;
 
                 case "e":
@@ -276,11 +300,14 @@ public class EditCommand implements Command
                     {
                         end = end.plusDays(1);
                     }
+
+                    //Main.getEntryManager().updateEntryEndTime(entryId, end);
                     break;
 
                 case "t":
                 case "title":
                     title = args[index];
+                    //Main.getEntryManager().updateEntryTitle(entryId, title);
                     break;
 
                 case "d":
@@ -291,6 +318,8 @@ public class EditCommand implements Command
                             .withDayOfMonth(date.getDayOfMonth());
                     end = end.withMonth(date.getMonthValue())
                             .withDayOfMonth(date.getDayOfMonth());
+
+                    //Main.getEntryManager().updateEntryDate(entryId, start, end);
                     break;
 
                 case "sd":
@@ -303,6 +332,8 @@ public class EditCommand implements Command
 
                     if(end.isBefore(start))
                         end = start.plusDays(1);
+
+                    //Main.getEntryManager().updateEntryDate(entryId, start, end);
                     break;
 
                 case "ed":
@@ -312,45 +343,66 @@ public class EditCommand implements Command
 
                     end = end.withMonth(edate.getMonthValue())
                             .withDayOfMonth(edate.getDayOfMonth());
+
+                    //Main.getEntryManager().updateEntryDate(entryId, start, end);
                     break;
 
                 case "r":
                 case "repeats":
                 case "repeat":
-                    String tmp = args[index].toLowerCase();
-                    repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
+                    repeat = ParsingUtilities.parseWeeklyRepeat(args[index].toLowerCase());
+                    //Main.getEntryManager().updateEntryRepeat(entryId, repeat);
                     break;
 
                 case "i":
                 case "interval":
                     repeat = 0b10000000 | Integer.parseInt(args[index]);
+                    //Main.getEntryManager().updateEntryRepeat(entryId, repeat);
                     break;
 
                 case "u":
                 case "url":
                     url = args[index];
+                    //Main.getEntryManager().updateEntryUrl(entryId, url);
                     break;
 
                 case "qs":
                 case "quiet-start":
                     quietStart = !quietStart;
+                    //Main.getEntryManager().updateEntryQuietStart(entryId, quietStart);
                     break;
 
                 case "qe":
                 case "quiet-end":
                     quietEnd = !quietEnd;
+                    //Main.getEntryManager().updateEntryQuietEnd(entryId, quietEnd);
                     break;
 
 
                 case "qr":
                 case "quiet-remind":
                     quietRemind = !quietRemind;
+                    //Main.getEntryManager().updateEntryQuietRemind(entryId, quietRemind);
+                    break;
+
+
+                case "max":
+                case "m":
+                    if(args[index].toLowerCase().equals("off"))
+                    {
+                        rsvpMax = -1;
+                    }
+                    else
+                    {
+                        rsvpMax = Integer.valueOf(args[index]);
+                    }
+                    //Main.getEntryManager().updateEntryRsvpMax(entryId, rsvpMax);
                     break;
             }
 
             Main.getEntryManager().updateEntry(entryId, title, start, end, comments, repeat, url, entry.hasStarted(),
                     msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo(), entry.getRsvpUndecided(),
-                    quietStart, quietEnd, quietRemind);
+                    quietStart, quietEnd, quietRemind, rsvpMax);
         }
 
         //
@@ -394,6 +446,9 @@ public class EditCommand implements Command
             }
             body += " disabled\n";
         }
+
+        if(rsvpMax>=0)
+            body += "Max: " + rsvpMax + "\n";
 
         if(!comments.isEmpty())
             body += "// Comments\n";

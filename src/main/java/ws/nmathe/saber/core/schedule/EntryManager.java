@@ -92,7 +92,7 @@ public class EntryManager
         Integer newId = this.newId();   // generate a new, unused ID
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, newId, channel.getId(), channel.getGuild().getId(),
-                rsvpList, rsvpList, rsvpList);
+                rsvpList, rsvpList, rsvpList, -1);
 
         // send message to schedule
         MessageUtilities.sendMsg(message, channel, msg -> {
@@ -127,6 +127,7 @@ public class EntryManager
                             .append("start_disabled", false)
                             .append("end_disabled", false)
                             .append("reminders_disabled", false)
+                            .append("rsvp_max", -1)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
@@ -161,7 +162,7 @@ public class EntryManager
                             List<String> comments, int repeat, String url, boolean hasStarted,
                             Message origMessage, String googleId, List<String> rsvpYes, List<String> rsvpNo,
                             List<String> rsvpUndecided, boolean quietStart, boolean quietEnd,
-                            boolean quietRemind)
+                            boolean quietRemind, Integer rsvpMax)
     {
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
@@ -176,7 +177,7 @@ public class EntryManager
         // generate event display message
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId(),
-                rsvpYes, rsvpNo, rsvpUndecided);
+                rsvpYes, rsvpNo, rsvpUndecided, rsvpMax);
 
         // update message display
         MessageUtilities.editMsg(message, origMessage, msg -> {
@@ -203,6 +204,7 @@ public class EntryManager
                             .append("start_disabled", quietStart)
                             .append("end_disabled", quietEnd)
                             .append("reminders_disabled", quietRemind)
+                            .append("rsvp_max", rsvpMax)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);

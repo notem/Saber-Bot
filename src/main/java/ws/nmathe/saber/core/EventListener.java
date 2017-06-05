@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 
+import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
@@ -213,6 +214,8 @@ public class EventListener extends ListenerAdapter
         if(reactionLimiter.isOnCooldown(event.getUser().getId()))
             return;
 
+        // if the schedule is rsvp enabled and the user added an rsvp emoji to the event
+        // add the user to the appropriate rsvp list and remove the emoji
         try
         {
             if(Main.getScheduleManager().isRSVPEnabled(event.getChannel().getId()))
@@ -220,20 +223,25 @@ public class EventListener extends ListenerAdapter
                 Document doc = Main.getDBDriver().getEventCollection()
                         .find(eq("messageId", event.getMessageId())).first();
 
+                ScheduleEntry se = new ScheduleEntry(doc);
+
                 if(doc == null) // shouldn't happen, but if it does
                     return;
 
                 Integer entryId = doc.getInteger("_id");
 
+                // current list of players
                 List<String> rsvpYes = (List<String>) doc.get("rsvp_yes");
                 List<String> rsvpNo = (List<String>) doc.get("rsvp_no");
                 List<String> rsvpUndecided = (List<String>) doc.get("rsvp_undecided");
 
                 MessageReaction.ReactionEmote emote = event.getReaction().getEmote();
+
+                // if the user added the 'yes'/join emote
                 if(emote.getName().equals(Main.getBotSettingsManager().getYesEmoji()))
                 {
-                    // add user to yes list
-                    if(!rsvpYes.contains(event.getUser().getId()))
+                    // add user to yes list (only if the event has not filled)
+                    if(!rsvpYes.contains(event.getUser().getId()) && !se.isFull())
                     {
                         rsvpYes.add(event.getUser().getId());
                         Main.getDBDriver().getEventCollection()
@@ -255,6 +263,7 @@ public class EventListener extends ListenerAdapter
                     Main.getEntryManager().reloadEntry(entryId);
                     event.getReaction().removeReaction(event.getUser()).queue();
                 }
+                // if the user added the 'no'/leave emote
                 else if(emote.getName().equals(Main.getBotSettingsManager().getNoEmoji()))
                 {
                     // add user to no list
@@ -280,6 +289,7 @@ public class EventListener extends ListenerAdapter
                     Main.getEntryManager().reloadEntry(entryId);
                     event.getReaction().removeReaction(event.getUser()).queue();
                 }
+                // if the user added the undecided emote
                 else if(emote.getName().equals(Main.getBotSettingsManager().getClearEmoji()))
                 {
                     // add user to undecided list

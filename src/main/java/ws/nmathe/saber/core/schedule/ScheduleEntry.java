@@ -31,6 +31,7 @@ public class ScheduleEntry
     private String titleUrl;
     private List<Date> reminders;
     private List<String> rsvpYes;
+    private Integer rsvpYesMax;
     private List<String> rsvpNo;
     private List<String> rsvpUndecided;
 
@@ -44,7 +45,7 @@ public class ScheduleEntry
     private boolean quietRemind;
     private boolean hasStarted;
 
-    ScheduleEntry(Document entryDocument)
+    public ScheduleEntry(Document entryDocument)
     {
         this.msgId = (String) entryDocument.get("messageId");
         this.chanId = (String) entryDocument.get("channelId");
@@ -72,6 +73,8 @@ public class ScheduleEntry
 
         this.googleId = (String) entryDocument.get("googleId");
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
+
+        this.rsvpYesMax = entryDocument.get("rsvp_max") != null ? entryDocument.getInteger("rsvp_max") : -1;
     }
 
     private void checkDelay(Instant time)
@@ -197,7 +200,7 @@ public class ScheduleEntry
                     this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId,
                     (this.rsvpYes==null ? null:new ArrayList<>()), (this.rsvpNo==null ? null:new ArrayList<>()),
                     (this.rsvpUndecided==null ? null:new ArrayList<>()), this.quietStart, this.quietEnd,
-                    this.quietRemind);
+                    this.quietRemind, this.rsvpYesMax);
         }
         else // otherwise remove entry and delete the message
         {
@@ -219,7 +222,7 @@ public class ScheduleEntry
         MessageUtilities.editMsg(
                 MessageGenerator.generate(this.entryTitle, this.entryStart, this.entryEnd, this.entryComments,
                         this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId, this.guildId,
-                        this.rsvpYes, this.rsvpNo, this.rsvpUndecided),
+                        this.rsvpYes, this.rsvpNo, this.rsvpUndecided, this.rsvpYesMax),
                         msg, null);
     }
 
@@ -272,6 +275,11 @@ public class ScheduleEntry
         return this.hasStarted;
     }
 
+    public boolean isFull()
+    {
+        return (this.rsvpYesMax == -1) || (this.rsvpYes.size() >= this.rsvpYesMax);
+    }
+
     public String getTitle()
     {
         return this.entryTitle;
@@ -320,6 +328,11 @@ public class ScheduleEntry
     public String getScheduleID()
     {
         return this.chanId;
+    }
+
+    public Integer getRsvpMax()
+    {
+        return this.rsvpYesMax;
     }
 
     public List<String> getRsvpYes()

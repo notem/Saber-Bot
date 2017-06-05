@@ -23,7 +23,7 @@ public class MessageGenerator
 {
     static Message generate(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
                             int repeat, String url, List<Date> reminders, Integer eId, String cId, String guildId,
-                            List<String> rsvpYes, List<String> rsvpNo, List<String> rsvpUndecided)
+                            List<String> rsvpYes, List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax)
     {
         String titleUrl = url != null ? url : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
@@ -83,9 +83,9 @@ public class MessageGenerator
 
         String bodyContent;
         if(Main.getScheduleManager().getStyle(cId).toLowerCase().equals("narrow"))
-            bodyContent = generateBodyNarrow(start, end, cId, repeat, rsvpYes, rsvpNo, rsvpUndecided);
+            bodyContent = generateBodyNarrow(start, end, cId, repeat, rsvpYes, rsvpNo, rsvpUndecided, rsvpMax);
         else
-            bodyContent = generateBodyFull(start, end, cId, repeat, comments, rsvpYes, rsvpNo, rsvpUndecided);
+            bodyContent = generateBodyFull(start, end, cId, repeat, comments, rsvpYes, rsvpNo, rsvpUndecided, rsvpMax);
 
 
         EmbedBuilder builder = new EmbedBuilder();
@@ -99,7 +99,7 @@ public class MessageGenerator
 
     private static String generateBodyFull(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
                                            int eRepeat, List<String> eComments, List<String> rsvpYes,
-                                           List<String> rsvpNo, List<String> rsvpUndecided)
+                                           List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax)
     {
         String timeFormatter;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
@@ -155,7 +155,7 @@ public class MessageGenerator
         // if rsvp is enabled, show the number of rsvp
         if(rsvpYes != null && rsvpNo != null)
         {
-            String rsvpLine = "- RSVP: <Yes " + rsvpYes.size() + "> <No " + rsvpNo.size()
+            String rsvpLine = "- RSVP: <Yes " + rsvpYes.size() + (rsvpMax>=0?"/"+rsvpMax:"") + "> <No " + rsvpNo.size()
                     + "> <Undecided " + rsvpUndecided.size() + ">\n";
             msg += "```Markdown\n\n" + zoneLine + rsvpLine + "```";
         }
@@ -169,7 +169,7 @@ public class MessageGenerator
 
     private static String generateBodyNarrow(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
                                            int eRepeat, List<String> rsvpYes,
-                                           List<String> rsvpNo, List<String> rsvpUndecided)
+                                           List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax)
     {
         // determine the formatting for clock
         String timeFormatter;
@@ -206,7 +206,7 @@ public class MessageGenerator
 
         // if rsvp is enabled, show the number of rsvps
         if(rsvpYes != null && rsvpNo != null)
-            lineTwo += " <Y " + rsvpYes.size() + "> <N " + rsvpNo.size() + "> <U " + rsvpUndecided.size() + ">\n";
+            lineTwo += " <Y " + rsvpYes.size() + (rsvpMax>=0?"/"+rsvpMax:"") + "> <N " + rsvpNo.size() + "> <U " + rsvpUndecided.size() + ">\n";
         else
             lineTwo += "\n";
 

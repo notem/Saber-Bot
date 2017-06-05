@@ -49,6 +49,7 @@ public class CommandHandler
         commands.put("test", new TestCommand());
         commands.put("sort", new SortCommand());
         commands.put("list", new ListCommand());
+        commands.put("listm", new ListMobileCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put("announcement", new GlobalMsgCommand());
