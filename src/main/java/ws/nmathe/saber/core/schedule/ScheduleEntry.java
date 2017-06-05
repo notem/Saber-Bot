@@ -277,7 +277,7 @@ public class ScheduleEntry
 
     public boolean isFull()
     {
-        return !(this.rsvpYesMax == -1) || (this.rsvpYes.size() >= this.rsvpYesMax);
+        return !(this.rsvpYesMax == -1) && (this.rsvpYes.size() >= this.rsvpYesMax);
     }
 
     public String getTitle()
