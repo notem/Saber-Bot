@@ -130,10 +130,11 @@ public class ScheduleEntry
             for( TextChannel chan : channels )
             {
                 MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant()));
-                Logging.info(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
-                        this.getStart().withZoneSameInstant(ZoneId.systemDefault())
-                                .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
             }
+
+            Logging.info(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
+                    this.getStart().withZoneSameInstant(ZoneId.systemDefault())
+                            .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
         }
 
         // if the entry's start time is the same as it's end
@@ -168,10 +169,11 @@ public class ScheduleEntry
             for( TextChannel chan : channels)
             {
                 MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant()));
-                Logging.info(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
-                        this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
-                                .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
             }
+
+            Logging.info(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
+                    this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
+                            .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
         }
 
         this.repeat();

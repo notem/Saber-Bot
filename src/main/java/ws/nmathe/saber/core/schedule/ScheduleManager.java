@@ -369,9 +369,9 @@ public class ScheduleManager
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
             return Main.getBotSettingsManager().getAnnounceChan();
-        String chan = settings.getString("announcement_channel_end");
+        String chan = (String) settings.get("announcement_channel_end");
         if(chan == null)
-            return (String) settings.get("announcement_format");
+            return (String) settings.get("announcement_channel");
         else
             return chan;
     }
@@ -381,7 +381,7 @@ public class ScheduleManager
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )
             return Main.getBotSettingsManager().getAnnounceFormat();
-        String format = settings.getString("announcement_format_end");
+        String format = (String) settings.get("announcement_format_end");
         if(format == null)
             return (String) settings.get("announcement_format");
         else
