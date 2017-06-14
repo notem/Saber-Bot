@@ -84,7 +84,6 @@ public class Main
 
         calendarConverter.init();   // connect to calendar service
         entryManager.init();        // start timers
-        scheduleManager.init();     // start auto-sync
         commandHandler.init();      // ready commands
 
         HttpUtilities.updateStats();

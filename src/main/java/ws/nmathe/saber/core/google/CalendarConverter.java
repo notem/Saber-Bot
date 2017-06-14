@@ -47,7 +47,8 @@ public class CalendarConverter
         try
         {
             service = GoogleAuth.getCalendarService();
-            Main.getCommandHandler().putSync();
+            Main.getCommandHandler().putSync(); // enable the sync command
+            Main.getScheduleManager().initScheduleSync(); // start the schedule sync timer
         }
         catch( IOException e )
         {

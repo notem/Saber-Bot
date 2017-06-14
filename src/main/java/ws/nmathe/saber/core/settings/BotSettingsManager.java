@@ -120,11 +120,13 @@ public class BotSettingsManager
         String rsvp_yes;
         String rsvp_no;
         String rsvp_clear;
+        String google_service_key;
 
         BotSettings()
         {
             discord_token = "BOT_TOKEN";
             web_token = "ABAL_TOKEN";
+            google_service_key = "./saber-g-id.json";
             mongodb = "mongodb://localhost:27017";
 
             prefix = "!";
@@ -247,5 +249,10 @@ public class BotSettingsManager
     public String getClearEmoji()
     {
         return settings.rsvp_clear;
+    }
+
+    public String getGoogleServiceKey()
+    {
+        return settings.google_service_key;
     }
 }

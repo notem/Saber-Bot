@@ -8,6 +8,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.JsonFactory;
 
 import com.google.api.services.calendar.CalendarScopes;
+import ws.nmathe.saber.Main;
 
 import java.io.*;
 import java.util.Arrays;
@@ -53,7 +54,7 @@ public class GoogleAuth
     static Credential authorize() throws IOException
     {
         // Load service account key
-        InputStream in = new FileInputStream("./saber-g-id.json");
+        InputStream in = new FileInputStream(Main.getBotSettingsManager().getGoogleServiceKey());
 
         // build credentials
         return GoogleCredential.fromStream(in).createScoped(SCOPES);

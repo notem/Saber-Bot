@@ -30,7 +30,7 @@ public class ScheduleManager
 {
     private Set<String> locks = new HashSet<>(); // locks channels from running multiple sorts simultaneously
 
-    public void init()
+    public void initScheduleSync()
     {
         // every 15 minutes create a thread to check for schedules to sync
         ScheduledExecutorService syncScheduler = Executors.newScheduledThreadPool(1);

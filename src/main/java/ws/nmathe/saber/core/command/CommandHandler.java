@@ -39,7 +39,7 @@ public class CommandHandler
     public void init()
     {
         // add bot commands with their lookup name
-        commands.put("init", new InitCommand());
+        commands.put("initScheduleSync", new InitCommand());
         commands.put("create", new CreateCommand());
         commands.put("delete", new DeleteCommand());
         commands.put("edit", new EditCommand());

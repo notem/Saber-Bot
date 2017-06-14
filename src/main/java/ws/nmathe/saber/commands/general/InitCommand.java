@@ -1,18 +1,12 @@
 package ws.nmathe.saber.commands.general;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
-import ws.nmathe.saber.core.schedule.ScheduleEntry;
-import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
-import ws.nmathe.saber.utils.VerifyUtilities;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -22,7 +16,7 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class InitCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "init";
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "initScheduleSync";
 
     @Override
     public String help(boolean brief)
