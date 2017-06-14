@@ -82,9 +82,11 @@ public class ParsingUtilities
                             announceMsg += "begins";
                             if(!entry.getReminders().isEmpty())
                             {
-                                announceMsg += " in " +
-                                        (ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES)+1) +
-                                        " minutes";
+                                long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES)+1;
+                                if(minutes > 120)
+                                    announceMsg += " in " + minutes/60 + " hours";
+                                else
+                                    announceMsg += " in " + minutes + " minutes";
                             }
                         }
                         else
@@ -109,9 +111,11 @@ public class ParsingUtilities
                         {
                             if(!entry.getReminders().isEmpty())
                             {
-                                announceMsg += " in " +
-                                        (ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES)+1) +
-                                        " minutes";
+                                long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES)+1;
+                                if(minutes > 120)
+                                    announceMsg += "in " + minutes/60 + " hours";
+                                else
+                                    announceMsg += "in " + minutes + " minutes";
                             }
                         }
                         break;
