@@ -16,7 +16,7 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class InitCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "initScheduleSync";
+    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "init";
 
     @Override
     public String help(boolean brief)
