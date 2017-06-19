@@ -100,8 +100,11 @@ public class EditCommand implements Command
                         break;
                     case "r":
                     case "remove":
-                        if(args[index].isEmpty() && Character.isDigit(args[index].charAt(0)) && !VerifyUtilities.verifyInteger(args[index]))
+                        if((!args[index].isEmpty() && Character.isDigit(args[index].charAt(0)))
+                                && !VerifyUtilities.verifyInteger(args[index]))
+                        {
                             return "I cannot use **" + args[index] + "** to remove a comment!";
+                        }
                         break;
                     default:
                         return "The only valid options for ``comment`` is **add** or **remove***!";
