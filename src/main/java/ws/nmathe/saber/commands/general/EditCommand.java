@@ -100,8 +100,7 @@ public class EditCommand implements Command
                         break;
                     case "r":
                     case "remove":
-                        if(Character.isDigit(args[index].charAt(0)) &&
-                                !VerifyUtilities.verifyInteger(args[index]))
+                        if(args[index].isEmpty() && Character.isDigit(args[index].charAt(0)) && !VerifyUtilities.verifyInteger(args[index]))
                             return "I cannot use **" + args[index] + "** to remove a comment!";
                         break;
                     default:
@@ -263,7 +262,9 @@ public class EditCommand implements Command
                                 comments.remove( Integer.parseInt(args[index])-1 );
                             }
                             else
+                            {
                                 comments.remove(args[index]);
+                            }
                             break;
                     }
 

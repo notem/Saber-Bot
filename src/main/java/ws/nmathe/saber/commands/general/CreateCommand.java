@@ -305,6 +305,12 @@ public class CreateCommand implements Command
             }
         }
 
+        // handle all day events
+        if(startTime.equals(endTime) && (startTime.equals(LocalTime.MIN)||startTime.equals(LocalTime.MAX)) && endDate==null)
+        {
+            endDate = LocalDate.from(startDate).plusDays(1);
+        }
+
         // if the end time has not been filled, copy start time
         if(endTime == null)
         {
