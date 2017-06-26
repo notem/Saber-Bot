@@ -3,6 +3,8 @@ package ws.nmathe.saber.utils;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.exceptions.PermissionException;
+
 import java.util.function.Consumer;
 
 /**
@@ -26,6 +28,8 @@ public class MessageUtilities
         {
             chan.sendMessage(content).queue( action, null );
         }
+        catch( PermissionException ignored)
+        { return; }
         catch( Exception e)
         {
             Logging.warn(MessageUtilities.class, e.getMessage());
@@ -39,6 +43,8 @@ public class MessageUtilities
         {
             chan.sendMessage(message).queue( action, null );
         }
+        catch( PermissionException ignored)
+        { return; }
         catch( Exception e)
         {
             Logging.warn( MessageUtilities.class, e.getMessage() );
@@ -52,6 +58,8 @@ public class MessageUtilities
         {
             return chan.sendMessage(message).complete();
         }
+        catch( PermissionException ignored)
+        { return null; }
         catch( Exception e)
         {
             Logging.warn( MessageUtilities.class, e.getMessage() );
@@ -73,6 +81,8 @@ public class MessageUtilities
             user.openPrivateChannel().complete();
             sendMsg( content, user.getPrivateChannel(), action );
         }
+        catch( PermissionException ignored)
+        { return; }
         catch( Exception e)
         {
             Logging.warn( MessageUtilities.class, e.getMessage() );
@@ -92,6 +102,8 @@ public class MessageUtilities
         {
             msg.editMessage(content).queue( action, null );
         }
+        catch( PermissionException ignored)
+        { return; }
         catch( Exception e)
         {
             Logging.warn( MessageUtilities.class, e.getMessage() );
@@ -104,6 +116,8 @@ public class MessageUtilities
         {
             msg.editMessage(newMsg).queue( action, null );
         }
+        catch( PermissionException ignored)
+        { return; }
         catch( Exception e)
         {
             Logging.warn( MessageUtilities.class, e.getMessage() );
@@ -116,6 +130,8 @@ public class MessageUtilities
         {
             return msg.editMessage(newMsg).complete();
         }
+        catch( PermissionException ignored)
+        { return null; }
         catch( Exception e)
         {
             Logging.warn( MessageUtilities.class, e.getMessage() );
@@ -135,6 +151,8 @@ public class MessageUtilities
         {
             msg.delete().queue( action, null );
         }
+        catch( PermissionException ignored)
+        { return; }
         catch( Exception e)
         {
             Logging.warn( MessageUtilities.class, e.getMessage() );

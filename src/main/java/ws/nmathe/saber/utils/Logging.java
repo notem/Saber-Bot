@@ -50,4 +50,16 @@ public class Logging
 
         System.out.println(content);
     }
+
+    public static void cmd(Class caller, String msg)
+    {
+        LocalTime now = LocalTime.now();
+        String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] [Cmnd]" +
+                ANSI_RESET + " " + ANSI_GREEN_BACKGROUND + ANSI_BLACK +
+                "[" + caller.getSimpleName() + "]" +
+                ANSI_RESET + " " + msg +
+                ANSI_RESET;
+
+        System.out.println(content);
+    }
 }

@@ -85,12 +85,13 @@ public class EventListener extends ListenerAdapter
         }
 
         // if channel is a schedule for the guild
-        if (Main.getScheduleManager()
-                .getSchedulesForGuild(event.getGuild().getId()).contains(event.getChannel().getId()))
+        if (Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId()).contains(event.getChannel().getId()))
         {
             // delete all other user's messages
             if (!userId.equals(Main.getBotJda().getSelfUser().getId()))
+            {
                 MessageUtilities.deleteMsg(event.getMessage(), null);
+            }
         }
     }
 
