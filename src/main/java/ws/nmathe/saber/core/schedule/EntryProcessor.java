@@ -7,6 +7,7 @@ import ws.nmathe.saber.utils.Logging;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -18,12 +19,17 @@ import static com.mongodb.client.model.Updates.set;
  * Used by the Main scheduler timer, a new thread is executed every minute/5minutes/1hour/1day.
  * processes all entries referenced in the collection passed in, checking the start/end time and updating the
  * "time until" display timers.
- * additional threads are spawned to carry out tasks
+ * a thread is spawned for each event operation to avoid one problematic event hanging-up the class
  */
 class EntryProcessor implements Runnable
 {
     // thread pool for level 0 processing
     private static ExecutorService executor = Executors.newCachedThreadPool();
+
+    /// when the database is overwhelmed with write requests (or otherwise just misbehaving)
+    /// this hashmap (hashset) protects against announcing events multiple times
+    /// event IDs in this hashmap should not be processed when starting/ending/reminding
+    private static ConcurrentHashMap<Integer, Object> eventsToBeWritten = new ConcurrentHashMap<>();
 
     private int level;
     EntryProcessor(int level)
@@ -43,10 +49,13 @@ class EntryProcessor implements Runnable
                             lte("end", new Date())))
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        executor.submit(() ->
+                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                        {
+                            executor.submit(() -> {
                                 // convert to scheduleEntry object and start
-                                (new ScheduleEntry(document)).end()
-                        );
+                                (new ScheduleEntry(document)).end();
+                            });
+                        }
                     });
 
             // process entries which are starting
@@ -56,17 +65,22 @@ class EntryProcessor implements Runnable
                             lte("start", new Date())))
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        executor.submit(() -> {
-                            // convert to POJO and start
-                            (new ScheduleEntry(document)).start();
+                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                        {
+                            executor.submit(() -> {
+                                // convert to a POJO and start
+                                (new ScheduleEntry(document)).start();
 
-                            // if the entry isn't the special exception, update the db entry as started
-                            if(!document.get("start").equals(document.get("end")))
-                            {
-                                Main.getDBDriver().getEventCollection()
-                                        .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
-                            }
-                        });
+                                // if the entry isn't the special exception, update the db entry as started
+                                if(!document.get("start").equals(document.get("end")))
+                                {
+                                    eventsToBeWritten.put(document.getInteger("_id"), new Object());
+                                    Main.getDBDriver().getEventCollection()
+                                            .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
+                                    eventsToBeWritten.remove(document.getInteger("_id"));
+                                }
+                            });
+                        }
                     });
 
             // process entries with reminders
@@ -76,22 +90,27 @@ class EntryProcessor implements Runnable
                             lte("reminders", new Date())))
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        executor.submit(() -> {
-                            // convert to POJO and send a remind
-                            (new ScheduleEntry(document)).remind();
+                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                        {
+                            executor.submit(() -> {
+                                // convert to POJO and send a remind
+                                (new ScheduleEntry(document)).remind();
 
-                            // remove expired reminders
-                            List<Date> reminders = (List<Date>) document.get("reminders");
-                            reminders.removeIf(date -> date.before(new Date()));
+                                // remove expired reminders
+                                List<Date> reminders = (List<Date>) document.get("reminders");
+                                reminders.removeIf(date -> date.before(new Date()));
 
-                            // update document
-                            Main.getDBDriver().getEventCollection()
-                                    .updateOne(
-                                            eq("_id", document.get("_id")),
-                                            set("reminders", reminders));
+                                // update document
+                                eventsToBeWritten.put(document.getInteger("_id"), new Object());
+                                Main.getDBDriver().getEventCollection()
+                                        .updateOne(
+                                                eq("_id", document.get("_id")),
+                                                set("reminders", reminders));
+                                eventsToBeWritten.remove(document.getInteger("_id"));
 
-                            (new ScheduleEntry(document)).reloadDisplay();
-                        });
+                                (new ScheduleEntry(document)).reloadDisplay();
+                            });
+                        }
                     });
         }
         else if( level == 1 )   // few minute check
