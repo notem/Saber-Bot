@@ -113,29 +113,22 @@ public class EventListener extends ListenerAdapter
             return;
         }
 
-        try
-        {
-            // send welcome message to the server owner
-            String welcomeMessage = "```diff\n- Joined```\n" +
-                    "**" + Main.getBotJda().getSelfUser().getName() + "**, a calendar bot, has been added to the guild own, '"
-                    + event.getGuild().getName() + "'." +
-                    "\n\n" +
-                    "If this is your first time using the bot, you will need to create a new channel in your guild named" +
-                    " **" + Main.getBotSettingsManager().getControlChan() + "** to control the bot.\n" +
-                    "The bot will not listen to commands in any other channel!" +
-                    "\n\n" +
-                    "If you have not yet reviewed the **Quickstart** guide (as seen on the bots.discord.pw listing), " +
-                    "it may be found here: https://bots.discord.pw/bots/250801603630596100";
-            MessageUtilities.sendPrivateMsg(
-                    welcomeMessage,
-                    event.getGuild().getOwner().getUser(),
-                    null
-            );
-        }
-        catch(PermissionException e)
-        {
-            Logging.warn(this.getClass(), e.getMessage());
-        }
+        // send welcome message to the server owner
+        String welcomeMessage = "```diff\n- Joined```\n" +
+                "**" + Main.getBotJda().getSelfUser().getName() + "**, a calendar bot, has been added to the guild own, '"
+                + event.getGuild().getName() + "'." +
+                "\n\n" +
+                "If this is your first time using the bot, you will need to create a new channel in your guild named" +
+                " **" + Main.getBotSettingsManager().getControlChan() + "** to control the bot.\n" +
+                "The bot will not listen to commands in any other channel!" +
+                "\n\n" +
+                "If you have not yet reviewed the **Quickstart** guide (as seen on the bots.discord.pw listing), " +
+                "it may be found here: https://bots.discord.pw/bots/250801603630596100";
+        MessageUtilities.sendPrivateMsg(
+                welcomeMessage,
+                event.getGuild().getOwner().getUser(),
+                null
+        );
 
 
         // update web stats
@@ -318,7 +311,9 @@ public class EventListener extends ListenerAdapter
                 }
             }
         }
-        catch(PermissionException e)
+        catch(PermissionException ignored)
+        { return; }
+        catch(Exception e)
         {
             Logging.warn(this.getClass(), e.getMessage());
         }

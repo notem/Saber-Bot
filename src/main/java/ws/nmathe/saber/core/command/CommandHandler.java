@@ -109,10 +109,10 @@ public class CommandHandler
                     executor.submit( () -> {
                         commands.get(cc.invoke).action(cc.args, cc.event);
 
-                        String info = "Executed command [" + cc.event.getMessage().getStrippedContent() +
+                        String info = "Executed command [" + cc.event.getMessage().getRawContent() +
                                 "] by " + cc.event.getAuthor().getName() + " [" + cc.event.getMessage().getAuthor().getId()
                                 + "] on " + cc.event.getGuild().getName()+ " [" + cc.event.getGuild().getId() + "]";
-                        Logging.info(this.getClass(), info);
+                        Logging.cmd(this.getClass(), info);
                     });
                 }
                 // otherwise send error message
