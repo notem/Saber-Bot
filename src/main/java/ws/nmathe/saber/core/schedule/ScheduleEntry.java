@@ -77,13 +77,19 @@ public class ScheduleEntry
         this.rsvpYesMax = entryDocument.get("rsvp_max") != null ? entryDocument.getInteger("rsvp_max") : -1;
     }
 
-    private void checkDelay(Instant time)
+    /**
+     * If an event's notification was sent more than three minutes late, notify the discord user who administrates
+     * the bot application
+     * @param time (Instant) the time the message first attempted to send
+     * @param type (String) the type of notification sent
+     */
+    private void checkDelay(Instant time, String type)
     {
         long diff =  Instant.now().getEpochSecond() - time.plusSeconds(60*3).getEpochSecond();
         if(diff > 0)
         {
             User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
-            MessageUtilities.sendPrivateMsg("Event *" + this.entryTitle + "*'s notification was sent **"
+            MessageUtilities.sendPrivateMsg("Event *" + this.entryTitle + "*'s " + type + " notification was sent **"
                             + diff/60 + "** minutes late! [" + this.guildId + "]", admin, null);
         }
     }
@@ -107,7 +113,7 @@ public class ScheduleEntry
 
         for( TextChannel chan : channels )
         {
-            MessageUtilities.sendMsg(remindMsg, chan, message -> this.checkDelay(Instant.now()));
+            MessageUtilities.sendMsg(remindMsg, chan, message -> this.checkDelay(Instant.now(), "reminder"));
         }
     }
 
@@ -129,7 +135,7 @@ public class ScheduleEntry
 
             for( TextChannel chan : channels )
             {
-                MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant()));
+                MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant(), "start"));
             }
 
             Logging.info(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
@@ -168,7 +174,7 @@ public class ScheduleEntry
 
             for( TextChannel chan : channels)
             {
-                MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant()));
+                MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant(), "end"));
             }
 
             Logging.info(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +

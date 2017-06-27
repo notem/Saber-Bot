@@ -33,7 +33,7 @@ class ScheduleSyncer implements Runnable
                         lte("sync_time", new Date())))
                 .forEach((Consumer<? super Document>) document ->
         {
-            executor.submit(() -> {
+            executor.execute(() -> {
                 String scheduleId = (String) document.get("_id");
 
                 // add one day to sync_time

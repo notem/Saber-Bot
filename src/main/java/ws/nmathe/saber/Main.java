@@ -52,7 +52,7 @@ public class Main
             jda.addEventListener(new EventListener());
             jda.setAutoReconnect(true);
 
-            // cycle "now playing" message every 20 seconds
+            // cycle "now playing" message every 30 seconds
             games = Iterables.cycle(botSettingsManager.getNowPlayingList()).iterator();
             (new Timer()).scheduleAtFixedRate(new TimerTask()
             {
@@ -74,7 +74,7 @@ public class Main
                         { return GameType.DEFAULT; }
                     });
                 }
-            }, 0, 20*1000);
+            }, 0, 30*1000);
         }
         catch( Exception e )
         {

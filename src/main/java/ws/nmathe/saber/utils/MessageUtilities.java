@@ -24,6 +24,8 @@ public class MessageUtilities
      */
     public static void sendMsg(String content, MessageChannel chan, Consumer<Message> action )
     {
+        if(content.isEmpty()) return;
+
         try
         {
             chan.sendMessage(content).queue( action, null );
@@ -39,6 +41,8 @@ public class MessageUtilities
     /// version which takes a message rather than a string
     public static void sendMsg(Message message, MessageChannel chan, Consumer<Message> action )
     {
+        if(message.getContent().isEmpty()) return;
+
         try
         {
             chan.sendMessage(message).queue( action, null );
@@ -54,6 +58,8 @@ public class MessageUtilities
     /// blocking version
     public static Message sendMsg(Message message, MessageChannel chan)
     {
+        if(message.getContent().isEmpty()) return null;
+
         try
         {
             return chan.sendMessage(message).complete();
@@ -76,6 +82,8 @@ public class MessageUtilities
      */
     public static void sendPrivateMsg(String content, User user, Consumer<Message> action )
     {
+        if(content.isEmpty()) return;
+
         try
         {
             user.openPrivateChannel().complete();
@@ -98,6 +106,8 @@ public class MessageUtilities
      */
     public static void editMsg(String content, Message msg, Consumer<Message> action )
     {
+        if(content.isEmpty()) return;
+
         try
         {
             msg.editMessage(content).queue( action, null );
@@ -112,6 +122,8 @@ public class MessageUtilities
 
     public static void editMsg(Message newMsg, Message msg, Consumer<Message> action )
     {
+        if(newMsg.getContent().isEmpty()) return;
+
         try
         {
             msg.editMessage(newMsg).queue( action, null );
@@ -126,6 +138,8 @@ public class MessageUtilities
 
     public static Message editMsg(Message newMsg, Message msg)
     {
+        if(newMsg.getContent().isEmpty()) return null;
+
         try
         {
             return msg.editMessage(newMsg).complete();

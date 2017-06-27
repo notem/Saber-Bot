@@ -34,8 +34,7 @@ public class ScheduleManager
     {
         // every 15 minutes create a thread to check for schedules to sync
         ScheduledExecutorService syncScheduler = Executors.newScheduledThreadPool(1);
-        syncScheduler.scheduleAtFixedRate( new ScheduleSyncer(),
-                3, 60*15, TimeUnit.SECONDS );
+        syncScheduler.scheduleAtFixedRate( new ScheduleSyncer(), 3, 60*15, TimeUnit.SECONDS );
     }
 
     /**

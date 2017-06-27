@@ -24,7 +24,8 @@ import static com.mongodb.client.model.Updates.set;
 class EntryProcessor implements Runnable
 {
     // thread pool for level 0 processing
-    private static ExecutorService executor = Executors.newCachedThreadPool();
+    private static ExecutorService primaryExecutor = Executors.newCachedThreadPool();   // handles fine check tasks
+    private static ExecutorService secondaryExecutor = Executors.newCachedThreadPool(); // handles the coarse check tasks
 
     /// when the database is overwhelmed with write requests (or otherwise just misbehaving)
     /// this hashmap (hashset) protects against announcing events multiple times
@@ -51,7 +52,7 @@ class EntryProcessor implements Runnable
                     {
                         if(!eventsToBeWritten.contains(document.getInteger("_id")))
                         {
-                            executor.submit(() -> {
+                            primaryExecutor.execute(() -> {
                                 // convert to scheduleEntry object and start
                                 (new ScheduleEntry(document)).end();
                             });
@@ -67,7 +68,7 @@ class EntryProcessor implements Runnable
                     {
                         if(!eventsToBeWritten.contains(document.getInteger("_id")))
                         {
-                            executor.submit(() -> {
+                            primaryExecutor.execute(() -> {
                                 // convert to a POJO and start
                                 (new ScheduleEntry(document)).start();
 
@@ -92,7 +93,7 @@ class EntryProcessor implements Runnable
                     {
                         if(!eventsToBeWritten.contains(document.getInteger("_id")))
                         {
-                            executor.submit(() -> {
+                            primaryExecutor.execute(() -> {
                                 // convert to POJO and send a remind
                                 (new ScheduleEntry(document)).remind();
 
@@ -121,14 +122,18 @@ class EntryProcessor implements Runnable
                     find(or(
                             and(
                                     eq("hasStarted",false),
-                                    lte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))),
+                                    lte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
+                            ),
                             and(
                                     eq("hasStarted", true),
-                                    lte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant())))))
-                    .forEach((Consumer<? super Document>) document ->
+                                    lte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant())))
+                            )
+                    ).forEach((Consumer<? super Document>) document ->
                     {
-                        // convert to scheduleEntry object and start
-                        (new ScheduleEntry(document)).reloadDisplay();
+                        secondaryExecutor.execute(() -> {
+                            // convert to scheduleEntry object and start
+                            (new ScheduleEntry(document)).reloadDisplay();
+                        });
                     });
         }
         else if( level == 2 )   // hourly check
@@ -139,14 +144,24 @@ class EntryProcessor implements Runnable
                     find(or(
                             and(
                                     eq("hasStarted",false),
-                                    lte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))),
+                                    and(
+                                            lte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant())),
+                                            gte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
+                                    )
+                            ),
                             and(
                                     eq("hasStarted", true),
-                                    lte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant())))))
-                    .forEach((Consumer<? super Document>) document ->
+                                    and(
+                                            lte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant())),
+                                            gte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
+                                    )
+                            ))
+                    ).forEach((Consumer<? super Document>) document ->
                     {
-                        // convert to scheduleEntry object and start
-                        (new ScheduleEntry(document)).reloadDisplay();
+                        secondaryExecutor.execute(() -> {
+                            // convert to scheduleEntry object and start
+                            (new ScheduleEntry(document)).reloadDisplay();
+                        });
                     });
         }
         else if( level == 3 )   // daily check
@@ -157,14 +172,18 @@ class EntryProcessor implements Runnable
                     find(or(
                             and(
                                     eq("hasStarted", false),
-                                    gte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))),
+                                    gte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))
+                            ),
                             and(
                                     eq("hasStarted", true),
-                                    gte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant())))))
-                    .forEach((Consumer<? super Document>) document ->
+                                    gte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant())))
+                            )
+                    ).forEach((Consumer<? super Document>) document ->
                     {
-                        // convert to scheduleEntry object and start
-                        (new ScheduleEntry(document)).reloadDisplay();
+                        secondaryExecutor.execute(() -> {
+                            // convert to scheduleEntry object and start
+                            (new ScheduleEntry(document)).reloadDisplay();
+                        });
                     });
         }
     }
