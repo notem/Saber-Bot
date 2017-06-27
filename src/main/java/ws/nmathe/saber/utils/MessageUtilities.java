@@ -41,7 +41,7 @@ public class MessageUtilities
     /// version which takes a message rather than a string
     public static void sendMsg(Message message, MessageChannel chan, Consumer<Message> action )
     {
-        if(message.getContent().isEmpty()) return;
+        if(message.getContent().isEmpty() && message.getEmbeds().isEmpty()) return;
 
         try
         {
@@ -58,7 +58,7 @@ public class MessageUtilities
     /// blocking version
     public static Message sendMsg(Message message, MessageChannel chan)
     {
-        if(message.getContent().isEmpty()) return null;
+        if(message.getContent().isEmpty() && message.getEmbeds().isEmpty()) return null;
 
         try
         {
@@ -122,7 +122,7 @@ public class MessageUtilities
 
     public static void editMsg(Message newMsg, Message msg, Consumer<Message> action )
     {
-        if(newMsg.getContent().isEmpty()) return;
+        if(newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return;
 
         try
         {
@@ -138,7 +138,7 @@ public class MessageUtilities
 
     public static Message editMsg(Message newMsg, Message msg)
     {
-        if(newMsg.getContent().isEmpty()) return null;
+        if(newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return null;
 
         try
         {
