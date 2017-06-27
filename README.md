@@ -1,8 +1,3 @@
-#### Alerts:
-```diff
-- I consider Saber-Bot feature complete, and I am not planning to add additional features in the near future.
-+ I will continue to maintain the code and provide fixes when necessary.
-```
 
 # Saber-Bot
 
@@ -20,7 +15,7 @@
 
 + [JDA](https://github.com/DV8FromTheWorld/JDA) - 3.0.0_160
 + [Unirest](https://github.com/Mashape/unirest-java) - 1.4.9
-+ [MongoDB]() - mongodb-driver 3.4.2
++ [MongoDB](http://mongodb.github.io/mongo-java-driver/3.4/) - mongodb-driver 3.4.2
 + [Google API Libraries]()
 
 ### Suggestions/Complaints
