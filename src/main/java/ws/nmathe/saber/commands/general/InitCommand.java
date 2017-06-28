@@ -25,9 +25,9 @@ public class InitCommand implements Command
                 "With this bot, all events must be placed on a schedule." +
                 "\nSchedules are discord channels which are used to store and display the details of an event." +
                 "\n\n" +
-                "This command is used to either create a new schedule or to convert an existing channel to a schedule." +
+                "This command is used to either create a new schedule or to convert an existing channel to a schedule.\n" +
                 "Converting a channel to schedule can only be undone by deleting the schedule.\n" +
-                "Existing messages in that message will not be removed." +
+                "Existing messages in that schedule will not be removed." +
                 "\n\n" +
                 "The single argument the command takes is optional." +
                 "\nThe argument should either be an existing #channel, or the name of the schedule you wish to create." +
@@ -35,7 +35,8 @@ public class InitCommand implements Command
 
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + invoke + "``\n" +
-                "``" + invoke + " \"Guild Events\"``";
+                "``" + invoke + " \"Guild Events\"``" +
+                "``" + invoke + " #events";
 
         String USAGE_BRIEF = "``" + invoke + "`` - initialize a new schedule";
 
@@ -87,7 +88,7 @@ public class InitCommand implements Command
 
             if(chans.isEmpty()) // use the argument as the new channel's name
             {
-                String chanTitle = args[0].replaceAll("[^A-Za-z0-9_ ]","").replace(" ","_");
+                String chanTitle = args[0].replaceAll("[^A-Za-z0-9_ -]","").replace(" ","_");
                 Main.getScheduleManager().createSchedule(event.getGuild().getId(), chanTitle);
                 body = "A new schedule channel named **" + chanTitle.toLowerCase() + "** has been created!";
 

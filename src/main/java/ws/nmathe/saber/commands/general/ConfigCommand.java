@@ -281,6 +281,8 @@ public class ConfigCommand implements Command
                         case "off":
                         case "desc":
                         case "asc":
+                        case "ascending":
+                        case "descending":
                             return "";
                         default:
                             return "*" + args[index] + "* is not a valid sort option! Use *off*, *desc*, or *asc*.";
@@ -606,9 +608,11 @@ public class ConfigCommand implements Command
                     {
                         case "on":
                         case "asc":
+                        case "ascending":
                             sortType = 1;
                             break;
                         case "desc":
+                        case "descending":
                             sortType = 2;
                             break;
                         default:
