@@ -6,6 +6,9 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.MessageUtilities;
 
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.set;
+
 /**
  * Sets a channel to sync to a google calendar address
  */
@@ -65,6 +68,9 @@ public class SyncCommand implements Command
         else
         {
             address = args[1];
+
+            // enable auto-sync'ing timezone
+            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("timezone_sync", true));
         }
 
         Main.getCalendarConverter().syncCalendar(address, channel);

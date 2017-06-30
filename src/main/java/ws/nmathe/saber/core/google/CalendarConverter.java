@@ -118,8 +118,12 @@ public class CalendarConverter
 
             // change the zone to match the calendar
             ZoneId zone = ZoneId.of( events.getTimeZone() );
-            // !!Disabled as of 2017-06-26
-            // Main.getScheduleManager().setTimeZone( channel.getId(), zone );
+            Boolean syncZone = Main.getDBDriver().getScheduleCollection().find(eq("_id", channel.getId()))
+                    .first().getBoolean("timezone_sync", false);
+            if(syncZone)
+            {
+                Main.getScheduleManager().setTimeZone( channel.getId(), zone );
+            }
 
             HashSet<String> uniqueEvents = new HashSet<>(); // a set of all unique (not child of a recurring event) events
 
@@ -263,9 +267,11 @@ public class CalendarConverter
             {
                 try
                 {
-                    channel.getManager().setTopic(calLink).queue();
+                    channel.getManagerUpdatable().getTopicField().setValue(calLink).update().queue();
                 }
-                catch(PermissionException e)
+                catch(PermissionException ignored)
+                {}
+                catch(Exception e)
                 {
                     Logging.warn(this.getClass(), e.getMessage());
                 }

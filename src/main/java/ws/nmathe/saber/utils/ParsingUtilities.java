@@ -153,19 +153,19 @@ public class ParsingUtilities
         }
         else
         {
-            if( str.contains("su") )
+            if( str.contains("sun") )
                 bits |= 1;
-            if( str.contains("mo") )
+            if( str.contains("mon") )
                 bits |= 1<<1;
-            if( str.contains("tu") )
+            if( str.contains("tue") )
                 bits |= 1<<2;
-            if( str.contains("we") )
+            if( str.contains("wed") )
                 bits |= 1<<3;
-            if( str.contains("th") )
+            if( str.contains("thu") )
                 bits |= 1<<4;
-            if( str.contains("fr") )
+            if( str.contains("fri") )
                 bits |= 1<<5;
-            if( str.contains("sa") )
+            if( str.contains("sat") )
                 bits |= 1<<6;
         }
         return bits;

@@ -394,6 +394,10 @@ public class ConfigCommand implements Command
                                         Main.getEntryManager().reloadEntry(id);
                                     });
 
+                    // disable auto-sync'ing timezone
+                    Main.getDBDriver().getScheduleCollection()
+                            .updateOne(eq("_id", scheduleChan.getId()), set("timezone_sync", false));
+
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
                     break;
 
