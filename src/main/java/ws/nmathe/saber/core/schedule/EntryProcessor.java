@@ -5,6 +5,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -163,6 +164,10 @@ class EntryProcessor implements Runnable
                             (new ScheduleEntry(document)).reloadDisplay();
                         });
                     });
+            // remove expiring events
+            Main.getDBDriver().getEventCollection().deleteMany(
+                    lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()))
+            );
         }
         else if( level == 3 )   // daily check
         {

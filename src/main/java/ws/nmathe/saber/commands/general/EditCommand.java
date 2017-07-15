@@ -10,6 +10,7 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -209,6 +210,26 @@ public class EditCommand implements Command
                     return "The rsvp max cannot be negative!";
                 break;
 
+            case "ex":
+            case "expire":
+                if(args.length != 3)
+                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [date]``";
+                switch(args[index])
+                {
+                    case "none":
+                    case "never":
+                    case "null":
+                        return "";
+
+                    default:
+                        if( !VerifyUtilities.verifyDate( args[index] ) )
+                            return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                        if(ParsingUtilities.parseDateStr(args[index]).isBefore(LocalDate.now()))
+                            return "That date is in the past!";
+                        return "";
+                }
+
             default:
                 return "**" + args[index-1] + "** is not an option I know of! Please use the ``help`` command to see available options!";
         }
@@ -236,6 +257,7 @@ public class EditCommand implements Command
         int repeat = entry.getRepeat();                     //
         String url = entry.getTitleUrl();                   //
         Integer rsvpMax = entry.getRsvpMax();
+        ZonedDateTime expire = entry.getExpire();
 
         boolean quietStart = entry.isQuietStart();
         boolean quietEnd = entry.isQuietEnd();
@@ -402,11 +424,26 @@ public class EditCommand implements Command
                     }
                     //Main.getEntryManager().updateEntryRsvpMax(entryId, rsvpMax);
                     break;
+
+                case "ex":
+                case "expire":
+                    switch(args[index])
+                    {
+                        case "none":
+                        case "never":
+                        case "null":
+                            expire = null;
+                            break;
+                            
+                        default:
+                            expire = ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.MIN, start.getZone());
+                            break;
+                    }
             }
 
             Main.getEntryManager().updateEntry(entryId, title, start, end, comments, repeat, url, entry.hasStarted(),
                     msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo(), entry.getRsvpUndecided(),
-                    quietStart, quietEnd, quietRemind, rsvpMax);
+                    quietStart, quietEnd, quietRemind, rsvpMax, expire);
         }
 
         //
@@ -453,6 +490,9 @@ public class EditCommand implements Command
 
         if(rsvpMax>=0)
             body += "Max: " + rsvpMax + "\n";
+
+        if(expire != null)
+            body += "Expire: \"" + expire.toLocalDate() + "\"";
 
         if(!comments.isEmpty())
             body += "// Comments\n";

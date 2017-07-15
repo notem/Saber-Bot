@@ -28,7 +28,7 @@ public class Logging
 
     public static void info(Class caller, String msg)
     {
-        LocalTime now = LocalTime.now();
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] [Info]" +
                 ANSI_RESET + " " + ANSI_CYAN_BACKGROUND + ANSI_BLACK +
                 "[" + caller.getSimpleName() + "]" +
@@ -40,7 +40,7 @@ public class Logging
 
     public static void warn(Class caller, String msg)
     {
-        LocalTime now = LocalTime.now();
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] " +
                 ANSI_RED + "[Warn]" + ANSI_RESET + " " +
                 ANSI_YELLOW_BACKGROUND + ANSI_BLACK +
@@ -53,7 +53,7 @@ public class Logging
 
     public static void cmd(Class caller, String msg)
     {
-        LocalTime now = LocalTime.now();
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] [Cmnd]" +
                 ANSI_RESET + " " + ANSI_GREEN_BACKGROUND + ANSI_BLACK +
                 "[" + caller.getSimpleName() + "]" +

@@ -137,6 +137,7 @@ public class CalendarConverter
                 String title;
                 ArrayList<String> comments = new ArrayList<>();
                 int repeat = 0;
+                ZonedDateTime expire = null;
 
                 if(event.getStart().getDateTime() == null)
                 { // parse start and end dates for strange events
@@ -191,8 +192,10 @@ public class CalendarConverter
                 {
                     for( String rule : recurrence )
                     {
+                        Logging.warn(this.getClass(), rule);
                         if( rule.startsWith("RRULE") && rule.contains("FREQ" ) )
                         {
+                            // parse out the frequency of recurrence
                             String tmp = rule.split("FREQ=")[1].split(";")[0];
                             if( tmp.equals("DAILY" ) )
                             {
@@ -210,6 +213,17 @@ public class CalendarConverter
                             {
                                 tmp = rule.split("BYDAY=")[1].split(";")[0];
                                 repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
+                            }
+
+                            // parse out the end date of recurrence
+                            if( rule.contains("UNTIL=") )
+                            {
+                                tmp = rule.split("UNTIL=")[1].split(";")[0];
+                                int year = Integer.parseInt(tmp.substring(0, 4));
+                                int month = Integer.parseInt(tmp.substring(4,6));
+                                int day = Integer.parseInt(tmp.substring(6, 8));
+
+                                expire = ZonedDateTime.of(LocalDate.of(year, month, day), LocalTime.MIN, zone);
                             }
                         }
                     }
@@ -231,13 +245,13 @@ public class CalendarConverter
                         Main.getEntryManager().updateEntry(se.getId(), title, start, end, comments, repeat,
                                 event.getHtmlLink(), se.hasStarted(), se.getMessageObject(), googleId,
                                 se.getRsvpYes(), se.getRsvpNo(), se.getRsvpUndecided(), se.isQuietStart(),
-                                se.isQuietEnd(), se.isQuietRemind(), se.getRsvpMax());
+                                se.isQuietEnd(), se.isQuietRemind(), se.getRsvpMax(), se.getExpire());
                     }
                     else
                     {
                         boolean hasStarted = !start.isAfter(ZonedDateTime.now());
                         Main.getEntryManager().newEntry(title, start, end, comments, repeat,
-                                event.getHtmlLink(), channel, googleId, hasStarted);
+                                event.getHtmlLink(), channel, googleId, hasStarted, expire);
                     }
 
                     uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);

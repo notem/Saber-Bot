@@ -23,7 +23,8 @@ public class MessageGenerator
 {
     static Message generate(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
                             int repeat, String url, List<Date> reminders, Integer eId, String cId, String guildId,
-                            List<String> rsvpYes, List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax)
+                            List<String> rsvpYes, List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax,
+                            ZonedDateTime expire)
     {
         String titleUrl = url != null ? url : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
@@ -85,7 +86,7 @@ public class MessageGenerator
         if(Main.getScheduleManager().getStyle(cId).toLowerCase().equals("narrow"))
             bodyContent = generateBodyNarrow(start, end, cId, repeat, rsvpYes, rsvpNo, rsvpUndecided, rsvpMax);
         else
-            bodyContent = generateBodyFull(start, end, cId, repeat, comments, rsvpYes, rsvpNo, rsvpUndecided, rsvpMax);
+            bodyContent = generateBodyFull(start, end, cId, repeat, comments, rsvpYes, rsvpNo, rsvpUndecided, rsvpMax, expire);
 
 
         EmbedBuilder builder = new EmbedBuilder();
@@ -99,7 +100,8 @@ public class MessageGenerator
 
     private static String generateBodyFull(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
                                            int eRepeat, List<String> eComments, List<String> rsvpYes,
-                                           List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax)
+                                           List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax,
+                                           ZonedDateTime expire)
     {
         String timeFormatter;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
@@ -131,9 +133,14 @@ public class MessageGenerator
                     " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
         }
 
-        String repeatLine = "> " + getRepeatString( eRepeat, false ) + "\n";
+        String repeatLine = "> " + getRepeatString(eRepeat, false) + "\n";
         String zoneLine = "[" + eStart.getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "]" +
                 MessageGenerator.genTimer(eStart,eEnd) + "\n";
+        if(expire != null)
+        {
+            repeatLine += "> expires " + expire.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
+                    " " + expire.getDayOfMonth() + ", " + expire.getYear() + "\n";
+        }
 
         msg += "```Markdown\n\n" + timeLine + repeatLine + "```\n";
 
@@ -168,8 +175,8 @@ public class MessageGenerator
     }
 
     private static String generateBodyNarrow(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
-                                           int eRepeat, List<String> rsvpYes,
-                                           List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax)
+                                             int eRepeat, List<String> rsvpYes,
+                                             List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax)
     {
         // determine the formatting for clock
         String timeFormatter;
@@ -202,7 +209,7 @@ public class MessageGenerator
 
         // create the second line of the body
         String lineTwo = "[" + eStart.getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
-                "](" + getRepeatString( eRepeat, true ) + ")";
+                "](" + getRepeatString(eRepeat, true) + ")";
 
         // if rsvp is enabled, show the number of rsvps
         if(rsvpYes != null && rsvpNo != null)

@@ -45,7 +45,7 @@ public class CreateCommand implements Command
                 "Dates which are in a non-number format (such as '10 May') are not acceptable.\n" +
                 "Default behavior is to use the next day as the event's date. " +
 
-                "splithere" +
+                "splithere" + // the help command will parse this token and start a new message
 
                 "\n\n```diff\n+ Event description ```\n" +
                 "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``.\n" +
@@ -113,6 +113,7 @@ public class CreateCommand implements Command
             boolean dateFlag = false;
             boolean urlFlag = false;
             boolean intervalFlag = false;
+            boolean expireFlag = false;
 
             for (String arg : argsRemaining)
             {
@@ -138,6 +139,24 @@ public class CreateCommand implements Command
                         return "Your repeat interval can't be negative!";
                     intervalFlag = false;
                 }
+                else if (expireFlag)
+                {
+                    switch(arg)
+                    {
+                        case "none":
+                        case "never":
+                        case "null":
+                            break;
+
+                        default:
+                            if( !VerifyUtilities.verifyDate( arg ) )
+                                return "I could not understand **" + arg + "** as a date! Please use the format M/d.";
+                            if(ParsingUtilities.parseDateStr(arg).isBefore(LocalDate.now()))
+                                return "That date is in the past!";
+                            break;
+                    }
+                    expireFlag = false;
+                }
                 else
                 {
                     switch(arg.toLowerCase())
@@ -161,6 +180,11 @@ public class CreateCommand implements Command
                         case "i":
                         case "interval":
                             intervalFlag = true;
+                            break;
+
+                        case "ex":
+                        case "expire":
+                            expireFlag = true;
                             break;
                     }
                 }
@@ -191,6 +215,7 @@ public class CreateCommand implements Command
         LocalDate startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
         LocalDate endDate = null;
         String url = null;
+        LocalDate expireDate = null;
 
         boolean channelFlag = false;
         boolean titleFlag = false;
@@ -202,6 +227,7 @@ public class CreateCommand implements Command
         boolean endDateFlag = false;
         boolean urlFlag = false;
         boolean intervalFlag = false;
+        boolean expireFlag = false;
 
         for( String arg : args )
         {
@@ -261,6 +287,21 @@ public class CreateCommand implements Command
                     repeat = 0b10000000 | Integer.parseInt(arg);
                     intervalFlag = false;
                 }
+                else if (expireFlag)
+                {
+                    switch(arg.toLowerCase())
+                    {
+                        case "none":
+                        case "never":
+                        case "null":
+                            expireDate = null;
+                            break;
+
+                        default:
+                            expireDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                            break;
+                    }
+                }
                 else
                 {
                     switch(arg.toLowerCase())
@@ -297,6 +338,11 @@ public class CreateCommand implements Command
                             intervalFlag = true;
                             break;
 
+                        case "ex":
+                        case "expire":
+                            expireFlag = true;
+                            break;
+
                         default:
                             comments.add(arg);
                             break;
@@ -326,6 +372,7 @@ public class CreateCommand implements Command
         // create the zoned date time using the schedule's timezone
         ZonedDateTime start = ZonedDateTime.of( startDate, startTime, zone );
         ZonedDateTime end = ZonedDateTime.of( endDate, endTime, zone );
+        ZonedDateTime expire = expireDate == null ? null : ZonedDateTime.of(expireDate, LocalTime.MIN, zone);
 
         // add a year to the date if the provided date is past current time
         Instant now = Instant.now();
@@ -347,7 +394,7 @@ public class CreateCommand implements Command
 
         // send the event summary to the command channel
         Integer entryId = Main.getEntryManager().newEntry(title, start, end, comments, repeat, url,
-                event.getGuild().getTextChannelById(cId), null, false);
+                event.getGuild().getTextChannelById(cId), null, false, expire);
 
         DateTimeFormatter dtf;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
@@ -363,6 +410,9 @@ public class CreateCommand implements Command
 
         if(url!=null)
             body += "Url: \"" + url + "\"\n";
+
+        if(expireDate != null)
+            body += "Expire: \"" + expireDate + "\"";
 
         if(!comments.isEmpty())
             body += "// Comments\n";

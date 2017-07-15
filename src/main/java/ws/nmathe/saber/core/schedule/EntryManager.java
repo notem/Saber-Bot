@@ -7,6 +7,8 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -49,7 +51,7 @@ public class EntryManager
         scheduler2.scheduleAtFixedRate( new EntryProcessor(3), 0, 12*60*60, TimeUnit.SECONDS);
         // 1 hour timer
         scheduler2.scheduleAtFixedRate( new EntryProcessor(2), 0, 60*30, TimeUnit.SECONDS);
-        // 5 min timer
+        // 3 min timer
         scheduler2.scheduleAtFixedRate( new EntryProcessor(1), 30 , 60*3, TimeUnit.SECONDS );
     }
 
@@ -64,7 +66,8 @@ public class EntryManager
      * @param channel   (MessageChannel) channel to send event's message
      */
     public Integer newEntry(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
-                         int repeat, String url, TextChannel channel, String googleId, boolean hasStarted)
+                            int repeat, String url, TextChannel channel, String googleId, boolean hasStarted,
+                            ZonedDateTime expireDate)
     {
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
@@ -75,6 +78,13 @@ public class EntryManager
                 reminders.add(Date.from(start.toInstant().minusSeconds(til*60)));
             }
         }
+
+        // process expiration date
+        Date expire;
+        if (expireDate == null)
+            expire = null;
+        else
+            expire = Date.from(expireDate.toInstant());
 
         // is rsvp enabled on the channel? if so, create the entry with an empty list. otherwise set list to null
         List<String> rsvpList;
@@ -87,7 +97,7 @@ public class EntryManager
         Integer newId = this.newId();   // generate a new, unused ID
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, newId, channel.getId(), channel.getGuild().getId(),
-                rsvpList, rsvpList, rsvpList, -1);
+                rsvpList, rsvpList, rsvpList, -1, expireDate);
 
         // send message to schedule
         MessageUtilities.sendMsg(message, channel, msg -> {
@@ -123,6 +133,7 @@ public class EntryManager
                             .append("end_disabled", false)
                             .append("reminders_disabled", false)
                             .append("rsvp_max", -1)
+                            .append("expire", expire)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
@@ -157,7 +168,7 @@ public class EntryManager
                             List<String> comments, int repeat, String url, boolean hasStarted,
                             Message origMessage, String googleId, List<String> rsvpYes, List<String> rsvpNo,
                             List<String> rsvpUndecided, boolean quietStart, boolean quietEnd,
-                            boolean quietRemind, Integer rsvpMax)
+                            boolean quietRemind, Integer rsvpMax, ZonedDateTime expireDate)
     {
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
@@ -169,10 +180,17 @@ public class EntryManager
             }
         }
 
+        // process expiration date
+        Date expire;
+        if (expireDate == null)
+            expire = null;
+        else
+            expire = Date.from(expireDate.toInstant());
+
         // generate event display message
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId(),
-                rsvpYes, rsvpNo, rsvpUndecided, rsvpMax);
+                rsvpYes, rsvpNo, rsvpUndecided, rsvpMax, expireDate);
 
         // update message display
         MessageUtilities.editMsg(message, origMessage, msg -> {
@@ -200,6 +218,7 @@ public class EntryManager
                             .append("end_disabled", quietEnd)
                             .append("reminders_disabled", quietRemind)
                             .append("rsvp_max", rsvpMax)
+                            .append("expire", expire)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);

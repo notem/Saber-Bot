@@ -234,6 +234,7 @@ public class ListCommand implements Command
                     .map(member -> member.getUser().getId()).collect(Collectors.toList());
             undecided.removeAll(rsvpYes);
             undecided.removeAll(rsvpNo);
+            undecided.removeAll(rsvpUndecided);
 
             content += "**\nNo input\n======================\n**";
             if(!filterByType & undecided.size() > 10)
