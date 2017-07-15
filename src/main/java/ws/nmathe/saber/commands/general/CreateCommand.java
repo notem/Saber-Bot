@@ -51,14 +51,19 @@ public class CreateCommand implements Command
                 "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``.\n" +
                 "Up to 10 of comments may be added in ``<extra>``.\n" +
                 "If your title, comment, or channel includes any space characters, the phrase must be enclosed in " +
-                "quotations (see examples).";
+                "quotations (see examples)." +
+                "\n\n```diff\n+ Event Expiration ````\n" +
+                "In some instances of a repeating event, it may be desirable to set a date for when that event will stop recurring.\n" +
+                "This can be accomplished using the ``expire`` argument.\n" +
+                "Add ``expire <yyyy/MM/dd>`` to a create command to create an event with an expiration date (see examples).";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + invoke + " #event_schedule \"Party in the Guild Hall\" 19:00 2:00``" +
                 "\n``" + invoke + " #guild_reminders \"Sign up for Raids\" 4:00pm interval 2``" +
-                "\n``" + invoke + " #raid_schedule \"Weekly Raid Event\" 7:00pm 12:00pm repeat Sunday \"Healers and " +
+                "\n``" + invoke + " #raid_schedule \"Weekly Raid Event\" 7:00pm 12:00pm repeat \"Fri, Sun\" \"Healers and " +
                 "tanks always in demand.\" \"PM our raid captain with your role and level if attending.\"``" +
-                "\n``" + invoke + " #competition \"Capture the Flag\" 10:00am start-date 10/20 end-date 10/23``";
+                "\n``" + invoke + " #competition \"Capture the Flag\" 10:00am start-date 10/20 end-date 10/23``" +
+                "\n``" + invoke + " #shows \"Pokemon\" 5:29pm 6:00pm date 3/30 repeat \"Sat\" expire 5/30";
 
         String USAGE_BRIEF = "``" + invoke + "`` - add an event to a schedule";
 

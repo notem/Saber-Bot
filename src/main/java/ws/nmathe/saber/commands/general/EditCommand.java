@@ -31,7 +31,7 @@ public class EditCommand implements Command
                 " new configuration." +
                 "\n\n```diff\n+ Options ```\n" +
                 "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment <add|remove>``, ``date``, " +
-                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``," +
+                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``" +
                 " and ``max``.\n\n" +
                 "Most of the options listed above accept the same arguments as the ``create`` command." +
                 "\nReference the ``help`` information for the ``create`` command for more information.\n\n" +
@@ -48,9 +48,10 @@ public class EditCommand implements Command
                 "\n``" + invoke + " 0abf2991 start 21:15``" +
                 "\n``" + invoke + " 49afaf2 end 2:15pm``" +
                 "\n``" + invoke + " 409fa22 start-date 10/9``" +
-                "\n``" + invoke + " a00af9a repeat \"Su, Tu, Fr\"``" +
+                "\n``" + invoke + " a00af9a repeat \"Sun, Tue, Fri\"``" +
                 "\n``" + invoke + " 80c0sd09 comment remove 1``" +
-                "\n``" + invoke + " 0912af9 quiet-start``";
+                "\n``" + invoke + " 0912af9 quiet-start``" +
+                "\n``" + invoke + " a901992 expire 2019/1/1";
 
         String USAGE_BRIEF = "``" + invoke + "`` - modify an event";
 
