@@ -192,7 +192,6 @@ public class CalendarConverter
                 {
                     for( String rule : recurrence )
                     {
-                        Logging.warn(this.getClass(), rule);
                         if( rule.startsWith("RRULE") && rule.contains("FREQ" ) )
                         {
                             // parse out the frequency of recurrence
