@@ -124,6 +124,30 @@ public class ParsingUtilities
                         announceMsg += entry.getTitle();
                         break;
 
+                    case 'd' :
+                        announceMsg += entry.getStart().getDayOfMonth();
+                        break;
+
+                    case 'D' :
+                        announceMsg += entry.getStart().getDayOfWeek();
+                        break;
+
+                    case 'm' :
+                        announceMsg += entry.getStart().getMonthValue();
+                        break;
+
+                    case 'M' :
+                        announceMsg += entry.getStart().getMonth();
+                        break;
+
+                    case 'y' :
+                        announceMsg += entry.getStart().getYear();
+                        break;
+
+                    case 'i':
+                        announceMsg += Integer.toHexString(entry.getId());
+                        break;
+
                     case '%' :
                         announceMsg += '%';
                         break;
