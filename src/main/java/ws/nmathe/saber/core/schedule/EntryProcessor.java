@@ -3,6 +3,7 @@ package ws.nmathe.saber.core.schedule;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
+import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -164,7 +165,17 @@ class EntryProcessor implements Runnable
                             (new ScheduleEntry(document)).reloadDisplay();
                         });
                     });
-            // remove expiring events
+
+            /// remove expiring events
+            // delete message objects
+            Main.getDBDriver().getEventCollection().find(
+                    lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()))
+            ).forEach((Consumer<? super Document>) document-> {
+                ScheduleEntry se = new ScheduleEntry(document);
+                MessageUtilities.deleteMsg(se.getMessageObject(), null);
+            });
+
+            // bulk delete entries from the database
             Main.getDBDriver().getEventCollection().deleteMany(
                     lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()))
             );

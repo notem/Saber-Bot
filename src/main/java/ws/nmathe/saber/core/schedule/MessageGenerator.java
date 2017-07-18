@@ -24,11 +24,19 @@ public class MessageGenerator
     static Message generate(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
                             int repeat, String url, List<Date> reminders, Integer eId, String cId, String guildId,
                             List<String> rsvpYes, List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax,
-                            ZonedDateTime expire)
+                            ZonedDateTime expire, boolean quietStart, boolean quietEnd, boolean quietRemind)
     {
         String titleUrl = url != null ? url : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
         String footerStr = "ID: " + Integer.toHexString(eId);
+
+        if(quietEnd || quietRemind || quietStart)
+        {
+            footerStr += " |";
+            if(quietStart) footerStr += " quiet-start";
+            if(quietEnd) footerStr += " quiet-end";
+            if(quietRemind) footerStr += " quiet-remind";
+        }
 
         // generate reminder footer
         if (!reminders.isEmpty())

@@ -97,7 +97,7 @@ public class EntryManager
         Integer newId = this.newId();   // generate a new, unused ID
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, newId, channel.getId(), channel.getGuild().getId(),
-                rsvpList, rsvpList, rsvpList, -1, expireDate);
+                rsvpList, rsvpList, rsvpList, -1, expireDate, false, false, false);
 
         // send message to schedule
         MessageUtilities.sendMsg(message, channel, msg -> {
@@ -190,7 +190,7 @@ public class EntryManager
         // generate event display message
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId(),
-                rsvpYes, rsvpNo, rsvpUndecided, rsvpMax, expireDate);
+                rsvpYes, rsvpNo, rsvpUndecided, rsvpMax, expireDate, quietStart, quietEnd, quietRemind);
 
         // update message display
         MessageUtilities.editMsg(message, origMessage, msg -> {

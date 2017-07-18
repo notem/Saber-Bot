@@ -254,7 +254,7 @@ public class EventListener extends ListenerAdapter
                     }
 
                     Main.getEntryManager().reloadEntry(entryId);
-                    //event.getReaction().removeReaction(event.getUser()).queue();
+                    event.getReaction().removeReaction(event.getUser()).queue();
                 }
                 // if the user added the 'no'/leave emote
                 else if(emote.getName().equals(Main.getBotSettingsManager().getNoEmoji()))
@@ -280,7 +280,7 @@ public class EventListener extends ListenerAdapter
                     }
 
                     Main.getEntryManager().reloadEntry(entryId);
-                    //event.getReaction().removeReaction(event.getUser()).queue();
+                    event.getReaction().removeReaction(event.getUser()).queue();
                 }
                 // if the user added the undecided emote
                 else if(emote.getName().equals(Main.getBotSettingsManager().getClearEmoji()))
@@ -306,7 +306,7 @@ public class EventListener extends ListenerAdapter
                     }
 
                     Main.getEntryManager().reloadEntry(entryId);
-                    //event.getReaction().removeReaction(event.getUser()).queue();
+                    event.getReaction().removeReaction(event.getUser()).queue();
                 }
             }
         }
