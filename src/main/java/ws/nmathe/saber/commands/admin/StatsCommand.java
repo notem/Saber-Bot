@@ -13,19 +13,25 @@ import java.lang.management.RuntimeMXBean;
 public class StatsCommand implements Command
 {
     @Override
-    public String help(boolean brief)
+    public String name()
+    {
+        return "stats";
+    }
+
+    @Override
+    public String help(String prefix, boolean brief)
     {
         return null;
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         return "";
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
         String msg = "```python\n";
         msg += "     Entries: " + Main.getDBDriver().getEventCollection().count() + "\n";

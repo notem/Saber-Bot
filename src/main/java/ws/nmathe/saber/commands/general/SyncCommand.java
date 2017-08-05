@@ -14,12 +14,18 @@ import static com.mongodb.client.model.Updates.set;
  */
 public class SyncCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "sync";
+    @Override
+    public String name()
+    {
+        return "sync";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel> [<calendar address>]```\n" +
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel> [<calendar address>]```\n" +
                 "The sync command will replace all events in the specified channel" +
                 "with events imported from a public google calendar.\n" +
                 "The command imports the next 7 days of events into the channel;" +
@@ -27,11 +33,11 @@ public class SyncCommand implements Command
                 "If ``<calendar address>`` is not included, " +
                 "the address saved in the channel settings will be used.";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - sync a schedule to a google calendar";
+        String USAGE_BRIEF = "``" + head + "`` - sync a schedule to a google calendar";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + " #new_schedule g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com``" +
-                "\n``" + invoke + " #new_schedule``";
+                "``" + head + " #new_schedule g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com``" +
+                "\n``" + head + " #new_schedule``";
 
         if( brief )
             return USAGE_BRIEF;
@@ -40,12 +46,14 @@ public class SyncCommand implements Command
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String head = prefix + this.name();
+
         if( args.length < 1 )
-            return "That's not enough arguments! Use ``" + invoke + " <channel> [<calendar address>]``";
+            return "That's not enough arguments! Use ``" + head + " <channel> [<calendar address>]``";
         if( args.length > 2)
-            return "That's too many arguments! Use ``" + invoke + " <channel> [<calendar address>]``";
+            return "That's too many arguments! Use ``" + head + " <channel> [<calendar address>]``";
 
         String cId = args[0].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId))
@@ -57,7 +65,7 @@ public class SyncCommand implements Command
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String head, String[] args, MessageReceivedEvent event)
     {
         String cId = args[0].replace("<#","").replace(">","");
         TextChannel channel = event.getGuild().getTextChannelById(cId);

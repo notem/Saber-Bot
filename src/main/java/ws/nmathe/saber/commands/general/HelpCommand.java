@@ -1,5 +1,6 @@
 package ws.nmathe.saber.commands.general;
 
+import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -13,8 +14,6 @@ import java.util.Collection;
  */
 public class HelpCommand implements Command
 {
-    private String prefix = Main.getBotSettingsManager().getCommandPrefix();
-
     private String INTRO = "```diff\n- Intro```\nI am **" + Main.getBotJda().getSelfUser().getName() + "**, the event scheduling discord bot." +
             " I can provide your discord with basic event schedule management.\nInvite me to your discord and create " +
             "a dedicated command channel named **" + Main.getBotSettingsManager().getControlChan() + "** to get started.\n\n" +
@@ -25,15 +24,23 @@ public class HelpCommand implements Command
             "invite: <https://discordapp.com/api/oauth2/authorize?client_id=" + Main.getBotJda().getSelfUser().getId() +
             "&scope=bot&permissions=523344>\n\n";
 
-    private String USAGE_EXTENDED = "To get detailed information concerning the usage of any of these" +
-            " commands use the command ``" + prefix + "help <command>`` where the prefix for <command> is stripped off.\n\n" +
-            "Ex. ``" + prefix + "help create``";
-
-    private String USAGE_BRIEF = "``" + prefix + "help`` - receive help message";
+    @Override
+    public String name()
+    {
+        return "help";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "To get detailed information concerning the usage of any of these" +
+                " commands use the command ``" + head + " <command>`` where the prefix for <command> is stripped off.\n\n" +
+                "Ex. ``" + head + " create``";
+
+        String USAGE_BRIEF = "``" + head + "`` - receive help message";
+
         if( brief )
             return USAGE_BRIEF;
         else
@@ -41,7 +48,7 @@ public class HelpCommand implements Command
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         if(args.length>1)
             return "That's too many arguments!";
@@ -49,14 +56,20 @@ public class HelpCommand implements Command
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "To get detailed information concerning the usage of any of these" +
+                " commands use the command ``" + head + " <command>`` where the prefix for <command> is stripped off.\n\n" +
+                "Ex. ``" + head + " create``";
+
         Collection<Command> commands = Main.getCommandHandler().getCommands();
 
         if(args.length < 1)     // send the bot intro with a brief list of commands to the user
         {
             String commandsBrief = ""; for( Command cmd : commands )
-                commandsBrief += cmd.help( true ) + "\n";
+                commandsBrief += cmd.help(prefix, true) + "\n";
 
             MessageUtilities.sendPrivateMsg( INTRO + "```diff\n- Command List```\n" +
                     commandsBrief + "\n" + USAGE_EXTENDED, event.getAuthor(), null );
@@ -66,7 +79,7 @@ public class HelpCommand implements Command
             Command cmd = Main.getCommandHandler().getCommand( args[0] );
             if( cmd != null )
             {
-                String helpMsg = cmd.help(false);
+                String helpMsg = cmd.help(head, false);
                 if(helpMsg.length() > 1900)
                 {
                     String[] split = helpMsg.split("splithere");

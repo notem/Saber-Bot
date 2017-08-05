@@ -12,6 +12,7 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import ws.nmathe.saber.core.EventListener;
+import ws.nmathe.saber.core.settings.GuildSettingsManager;
 import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.Logging;
 import java.util.*;
@@ -29,6 +30,7 @@ public class Main
     private static ScheduleManager scheduleManager = new ScheduleManager();
     private static CommandHandler commandHandler = new CommandHandler();
     private static CalendarConverter calendarConverter = new CalendarConverter();
+    private static GuildSettingsManager guildSettingsManager = new GuildSettingsManager();
     private static Driver mongoDriver = new Driver();
     private static Iterator<String> games;
 
@@ -113,6 +115,11 @@ public class Main
     public static ScheduleManager getScheduleManager()
     {
        return scheduleManager;
+    }
+
+    public static GuildSettingsManager getGuildSettingsManager()
+    {
+        return guildSettingsManager;
     }
 
     public static CalendarConverter getCalendarConverter()

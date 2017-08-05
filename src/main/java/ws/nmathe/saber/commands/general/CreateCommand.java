@@ -18,12 +18,18 @@ import java.util.Arrays;
  */
 public class CreateCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "create";
+    @Override
+    public String name()
+    {
+        return "create";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel> <title> <start> [<end> <extra>]```\n" +
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel> <title> <start> [<end> <extra>]```\n" +
                 "The create command will add a new entry to a schedule.\n" +
                 "Entries MUST be initialized with a title, and a start time.\n" +
                 "The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
@@ -59,14 +65,14 @@ public class CreateCommand implements Command
                 "Add ``expire <yyyy/MM/dd>`` to a create command to create an event with an expiration date (see examples).";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + " #event_schedule \"Party in the Guild Hall\" 19:00 2:00``" +
-                "\n``" + invoke + " #guild_reminders \"Sign up for Raids\" 4:00pm interval 2``" +
-                "\n``" + invoke + " #raid_schedule \"Weekly Raid Event\" 7:00pm 12:00pm repeat \"Fri, Sun\" \"Healers and " +
+                "``" + head + " #event_schedule \"Party in the Guild Hall\" 19:00 2:00``" +
+                "\n``" + head + " #guild_reminders \"Sign up for Raids\" 4:00pm interval 2``" +
+                "\n``" + head + " #raid_schedule \"Weekly Raid Event\" 7:00pm 12:00pm repeat \"Fri, Sun\" \"Healers and " +
                 "tanks always in demand.\" \"PM our raid captain with your role and level if attending.\"``" +
-                "\n``" + invoke + " #competition \"Capture the Flag\" 10:00am start-date 10/20 end-date 10/23``" +
-                "\n``" + invoke + " #shows \"Pokemon\" 5:29pm 6:00pm date 3/30 repeat \"Sat\" expire 5/30``";
+                "\n``" + head + " #competition \"Capture the Flag\" 10:00am start-date 10/20 end-date 10/23``" +
+                "\n``" + head + " #shows \"Pokemon\" 5:29pm 6:00pm date 3/30 repeat \"Sat\" expire 5/30``";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - add an event to a schedule";
+        String USAGE_BRIEF = "``" + head + "`` - add an event to a schedule";
 
         if( brief )
             return USAGE_BRIEF;
@@ -74,17 +80,19 @@ public class CreateCommand implements Command
             return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String head = prefix + this.name();
+
         int index = 0;
 
         if (args.length < 3)
-            return "That's not enough arguments! Use ``" + invoke + " <channel> <title> <start> [<end> <extra>]``";
+            return "That's not enough arguments! Use ``" + head + " <channel> <title> <start> [<end> <extra>]``";
 
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
             return "Channel " + args[index] + " is not a schedule for your guild. " +
-                    "Use the ``" + invoke + "`` command to create a new schedule!";
+                    "Use the ``" + head + "`` command to create a new schedule!";
 
         if( Main.getScheduleManager().isLocked(cId) )
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
@@ -207,7 +215,7 @@ public class CreateCommand implements Command
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
         String cId = args[0].replace("<#","").replace(">","");
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);

@@ -1,7 +1,8 @@
 package ws.nmathe.saber.core.command;
 
-import ws.nmathe.saber.Main;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import org.apache.commons.lang3.StringUtils;
+import ws.nmathe.saber.utils.Logging;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,16 +21,12 @@ class CommandParser
      * @param e event
      * @return container holding command parts
      */
-    CommandContainer parse(MessageReceivedEvent e)
+    CommandContainer parse(MessageReceivedEvent e, String prefix)
     {
         String raw = e.getMessage().getRawContent();
 
         /// trim off the prefix
-        String trimmed;
-        if( raw.startsWith( Main.getBotSettingsManager().getAdminPrefix() ))
-            trimmed = raw.replaceFirst(Main.getBotSettingsManager().getAdminPrefix(), "");
-        else
-            trimmed = raw.replaceFirst( Main.getBotSettingsManager().getCommandPrefix(), "");
+        String trimmed = StringUtils.replaceOnce(raw,prefix, "");
 
         // split at white spaces (non newlines)
         String[] split = trimmed.split("[^\\S\n\r]+");
@@ -85,7 +82,7 @@ class CommandParser
         // ArrayList to primitive array
         String[] args = list.toArray(new String[list.size()]);
 
-        return new CommandContainer(invoke, args, e);
+        return new CommandContainer(prefix, invoke, args, e);
     }
 
     /**
@@ -93,13 +90,15 @@ class CommandParser
      **/
     class CommandContainer
     {
-        final String invoke;         // the first argument in the user's input
-        final String[] args;         // all arguments after the initial argument
+        final String prefix;            // command prefix
+        final String invoke;            // the first argument in the user's input
+        final String[] args;            // all arguments after the initial argument
         final MessageReceivedEvent event;    // the originating event
 
         // constructor for CommandContainer
-        CommandContainer(String invoke, String[] args, MessageReceivedEvent e)
+        CommandContainer(String prefix, String invoke, String[] args, MessageReceivedEvent e)
         {
+            this.prefix = prefix;
             this.invoke = invoke.toLowerCase();
             this.args = args;
             this.event = e;

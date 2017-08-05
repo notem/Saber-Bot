@@ -13,21 +13,27 @@ import ws.nmathe.saber.utils.VerifyUtilities;
  */
 public class TestCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "test";
+    @Override
+    public String name()
+    {
+        return "test";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <ID>```\n" +
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID>```\n" +
                 "The test command will send an test announcement for the event to **#"
                 + Main.getBotSettingsManager().getControlChan() + "**.\n The announcement message for an event is " +
                 "controlled by the schedule to which the event belongs to, and can be changed using the ``config``" +
                 " command.";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + " 7fffffff``";
+                "``" + head + " 7fffffff``";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - test an event's announcement message";
+        String USAGE_BRIEF = "``" + head + "`` - test an event's announcement message";
 
         if( brief )
             return USAGE_BRIEF;
@@ -36,14 +42,16 @@ public class TestCommand implements Command
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String head = prefix + this.name();
+
         int index = 0;
 
         if( args.length < 1 )
-            return "That's not enough arguments! Use ``" + invoke + " <ID>``";
+            return "That's not enough arguments! Use ``" + head + " <ID>``";
         if( args.length > 1 )
-            return "That's too many arguments! Use ``" + invoke + " <ID>``";
+            return "That's too many arguments! Use ``" + head + " <ID>``";
 
         // check first arg
         if( !VerifyUtilities.verifyHex(args[index]) )
@@ -59,7 +67,7 @@ public class TestCommand implements Command
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
         int index = 0;
 

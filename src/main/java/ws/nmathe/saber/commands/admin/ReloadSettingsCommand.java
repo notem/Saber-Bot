@@ -10,19 +10,25 @@ import ws.nmathe.saber.utils.MessageUtilities;
 public class ReloadSettingsCommand implements Command
 {
     @Override
-    public String help(boolean brief)
+    public String name()
+    {
+        return "reload";
+    }
+
+    @Override
+    public String help(String head, boolean brief)
     {
         return null;
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String head, String[] args, MessageReceivedEvent event)
     {
         return "";
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String head, String[] args, MessageReceivedEvent event)
     {
         Main.getBotSettingsManager().reloadSettings();
         Main.reloadNowPlayingList();

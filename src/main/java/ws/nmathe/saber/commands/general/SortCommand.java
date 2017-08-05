@@ -9,22 +9,28 @@ import ws.nmathe.saber.utils.MessageUtilities;
  */
 public class SortCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "sort";
+    @Override
+    public String name()
+    {
+        return "sort";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <channel>```\n" +
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel>```\n" +
                 "The sort command will re-sort the entries in a schedule." +
                 "\nEntries are reordered so that the top event entry is the next event to begin." +
                 "\n\n" +
                 "The schedule cannot be modified while in the process of sorting.\n" +
                 "Schedules with more than 15 entries will not be sorted.";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - reorder the schedule by start time";
+        String USAGE_BRIEF = "``" + head + "`` - reorder the schedule by start time";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + " #schedule``\n";
+                "``" + head + " #schedule``\n";
 
         if( brief )
             return USAGE_BRIEF;
@@ -33,17 +39,19 @@ public class SortCommand implements Command
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String head = prefix + this.name();
+
         int index = 0;
 
         if (args.length != 2 && args.length != 1)
-            return "That's not enough arguments! Use ``" + invoke + " <channel> [<order>]``";
+            return "That's not enough arguments! Use ``" + head + " <channel> [<order>]``";
 
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
-                    "Use the ``" + invoke + "`` command to create a new schedule!";
+                    "Use the ``" + head + "`` command to create a new schedule!";
 
         if(Main.getScheduleManager().isLocked(cId))
             return "Schedule is locked while sorting or syncing. Please try again after I finish.";
@@ -65,7 +73,7 @@ public class SortCommand implements Command
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String head, String[] args, MessageReceivedEvent event)
     {
         int index = 0;
         String cId = args[index].replace("<#","").replace(">","");

@@ -19,12 +19,18 @@ import java.util.stream.Collectors;
  */
 public class ListCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "list";
+    @Override
+    public String name()
+    {
+        return "list";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <ID> [filters]```\n" +
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> [filters]```\n" +
                 "The list command will show all users who have rsvp'ed yes.\n" +
                 "The command takes a single argument which should be the ID of the event you wish query.\n" +
                 "\nThe schedule holding the event must have 'rsvp' turned on in the configuration settings.\n" +
@@ -33,10 +39,10 @@ public class ListCommand implements Command
                 "\nThe list may be filtered by either users or roles by appending \"r: @role\", \"u: @user\", or \"t: [type]\" to the command\n" +
                 "Any number of filters may be appended.";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - show an event's rsvp list";
+        String USAGE_BRIEF = "``" + head + "`` - show an event's rsvp list";
 
         String USAGE_EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + " 080194c``";
+                "``" + head + " 080194c``";
 
         if( brief )
             return USAGE_BRIEF;
@@ -45,10 +51,12 @@ public class ListCommand implements Command
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String head = prefix + this.name();
+
         if (args.length==0)
-            return "That's not enough arguments! Use ``" + invoke + " <ID> [filters]``";
+            return "That's not enough arguments! Use ``" + head + " <ID> [filters]``";
 
         int index = 0;
 
@@ -114,7 +122,7 @@ public class ListCommand implements Command
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
         int index = 0;
         Integer entryId = Integer.decode("0x" + args[index++]);

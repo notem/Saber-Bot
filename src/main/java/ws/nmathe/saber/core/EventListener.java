@@ -5,10 +5,12 @@ import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
+import ws.nmathe.saber.core.settings.GuildSettingsManager;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
@@ -41,7 +43,7 @@ public class EventListener extends ListenerAdapter
     public void onMessageReceived(MessageReceivedEvent event)
     {
         // store some properties of the message for use later
-        String content = event.getMessage().getContent();   // the raw string the user sent
+        String content = event.getMessage().getRawContent();   // the raw string the user sent
         String userId = event.getAuthor().getId();          // the ID of the user
 
         // leave the guild if the message author is black listed
@@ -57,13 +59,13 @@ public class EventListener extends ListenerAdapter
             // help and setup general commands
             if (content.startsWith(prefix + "help") || content.startsWith("help"))
             {
-                Main.getCommandHandler().handleCommand(event, 0);
+                Main.getCommandHandler().handleCommand(event, 0, Main.getBotSettingsManager().getCommandPrefix());
                 return;
             }
             // admin commands
             else if (content.startsWith(adminPrefix) && userId.equals(adminId))
             {
-                Main.getCommandHandler().handleCommand(event, 1);
+                Main.getCommandHandler().handleCommand(event, 1, Main.getBotSettingsManager().getAdminPrefix());
                 return;
             }
             return;
@@ -76,14 +78,6 @@ public class EventListener extends ListenerAdapter
             return;
         }
 
-        // process a command if it originates in the control channel and with appropriate prefix
-        if (event.getChannel().getName().toLowerCase().equals(controlChan) && content.startsWith(prefix))
-        {
-            // handle command received
-            Main.getCommandHandler().handleCommand(event, 0);
-            return;
-        }
-
         // if channel is a schedule for the guild
         if (Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId()).contains(event.getChannel().getId()))
         {
@@ -91,6 +85,51 @@ public class EventListener extends ListenerAdapter
             if (!userId.equals(Main.getBotJda().getSelfUser().getId()))
             {
                 MessageUtilities.deleteMsg(event.getMessage(), null);
+                return;
+            }
+        }
+
+        // command processing
+        GuildSettingsManager.GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
+        String prefix = content.startsWith("<@"+Main.getBotJda().getSelfUser().getId()+"> ") ?
+                "<@"+Main.getBotJda().getSelfUser().getId()+"> " : guildSettings.getPrefix();
+        if(content.startsWith(prefix))
+        {
+            // check if command is restricted on the guild
+            String trimmedContent = StringUtils.replaceOnce(content,prefix, "");
+            Boolean isRestricted = true;
+            for(String command : guildSettings.getUnrestrictedCommands())
+            {
+                if(trimmedContent.startsWith(command))
+                {
+                    isRestricted = false;
+                    break;
+                }
+            }
+
+            // if the command is restricted on the guild
+            // check if the guild has a custom command channel and if the channel IDs match,
+            // otherwise check if the channel is equal to the default command channel name
+            if(isRestricted)
+            {
+                if(guildSettings.getCommandChannelId() != null &&
+                        guildSettings.getCommandChannelId().equals(event.getChannel().getId()))
+                {
+                    Main.getCommandHandler().handleCommand(event, 0, prefix);
+                    return;
+                }
+                else if (event.getChannel().getName().toLowerCase().equals(controlChan))
+                {
+                    Main.getCommandHandler().handleCommand(event, 0, prefix);
+                    guildSettings.setCommandChannelId(event.getChannel().getId());
+                    return;
+                }
+            }
+            // if not restricted, process the command
+            else
+            {
+                Main.getCommandHandler().handleCommand(event, 0, prefix);
+                return;
             }
         }
     }
@@ -139,8 +178,10 @@ public class EventListener extends ListenerAdapter
     {
         // purge the leaving guild's entry list
         Main.getDBDriver().getEventCollection().deleteMany(eq("guildId", event.getGuild().getId()));
-        // remove the guild
+        // remove the guild's schedules
         Main.getDBDriver().getScheduleCollection().deleteOne(eq("guildId", event.getGuild().getId()));
+        // remove the guild's settings
+        Main.getDBDriver().getGuildCollection().deleteOne(eq("_id", event.getGuild().getId()));
 
         HttpUtilities.updateStats();
     }

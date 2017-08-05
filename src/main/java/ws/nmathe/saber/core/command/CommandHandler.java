@@ -39,31 +39,32 @@ public class CommandHandler
     public void init()
     {
         // add bot commands with their lookup name
-        commands.put("init", new InitCommand());
-        commands.put("create", new CreateCommand());
-        commands.put("delete", new DeleteCommand());
-        commands.put("edit", new EditCommand());
-        commands.put("help", new HelpCommand());
-        commands.put("config", new ConfigCommand());
-        commands.put("zones", new TimeZonesCommand());
-        commands.put("test", new TestCommand());
-        commands.put("sort", new SortCommand());
-        commands.put("list", new ListCommand());
-        commands.put("listm", new ListMobileCommand());
+        commands.put((new InitCommand()).name(), new InitCommand());
+        commands.put((new CreateCommand()).name(), new CreateCommand());
+        commands.put((new DeleteCommand()).name(), new DeleteCommand());
+        commands.put((new EditCommand()).name(), new EditCommand());
+        commands.put((new HelpCommand()).name(), new HelpCommand());
+        commands.put((new ConfigCommand()).name(), new ConfigCommand());
+        commands.put((new TimeZonesCommand()).name(), new TimeZonesCommand());
+        commands.put((new TestCommand()).name(), new TestCommand());
+        commands.put((new SortCommand()).name(), new SortCommand());
+        commands.put((new ListCommand()).name(), new ListCommand());
+        commands.put((new ListMobileCommand()).name(), new ListMobileCommand());
+        commands.put((new GuildCommand()).name(), new GuildCommand());
 
         // add administrator commands with their lookup name
-        adminCommands.put("announcement", new GlobalMsgCommand());
-        adminCommands.put("stats", new StatsCommand());
-        adminCommands.put("reload", new ReloadSettingsCommand());
-        adminCommands.put("clear", new ClearLocksCommand());
+        adminCommands.put((new GlobalMsgCommand()).name(), new GlobalMsgCommand());
+        adminCommands.put((new StatsCommand()).name(), new StatsCommand());
+        adminCommands.put((new ReloadSettingsCommand()).name(), new ReloadSettingsCommand());
+        adminCommands.put((new ClearLocksCommand()).name(), new ClearLocksCommand());
     }
 
-    public void handleCommand( MessageReceivedEvent event, Integer type )
+    public void handleCommand(MessageReceivedEvent event, Integer type, String prefix)
     {
-        CommandParser.CommandContainer cc = commandParser.parse( event );
+        CommandParser.CommandContainer cc = commandParser.parse(event, prefix);
         if( type == 0 )
         {
-            if(rateLimiter.isOnCooldown(event.getAuthor().getId()) )
+            if(rateLimiter.isOnCooldown(event.getAuthor().getId()))
             {
                 if(event.getChannelType().equals(ChannelType.PRIVATE))
                 {
@@ -85,11 +86,11 @@ public class CommandHandler
                 }
                 return;
             }
-            handleGeneralCommand( cc );
+            handleGeneralCommand(cc);
         }
         else if( type == 1 )
         {
-            handleAdminCommand( cc );
+            handleAdminCommand(cc);
         }
 
     }
@@ -101,13 +102,13 @@ public class CommandHandler
         {
             try // catch any errors which occur while parsing user input
             {
-                String err = commands.get(cc.invoke).verify(cc.args, cc.event);
+                String err = commands.get(cc.invoke).verify(cc.prefix, cc.args, cc.event);
 
                 // do command action if valid arguments
                 if(err.isEmpty())
                 {
                     executor.submit( () -> {
-                        commands.get(cc.invoke).action(cc.args, cc.event);
+                        commands.get(cc.invoke).action(cc.prefix, cc.args, cc.event);
 
                         String info = "Executed command [" + cc.event.getMessage().getRawContent() +
                                 "] by " + cc.event.getAuthor().getName() + " [" + cc.event.getMessage().getAuthor().getId()
@@ -147,12 +148,12 @@ public class CommandHandler
         {
             try // catch any errors which occur while parsing user input
             {
-                String err = adminCommands.get(cc.invoke).verify(cc.args, cc.event);
+                String err = adminCommands.get(cc.invoke).verify(cc.prefix + cc.invoke, cc.args, cc.event);
 
                 // do command action if valid arguments
                 if (err.equals(""))
                 {
-                    executor.submit( () -> adminCommands.get(cc.invoke).action(cc.args, cc.event));
+                    executor.submit( () -> adminCommands.get(cc.invoke).action(cc.prefix + cc.invoke, cc.args, cc.event));
                 }
             }
             catch(Exception e)
@@ -170,6 +171,11 @@ public class CommandHandler
     public Collection<Command> getCommands()
     {
         return commands.values();
+    }
+
+    public Collection<String> getCommandNames()
+    {
+        return commands.keySet();
     }
 
     public Command getCommand( String invoke )

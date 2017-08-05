@@ -16,12 +16,18 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class InitCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "init";
+    @Override
+    public String name()
+    {
+        return "init";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " [<channel>|<name>]```\n" +
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " [<channel>|<name>]```\n" +
                 "With this bot, all events must be placed on a schedule." +
                 "\nSchedules are discord channels which are used to store and display the details of an event." +
                 "\n\n" +
@@ -34,11 +40,11 @@ public class InitCommand implements Command
                 "\nIf omitted, a new schedule named 'new_schedule' will be created.";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + "``\n" +
-                "``" + invoke + " \"Guild Events\"``" +
-                "``" + invoke + " #events";
+                "``" + head + "``\n" +
+                "``" + head + " \"Guild Events\"``" +
+                "``" + head + " #events";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - initialize a new schedule";
+        String USAGE_BRIEF = "``" + head + "`` - initialize a new schedule";
 
         if( brief )
             return USAGE_BRIEF;
@@ -47,8 +53,10 @@ public class InitCommand implements Command
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String head = prefix + this.name();
+
         if(!event.getGuild().getMember(Main.getBotJda().getSelfUser())
                 .getPermissions().contains(Permission.MANAGE_CHANNEL))
             return "I need the Manage Channels permission to create a new schedule!";
@@ -57,7 +65,7 @@ public class InitCommand implements Command
             return "You have reached the limit for schedules! Please remove one schedule channel before trying again.";
 
         if(args.length > 1)
-            return "That's too many arguments! Use ``" + invoke + " [<name>]``";
+            return "That's too many arguments! Use ``" + head + " [<name>]``";
 
         if(args.length == 1)
         {
@@ -75,7 +83,7 @@ public class InitCommand implements Command
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
         String body;
         if(args.length > 0)

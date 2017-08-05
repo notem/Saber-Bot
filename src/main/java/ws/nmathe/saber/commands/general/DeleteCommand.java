@@ -12,12 +12,18 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  */
 public class DeleteCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "delete";
+    @Override
+    public String name()
+    {
+        return "delete";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <ID|channel|'all'>```\n" +
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID|channel|'all'>```\n" +
                 "The delete command can be used to delete schedules or events.\n" +
                 "The command's single argument may be an entry's ID, a schedule's channel, or ``all``." +
                 "\nIf ``all`` is used all schedules will be deleted, use with caution.\n\n" +
@@ -25,12 +31,12 @@ public class DeleteCommand implements Command
                 "\nManually deleting the event's message on the schedule channel" +
                 " or deleting the entire schedule channel through discord suffices.";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - remove schedules or events ";
+        String USAGE_BRIEF = "``" + head + "`` - remove schedules or events ";
 
         String USAGE_EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + " 084c``" +
-                "\n``" + invoke + " all``" +
-                "\n``" + invoke + " #events``";
+                "``" + head + " 084c``" +
+                "\n``" + head + " all``" +
+                "\n``" + head + " #events``";
 
         if( brief )
             return USAGE_BRIEF;
@@ -39,12 +45,14 @@ public class DeleteCommand implements Command
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String head = prefix + this.name();
+
         if (args.length>1)
-            return "Too many arguments! Use ``" + invoke + " <ID|channel|'all'>``";
+            return "Too many arguments! Use ``" + head + " <ID|channel|'all'>``";
         if (args.length==0)
-            return "Not enough arguments! Use ``" + invoke + " <ID|channel|'all'>``";
+            return "Not enough arguments! Use ``" + head + " <ID|channel|'all'>``";
 
         // pass if "all"
         if (args[0].equals("all"))
@@ -74,7 +82,7 @@ public class DeleteCommand implements Command
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
         if( args[0].equals("all") )
         {

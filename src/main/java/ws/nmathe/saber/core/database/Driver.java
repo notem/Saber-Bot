@@ -26,4 +26,9 @@ public class Driver
     {
         return db.getCollection("events");
     }
+
+    public MongoCollection<Document> getGuildCollection()
+    {
+        return db.getCollection("guilds");
+    }
 }

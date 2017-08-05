@@ -12,20 +12,26 @@ import java.util.Set;
  */
 public class TimeZonesCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "zones";
+    @Override
+    public String name()
+    {
+        return "zones";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <filter>```\n" +
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <filter>```\n" +
                 "The zones command will provide a list of valid timezone strings for schedule configuration." +
                 "\nA search filter argument is required (eg. ``us``).";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - show available timezones";
+        String USAGE_BRIEF = "``" + head + "`` - show available timezones";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + " america``" +
-                "\n``" + invoke + " tokyo``";
+                "``" + head + " america``" +
+                "\n``" + head + " tokyo``";
 
         if( brief )
             return USAGE_BRIEF;
@@ -34,13 +40,15 @@ public class TimeZonesCommand implements Command
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
-        return args.length==1 ? "" : "Incorrect amount of arguments! Use ``" + invoke + " <filter>``";
+        String head = prefix + this.name();
+
+        return args.length==1 ? "" : "Incorrect amount of arguments! Use ``" + head + " <filter>``";
     }
 
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
         Set<String> zones = ZoneId.getAvailableZoneIds();
 

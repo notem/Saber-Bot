@@ -19,12 +19,18 @@ import java.util.ArrayList;
  */
 public class EditCommand implements Command
 {
-    private String invoke = Main.getBotSettingsManager().getCommandPrefix() + "edit";
+    @Override
+    public String name()
+    {
+        return "edit";
+    }
 
     @Override
-    public String help(boolean brief)
+    public String help(String prefix, boolean brief)
     {
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + invoke + " <ID> <option> <arg>```\n" +
+        String head = prefix + this.name();
+
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> <option> <arg>```\n" +
                 "The edit command will allow you to change an event's settings." +
                 "\n\n" +
                 "``<option>`` is to contain which attribute of the event you wish to edit. ``<arg>`` should be the" +
@@ -44,16 +50,16 @@ public class EditCommand implements Command
                 "Use \"off\" as the argument to remove a previously set limit.";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + invoke + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
-                "\n``" + invoke + " 0abf2991 start 21:15``" +
-                "\n``" + invoke + " 49afaf2 end 2:15pm``" +
-                "\n``" + invoke + " 409fa22 start-date 10/9``" +
-                "\n``" + invoke + " a00af9a repeat \"Sun, Tue, Fri\"``" +
-                "\n``" + invoke + " 80c0sd09 comment remove 1``" +
-                "\n``" + invoke + " 0912af9 quiet-start``" +
-                "\n``" + invoke + " a901992 expire 2019/1/1";
+                "``" + head + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
+                "\n``" + head + " 0abf2991 start 21:15``" +
+                "\n``" + head + " 49afaf2 end 2:15pm``" +
+                "\n``" + head + " 409fa22 start-date 10/9``" +
+                "\n``" + head + " a00af9a repeat \"Sun, Tue, Fri\"``" +
+                "\n``" + head + " 80c0sd09 comment remove 1``" +
+                "\n``" + head + " 0912af9 quiet-start``" +
+                "\n``" + head + " a901992 expire 2019/1/1";
 
-        String USAGE_BRIEF = "``" + invoke + "`` - modify an event";
+        String USAGE_BRIEF = "``" + head + "`` - modify an event";
 
         if( brief )
             return USAGE_BRIEF;
@@ -62,12 +68,14 @@ public class EditCommand implements Command
     }
 
     @Override
-    public String verify(String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String head = prefix + this.name();
+
         int index = 0;
 
         if( args.length < 1 )
-            return "That's not enough arguments! Use ``" + invoke + " <ID> [<option> <arg>]``";
+            return "That's not enough arguments! Use ``" + head + " <ID> [<option> <arg>]``";
 
         // check first arg
         if( !VerifyUtilities.verifyHex(args[index]) )
@@ -93,7 +101,7 @@ public class EditCommand implements Command
             case "c":
             case "comment":
                 if(args.length <= index+1)
-                    return "That's not enough arguments for *comment*! Use ``"+ invoke +" [id] comment [add|remove] \"comment\"``";
+                    return "That's not enough arguments for *comment*! Use ``"+ head +" [id] comment [add|remove] \"comment\"``";
 
                 switch (args[index++]) // 3
                 {
@@ -118,7 +126,7 @@ public class EditCommand implements Command
             case "start":
                 if(args.length != 3)
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [start time]``";
+                            "Use ``" + head + " "+args[index-2]+" "+args[index-1]+" [start time]``";
                 if( !VerifyUtilities.verifyTime( args[index] ) )
                     return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                 if( entry.hasStarted() )
@@ -130,7 +138,7 @@ public class EditCommand implements Command
             case "end":
                 if(args.length != 3)
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [end time]``";
+                            "Use ``" + head + " "+args[index-2]+" "+args[index-1]+" [end time]``";
                 if( !VerifyUtilities.verifyTime( args[index] ) )
                     return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                 break;
@@ -139,7 +147,7 @@ public class EditCommand implements Command
             case "title":
                 if(args.length != 3)
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [\"title\"]``";
+                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [\"title\"]``";
                 if( args[index].length() > 255 )
                     return "Your title can be at most 255 characters!";
                 break;
@@ -152,7 +160,7 @@ public class EditCommand implements Command
             case "end-date":
                 if(args.length != 3)
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [date]``";
+                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [date]``";
                 if( !VerifyUtilities.verifyDate( args[index] ) )
                     return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
                 if(ParsingUtilities.parseDateStr(args[index]).isBefore(LocalDate.now()))
@@ -166,14 +174,14 @@ public class EditCommand implements Command
             case "repeat":
                 if(args.length != 3)
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [repeat]``";
+                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [repeat]``";
                 break;
 
             case "i":
             case "interval":
                 if(args.length != 3)
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [number]``";
+                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [number]``";
                 if(!VerifyUtilities.verifyInteger(args[index]))
                     return "**" + args[index] + "** is not a number!";
                 if(Integer.parseInt(args[index]) < 1)
@@ -184,7 +192,7 @@ public class EditCommand implements Command
             case "url":
                 if(args.length != 3)
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [url]``";
+                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [url]``";
                 if (!VerifyUtilities.verifyUrl(args[index]))
                     return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
                 break;
@@ -197,14 +205,14 @@ public class EditCommand implements Command
             case "quiet-remind":
                 if (args.length > 2)
                     return "That's too many arguments for **"+args[index-1]+"**!" +
-                            " Just use ``" + invoke + args[index-2] + args[index-1] + "``!";
+                            " Just use ``" + head + args[index-2] + args[index-1] + "``!";
                 break;
 
             case "max":
             case "m":
                 if (args.length > 3)
                     return "That's too many arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+ invoke + " " + args[index-2] + " " + args[index-1] + " [rsvp max]``";
+                            "Use ``"+ head + " " + args[index-2] + " " + args[index-1] + " [rsvp max]``";
                 if (!VerifyUtilities.verifyInteger(args[index]))
                     return "The rsvp max must be a number!";
                 if (Integer.valueOf(args[index])<0)
@@ -215,7 +223,7 @@ public class EditCommand implements Command
             case "expire":
                 if(args.length != 3)
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+invoke+" "+args[index-2]+" "+args[index-1]+" [date]``";
+                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [date]``";
                 switch(args[index])
                 {
                     case "none":
@@ -240,7 +248,7 @@ public class EditCommand implements Command
 
     // TODO consider reworking the updateEntry command to only update the required attribute
     @Override
-    public void action(String[] args, MessageReceivedEvent event)
+    public void action(String head, String[] args, MessageReceivedEvent event)
     {
         int index = 0;
 
