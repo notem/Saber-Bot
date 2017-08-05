@@ -96,7 +96,7 @@ public class EventListener extends ListenerAdapter
         if(content.startsWith(prefix))
         {
             // check if command is restricted on the guild
-            String trimmedContent = StringUtils.replaceOnce(content,prefix, "");
+            String trimmedContent = StringUtils.replaceOnce(content,prefix, "").trim();
             Boolean isRestricted = true;
             for(String command : guildSettings.getUnrestrictedCommands())
             {
@@ -122,6 +122,9 @@ public class EventListener extends ListenerAdapter
                 {
                     Main.getCommandHandler().handleCommand(event, 0, prefix);
                     guildSettings.setCommandChannelId(event.getChannel().getId());
+                    String body = "<#" + event.getChannel().getId() + "> is now set as my control channel.\n" +
+                            "You can now safely rename <#" + event.getChannel().getId() + "> without affecting my behavior.";
+                    MessageUtilities.sendMsg(body, event.getChannel(), null);
                     return;
                 }
             }

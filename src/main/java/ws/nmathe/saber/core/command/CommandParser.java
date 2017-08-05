@@ -26,7 +26,7 @@ class CommandParser
         String raw = e.getMessage().getRawContent();
 
         /// trim off the prefix
-        String trimmed = StringUtils.replaceOnce(raw,prefix, "");
+        String trimmed = StringUtils.replaceOnce(raw,prefix, "").trim();
 
         // split at white spaces (non newlines)
         String[] split = trimmed.split("[^\\S\n\r]+");
