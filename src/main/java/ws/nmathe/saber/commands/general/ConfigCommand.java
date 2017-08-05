@@ -45,7 +45,7 @@ public class ConfigCommand implements Command
                 "To modify any settings, use the term inside the brackets as the parameter of <option> and supply the " +
                 "new setting configuration as the final <new config> parameter." +
                 "\n\n" +
-                "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config option." +
+                "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config 'sync' and 'remind' options." +
                 "\n\n" +
                 "```diff\n+ Event Reminders```\n" +
                 "Events can be configured to send reminder announcements at configured thresholds before an event begins.\n" +
@@ -63,7 +63,9 @@ public class ConfigCommand implements Command
                 " 'begins' or 'ends'\n**%%** will insert %." +
                 "\n\n" +
                 "If you wish to create a multi-line message like the default message format, new lines can be entered using" +
-                " SHIFT+Enter. However, be sure to encapsulate the entire string (new lines included) in quotations.";
+                " SHIFT+Enter. However, be sure to encapsulate the entire string (new lines included) in quotations." +
+                "\n\n" +
+                "To reset a custom message or channel to the default pass **reset** as the command parameter.";
 
         String USAGE_BRIEF = "``" + cmd + "`` - configure a schedule's settings";
 
@@ -71,7 +73,8 @@ public class ConfigCommand implements Command
                 "``" + cmd + " #schedule``\n" +
                 "``" + cmd + " #guild_events msg \"@here The event %t %a. %c1\"``\n" +
                 "``" + cmd + " #guild_events remind \"10, 20, 30 min\"``\n" +
-                "``" + cmd + " #events_channel chan \"general\"``";
+                "``" + cmd + " #events_channel chan \"general\"``" +
+                "``" + cmd + " #guild_events remind-msg \"reset\"``";
 
         if( brief )
             return USAGE_BRIEF;
@@ -321,17 +324,29 @@ public class ConfigCommand implements Command
             {
                 case "m":
                 case "msg":
-                    Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), args[index]);
+                    String msgFormat;
+                    switch(args[index].toLowerCase())
+                    {
+                        case "reset":
+                        case "default":
+                            msgFormat = Main.getBotSettingsManager().getAnnounceFormat();
+                            break;
+
+                        default:
+                            msgFormat = args[index];
+                            break;
+                    }
+                    Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), msgFormat);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
                     break;
 
                 case "ch":
                 case "chan":
                     String chanName;
-                    String chanID = args[index].replace("<#","").replace(">","");
+                    String chanId = args[index].replace("<#","").replace(">","");
                     try
                     {
-                        TextChannel tmp = event.getGuild().getTextChannelById(chanID);
+                        TextChannel tmp = event.getGuild().getTextChannelById(chanId);
                         if(tmp!=null)
                             chanName = tmp.getName();
                         else
@@ -343,36 +358,56 @@ public class ConfigCommand implements Command
                     }
 
                     Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
-
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
                     break;
 
 
                 case "em":
                 case "end-msg":
-                    Main.getScheduleManager().setEndAnnounceFormat(scheduleChan.getId(), args[index]);
+                    String endFormat;
+                    switch(args[index].toLowerCase())
+                    {
+                        case "reset":
+                        case "default":
+                        case "null":
+                            endFormat = null;
+                            break;
+
+                        default:
+                            endFormat = args[index];
+                            break;
+                    }
+                    Main.getScheduleManager().setEndAnnounceFormat(scheduleChan.getId(), endFormat);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
                     break;
 
                 case "ech":
                 case "end-chan":
                     String endChanName;
-                    String endChanID = args[index].replace("<#","").replace(">","");
-                    try
+                    switch(args[index].toLowerCase())
                     {
-                        TextChannel tmp = event.getGuild().getTextChannelById(endChanID);
-                        if(tmp!=null)
-                            endChanName = tmp.getName();
-                        else
-                            endChanName = args[index];
-                    }
-                    catch(Exception e)
-                    {
-                        endChanName = args[index];
-                    }
+                        case "reset":
+                        case "default":
+                        case "null":
+                            endChanName = null;
+                            break;
 
+                        default:
+                            String endChanId = args[index].replace("<#","").replace(">","");
+                            try
+                            {
+                                TextChannel tmp = event.getGuild().getTextChannelById(endChanId);
+                                if(tmp!=null)
+                                    endChanName = tmp.getName();
+                                else
+                                    endChanName = args[index];
+                            }
+                            catch(Exception e)
+                            {
+                                endChanName = args[index];
+                            }
+                    }
                     Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanName);
-
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
                     break;
 
@@ -485,36 +520,55 @@ public class ConfigCommand implements Command
 
                 case "rm":
                 case "remind-msg":
-                    Main.getScheduleManager().setReminderFormat(scheduleChan.getId(), args[index]);
+                    String remindFormat;
+                    switch(args[index].toLowerCase())
+                    {
+                        case "reset":
+                        case "default":
+                        case "null":
+                            remindFormat = null;
+                            break;
 
+                        default:
+                            remindFormat = args[index];
+                            break;
+                    }
+                    Main.getScheduleManager().setReminderFormat(scheduleChan.getId(), remindFormat);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
                     break;
 
                 case "rc":
                 case "remind-chan":
-                    String chanName2;
-                    String chanID2 = args[index].replace("<#","").replace(">","");
-                    try
+                    switch(args[index].toLowerCase())
                     {
-                        TextChannel tmp2 = event.getGuild().getTextChannelById(chanID2);
-                        if(tmp2!=null)
-                            chanName2 = tmp2.getName();
-                        else
-                            chanName2 = args[index];
-                    }
-                    catch(Exception e)
-                    {
-                        chanName2 = args[index];
-                    }
+                        case "reset":
+                        case "default":
+                        case "null":
+                            chanName = null;
+                            break;
 
-                    Main.getScheduleManager().setReminderChan(scheduleChan.getId(), chanName2);
-
+                        default:
+                            chanId = args[index].replace("<#","").replace(">","");
+                            try
+                            {
+                                TextChannel tmp2 = event.getGuild().getTextChannelById(chanId);
+                                if(tmp2!=null)
+                                    chanName = tmp2.getName();
+                                else
+                                    chanName = args[index];
+                            }
+                            catch(Exception e)
+                            {
+                                chanName = args[index];
+                            }
+                            break;
+                    }
+                    Main.getScheduleManager().setReminderChan(scheduleChan.getId(), chanName);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
                     break;
 
                 case "rsvp":
                     boolean enabled = Main.getScheduleManager().isRSVPEnabled(cId);
-
                     boolean new_enabled;
                     switch(args[index].toLowerCase())
                     {

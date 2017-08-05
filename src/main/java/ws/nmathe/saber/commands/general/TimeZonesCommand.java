@@ -1,6 +1,5 @@
 package ws.nmathe.saber.commands.general;
 
-import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;

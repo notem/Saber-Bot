@@ -79,7 +79,7 @@ public class HelpCommand implements Command
             Command cmd = Main.getCommandHandler().getCommand( args[0] );
             if( cmd != null )
             {
-                String helpMsg = cmd.help(head, false);
+                String helpMsg = cmd.help(prefix, false);
                 if(helpMsg.length() > 1900)
                 {
                     String[] split = helpMsg.split("splithere");
