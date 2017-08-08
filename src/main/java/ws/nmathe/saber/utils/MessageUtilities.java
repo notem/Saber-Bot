@@ -34,7 +34,7 @@ public class MessageUtilities
         { return; }
         catch( Exception e)
         {
-            Logging.warn(MessageUtilities.class, e.getMessage());
+            Logging.exception(MessageUtilities.class, e);
         }
     }
 
@@ -68,7 +68,7 @@ public class MessageUtilities
         { return null; }
         catch( Exception e)
         {
-            Logging.warn( MessageUtilities.class, e.getMessage() );
+            Logging.exception( MessageUtilities.class, e );
             return null;
         }
     }
@@ -86,14 +86,16 @@ public class MessageUtilities
 
         try
         {
-            user.openPrivateChannel().complete();
-            sendMsg( content, user.getPrivateChannel(), action );
+            if(user.hasPrivateChannel())
+            {
+                sendMsg( content, user.openPrivateChannel().complete(), action );
+            }
         }
         catch( PermissionException ignored)
         { return; }
         catch( Exception e)
         {
-            Logging.warn( MessageUtilities.class, e.getMessage() );
+            Logging.exception( MessageUtilities.class, e );
         }
     }
 
@@ -116,7 +118,7 @@ public class MessageUtilities
         { return; }
         catch( Exception e)
         {
-            Logging.warn( MessageUtilities.class, e.getMessage() );
+            Logging.exception( MessageUtilities.class, e );
         }
     }
 
@@ -132,10 +134,11 @@ public class MessageUtilities
         { return; }
         catch( Exception e)
         {
-            Logging.warn( MessageUtilities.class, e.getMessage() );
+            Logging.exception( MessageUtilities.class, e );
         }
     }
 
+    // blocking
     public static Message editMsg(Message newMsg, Message msg)
     {
         if(newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return null;
@@ -148,7 +151,7 @@ public class MessageUtilities
         { return null; }
         catch( Exception e)
         {
-            Logging.warn( MessageUtilities.class, e.getMessage() );
+            Logging.exception( MessageUtilities.class, e );
             return null;
         }
     }
@@ -169,7 +172,7 @@ public class MessageUtilities
         { return; }
         catch( Exception e)
         {
-            Logging.warn( MessageUtilities.class, e.getMessage() );
+            Logging.exception( MessageUtilities.class, e );
         }
     }
 }

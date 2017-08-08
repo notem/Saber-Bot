@@ -30,19 +30,25 @@ public class ListCommand implements Command
     {
         String head = prefix + this.name();
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> [filters]```\n" +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> [mode] [filters]```\n" +
                 "The list command will show all users who have rsvp'ed yes.\n" +
                 "The command takes a single argument which should be the ID of the event you wish query.\n" +
                 "\nThe schedule holding the event must have 'rsvp' turned on in the configuration settings.\n" +
                 "RSVP can be enabled on a channel using the config command as followed, ``" +
-                Main.getBotSettingsManager().getCommandPrefix() + "config #channel rsvp on``\n" +
-                "\nThe list may be filtered by either users or roles by appending \"r: @role\", \"u: @user\", or \"t: [type]\" to the command\n" +
-                "Any number of filters may be appended.";
+                prefix + "config #channel rsvp on``\n" +
+                "\nThe list may be filtered by either users or roles by appending \"r: @role\", \"u: @user\", or " +
+                "\"t: [type]\" to the command.\n" +
+                "Any number of filters may be appended to the command.\n\n" +
+                "The list command has two optional 'modes' of display. \n" +
+                "If the term 'mobile' is added as an argument to the command, non-mentionable usernames will be displayed.\n" +
+                "If the term 'id' is added as an argument, usernames will be displayed as they escaped mentionable ID tags.";
 
         String USAGE_BRIEF = "``" + head + "`` - show an event's rsvp list";
 
         String USAGE_EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " 080194c``";
+                "``" + head + " 080194c``\n" +
+                "``" + head + " 01d9aff \"u: @notem\"\n" +
+                "``" + head + " 0a9dda2 mobile \"t: yes\" \"t: no\" \"t: undecided\"";
 
         if( brief )
             return USAGE_BRIEF;
@@ -76,8 +82,31 @@ public class ListCommand implements Command
 
         index++;
 
+        boolean mobileFlag = false;
+        boolean IdFlag = false;
         for(; index<args.length; index++)
         {
+            if(args[index].equalsIgnoreCase("mobile") || args[index].equalsIgnoreCase("m"))
+            {
+                mobileFlag = true;
+                if(IdFlag)
+                {
+                    return "Both 'mobile' and 'id' modes cannot be active at the same time!\n" +
+                            "Include either the 'id' or 'mobile' argument in the command, not both.";
+                }
+                continue;
+            }
+            if(args[index].equalsIgnoreCase("id") || args[index].equalsIgnoreCase("i"))
+            {
+                IdFlag = true;
+                if(mobileFlag)
+                {
+                    return "Both 'mobile' and 'id' modes cannot be active at the same time!\n" +
+                            "Include either the 'id' or 'mobile' argument in the command, not both.";
+                }
+                continue;
+            }
+
             String[] filter = args[index].toLowerCase().split(":");
             if(filter.length != 2)
             {
@@ -140,8 +169,22 @@ public class ListCommand implements Command
         boolean typeNo = false;
         boolean typeUndecided = false;
         boolean typeNoInput = false;
+
+        boolean mobileFlag = false;
+        boolean IdFlag = false;
         for(; index<args.length; index++)
         {
+            if(args[index].equalsIgnoreCase("mobile") || args[index].equalsIgnoreCase("m"))
+            {
+                mobileFlag = true;
+                continue;
+            }
+            if(args[index].equalsIgnoreCase("id") || args[index].equalsIgnoreCase("i"))
+            {
+                IdFlag = true;
+                continue;
+            }
+
             String filterType = args[index].toLowerCase().split(":")[0].trim();
             String filterValue = args[index].toLowerCase().split(":")[1].trim();
             switch(filterType)
@@ -190,7 +233,18 @@ public class ListCommand implements Command
                 Member member = event.getGuild().getMemberById(id);
                 if(this.checkMember(member, userFilters, roleFilters))
                 {
-                    content += " <@" + id + ">\n";
+                    if(mobileFlag)
+                    {
+                        content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
+                    }
+                    else if(IdFlag)
+                    {
+                        content += " \\<@" + id + ">\n";
+                    }
+                    else
+                    {
+                        content += " <@" + id + ">\n";
+                    }
                 }
             }
         }
@@ -210,7 +264,18 @@ public class ListCommand implements Command
                 Member member = event.getGuild().getMemberById(id);
                 if(this.checkMember(member, userFilters, roleFilters))
                 {
-                    content += " <@" + id + ">\n";
+                    if(mobileFlag)
+                    {
+                        content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
+                    }
+                    else if(IdFlag)
+                    {
+                        content += " \\<@" + id + ">\n";
+                    }
+                    else
+                    {
+                        content += " <@" + id + ">\n";
+                    }
                 }
             }
         }
@@ -230,7 +295,18 @@ public class ListCommand implements Command
                 Member member = event.getGuild().getMemberById(id);
                 if(this.checkMember(member, userFilters, roleFilters))
                 {
-                    content += " <@" + id + ">\n";
+                    if(mobileFlag)
+                    {
+                        content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
+                    }
+                    else if(IdFlag)
+                    {
+                        content += " \\<@" + id + ">\n";
+                    }
+                    else
+                    {
+                        content += " <@" + id + ">\n";
+                    }
                 }
             }
         }
@@ -258,7 +334,18 @@ public class ListCommand implements Command
                     ).build(), event.getChannel(), null);
                     content = "*continued. . .* \n";
                 }
-                content += " <@" + id + ">\n";
+                if(mobileFlag)
+                {
+                    content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
+                }
+                else if(IdFlag)
+                {
+                    content += " \\<@" + id + ">\n";
+                }
+                else
+                {
+                    content += " <@" + id + ">\n";
+                }
             }
         }
 

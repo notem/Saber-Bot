@@ -121,6 +121,7 @@ public class BotSettingsManager
         String rsvp_no;
         String rsvp_clear;
         String google_service_key;
+        Integer log_level;
 
         BotSettings()
         {
@@ -128,6 +129,7 @@ public class BotSettingsManager
             web_token = "ABAL_TOKEN";
             google_service_key = "./saber-g-id.json";
             mongodb = "mongodb://localhost:27017";
+            log_level = 4;
 
             prefix = "!";
             admin_prefix = "s.";
@@ -254,5 +256,10 @@ public class BotSettingsManager
     public String getGoogleServiceKey()
     {
         return settings.google_service_key;
+    }
+
+    public Integer getLogLevel()
+    {
+        return settings.log_level;
     }
 }

@@ -358,7 +358,7 @@ public class EventListener extends ListenerAdapter
         { return; }
         catch(Exception e)
         {
-            Logging.warn(this.getClass(), e.getMessage());
+            Logging.exception(this.getClass(), e);
         }
     }
 }

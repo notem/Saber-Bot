@@ -36,14 +36,20 @@ public class EditCommand implements Command
                 "``<option>`` is to contain which attribute of the event you wish to edit. ``<arg>`` should be the" +
                 " new configuration." +
                 "\n\n```diff\n+ Options ```\n" +
-                "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment <add|remove>``, ``date``, " +
+                "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment``, ``date``, " +
                 "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``" +
                 " and ``max``.\n\n" +
                 "Most of the options listed above accept the same arguments as the ``create`` command." +
-                "\nReference the ``help`` information for the ``create`` command for more information.\n\n" +
+                "\nReference the ``help`` information for the ``create`` command for more information." +
+                "\n\n" +
+                "The comment option requires one additional argument immediately after the 'comment' argument.\n" +
+                "This argument identifies what comment operation to do. The operations are ``add``, ``remove``, and ``swap``." +
+                "\nSee the examples for their usage." +
+                "\n\n" +
                 "Announcements for individual events can be toggled on-off using any of these three options: " +
                 "``quiet-start``, ``quiet-end``, ``quiet-remind``\n" +
-                "No additional arguments need to be provided when using one of the ``quiet-`` options.\n\n" +
+                "No additional arguments need to be provided when using one of the ``quiet-`` options." +
+                "\n\n" +
                 "If the schedule that the event is placed on is rsvp enabled (which may be turned on using the ``config`` command)" +
                 " a limit to the number of users who may rsvp 'yes' can be set using the ``max`` option.\n" +
                 "The ``max`` option requires one additional argument, which is the maximum number of players allowed to rsvp for the event.\n" +
@@ -51,13 +57,15 @@ public class EditCommand implements Command
 
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + head + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
+                "\n``" + head + " 80c0sd09 comment remove 3``" +
+                "\n``" + head + " 09adff3 comment swap 1 2" +
                 "\n``" + head + " 0abf2991 start 21:15``" +
                 "\n``" + head + " 49afaf2 end 2:15pm``" +
                 "\n``" + head + " 409fa22 start-date 10/9``" +
                 "\n``" + head + " a00af9a repeat \"Sun, Tue, Fri\"``" +
-                "\n``" + head + " 80c0sd09 comment remove 1``" +
                 "\n``" + head + " 0912af9 quiet-start``" +
-                "\n``" + head + " a901992 expire 2019/1/1";
+                "\n``" + head + " a901992 expire 2019/1/1" +
+                "";
 
         String USAGE_BRIEF = "``" + head + "`` - modify an event";
 
@@ -88,7 +96,7 @@ public class EditCommand implements Command
             return "I could not find an entry with that ID!";
 
         if(Main.getScheduleManager().isLocked(entry.getScheduleID()))
-            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
+            return "Schedule is locked for sorting/syncing. Please try again after sort/sync finishes.";
 
         if(args.length == 1)
             return "";
@@ -100,6 +108,7 @@ public class EditCommand implements Command
         {
             case "c":
             case "comment":
+            case "comments":
                 if(args.length <= index+1)
                     return "That's not enough arguments for *comment*! Use ``"+ head +" [id] comment [add|remove] \"comment\"``";
 
@@ -116,8 +125,31 @@ public class EditCommand implements Command
                             return "I cannot use **" + args[index] + "** to remove a comment!";
                         }
                         break;
+                    case "s":
+                    case "swap":
+                        if(args.length != 5)
+                            return "That's not enough arguments for *comment swap*!" +
+                                    "\nUse ``"+ head +" [id] comment swap [number] [number]``";
+                        if(!VerifyUtilities.verifyInteger(args[index]))
+                        {
+                            return "Argument **" + args[index] + "** is not a number!";
+                        }
+                        if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
+                        {
+                            return "Comment **#" + args[index] + "** does not exist!";
+                        }
+                        index++; // 4
+                        if(!VerifyUtilities.verifyInteger(args[index]))
+                        {
+                            return "Argument **" + args[index] + "** is not a number!";
+                        }
+                        if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
+                        {
+                            return "Comment **#" + args[index] + "** does not exist!";
+                        }
+                        break;
                     default:
-                        return "The only valid options for ``comment`` is **add** or **remove***!";
+                        return "The only valid options for ``comment`` are **add**, **remove**, or **swap**!";
                 }
                 break;
 
@@ -291,7 +323,7 @@ public class EditCommand implements Command
                             break;
                         case "r":
                         case "remove" :
-                            if( VerifyUtilities.verifyInteger(args[index]) )
+                            if(VerifyUtilities.verifyInteger(args[index]))
                             {
                                 comments.remove( Integer.parseInt(args[index])-1 );
                             }
@@ -299,6 +331,13 @@ public class EditCommand implements Command
                             {
                                 comments.remove(args[index]);
                             }
+                            break;
+                        case "s":
+                        case "swap":
+                            String a = comments.get(Integer.parseInt(args[index])-1);
+                            String b = comments.get(Integer.parseInt(args[index+1])-1);
+                            comments.set(Integer.parseInt(args[index])-1, b);
+                            comments.set(Integer.parseInt(args[index+1])-1, a);
                             break;
                     }
 

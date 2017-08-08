@@ -49,7 +49,6 @@ public class CommandHandler
         commands.put((new TestCommand()).name(), new TestCommand());
         commands.put((new SortCommand()).name(), new SortCommand());
         commands.put((new ListCommand()).name(), new ListCommand());
-        commands.put((new ListMobileCommand()).name(), new ListMobileCommand());
         commands.put((new GuildCommand()).name(), new GuildCommand());
 
         // add administrator commands with their lookup name
@@ -130,7 +129,7 @@ public class CommandHandler
                 {
                     MessageUtilities.sendPrivateMsg(e.toString(), admin, null);
                 }
-                e.printStackTrace();
+                Logging.exception(this.getClass(), e);
             }
         }
         // else the invoking command is invalid
@@ -163,7 +162,7 @@ public class CommandHandler
                 {
                     MessageUtilities.sendPrivateMsg(e.getLocalizedMessage(), admin, null);
                 }
-                e.printStackTrace();
+                Logging.exception(this.getClass(), e);
             }
         }
     }

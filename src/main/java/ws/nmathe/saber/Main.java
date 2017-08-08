@@ -80,7 +80,7 @@ public class Main
         }
         catch( Exception e )
         {
-            e.printStackTrace();
+            Logging.exception(Main.class, e);
             System.exit(1);
         }
 

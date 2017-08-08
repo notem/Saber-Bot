@@ -1,5 +1,7 @@
 package ws.nmathe.saber.utils;
 
+import ws.nmathe.saber.Main;
+
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
@@ -28,6 +30,8 @@ public class Logging
 
     public static void info(Class caller, String msg)
     {
+        if(Main.getBotSettingsManager().getLogLevel() < 4) return;
+
         LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] [Info]" +
                 ANSI_RESET + " " + ANSI_CYAN_BACKGROUND + ANSI_BLACK +
@@ -40,6 +44,8 @@ public class Logging
 
     public static void warn(Class caller, String msg)
     {
+        if(Main.getBotSettingsManager().getLogLevel() < 2) return;
+
         LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] " +
                 ANSI_RED + "[Warn]" + ANSI_RESET + " " +
@@ -51,8 +57,25 @@ public class Logging
         System.out.println(content);
     }
 
+    public static void exception(Class caller, Exception error)
+    {
+        if(Main.getBotSettingsManager().getLogLevel() < 1) return;
+
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+        String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] " +
+                ANSI_PURPLE + "[Excp]" + ANSI_RESET + " " +
+                ANSI_PURPLE_BACKGROUND + ANSI_BLACK +
+                "[" + caller.getSimpleName() + "]" +
+                ANSI_RESET + " " + ANSI_PURPLE + error.getLocalizedMessage() +
+                ANSI_RESET;
+        System.out.println(content);
+        error.printStackTrace();
+    }
+
     public static void cmd(Class caller, String msg)
     {
+        if(Main.getBotSettingsManager().getLogLevel() < 3) return;
+
         LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] [Cmnd]" +
                 ANSI_RESET + " " + ANSI_GREEN_BACKGROUND + ANSI_BLACK +

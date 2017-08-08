@@ -71,12 +71,17 @@ class EntryProcessor implements Runnable
                         if(!eventsToBeWritten.contains(document.getInteger("_id")))
                         {
                             primaryExecutor.execute(() -> {
-                                // convert to a POJO and start
-                                (new ScheduleEntry(document)).start();
-
                                 // if the entry isn't the special exception, update the db entry as started
-                                if(!document.get("start").equals(document.get("end")))
+                                if(document.getDate("start").equals(document.getDate("end")))
                                 {
+                                    // convert to scheduleEntry object and start
+                                    (new ScheduleEntry(document)).end();
+                                }
+                                else
+                                {
+                                    // convert to a POJO and start
+                                    (new ScheduleEntry(document)).start();
+
                                     eventsToBeWritten.put(document.getInteger("_id"), new Object());
                                     Main.getDBDriver().getEventCollection()
                                             .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));

@@ -59,6 +59,11 @@ public class ScheduleManager
         }
         catch(PermissionException ignored)
         { return; }
+        catch(Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+            return;
+        }
 
         List<Integer> default_reminders = new ArrayList<>();
         default_reminders.add(10);
@@ -269,7 +274,7 @@ public class ScheduleManager
         }
         catch(Exception e)
         {
-            Logging.warn(this.getClass(), e.getMessage());
+            Logging.exception(this.getClass(), e);
         }
         finally
         {

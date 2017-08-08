@@ -1,5 +1,6 @@
 package ws.nmathe.saber.utils;
 
+import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
 import java.time.LocalDate;
@@ -129,7 +130,7 @@ public class ParsingUtilities
                         break;
 
                     case 'D' :
-                        announceMsg += entry.getStart().getDayOfWeek();
+                        announceMsg += StringUtils.capitalize(entry.getStart().getDayOfWeek().toString());
                         break;
 
                     case 'm' :
@@ -137,7 +138,7 @@ public class ParsingUtilities
                         break;
 
                     case 'M' :
-                        announceMsg += entry.getStart().getMonth();
+                        announceMsg += StringUtils.capitalize(entry.getStart().getMonth().toString());
                         break;
 
                     case 'y' :
@@ -177,6 +178,7 @@ public class ParsingUtilities
         }
         else
         {
+            // TODO better parsing
             if( str.contains("su") )
                 bits |= 1;
             if( str.contains("mo") )

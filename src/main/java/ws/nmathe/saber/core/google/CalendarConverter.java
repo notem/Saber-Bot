@@ -104,8 +104,9 @@ public class CalendarConverter
 
             calLink = "https://calendar.google.com/calendar/embed?src=" + address;
         }
-        catch( IOException e )
+        catch( Exception e )
         {
+            Logging.exception(this.getClass(), e);
             return;
         }
 
@@ -286,14 +287,14 @@ public class CalendarConverter
                 {}
                 catch(Exception e)
                 {
-                    Logging.warn(this.getClass(), e.getMessage());
+                    Logging.exception(this.getClass(), e);
                 }
             }
 
         }
         catch(Exception e)
         {
-            Logging.warn(this.getClass(), e.getMessage());
+            Logging.exception(this.getClass(), e);
         }
         finally
         {
