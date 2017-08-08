@@ -86,10 +86,8 @@ public class MessageUtilities
 
         try
         {
-            if(user.hasPrivateChannel())
-            {
-                sendMsg( content, user.openPrivateChannel().complete(), action );
-            }
+            user.openPrivateChannel().complete();
+            sendMsg( content, user.getPrivateChannel(), action );
         }
         catch( PermissionException ignored)
         { return; }
