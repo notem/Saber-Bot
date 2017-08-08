@@ -260,10 +260,10 @@ public class EventListener extends ListenerAdapter
                 Document doc = Main.getDBDriver().getEventCollection()
                         .find(eq("messageId", event.getMessageId())).first();
 
-                ScheduleEntry se = new ScheduleEntry(doc);
-
-                if(doc == null) // shouldn't happen, but if it does
+                if(doc == null)
                     return;
+
+                ScheduleEntry se = new ScheduleEntry(doc);
 
                 Integer entryId = doc.getInteger("_id");
 
