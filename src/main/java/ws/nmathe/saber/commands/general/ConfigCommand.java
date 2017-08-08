@@ -56,7 +56,7 @@ public class ConfigCommand implements Command
                 "```diff\n+ Custom announcements and reminders```\n" +
                 "When an event begins or ends an announcement message is sent to the configured channel.\n" +
                 "The message that is sent is determined from the message format the schedule is configured to use." +
-                "\n\n" +
+                "\n\n splithere" +
                 "When creating a custom announcement message format the " +
                 "'%' acts as a delimiter for entry parameters such as the title or a comment.\n" +
                 "**%t** will cause the entry title to be inserted\n**%c[1-9]** will cause the nth comment to be inserted\n**%a** will insert" +
