@@ -99,9 +99,16 @@ public class GuildCommand implements Command
                                 "The correct usage is ``" + head + " control [#channel]`` where ``[#channel]`` " +
                                 "is the channel to use as the bot control channel.";
                     String chanId = args[1].replace("<#", "").replace(">", "");
-                    Channel chan = event.getGuild().getTextChannelById(chanId);
-                    if(chan == null)
+                    try
+                    {
+                        Channel chan = event.getGuild().getTextChannelById(chanId);
+                        if(chan == null)
+                            return "I could not find the channel **" + args[1] + "** on your guild server!";
+                    }
+                    catch(NumberFormatException e)
+                    {
                         return "I could not find the channel **" + args[1] + "** on your guild server!";
+                    }
                     break;
 
                 default:

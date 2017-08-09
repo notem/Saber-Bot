@@ -246,6 +246,11 @@ public class ScheduleManager
                 ScheduleEntry min = top;
                 for (ScheduleEntry cur : unsortedEntries)
                 {
+                    if(min.getMessageObject()==null || cur.getMessageObject()==null)
+                    {
+                        continue;
+                    }
+
                     OffsetDateTime a = min.getMessageObject().getCreationTime();
                     OffsetDateTime b = cur.getMessageObject().getCreationTime();
                     if (a.isAfter(b))

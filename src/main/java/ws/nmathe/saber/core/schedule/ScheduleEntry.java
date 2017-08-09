@@ -424,9 +424,7 @@ public class ScheduleEntry
         }
         catch( Exception e )
         {
-            // disabled entry removal when an entry's message cannot be found
-            // to avoid event loss during discord outages
-            //Main.getEntryManager().removeEntry(this.getId());
+            Main.getEntryManager().removeEntry(this.getId());
             msg = null;
         }
         return msg;

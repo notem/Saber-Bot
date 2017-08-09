@@ -1,6 +1,7 @@
 package ws.nmathe.saber.commands.general;
 
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.bson.Document;
@@ -73,7 +74,8 @@ public class InitCommand implements Command
                 return "Schedule name must be between 2 and 100 characters long!";
 
             String chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
-            if(event.getGuild().getPublicChannel().getId().equals(chanId))
+            MessageChannel publicChannel = event.getGuild().getPublicChannel();
+            if(publicChannel != null && publicChannel.getId().equals(chanId))
             {
                 return "Your public guild's public channel cannot be converted to a schedule!";
             }
