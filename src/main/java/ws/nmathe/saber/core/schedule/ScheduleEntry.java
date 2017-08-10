@@ -417,14 +417,14 @@ public class ScheduleEntry
         try
         {
             msg = Main.getBotJda()
-                    .getGuildById(this.guildId)
+                    //.getGuildById(this.guildId)
                     .getTextChannelById(this.chanId)
                     .getMessageById(this.msgId)
                     .complete();
         }
         catch( Exception e )
         {
-            Main.getEntryManager().removeEntry(this.getId());
+            // Main.getEntryManager().removeEntry(this.getId());
             msg = null;
         }
         return msg;

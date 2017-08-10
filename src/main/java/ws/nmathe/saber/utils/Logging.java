@@ -57,7 +57,7 @@ public class Logging
         System.out.println(content);
     }
 
-    public static void exception(Class caller, Exception error)
+    public static void exception(Class caller, Throwable error)
     {
         if(Main.getBotSettingsManager().getLogLevel() < 1) return;
 

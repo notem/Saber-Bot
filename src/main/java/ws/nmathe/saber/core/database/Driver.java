@@ -7,6 +7,8 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 
+import java.util.concurrent.*;
+
 public class Driver
 {
     private MongoDatabase db;
@@ -15,6 +17,10 @@ public class Driver
     {
         MongoClient mongoClient = new MongoClient(new MongoClientURI(Main.getBotSettingsManager().getMongoURI()));
         db = mongoClient.getDatabase("saberDB");
+
+        // schedule a thread to prune disconnected guild, schedules, and events from the database
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.scheduleAtFixedRate(new DatabasePruner(), 2*60, 48*60*60, TimeUnit.SECONDS);
     }
 
     public MongoCollection<Document> getScheduleCollection()

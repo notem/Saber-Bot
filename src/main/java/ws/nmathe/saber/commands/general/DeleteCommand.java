@@ -89,6 +89,7 @@ public class DeleteCommand implements Command
             // delete all schedule
             Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId())
                     .forEach(cId -> Main.getScheduleManager().deleteSchedule(cId));
+            event.getChannel().sendMessage("All events and schedules for this guild has been cleared.");
         }
         else if(VerifyUtilities.verifyHex(args[0]))
         {
@@ -101,6 +102,7 @@ public class DeleteCommand implements Command
 
             Main.getEntryManager().removeEntry(entryId);
             MessageUtilities.deleteMsg(msg, null);
+            event.getChannel().sendMessage("The event with :id: " + event + " removed.");
         }
         else
         {

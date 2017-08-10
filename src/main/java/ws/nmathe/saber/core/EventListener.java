@@ -179,12 +179,16 @@ public class EventListener extends ListenerAdapter
     @Override
     public void onGuildLeave( GuildLeaveEvent event )
     {
+        /* Disabled reactive database pruning as the Discord API seems to like to send GuildLeave notifications
+           during discord outages
+
         // purge the leaving guild's entry list
         Main.getDBDriver().getEventCollection().deleteMany(eq("guildId", event.getGuild().getId()));
         // remove the guild's schedules
-        Main.getDBDriver().getScheduleCollection().deleteOne(eq("guildId", event.getGuild().getId()));
+        Main.getDBDriver().getScheduleCollection().deleteMany(eq("guildId", event.getGuild().getId()));
         // remove the guild's settings
         Main.getDBDriver().getGuildCollection().deleteOne(eq("_id", event.getGuild().getId()));
+        */
 
         HttpUtilities.updateStats();
     }
@@ -264,7 +268,6 @@ public class EventListener extends ListenerAdapter
                     return;
 
                 ScheduleEntry se = new ScheduleEntry(doc);
-
                 Integer entryId = doc.getInteger("_id");
 
                 // current list of players
