@@ -66,7 +66,7 @@ public class Logging
                 ANSI_PURPLE + "[Excp]" + ANSI_RESET + " " +
                 ANSI_PURPLE_BACKGROUND + ANSI_BLACK +
                 "[" + caller.getSimpleName() + "]" +
-                ANSI_RESET + " " + ANSI_PURPLE + error.getLocalizedMessage() +
+                ANSI_RESET + " " + ANSI_PURPLE + error.getMessage() +
                 ANSI_RESET;
         System.out.println(content);
         error.printStackTrace();
