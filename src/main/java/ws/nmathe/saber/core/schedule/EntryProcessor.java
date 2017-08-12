@@ -1,6 +1,7 @@
 package ws.nmathe.saber.core.schedule;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -52,12 +53,19 @@ class EntryProcessor implements Runnable
                             lte("end", new Date())))
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                        try
                         {
-                            primaryExecutor.execute(() -> {
-                                // convert to scheduleEntry object and start
-                                (new ScheduleEntry(document)).end();
-                            });
+                            if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                            {
+                                primaryExecutor.execute(() -> {
+                                    // convert to scheduleEntry object and start
+                                    (new ScheduleEntry(document)).end();
+                                });
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            Logging.exception(this.getClass(), e);
                         }
                     });
 
@@ -68,26 +76,33 @@ class EntryProcessor implements Runnable
                             lte("start", new Date())))
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                        try
                         {
-                            primaryExecutor.execute(() -> {
-                                // if the entry isn't the special exception, update the db entry as started
-                                if(document.getDate("start").equals(document.getDate("end")))
-                                {
-                                    // convert to scheduleEntry object and start
-                                    (new ScheduleEntry(document)).end();
-                                }
-                                else
-                                {
-                                    // convert to a POJO and start
-                                    (new ScheduleEntry(document)).start();
+                            if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                            {
+                                primaryExecutor.execute(() -> {
+                                    // if the entry isn't the special exception, update the db entry as started
+                                    if(document.getDate("start").equals(document.getDate("end")))
+                                    {
+                                        // convert to scheduleEntry object and start
+                                        (new ScheduleEntry(document)).end();
+                                    }
+                                    else
+                                    {
+                                        // convert to a POJO and start
+                                        (new ScheduleEntry(document)).start();
 
-                                    eventsToBeWritten.put(document.getInteger("_id"), new Object());
-                                    Main.getDBDriver().getEventCollection()
-                                            .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
-                                    eventsToBeWritten.remove(document.getInteger("_id"));
-                                }
-                            });
+                                        eventsToBeWritten.put(document.getInteger("_id"), new Object());
+                                        Main.getDBDriver().getEventCollection()
+                                                .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
+                                        eventsToBeWritten.remove(document.getInteger("_id"));
+                                    }
+                                });
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            Logging.exception(this.getClass(), e);
                         }
                     });
 
@@ -98,26 +113,33 @@ class EntryProcessor implements Runnable
                             lte("reminders", new Date())))
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                        try
                         {
-                            primaryExecutor.execute(() -> {
-                                // convert to POJO and send a remind
-                                (new ScheduleEntry(document)).remind();
+                            if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                            {
+                                primaryExecutor.execute(() -> {
+                                    // convert to POJO and send a remind
+                                    (new ScheduleEntry(document)).remind();
 
-                                // remove expired reminders
-                                List<Date> reminders = (List<Date>) document.get("reminders");
-                                reminders.removeIf(date -> date.before(new Date()));
+                                    // remove expired reminders
+                                    List<Date> reminders = (List<Date>) document.get("reminders");
+                                    reminders.removeIf(date -> date.before(new Date()));
 
-                                // update document
-                                eventsToBeWritten.put(document.getInteger("_id"), new Object());
-                                Main.getDBDriver().getEventCollection()
-                                        .updateOne(
-                                                eq("_id", document.get("_id")),
-                                                set("reminders", reminders));
-                                eventsToBeWritten.remove(document.getInteger("_id"));
+                                    // update document
+                                    eventsToBeWritten.put(document.getInteger("_id"), new Object());
+                                    Main.getDBDriver().getEventCollection()
+                                            .updateOne(
+                                                    eq("_id", document.get("_id")),
+                                                    set("reminders", reminders));
+                                    eventsToBeWritten.remove(document.getInteger("_id"));
 
-                                (new ScheduleEntry(document)).reloadDisplay();
-                            });
+                                    (new ScheduleEntry(document)).reloadDisplay();
+                                });
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            Logging.exception(this.getClass(), e);
                         }
                     });
         }
@@ -137,10 +159,17 @@ class EntryProcessor implements Runnable
                             )
                     ).forEach((Consumer<? super Document>) document ->
                     {
-                        secondaryExecutor.execute(() -> {
-                            // convert to scheduleEntry object and start
-                            (new ScheduleEntry(document)).reloadDisplay();
-                        });
+                        try
+                        {
+                            secondaryExecutor.execute(() -> {
+                                // convert to scheduleEntry object and start
+                                (new ScheduleEntry(document)).reloadDisplay();
+                            });
+                        }
+                        catch(Exception e)
+                        {
+                            Logging.exception(this.getClass(), e);
+                        }
                     });
         }
         else if( level == 2 )   // hourly check
@@ -165,7 +194,8 @@ class EntryProcessor implements Runnable
                             ))
                     ).forEach((Consumer<? super Document>) document ->
                     {
-                        secondaryExecutor.execute(() -> {
+                        secondaryExecutor.execute(() ->
+                        {
                             // convert to scheduleEntry object and start
                             (new ScheduleEntry(document)).reloadDisplay();
                         });
@@ -173,17 +203,17 @@ class EntryProcessor implements Runnable
 
             /// remove expiring events
             // delete message objects
-            Main.getDBDriver().getEventCollection().find(
-                    lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()))
-            ).forEach((Consumer<? super Document>) document-> {
-                ScheduleEntry se = new ScheduleEntry(document);
-                MessageUtilities.deleteMsg(se.getMessageObject(), null);
-            });
+            Bson query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
+            Main.getDBDriver().getEventCollection().find(query)
+                    .forEach((Consumer<? super Document>) document->
+                    {
+                        ScheduleEntry se = new ScheduleEntry(document);
+                        MessageUtilities.deleteMsg(se.getMessageObject(), null);
+                    });
 
             // bulk delete entries from the database
-            Main.getDBDriver().getEventCollection().deleteMany(
-                    lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()))
-            );
+            query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
+            Main.getDBDriver().getEventCollection().deleteMany(query);
         }
         else if( level == 3 )   // daily check
         {

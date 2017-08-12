@@ -48,11 +48,11 @@ public class EntryManager
         // thread to adjust entry display timers
         ScheduledExecutorService scheduler2 = Executors.newScheduledThreadPool(1);
         // 1 day timer
-        scheduler2.scheduleAtFixedRate( new EntryProcessor(3), 0, 12*60*60, TimeUnit.SECONDS);
+        scheduler2.scheduleAtFixedRate( new EntryProcessor(3), 12*60*60, 12*60*60, TimeUnit.SECONDS);
         // 1 hour timer
-        scheduler2.scheduleAtFixedRate( new EntryProcessor(2), 0, 60*30, TimeUnit.SECONDS);
+        scheduler2.scheduleAtFixedRate( new EntryProcessor(2), 60*30, 60*30, TimeUnit.SECONDS);
         // 3 min timer
-        scheduler2.scheduleAtFixedRate( new EntryProcessor(1), 30 , 60*3, TimeUnit.SECONDS );
+        scheduler2.scheduleAtFixedRate( new EntryProcessor(1), 60*3, 60*3, TimeUnit.SECONDS );
     }
 
     /**
