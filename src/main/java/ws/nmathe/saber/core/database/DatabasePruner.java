@@ -59,6 +59,7 @@ public class DatabasePruner implements Runnable
         });
 
         // purge events for which the bot cannot access the message
+        // TODO doesn't seem to behave properly. Nothing is being pruned. . .
         Main.getDBDriver().getEventCollection().find().forEach((Consumer<? super Document>) document -> {
             String eventId = document.getString("_id");
             String messageId = document.getString("messageId");

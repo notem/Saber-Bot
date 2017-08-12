@@ -49,7 +49,9 @@ public class CreateCommand implements Command
                 "('month/day' and 'day' are valid).\nThe omitted values will be inherited from the current date." +
                 "\n\n" +
                 "Dates which are in a non-number format (such as '10 May') are not acceptable.\n" +
-                "Default behavior is to use the next day as the event's date. " +
+                "Default behavior is to use the next day as the event's date." +
+                "\n\nAs a shortcut, appending ``today`` to the command will act like the ``date M/d`` option where " +
+                "the date is set to the current day." +
 
                 "splithere" + // the help command will parse this token and start a new message
 
@@ -109,6 +111,9 @@ public class CreateCommand implements Command
         if( !VerifyUtilities.verifyTime( args[index] ) )
             return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
 
+        ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
+        ZonedDateTime startTime = ParsingUtilities.parseTime(ZonedDateTime.now(zone), args[index]);
+
         // if minimum args, then ok
         if (args.length == 3)
             return "";
@@ -134,9 +139,14 @@ public class CreateCommand implements Command
                 if (dateFlag)
                 {
                     if (!VerifyUtilities.verifyDate(arg))
+                    {
                         return "I could not understand **" + arg + "** as a date! Please use the format yyyy/MM/dd.";
-                    if(ParsingUtilities.parseDateStr(arg).isBefore(LocalDate.now()))
+                    }
+                    ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(arg), LocalTime.now(zone), zone);
+                    if(time.isBefore(ZonedDateTime.now()))
+                    {
                         return "That date is in the past!";
+                    }
                     dateFlag = false;
                 }
                 else if (urlFlag)
@@ -164,9 +174,14 @@ public class CreateCommand implements Command
 
                         default:
                             if( !VerifyUtilities.verifyDate( arg ) )
+                            {
                                 return "I could not understand **" + arg + "** as a date! Please use the format M/d.";
-                            if(ParsingUtilities.parseDateStr(arg).isBefore(LocalDate.now()))
+                            }
+                            ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(arg), LocalTime.now(zone), zone);
+                            if(time.isBefore(ZonedDateTime.now()))
+                            {
                                 return "That date is in the past!";
+                            }
                             break;
                     }
                     expireFlag = false;
@@ -199,6 +214,13 @@ public class CreateCommand implements Command
                         case "ex":
                         case "expire":
                             expireFlag = true;
+                            break;
+
+                        case "today":
+                            if(startTime.isBefore(ZonedDateTime.now()))
+                            {
+                                return "I cannot be schedule the event for today at " + args[2] + " as that time has already past!";
+                            }
                             break;
                     }
                 }
@@ -355,6 +377,16 @@ public class CreateCommand implements Command
                         case "ex":
                         case "expire":
                             expireFlag = true;
+                            break;
+
+                        case "today":
+                            startDate = ZonedDateTime.now(zone).toLocalDate();
+                            endDate = ZonedDateTime.now(zone).toLocalDate();
+                            break;
+
+                        case "tomorrow":
+                            startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
+                            endDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
                             break;
 
                         default:

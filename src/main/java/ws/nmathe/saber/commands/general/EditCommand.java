@@ -11,6 +11,7 @@ import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -195,8 +196,14 @@ public class EditCommand implements Command
                             "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [date]``";
                 if( !VerifyUtilities.verifyDate( args[index] ) )
                     return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
-                if(ParsingUtilities.parseDateStr(args[index]).isBefore(LocalDate.now()))
+
+                ZoneId zone = Main.getScheduleManager().getTimeZone(entry.getScheduleID());
+                ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.now(zone), zone);
+                if(time.isBefore(ZonedDateTime.now()))
+                {
                     return "That date is in the past!";
+                }
+
                 if(entry.hasStarted())
                     return "You cannot modify the date of events which have already started!";
                 break;

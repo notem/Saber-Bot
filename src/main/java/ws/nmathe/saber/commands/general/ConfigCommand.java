@@ -52,11 +52,11 @@ public class ConfigCommand implements Command
                 "To configure the times at which events on the schedule should send reminders, use the 'remind' with an " +
                 "argument containing the relative times to remind delimited by spaces (see examples).\n" +
                 "Reminder messages are defined by a configured format, see below." +
-                "\n\n" +
+                "\n\n splithere" +
                 "```diff\n+ Custom announcements and reminders```\n" +
                 "When an event begins or ends an announcement message is sent to the configured channel.\n" +
                 "The message that is sent is determined from the message format the schedule is configured to use." +
-                "\n\n splithere" +
+                "\n\n" +
                 "When creating a custom announcement message format the " +
                 "'%' acts as a delimiter for entry parameters such as the title or a comment.\n" +
                 "**%t** will cause the entry title to be inserted\n**%c[1-9]** will cause the nth comment to be inserted\n**%a** will insert" +
