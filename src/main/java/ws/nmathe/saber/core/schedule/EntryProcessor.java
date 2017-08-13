@@ -46,42 +46,38 @@ class EntryProcessor implements Runnable
         if( level == 0 )    // minute check
         {
             Logging.info(this.getClass(), "Processing entries at level 0. . .");
+
             // process entries which are ending
-            Main.getDBDriver().getEventCollection().
-                    find(and(
-                            eq("hasStarted",true),
-                            lte("end", new Date())))
+            Bson query = and(eq("hasStarted",true), lte("end", new Date()));
+            Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        try
+                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
                         {
-                            if(!eventsToBeWritten.contains(document.getInteger("_id")))
-                            {
-                                primaryExecutor.execute(() -> {
-                                    // convert to scheduleEntry object and start
+                            primaryExecutor.execute(() -> {
+                                // convert to scheduleEntry object and start
+                                try
+                                {
                                     (new ScheduleEntry(document)).end();
-                                });
-                            }
-                        }
-                        catch(Exception e)
-                        {
-                            Logging.exception(this.getClass(), e);
+                                }
+                                catch(Exception e)
+                                {
+                                    Logging.exception(this.getClass(), e);
+                                }
+                            });
                         }
                     });
 
+            query = and(eq("hasStarted",false), lte("start", new Date()));
             // process entries which are starting
-            Main.getDBDriver().getEventCollection().
-                    find(and(
-                            eq("hasStarted",false),
-                            lte("start", new Date())))
+            Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        try
+                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
                         {
-                            if(!eventsToBeWritten.contains(document.getInteger("_id")))
-                            {
-                                primaryExecutor.execute(() -> {
-                                    // if the entry isn't the special exception, update the db entry as started
+                            primaryExecutor.execute(() -> {
+                                try
+                                {   // if the entry isn't the special exception, update the db entry as started
                                     if(document.getDate("start").equals(document.getDate("end")))
                                     {
                                         // convert to scheduleEntry object and start
@@ -97,27 +93,26 @@ class EntryProcessor implements Runnable
                                                 .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
                                         eventsToBeWritten.remove(document.getInteger("_id"));
                                     }
-                                });
-                            }
-                        }
-                        catch(Exception e)
-                        {
-                            Logging.exception(this.getClass(), e);
+                                }
+                                catch(Exception e)
+                                {
+                                    Logging.exception(this.getClass(), e);
+                                }
+                            });
                         }
                     });
 
             // process entries with reminders
-            Main.getDBDriver().getEventCollection().
-                    find(and(
-                            eq("hasStarted",false),
-                            lte("reminders", new Date())))
+            query = and(eq("hasStarted",false), lte("reminders", new Date()));
+            Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        try
+                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
                         {
-                            if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                            primaryExecutor.execute(() ->
                             {
-                                primaryExecutor.execute(() -> {
+                                try
+                                {
                                     // convert to POJO and send a remind
                                     (new ScheduleEntry(document)).remind();
 
@@ -134,12 +129,12 @@ class EntryProcessor implements Runnable
                                     eventsToBeWritten.remove(document.getInteger("_id"));
 
                                     (new ScheduleEntry(document)).reloadDisplay();
-                                });
-                            }
-                        }
-                        catch(Exception e)
-                        {
-                            Logging.exception(this.getClass(), e);
+                                }
+                                catch(Exception e)
+                                {
+                                    Logging.exception(this.getClass(), e);
+                                }
+                            });
                         }
                     });
         }
@@ -147,8 +142,7 @@ class EntryProcessor implements Runnable
         {
             Logging.info(this.getClass(), "Processing entries at level 1. . .");
             // adjust timers for entries starting/ending within the next hour
-            Main.getDBDriver().getEventCollection().
-                    find(or(
+            Bson query = or(
                             and(
                                     eq("hasStarted",false),
                                     lte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
@@ -156,54 +150,57 @@ class EntryProcessor implements Runnable
                             and(
                                     eq("hasStarted", true),
                                     lte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant())))
-                            )
-                    ).forEach((Consumer<? super Document>) document ->
+                            );
+            Main.getDBDriver().getEventCollection().find(query)
+                    .forEach((Consumer<? super Document>) document ->
                     {
-                        try
-                        {
-                            secondaryExecutor.execute(() -> {
-                                // convert to scheduleEntry object and start
+                        secondaryExecutor.execute(() -> {
+                            try
+                            {   // convert to scheduleEntry object and start
                                 (new ScheduleEntry(document)).reloadDisplay();
-                            });
-                        }
-                        catch(Exception e)
-                        {
-                            Logging.exception(this.getClass(), e);
-                        }
+                            }
+                            catch(Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
+                        });
                     });
         }
         else if( level == 2 )   // hourly check
         {
-            Logging.info(this.getClass(), "Processing entries at level 2. . .");
-            // adjust timers for entries starting/ending within the next Day
-            Main.getDBDriver().getEventCollection().
-                    find(or(
-                            and(
+            Bson query = or(and(
                                     eq("hasStarted",false),
                                     and(
                                             lte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant())),
                                             gte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
-                                    )
-                            ),
+                                    )),
                             and(
                                     eq("hasStarted", true),
                                     and(
                                             lte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant())),
                                             gte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
-                                    )
-                            ))
-                    ).forEach((Consumer<? super Document>) document ->
+                                    )));
+            Logging.info(this.getClass(), "Processing entries at level 2. . .");
+            // adjust timers for entries starting/ending within the next Day
+            Main.getDBDriver().getEventCollection().find(query)
+                    .forEach((Consumer<? super Document>) document ->
                     {
                         secondaryExecutor.execute(() ->
                         {
-                            // convert to scheduleEntry object and start
-                            (new ScheduleEntry(document)).reloadDisplay();
+                            try
+                            {   // convert to scheduleEntry object and start
+                                (new ScheduleEntry(document)).reloadDisplay();
+                            }
+                            catch(Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
                         });
                     });
 
             /// remove expiring events
             // delete message objects
-            Bson query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
+            query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document->
                     {
@@ -219,21 +216,26 @@ class EntryProcessor implements Runnable
         {
             Logging.info(this.getClass(), "Processing entries at level 3. . .");
             // adjust timers for entries that aren't starting/ending within the next day
-            Main.getDBDriver().getEventCollection().
-                    find(or(
+            Bson query = or(
                             and(
                                     eq("hasStarted", false),
-                                    gte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))
-                            ),
+                                    gte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))),
                             and(
                                     eq("hasStarted", true),
-                                    gte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant())))
-                            )
-                    ).forEach((Consumer<? super Document>) document ->
+                                    gte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))));
+            Main.getDBDriver().getEventCollection().find(query)
+                    .forEach((Consumer<? super Document>) document ->
                     {
-                        secondaryExecutor.execute(() -> {
-                            // convert to scheduleEntry object and start
-                            (new ScheduleEntry(document)).reloadDisplay();
+                        secondaryExecutor.execute(() ->
+                        {
+                            try
+                            {   // convert to scheduleEntry object and start
+                                (new ScheduleEntry(document)).reloadDisplay();
+                            }
+                            catch(Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
                         });
                     });
         }
