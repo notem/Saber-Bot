@@ -20,7 +20,7 @@ public class Driver
 
         // schedule a thread to prune disconnected guild, schedules, and events from the database
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(new Pruner(), 3*60, 24*60*60, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(new Pruner(), 10*60, 24*60*60, TimeUnit.SECONDS);
     }
 
     public MongoCollection<Document> getScheduleCollection()

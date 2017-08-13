@@ -136,7 +136,7 @@ public class ScheduleEntry
 
         if(!this.quietStart)
         { // send the start announcement
-            if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(60))) // dont send start announcements if 60 minutes late
+            if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15))) // dont send start announcements if 10 minutes late
             {
                 String startMsg =
                         ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
@@ -181,7 +181,7 @@ public class ScheduleEntry
 
         if(!this.quietEnd)
         {
-            if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(60))) // dont send end announcement if 60 minutes late
+            if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(15))) // dont send end announcement if 60 minutes late
             {// send the end announcement
                 String endMsg =
                         ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
