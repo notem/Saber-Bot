@@ -30,11 +30,6 @@ class EntryProcessor implements Runnable
     private static ExecutorService primaryExecutor = Executors.newCachedThreadPool();   // handles fine check tasks
     private static ExecutorService secondaryExecutor = Executors.newCachedThreadPool(); // handles the coarse check tasks
 
-    /// when the database is overwhelmed with write requests (or otherwise just misbehaving)
-    /// this hashmap (hashset) protects against announcing events multiple times
-    /// event IDs in this hashmap should not be processed when starting/ending/reminding
-    private static ConcurrentHashMap<Integer, Object> eventsToBeWritten = new ConcurrentHashMap<>();
-
     private int level;
     EntryProcessor(int level)
     {
@@ -52,54 +47,46 @@ class EntryProcessor implements Runnable
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
-                        {
-                            primaryExecutor.execute(() -> {
-                                // convert to scheduleEntry object and start
-                                try
-                                {
-                                    (new ScheduleEntry(document)).end();
-                                }
-                                catch(Exception e)
-                                {
-                                    Logging.exception(this.getClass(), e);
-                                }
-                            });
-                        }
+                        primaryExecutor.execute(() -> {
+                            // convert to scheduleEntry object and start
+                            try
+                            {
+                                (new ScheduleEntry(document)).end();
+                            }
+                            catch(Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
+                        });
                     });
 
-            query = and(eq("hasStarted",false), lte("start", new Date()));
             // process entries which are starting
+            query = and(eq("hasStarted",false), lte("start", new Date()));
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
-                        {
-                            primaryExecutor.execute(() -> {
-                                try
-                                {   // if the entry isn't the special exception, update the db entry as started
-                                    if(document.getDate("start").equals(document.getDate("end")))
-                                    {
-                                        // convert to scheduleEntry object and start
-                                        (new ScheduleEntry(document)).end();
-                                    }
-                                    else
-                                    {
-                                        // convert to a POJO and start
-                                        (new ScheduleEntry(document)).start();
-
-                                        eventsToBeWritten.put(document.getInteger("_id"), new Object());
-                                        Main.getDBDriver().getEventCollection()
-                                                .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
-                                        eventsToBeWritten.remove(document.getInteger("_id"));
-                                    }
-                                }
-                                catch(Exception e)
+                        primaryExecutor.execute(() -> {
+                            try
+                            {   // if the entry isn't the special exception, update the db entry as started
+                                if(document.getDate("start").equals(document.getDate("end")))
                                 {
-                                    Logging.exception(this.getClass(), e);
+                                    // convert to scheduleEntry object and start
+                                    (new ScheduleEntry(document)).end();
                                 }
-                            });
-                        }
+                                else
+                                {
+                                    // convert to a POJO and start
+                                    (new ScheduleEntry(document)).start();
+
+                                    Main.getDBDriver().getEventCollection()
+                                            .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
+                                }
+                            }
+                            catch(Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
+                        });
                     });
 
             // process entries with reminders
@@ -107,50 +94,99 @@ class EntryProcessor implements Runnable
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        if(!eventsToBeWritten.contains(document.getInteger("_id")))
+                        primaryExecutor.execute(() ->
                         {
-                            primaryExecutor.execute(() ->
+                            try
                             {
-                                try
-                                {
-                                    // convert to POJO and send a remind
-                                    (new ScheduleEntry(document)).remind();
+                                // convert to POJO and send a remind
+                                (new ScheduleEntry(document)).remind();
 
-                                    // remove expired reminders
-                                    List<Date> reminders = (List<Date>) document.get("reminders");
-                                    reminders.removeIf(date -> date.before(new Date()));
+                                // remove expired reminders
+                                List<Date> reminders = (List<Date>) document.get("reminders");
+                                reminders.removeIf(date -> date.before(new Date()));
 
-                                    // update document
-                                    eventsToBeWritten.put(document.getInteger("_id"), new Object());
-                                    Main.getDBDriver().getEventCollection()
-                                            .updateOne(
-                                                    eq("_id", document.get("_id")),
-                                                    set("reminders", reminders));
-                                    eventsToBeWritten.remove(document.getInteger("_id"));
+                                // update document
+                                Main.getDBDriver().getEventCollection()
+                                        .updateOne(
+                                                eq("_id", document.get("_id")),
+                                                set("reminders", reminders));
 
-                                    (new ScheduleEntry(document)).reloadDisplay();
-                                }
-                                catch(Exception e)
-                                {
-                                    Logging.exception(this.getClass(), e);
-                                }
-                            });
-                        }
+                                (new ScheduleEntry(document)).reloadDisplay();
+                            }
+                            catch(Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
+                        });
                     });
         }
-        else if( level == 1 )   // few minute check
+        else
         {
-            Logging.info(this.getClass(), "Processing entries at level 1. . .");
-            // adjust timers for entries starting/ending within the next hour
-            Bson query = or(
-                            and(
-                                    eq("hasStarted",false),
-                                    lte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
-                            ),
-                            and(
-                                    eq("hasStarted", true),
-                                    lte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant())))
-                            );
+            Bson query = new Document(); // should an invalid level ever be passed in, all entries will be reloaded!
+
+            if(level == 1)   // few minute check
+            {
+                Logging.info(this.getClass(), "Processing entries at level 1. . .");
+
+                // adjust timers for entries starting/ending within the next hour
+                query = or(
+                        and(
+                                eq("hasStarted",false),
+                                lte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
+                        ),
+                        and(
+                                eq("hasStarted", true),
+                                lte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant())))
+                );
+            }
+            else if(level == 2)
+            {
+                Logging.info(this.getClass(), "Processing entries at level 2. . .");
+
+                // delete message objects
+                query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
+                Main.getDBDriver().getEventCollection().find(query)
+                        .forEach((Consumer<? super Document>) document->
+                        {
+                            ScheduleEntry se = new ScheduleEntry(document);
+                            MessageUtilities.deleteMsg(se.getMessageObject(), null);
+                        });
+
+                // bulk delete entries from the database
+                query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
+                Main.getDBDriver().getEventCollection().deleteMany(query);
+
+                /// remove expiring events
+                query = or(and(
+                        eq("hasStarted",false),
+                        and(
+                                lte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant())),
+                                gte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
+                        )),
+                        and(
+                                eq("hasStarted", true),
+                                and(
+                                        lte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant())),
+                                        gte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
+                                )));
+
+            }
+            else if(level == 3)
+            {
+                Logging.info(this.getClass(), "Processing entries at level 3. . .");
+
+                // adjust timers for entries that aren't starting/ending within the next day
+                query = or(
+                        and(
+                                eq("hasStarted", false),
+                                gte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))),
+                        and(
+                                eq("hasStarted", true),
+                                gte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))));
+
+            }
+
+            // reload entries based on the appropriate query
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
@@ -165,79 +201,7 @@ class EntryProcessor implements Runnable
                             }
                         });
                     });
-        }
-        else if( level == 2 )   // hourly check
-        {
-            Bson query = or(and(
-                                    eq("hasStarted",false),
-                                    and(
-                                            lte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant())),
-                                            gte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
-                                    )),
-                            and(
-                                    eq("hasStarted", true),
-                                    and(
-                                            lte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant())),
-                                            gte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
-                                    )));
-            Logging.info(this.getClass(), "Processing entries at level 2. . .");
-            // adjust timers for entries starting/ending within the next Day
-            Main.getDBDriver().getEventCollection().find(query)
-                    .forEach((Consumer<? super Document>) document ->
-                    {
-                        secondaryExecutor.execute(() ->
-                        {
-                            try
-                            {   // convert to scheduleEntry object and start
-                                (new ScheduleEntry(document)).reloadDisplay();
-                            }
-                            catch(Exception e)
-                            {
-                                Logging.exception(this.getClass(), e);
-                            }
-                        });
-                    });
 
-            /// remove expiring events
-            // delete message objects
-            query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
-            Main.getDBDriver().getEventCollection().find(query)
-                    .forEach((Consumer<? super Document>) document->
-                    {
-                        ScheduleEntry se = new ScheduleEntry(document);
-                        MessageUtilities.deleteMsg(se.getMessageObject(), null);
-                    });
-
-            // bulk delete entries from the database
-            query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
-            Main.getDBDriver().getEventCollection().deleteMany(query);
-        }
-        else if( level == 3 )   // daily check
-        {
-            Logging.info(this.getClass(), "Processing entries at level 3. . .");
-            // adjust timers for entries that aren't starting/ending within the next day
-            Bson query = or(
-                            and(
-                                    eq("hasStarted", false),
-                                    gte("start", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))),
-                            and(
-                                    eq("hasStarted", true),
-                                    gte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))));
-            Main.getDBDriver().getEventCollection().find(query)
-                    .forEach((Consumer<? super Document>) document ->
-                    {
-                        secondaryExecutor.execute(() ->
-                        {
-                            try
-                            {   // convert to scheduleEntry object and start
-                                (new ScheduleEntry(document)).reloadDisplay();
-                            }
-                            catch(Exception e)
-                            {
-                                Logging.exception(this.getClass(), e);
-                            }
-                        });
-                    });
         }
     }
 }

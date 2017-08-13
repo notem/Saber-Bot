@@ -1,6 +1,7 @@
 package ws.nmathe.saber;
 
 import com.google.common.collect.Iterables;
+import net.dv8tion.jda.core.OnlineStatus;
 import ws.nmathe.saber.core.command.CommandHandler;
 import ws.nmathe.saber.core.database.Driver;
 import ws.nmathe.saber.core.google.CalendarConverter;
@@ -49,6 +50,7 @@ public class Main
         {
             jda = new JDABuilder(AccountType.BOT)
                     .setToken(botSettingsManager.getToken())
+                    .setStatus(OnlineStatus.ONLINE)
                     .buildBlocking();
             jda.addEventListener(new EventListener());
             jda.setAutoReconnect(true);

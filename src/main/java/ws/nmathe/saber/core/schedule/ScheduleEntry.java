@@ -120,6 +120,8 @@ public class ScheduleEntry
             {
                 MessageUtilities.sendMsg(remindMsg, chan, message -> this.checkDelay(Instant.now(), "reminder"));
             }
+
+            Logging.info(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
         }
     }
 

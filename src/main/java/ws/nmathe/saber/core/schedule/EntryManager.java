@@ -43,7 +43,7 @@ public class EntryManager
     {
         // create thread every minute to start/end/remind entries
         ScheduledExecutorService scheduler1 = Executors.newScheduledThreadPool(1);
-        scheduler1.scheduleAtFixedRate( new EntryProcessor(0), 0, 30, TimeUnit.SECONDS);
+        scheduler1.scheduleAtFixedRate( new EntryProcessor(0), 0, 60, TimeUnit.SECONDS);
 
         // thread to adjust entry display timers
         ScheduledExecutorService scheduler2 = Executors.newScheduledThreadPool(1);

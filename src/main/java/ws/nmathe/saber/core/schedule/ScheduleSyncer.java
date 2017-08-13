@@ -2,6 +2,7 @@ package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 
@@ -12,6 +13,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Projections.fields;
+import static com.mongodb.client.model.Projections.include;
 import static com.mongodb.client.model.Updates.set;
 
 /**
@@ -27,39 +30,48 @@ class ScheduleSyncer implements Runnable
     public void run()
     {
         Logging.info(this.getClass(), "Running schedule syncer. . .");
-        Main.getDBDriver().getScheduleCollection()
-                .find(and(
+        Bson query = and(
                         ne("sync_address", "off"),
-                        lte("sync_time", new Date())))
+                        lte("sync_time", new Date()));
+        Main.getDBDriver().getScheduleCollection()
+                .find(query)
+                .projection(fields(include("_id", "sync_time", "sync_address")))
                 .forEach((Consumer<? super Document>) document ->
         {
             executor.execute(() -> {
-                String scheduleId = (String) document.get("_id");
-
-                // add one day to sync_time
-                Date syncTime = Date.from(ZonedDateTime.ofInstant(document.getDate("sync_time").toInstant(),
-                        Main.getScheduleManager().getTimeZone(scheduleId)).plusDays(1).toInstant());
-
-                // update schedule document with next sync time
-                Main.getDBDriver().getScheduleCollection()
-                        .updateOne(eq("_id", scheduleId), set("sync_time", syncTime));
-
-                // attempt to sync schedule
-                if(Main.getCalendarConverter().checkValidAddress(document.getString("sync_address")))
+                try
                 {
-                    Main.getCalendarConverter().syncCalendar(
-                            (String) document.get("sync_address"),
-                            Main.getBotJda().getTextChannelById(document.getString("_id")));
+                    String scheduleId = (String) document.get("_id");
 
-                    TextChannel channel = Main.getBotJda().getTextChannelById(document.getString("_id"));
-                    Logging.info(this.getClass(), "Synchronized schedule #" + channel.getName() + " [" +
-                            document.getString("_id") + "] on '" + channel.getGuild().getName() + "' [" +
-                            channel.getGuild().getId() + "]");
-                }
-                else    // if sync address is not valid, set it to off
-                {
+                    // add one day to sync_time
+                    Date syncTime = Date.from(ZonedDateTime.ofInstant(document.getDate("sync_time").toInstant(),
+                            Main.getScheduleManager().getTimeZone(scheduleId)).plusDays(1).toInstant());
+
+                    // update schedule document with next sync time
                     Main.getDBDriver().getScheduleCollection()
-                            .updateOne(eq("_id", scheduleId), set("sync_address", "off"));
+                            .updateOne(eq("_id", scheduleId), set("sync_time", syncTime));
+
+                    // attempt to sync schedule
+                    if(Main.getCalendarConverter().checkValidAddress(document.getString("sync_address")))
+                    {
+                        Main.getCalendarConverter().syncCalendar(
+                                (String) document.get("sync_address"),
+                                Main.getBotJda().getTextChannelById(document.getString("_id")));
+
+                        TextChannel channel = Main.getBotJda().getTextChannelById(document.getString("_id"));
+                        Logging.info(this.getClass(), "Synchronized schedule #" + channel.getName() + " [" +
+                                document.getString("_id") + "] on '" + channel.getGuild().getName() + "' [" +
+                                channel.getGuild().getId() + "]");
+                    }
+                    else    // if sync address is not valid, set it to off
+                    {
+                        Main.getDBDriver().getScheduleCollection()
+                                .updateOne(eq("_id", scheduleId), set("sync_address", "off"));
+                    }
+                }
+                catch(Exception e)
+                {
+                    Logging.exception(this.getClass(), e);
                 }
             });
         });
