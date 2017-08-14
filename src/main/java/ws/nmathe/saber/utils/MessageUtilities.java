@@ -28,9 +28,9 @@ public class MessageUtilities
 
         try
         {
-            chan.sendMessage(content).queue( action, null );
+            chan.sendMessage(content).queue(action, e -> Logging.exception(MessageUtilities.class, e) );
         }
-        catch( PermissionException ignored)
+        catch(PermissionException ignored)
         { return; }
         catch( Exception e)
         {
@@ -45,13 +45,13 @@ public class MessageUtilities
 
         try
         {
-            chan.sendMessage(message).queue( action, null );
+            chan.sendMessage(message).queue(action, e -> Logging.exception(MessageUtilities.class, e));
         }
-        catch( PermissionException ignored)
+        catch(PermissionException ignored)
         { return; }
-        catch( Exception e)
+        catch(Exception e)
         {
-            Logging.warn( MessageUtilities.class, e.getMessage() );
+            Logging.warn(MessageUtilities.class, e.getMessage());
         }
     }
 
@@ -64,9 +64,9 @@ public class MessageUtilities
         {
             return chan.sendMessage(message).complete();
         }
-        catch( PermissionException ignored)
+        catch(PermissionException ignored)
         { return null; }
-        catch( Exception e)
+        catch(Exception e)
         {
             Logging.exception( MessageUtilities.class, e );
             return null;
@@ -86,7 +86,7 @@ public class MessageUtilities
 
         try
         {
-            sendMsg( content, user.openPrivateChannel().complete(), action );
+            sendMsg(content, user.openPrivateChannel().complete(), action);
         }
         catch( PermissionException ignored)
         { return; }
@@ -109,9 +109,9 @@ public class MessageUtilities
 
         try
         {
-            msg.editMessage(content).queue( action, null );
+            msg.editMessage(content).queue( action, e -> Logging.exception(MessageUtilities.class, e));
         }
-        catch( PermissionException ignored)
+        catch(PermissionException ignored)
         { return; }
         catch( Exception e)
         {
@@ -125,13 +125,13 @@ public class MessageUtilities
 
         try
         {
-            msg.editMessage(newMsg).queue( action, null );
+            msg.editMessage(newMsg).queue(action, e -> Logging.exception(MessageUtilities.class, e));
         }
-        catch( PermissionException ignored)
+        catch(PermissionException ignored)
         { return; }
-        catch( Exception e)
+        catch(Exception e)
         {
-            Logging.exception( MessageUtilities.class, e );
+            Logging.exception(MessageUtilities.class, e);
         }
     }
 
@@ -159,17 +159,17 @@ public class MessageUtilities
      * @param msg the message to delete
      * @param action a non null Consumer will do operations on the results returned
      */
-    public static void deleteMsg( Message msg, Consumer<Void> action )
+    public static void deleteMsg(Message msg, Consumer<Void> action)
     {
         try
         {
-            msg.delete().queue( action, null );
+            msg.delete().queue(action, e -> Logging.exception(MessageUtilities.class, e));
         }
         catch( PermissionException ignored)
         { return; }
         catch( Exception e)
         {
-            Logging.exception( MessageUtilities.class, e );
+            Logging.exception(MessageUtilities.class, e);
         }
     }
 }

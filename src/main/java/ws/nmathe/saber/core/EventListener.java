@@ -353,7 +353,7 @@ public class EventListener extends ListenerAdapter
                     }
 
                     Main.getEntryManager().reloadEntry(entryId);
-                    event.getReaction().removeReaction(event.getUser()).queue();
+                    event.getReaction().removeReaction(event.getUser()).queue(null, null);
                 }
             }
         }

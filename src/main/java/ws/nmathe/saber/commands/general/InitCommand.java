@@ -1,6 +1,7 @@
 package ws.nmathe.saber.commands.general;
 
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -77,7 +78,7 @@ public class InitCommand implements Command
             MessageChannel publicChannel = event.getGuild().getPublicChannel();
             if(publicChannel != null && publicChannel.getId().equals(chanId))
             {
-                return "Your public guild's public channel cannot be converted to a schedule!";
+                return "Your guild's public channel cannot be converted to a schedule!";
             }
         }
 
@@ -90,13 +91,19 @@ public class InitCommand implements Command
         String body;
         if(args.length > 0)
         {
-            String chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
+            boolean isAChannel = false;
+            TextChannel chan = null;
+            String chanId = null;
+            try
+            {
+                chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
+                chan = event.getGuild().getTextChannelById(chanId);
+                if(chan != null) isAChannel = true;
+            }
+            catch(Exception ignored)
+            {}
 
-            List<TextChannel> chans = event.getGuild().getTextChannels().stream()
-                    .filter(chan -> chan.getId().equals(chanId))
-                    .collect(Collectors.toList());
-
-            if(chans.isEmpty()) // use the argument as the new channel's name
+            if(!isAChannel) // use the argument as the new channel's name
             {
                 String chanTitle = args[0].replaceAll("[^A-Za-z0-9_ -]","").replace(" ","_");
                 Main.getScheduleManager().createSchedule(event.getGuild().getId(), chanTitle);
@@ -107,15 +114,14 @@ public class InitCommand implements Command
             }
             else // convert the channel to a schedule
             {
-                TextChannel chan = chans.get(0);
-
                 if(Main.getScheduleManager().isASchedule(chan.getId()))
                 {   // clear the channel of events
+                    TextChannel finalChan = chan;
                     Main.getDBDriver().getEventCollection().find(eq("channelId", chan.getId()))
                             .forEach((Consumer<? super Document>) document ->
                             {
                                 String msgId = document.getString("messageId");
-                                chan.deleteMessageById(msgId).complete();
+                                finalChan.deleteMessageById(msgId).complete();
                                 Main.getEntryManager().removeEntry(document.getInteger("_id"));
                             });
 

@@ -77,6 +77,12 @@ public class ParsingUtilities
                         }
                         break;
 
+                    case 'f' :
+                        for(String comment : entry.getComments())
+                        {
+                            announceMsg += comment + "\n";
+                        }
+
                     case 'a' :
                         if( !entry.hasStarted() )
                         {

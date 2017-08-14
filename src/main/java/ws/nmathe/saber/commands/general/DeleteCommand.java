@@ -89,7 +89,7 @@ public class DeleteCommand implements Command
             // delete all schedule
             Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId())
                     .forEach(cId -> Main.getScheduleManager().deleteSchedule(cId));
-            event.getChannel().sendMessage("All events and schedules for this guild has been cleared.");
+            MessageUtilities.sendMsg("All events and schedules for this guild has been cleared.", event.getChannel(), null);
         }
         else if(VerifyUtilities.verifyHex(args[0]))
         {
@@ -102,12 +102,13 @@ public class DeleteCommand implements Command
 
             Main.getEntryManager().removeEntry(entryId);
             MessageUtilities.deleteMsg(msg, null);
-            event.getChannel().sendMessage("The event with :id: " + event + " removed.");
+            MessageUtilities.sendMsg("The event with :id: " + event + " removed.", event.getChannel(), null);
         }
         else
         {
             // delete schedule
             Main.getScheduleManager().deleteSchedule(args[0].replace("<#","").replace(">",""));
+            MessageUtilities.sendMsg("That schedule has been removed", event.getChannel(), null);
         }
     }
 }
