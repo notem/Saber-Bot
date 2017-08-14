@@ -51,7 +51,7 @@ public class Main
             jda = new JDABuilder(AccountType.BOT)
                     .setToken(botSettingsManager.getToken())
                     .setStatus(OnlineStatus.ONLINE)
-                    .setCorePoolSize(20)
+                    .setCorePoolSize(2)
                     .buildBlocking();
             jda.addEventListener(new EventListener());
             jda.setAutoReconnect(true);
