@@ -40,7 +40,7 @@ class EntryProcessor implements Runnable
     {
         if( level == 0 )    // minute check
         {
-            Logging.info(this.getClass(), "Processing entries at level 0. . .");
+            Logging.info(this.getClass(), "Started processing entries at level 0. . .");
 
             // process entries which are ending
             Bson query = and(eq("hasStarted",true), lte("end", new Date()));
@@ -114,6 +114,8 @@ class EntryProcessor implements Runnable
                             }
                         });
                     });
+
+            Logging.info(this.getClass(), "Finished processing entries at level 0. . .");
         }
         else
         {
@@ -133,6 +135,7 @@ class EntryProcessor implements Runnable
                                 eq("hasStarted", true),
                                 lte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant())))
                 );
+
             }
             else if(level == 2)
             {
@@ -197,6 +200,7 @@ class EntryProcessor implements Runnable
                         });
                     });
 
+            Logging.info(this.getClass(), "Finished processing entries. . .");
         }
     }
 }
