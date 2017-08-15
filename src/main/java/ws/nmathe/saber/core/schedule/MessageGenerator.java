@@ -18,13 +18,16 @@ import java.util.List;
 /**
  *  This class is responsible for both parsing a discord message containing information that creates a ScheduleEvent,
  *  as well as is responsible for generating the message that is to be used as the parsable discord schedule entry
+ *  TODO: code quality for this class needs to be cleaned up
  */
 public class MessageGenerator
 {
+    // TODO: reduce the number of parameters here. Possibly change to a builder type design.
     static Message generate(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
                             int repeat, String url, List<Date> reminders, Integer eId, String cId, String guildId,
                             List<String> rsvpYes, List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax,
-                            ZonedDateTime expire, boolean quietStart, boolean quietEnd, boolean quietRemind)
+                            ZonedDateTime expire, boolean quietStart, boolean quietEnd, boolean quietRemind,
+                            String imageUrl, String thumbnailUrl)
     {
         String titleUrl = url != null ? url : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
@@ -92,16 +95,30 @@ public class MessageGenerator
 
         String bodyContent;
         if(Main.getScheduleManager().getStyle(cId).toLowerCase().equals("narrow"))
+        {
             bodyContent = generateBodyNarrow(start, end, cId, repeat, rsvpYes, rsvpNo, rsvpUndecided, rsvpMax);
+        }
         else
+        {
             bodyContent = generateBodyFull(start, end, cId, repeat, comments, rsvpYes, rsvpNo, rsvpUndecided, rsvpMax, expire);
+        }
 
 
+        // build the embed
         EmbedBuilder builder = new EmbedBuilder();
         builder.setDescription(bodyContent)
                 .setColor(color)
                 .setAuthor(title, titleUrl, titleImage)
                 .setFooter(footerStr, null);
+
+        if(imageUrl != null)
+        {
+            builder.setImage(imageUrl);
+        }
+        if(thumbnailUrl != null)
+        {
+            builder.setThumbnail(thumbnailUrl);
+        }
 
         return new MessageBuilder().setEmbed(builder.build()).build();
     }

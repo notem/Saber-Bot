@@ -22,50 +22,72 @@ import java.util.List;
  */
 public class ScheduleEntry
 {
+    // identifiers
     private Integer entryId;                      // 16 bit identifier
-    private String entryTitle;                    // the title/name of the event
-    private ZonedDateTime entryStart;             // the time when the event starts
-    private ZonedDateTime entryEnd;               // the ending time
-    private ArrayList<String> entryComments;      // ArrayList of strings that make up the desc
-    private Integer entryRepeat;
-    private String titleUrl;
-    private List<Date> reminders;
-    private List<String> rsvpYes;
-    private Integer rsvpYesMax;
-    private List<String> rsvpNo;
-    private List<String> rsvpUndecided;
-
     private String msgId;
     private String chanId;
     private String guildId;
     private String googleId;
 
+    // entry parameters
+    private String entryTitle;                    // the title/name of the event
+    private ZonedDateTime entryStart;             // the time when the event starts
+    private ZonedDateTime entryEnd;               // the ending time
+    private ArrayList<String> entryComments;      // ArrayList of strings that make up the desc
+    private Integer entryRepeat;
+    private List<Date> reminders;
+
+    // rsvp
+    private List<String> rsvpYes;
+    private Integer rsvpYesMax;
+    private List<String> rsvpNo;
+    private List<String> rsvpUndecided;
+
+    // urls
+    private String titleUrl;
+    private String imageUrl;
+    private String thumbnailUrl;
+
+    // toggles
     private boolean quietStart;
     private boolean quietEnd;
     private boolean quietRemind;
-    private boolean hasStarted;
 
+    // misc
+    private boolean hasStarted;
     private ZonedDateTime expire;
 
     public ScheduleEntry(Document entryDocument)
     {
+        ZoneId zone = Main.getScheduleManager().getTimeZone(this.chanId);
+
+        // identifiers
+        this.entryId = entryDocument.getInteger("_id");
         this.msgId = (String) entryDocument.get("messageId");
         this.chanId = (String) entryDocument.get("channelId");
         this.guildId = (String) entryDocument.get("guildId");
+        this.googleId = (String) entryDocument.get("googleId");
 
-        ZoneId zone = Main.getScheduleManager().getTimeZone(this.chanId);
-
-        this.entryId = (Integer) entryDocument.get("_id");
-        this.entryTitle = (String) entryDocument.get("title");
-        this.entryStart = ZonedDateTime.ofInstant(((Date) entryDocument.get("start")).toInstant(), zone);
-        this.entryEnd = ZonedDateTime.ofInstant(((Date) entryDocument.get("end")).toInstant(), zone);
+        // entry parameters
+        this.entryTitle = entryDocument.getString("title");
+        this.entryStart = ZonedDateTime.ofInstant((entryDocument.getDate("start")).toInstant(), zone);
+        this.entryEnd = ZonedDateTime.ofInstant((entryDocument.getDate("end")).toInstant(), zone);
         this.entryComments = (ArrayList<String>) entryDocument.get("comments");
-        this.entryRepeat = (Integer) entryDocument.get("repeat");
-        this.titleUrl = (String) entryDocument.get("url");
+        this.entryRepeat = entryDocument.getInteger("repeat");
         this.reminders = (List<Date>) entryDocument.get("reminders");
+
+        // rsvp
         this.rsvpYes = (List<String>) entryDocument.get("rsvp_yes");
+        this.rsvpYesMax = entryDocument.get("rsvp_max") != null ? entryDocument.getInteger("rsvp_max") : -1;
         this.rsvpNo = (List<String>) entryDocument.get("rsvp_no");
         this.rsvpUndecided = (List<String>) entryDocument.get("rsvp_undecided");
+
+        // urls
+        this.titleUrl = entryDocument.getString("url");
+        this.imageUrl = entryDocument.getString("image");
+        this.thumbnailUrl = entryDocument.getString("thumbnail");
+
+        // toggles
         this.quietStart = (boolean) (entryDocument.get("start_disabled")!=null ?
                 entryDocument.get("start_disabled") : false);
         this.quietEnd = (boolean) (entryDocument.get("end_disabled")!=null ?
@@ -73,10 +95,8 @@ public class ScheduleEntry
         this.quietRemind = (boolean) (entryDocument.get("reminders_disabled")!=null ?
                 entryDocument.get("reminders_disabled") : false);
 
-        this.googleId = (String) entryDocument.get("googleId");
+        // misc
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
-
-        this.rsvpYesMax = entryDocument.get("rsvp_max") != null ? entryDocument.getInteger("rsvp_max") : -1;
         this.expire = entryDocument.get("expire") == null ? null :
                 ZonedDateTime.ofInstant(entryDocument.getDate("expire").toInstant(), zone);
     }
@@ -229,7 +249,7 @@ public class ScheduleEntry
                     this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId,
                     (this.rsvpYes==null ? null:new ArrayList<>()), (this.rsvpNo==null ? null:new ArrayList<>()),
                     (this.rsvpUndecided==null ? null:new ArrayList<>()), this.quietStart, this.quietEnd,
-                    this.quietRemind, this.rsvpYesMax, this.expire);
+                    this.quietRemind, this.rsvpYesMax, this.expire, this.imageUrl, this.thumbnailUrl);
         }
         else // otherwise remove entry and delete the message
         {
@@ -252,7 +272,7 @@ public class ScheduleEntry
                 MessageGenerator.generate(this.entryTitle, this.entryStart, this.entryEnd, this.entryComments,
                         this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId, this.guildId,
                         this.rsvpYes, this.rsvpNo, this.rsvpUndecided, this.rsvpYesMax, this.expire, this.quietStart,
-                        this.quietEnd, this.quietRemind),
+                        this.quietEnd, this.quietRemind, this.imageUrl, this.thumbnailUrl),
                         msg, null);
     }
 
@@ -299,6 +319,9 @@ public class ScheduleEntry
         }
         return daysTil; // if this is zero, eRepeat was zero
     }
+
+
+    /// Getters
 
     public boolean hasStarted()
     {
@@ -398,6 +421,16 @@ public class ScheduleEntry
     public boolean isQuietRemind()
     {
         return this.quietRemind;
+    }
+
+    public String getImageUrl()
+    {
+        return this.imageUrl;
+    }
+
+    public String getThumbnailUrl()
+    {
+        return this.thumbnailUrl;
     }
 
     void setMessageObject(Message msg)

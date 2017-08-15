@@ -97,7 +97,8 @@ public class EntryManager
         Integer newId = this.newId();   // generate a new, unused ID
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, newId, channel.getId(), channel.getGuild().getId(),
-                rsvpList, rsvpList, rsvpList, -1, expireDate, false, false, false);
+                rsvpList, rsvpList, rsvpList, -1, expireDate, false,
+                false, false, null, null);
 
         // send message to schedule
         MessageUtilities.sendMsg(message, channel, msg -> {
@@ -168,7 +169,8 @@ public class EntryManager
                             List<String> comments, int repeat, String url, boolean hasStarted,
                             Message origMessage, String googleId, List<String> rsvpYes, List<String> rsvpNo,
                             List<String> rsvpUndecided, boolean quietStart, boolean quietEnd,
-                            boolean quietRemind, Integer rsvpMax, ZonedDateTime expireDate)
+                            boolean quietRemind, Integer rsvpMax, ZonedDateTime expireDate,
+                            String imageUrl, String thumbnailUrl)
     {
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
@@ -190,7 +192,8 @@ public class EntryManager
         // generate event display message
         Message message = MessageGenerator.generate(title, start, end, comments, repeat,
                 url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId(),
-                rsvpYes, rsvpNo, rsvpUndecided, rsvpMax, expireDate, quietStart, quietEnd, quietRemind);
+                rsvpYes, rsvpNo, rsvpUndecided, rsvpMax, expireDate, quietStart, quietEnd, quietRemind,
+                imageUrl, thumbnailUrl);
 
         // update message display
         MessageUtilities.editMsg(message, origMessage, msg -> {
@@ -219,6 +222,8 @@ public class EntryManager
                             .append("reminders_disabled", quietRemind)
                             .append("rsvp_max", rsvpMax)
                             .append("expire", expire)
+                            .append("image", imageUrl)
+                            .append("thumbnail", thumbnailUrl)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);

@@ -250,7 +250,8 @@ public class CalendarConverter
                         Main.getEntryManager().updateEntry(se.getId(), title, start, end, comments, repeat,
                                 event.getHtmlLink(), se.hasStarted(), se.getMessageObject(), googleId,
                                 se.getRsvpYes(), se.getRsvpNo(), se.getRsvpUndecided(), se.isQuietStart(),
-                                se.isQuietEnd(), se.isQuietRemind(), se.getRsvpMax(), se.getExpire());
+                                se.isQuietEnd(), se.isQuietRemind(), se.getRsvpMax(), se.getExpire(),
+                                null, null);
                     }
                     else
                     {

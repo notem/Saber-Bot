@@ -278,6 +278,25 @@ public class EditCommand implements Command
                         return "";
                 }
 
+            case "im":
+            case "image":
+            case "th":
+            case "thumbnail":
+                if(args.length != 3)
+                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [url]``";
+                switch(args[index])
+                {
+                    case "off":
+                    case "null":
+                        break;
+
+                    default:
+                        if (!VerifyUtilities.verifyUrl(args[index]))
+                            return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
+                }
+                break;
+
             default:
                 return "**" + args[index-1] + "** is not an option I know of! Please use the ``help`` command to see available options!";
         }
@@ -295,21 +314,24 @@ public class EditCommand implements Command
         ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
 
         Message msg = entry.getMessageObject();
-        if( msg==null )
-            return;
+        if( msg==null ) return;
 
-        String title = entry.getTitle();                    //
-        ArrayList<String> comments = entry.getComments();   // initialize using old
-        ZonedDateTime start = entry.getStart();             // schedule values
-        ZonedDateTime end = entry.getEnd();                 //
-        int repeat = entry.getRepeat();                     //
-        String url = entry.getTitleUrl();                   //
+        // initialize variables as the current (old) entry settings
+        String title = entry.getTitle();
+        ArrayList<String> comments = entry.getComments();
+        ZonedDateTime start = entry.getStart();
+        ZonedDateTime end = entry.getEnd();
+        int repeat = entry.getRepeat();
         Integer rsvpMax = entry.getRsvpMax();
         ZonedDateTime expire = entry.getExpire();
 
         boolean quietStart = entry.isQuietStart();
         boolean quietEnd = entry.isQuietEnd();
         boolean quietRemind = entry.isQuietRemind();
+
+        String url = entry.getTitleUrl();
+        String imageUrl = entry.getImageUrl();
+        String thumbnailUrl = entry.getThumbnailUrl();
 
         //
         // edit the event if command contains more arguments than the event ID,
@@ -347,8 +369,6 @@ public class EditCommand implements Command
                             comments.set(Integer.parseInt(args[index+1])-1, a);
                             break;
                     }
-
-                    //Main.getEntryManager().updateEntryComments(entryId, comments);
                     break;
 
                 case "s":
@@ -364,8 +384,6 @@ public class EditCommand implements Command
                     {
                         end = end.plusDays(1);
                     }
-
-                    //Main.getEntryManager().updateEntryStartTime(entryId, start);
                     break;
 
                 case "e":
@@ -381,14 +399,11 @@ public class EditCommand implements Command
                     {
                         end = end.plusDays(1);
                     }
-
-                    //Main.getEntryManager().updateEntryEndTime(entryId, end);
                     break;
 
                 case "t":
                 case "title":
                     title = args[index];
-                    //Main.getEntryManager().updateEntryTitle(entryId, title);
                     break;
 
                 case "d":
@@ -399,8 +414,6 @@ public class EditCommand implements Command
                             .withDayOfMonth(date.getDayOfMonth());
                     end = end.withMonth(date.getMonthValue())
                             .withDayOfMonth(date.getDayOfMonth());
-
-                    //Main.getEntryManager().updateEntryDate(entryId, start, end);
                     break;
 
                 case "sd":
@@ -413,8 +426,6 @@ public class EditCommand implements Command
 
                     if(end.isBefore(start))
                         end = start.plusDays(1);
-
-                    //Main.getEntryManager().updateEntryDate(entryId, start, end);
                     break;
 
                 case "ed":
@@ -424,46 +435,37 @@ public class EditCommand implements Command
 
                     end = end.withMonth(edate.getMonthValue())
                             .withDayOfMonth(edate.getDayOfMonth());
-
-                    //Main.getEntryManager().updateEntryDate(entryId, start, end);
                     break;
 
                 case "r":
                 case "repeats":
                 case "repeat":
                     repeat = ParsingUtilities.parseWeeklyRepeat(args[index].toLowerCase());
-                    //Main.getEntryManager().updateEntryRepeat(entryId, repeat);
                     break;
 
                 case "i":
                 case "interval":
                     repeat = 0b10000000 | Integer.parseInt(args[index]);
-                    //Main.getEntryManager().updateEntryRepeat(entryId, repeat);
                     break;
 
                 case "u":
                 case "url":
                     url = args[index];
-                    //Main.getEntryManager().updateEntryUrl(entryId, url);
                     break;
 
                 case "qs":
                 case "quiet-start":
                     quietStart = !quietStart;
-                    //Main.getEntryManager().updateEntryQuietStart(entryId, quietStart);
                     break;
 
                 case "qe":
                 case "quiet-end":
                     quietEnd = !quietEnd;
-                    //Main.getEntryManager().updateEntryQuietEnd(entryId, quietEnd);
                     break;
-
 
                 case "qr":
                 case "quiet-remind":
                     quietRemind = !quietRemind;
-                    //Main.getEntryManager().updateEntryQuietRemind(entryId, quietRemind);
                     break;
 
 
@@ -477,13 +479,13 @@ public class EditCommand implements Command
                     {
                         rsvpMax = Integer.valueOf(args[index]);
                     }
-                    //Main.getEntryManager().updateEntryRsvpMax(entryId, rsvpMax);
                     break;
 
                 case "ex":
                 case "expire":
                     switch(args[index])
                     {
+                        case "off":
                         case "none":
                         case "never":
                         case "null":
@@ -494,11 +496,39 @@ public class EditCommand implements Command
                             expire = ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.MIN, start.getZone());
                             break;
                     }
+
+                case "im":
+                case "image":
+                    switch(args[index])
+                    {
+                        case "null":
+                        case "off":
+                            imageUrl = null;
+                            break;
+                        default:
+                            imageUrl = args[index];
+                            break;
+                    }
+                    break;
+
+                case "th":
+                case "thumbnail":
+                    switch(args[index])
+                    {
+                        case "null":
+                        case "off":
+                            thumbnailUrl = null;
+                            break;
+                        default:
+                            thumbnailUrl = args[index];
+                            break;
+                    }
+                    break;
             }
 
             Main.getEntryManager().updateEntry(entryId, title, start, end, comments, repeat, url, entry.hasStarted(),
                     msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo(), entry.getRsvpUndecided(),
-                    quietStart, quietEnd, quietRemind, rsvpMax, expire);
+                    quietStart, quietEnd, quietRemind, rsvpMax, expire, imageUrl, thumbnailUrl);
         }
 
         //
@@ -514,7 +544,7 @@ public class EditCommand implements Command
                 "Title:  \"" + title + "\"\n" +
                 "Start:  " + start.format(dtf) + "\n" +
                 "End:    " + end.format(dtf) + "\n" +
-                "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n" ;
+                "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n";
 
         if(url!=null)
             body += "Url: \"" + url + "\"\n";
@@ -547,7 +577,13 @@ public class EditCommand implements Command
             body += "Max: " + rsvpMax + "\n";
 
         if(expire != null)
-            body += "Expire: \"" + expire.toLocalDate() + "\"";
+            body += "Expire: \"" + expire.toLocalDate() + "\"\n";
+
+        if(imageUrl != null)
+            body += "Image: \"" + thumbnailUrl + "\"\n";
+
+        if(thumbnailUrl != null)
+            body += "Thumbnail: \"" + thumbnailUrl + "\"\n";
 
         if(!comments.isEmpty())
             body += "// Comments\n";
