@@ -59,14 +59,14 @@ public class ScheduleEntry
 
     public ScheduleEntry(Document entryDocument)
     {
-        ZoneId zone = Main.getScheduleManager().getTimeZone(this.chanId);
-
         // identifiers
         this.entryId = entryDocument.getInteger("_id");
         this.msgId = (String) entryDocument.get("messageId");
         this.chanId = (String) entryDocument.get("channelId");
         this.guildId = (String) entryDocument.get("guildId");
         this.googleId = (String) entryDocument.get("googleId");
+
+        ZoneId zone = Main.getScheduleManager().getTimeZone(this.chanId);
 
         // entry parameters
         this.entryTitle = entryDocument.getString("title");
