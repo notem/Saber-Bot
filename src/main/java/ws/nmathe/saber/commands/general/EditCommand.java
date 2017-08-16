@@ -50,11 +50,16 @@ public class EditCommand implements Command
                 "Announcements for individual events can be toggled on-off using any of these three options: " +
                 "``quiet-start``, ``quiet-end``, ``quiet-remind``\n" +
                 "No additional arguments need to be provided when using one of the ``quiet-`` options." +
-                "\n\n" +
+                "\n\nsplithere" +
                 "If the schedule that the event is placed on is rsvp enabled (which may be turned on using the ``config`` command)" +
                 " a limit to the number of users who may rsvp 'yes' can be set using the ``max`` option.\n" +
                 "The ``max`` option requires one additional argument, which is the maximum number of players allowed to rsvp for the event.\n" +
-                "Use \"off\" as the argument to remove a previously set limit.";
+                "Use \"off\" as the argument to remove a previously set limit." +
+                "\n\n" +
+                "The thumbnail and image of the event's discord embed can be set through the 'thumbnail' and 'image' options.\n" +
+                "Provide a full url direct link to the image as the argument.\n" +
+                "The thumbnail of the event should appear as a small image to the right of the event's description.\n" +
+                "The image of the event should appear as a full-size image below the main content.";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + head + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
@@ -580,7 +585,7 @@ public class EditCommand implements Command
             body += "Expire: \"" + expire.toLocalDate() + "\"\n";
 
         if(imageUrl != null)
-            body += "Image: \"" + thumbnailUrl + "\"\n";
+            body += "Image: \"" + imageUrl + "\"\n";
 
         if(thumbnailUrl != null)
             body += "Thumbnail: \"" + thumbnailUrl + "\"\n";
