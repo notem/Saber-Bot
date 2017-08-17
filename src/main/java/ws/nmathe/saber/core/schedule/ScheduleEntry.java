@@ -57,6 +57,31 @@ public class ScheduleEntry
     private boolean hasStarted;
     private ZonedDateTime expire;
 
+
+    /**
+     * Constructor for a partially initialized ScheduleEntry
+     * @param channel (TextChannel) the schedule channel
+     * @param title (String) event title
+     * @param start (ZonedDateTime) time to start event
+     * @param end (ZonedDateTime) time to end event
+     */
+    public ScheduleEntry(TextChannel channel, String title, ZonedDateTime start, ZonedDateTime end)
+    {
+        // identifiers
+        this.entryId = null;
+        this.msgId = null;
+        this.chanId = channel.getId();
+        this.guildId = channel.getGuild().getId();
+
+        this.entryTitle = title;
+        this.entryStart = start;
+        this.entryEnd = end;
+    }
+
+    /**
+     * Constructor for a fully initialized ScheduleEntry
+     * @param entryDocument (Document) taken from the events collection in the database backing the bot
+     */
     public ScheduleEntry(Document entryDocument)
     {
         // identifiers
@@ -113,8 +138,8 @@ public class ScheduleEntry
         if(diff > 0)
         {
             User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
-            MessageUtilities.sendPrivateMsg("Event *" + this.entryTitle + "*'s " + type + " notification was sent **"
-                            + diff/60 + "** minutes late!", admin, null);
+            MessageUtilities.sendPrivateMsg("Event **" + this.entryTitle + "**'s [" + this.entryId + "] " +
+                    type + " notification was sent **" + diff/60 + "** minutes late!", admin, null);
         }
     }
 
@@ -168,7 +193,7 @@ public class ScheduleEntry
                     MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant(), "start"));
                 }
 
-                Logging.info(this.getClass(), "Started event " + this.getTitle() + " scheduled for " +
+                Logging.info(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                         this.getStart().withZoneSameInstant(ZoneId.systemDefault())
                                 .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
             }
@@ -177,6 +202,8 @@ public class ScheduleEntry
                 Logging.warn(this.getClass(), "Late event start: "+this.entryTitle+" ["+this.entryId+"] "+this.entryStart);
             }
         }
+
+        this.hasStarted = true;
 
         // if the entry's start time is the same as it's end
         // skip to end
@@ -213,7 +240,7 @@ public class ScheduleEntry
                     MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant(), "end"));
                 }
 
-                Logging.info(this.getClass(), "Ended event " + this.getTitle() + " scheduled for " +
+                Logging.info(this.getClass(), "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                         this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
                                 .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
             }
@@ -245,11 +272,11 @@ public class ScheduleEntry
             ZonedDateTime newEnd = this.entryEnd.plusDays(days).isAfter(this.entryEnd) ?
                     this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
 
-            Main.getEntryManager().updateEntry(this.entryId, this.entryTitle, newStart, newEnd, this.entryComments,
-                    this.entryRepeat, this.titleUrl, false, this.getMessageObject(), this.googleId,
-                    (this.rsvpYes==null ? null:new ArrayList<>()), (this.rsvpNo==null ? null:new ArrayList<>()),
-                    (this.rsvpUndecided==null ? null:new ArrayList<>()), this.quietStart, this.quietEnd,
-                    this.quietRemind, this.rsvpYesMax, this.expire, this.imageUrl, this.thumbnailUrl);
+            // set the new start and end
+            this.entryStart = newStart;
+            this.entryEnd = newEnd;
+
+            Main.getEntryManager().updateEntry(this);
         }
         else // otherwise remove entry and delete the message
         {
@@ -268,12 +295,7 @@ public class ScheduleEntry
         if( msg == null )
             return;
 
-        MessageUtilities.editMsg(
-                MessageGenerator.generate(this.entryTitle, this.entryStart, this.entryEnd, this.entryComments,
-                        this.entryRepeat, this.titleUrl, this.reminders, this.entryId, this.chanId, this.guildId,
-                        this.rsvpYes, this.rsvpNo, this.rsvpUndecided, this.rsvpYesMax, this.expire, this.quietStart,
-                        this.quietEnd, this.quietRemind, this.imageUrl, this.thumbnailUrl),
-                        msg, null);
+        MessageUtilities.editMsg(MessageGenerator.generate(this), msg, null);
     }
 
     /**
@@ -433,17 +455,19 @@ public class ScheduleEntry
         return this.thumbnailUrl;
     }
 
-    void setMessageObject(Message msg)
+    public String getGuildId()
     {
-        this.chanId = msg.getChannel().getId();
-        this.guildId = msg.getGuild().getId();
-        this.msgId = msg.getId();
+        return this.guildId;
+    }
+
+    public String getChannelId()
+    {
+        return this.chanId;
     }
 
     /**
      * Attempts to retrieve the discord Message, if the message does not exist
-     * (or the bot can for any other reason cannot retrieve it) the event entry is
-     * removed and null returned
+     * (or the bot can for any other reason cannot retrieve it) the method returns null
      * @return (Message) if exists, otherwise null
      */
     public Message getMessageObject()
@@ -464,4 +488,134 @@ public class ScheduleEntry
         }
         return msg;
     }
+
+    /// Setters
+
+    public ScheduleEntry setTitle(String title)
+    {
+        this.entryTitle = title;
+        return this;
+    }
+
+    public ScheduleEntry setStart(ZonedDateTime start)
+    {
+        this.entryStart = start;
+        return this;
+    }
+
+    public ScheduleEntry setEnd(ZonedDateTime end)
+    {
+        this.entryEnd = end;
+        return this;
+    }
+
+    public ScheduleEntry setComments(ArrayList<String> comments)
+    {
+        this.entryComments = comments;
+        return this;
+    }
+
+    public ScheduleEntry setRepeat(Integer repeat)
+    {
+        this.entryRepeat = repeat;
+        return this;
+    }
+
+    public ScheduleEntry setTitleUrl(String url)
+    {
+        this.titleUrl = url;
+        return this;
+    }
+
+    public ScheduleEntry setReminders(List<Date> reminders)
+    {
+        this.reminders = reminders;
+        return this;
+    }
+
+    public ScheduleEntry setGoogleId(String id)
+    {
+        this.googleId = id;
+        return this;
+    }
+
+    public void setRsvpMax(Integer max)
+    {
+        this.rsvpYesMax = max;
+    }
+
+    public ScheduleEntry setRsvpYes(List<String> rsvp)
+    {
+        this.rsvpYes = rsvp;
+        return this;
+    }
+
+    public ScheduleEntry setRsvpNo(List<String> rsvp)
+    {
+        this.rsvpNo = rsvp;
+        return this;
+    }
+
+    public ScheduleEntry setRsvpUndecided(List<String> rsvp)
+    {
+        this.rsvpUndecided = rsvp;
+        return this;
+    }
+
+    public ScheduleEntry setExpire(ZonedDateTime expire)
+    {
+        this.expire = expire;
+        return this;
+    }
+
+    public ScheduleEntry setImageUrl(String url)
+    {
+        this.imageUrl = url;
+        return this;
+    }
+
+    public ScheduleEntry setThumbnailUrl(String url)
+    {
+        this.thumbnailUrl = url;
+        return this;
+    }
+
+    public ScheduleEntry setQuietStart(boolean bool)
+    {
+        this.quietStart = bool;
+        return this;
+    }
+
+    public ScheduleEntry setQuietEnd(boolean bool)
+    {
+        this.quietEnd = bool;
+        return this;
+    }
+
+    public ScheduleEntry setQuietRemind(boolean bool)
+    {
+        this.quietRemind = bool;
+        return this;
+    }
+
+    public ScheduleEntry setStarted(boolean bool)
+    {
+        this.hasStarted = bool;
+        return this;
+    }
+
+    public ScheduleEntry setId(Integer id)
+    {
+        this.entryId = id;
+        return this;
+    }
+
+    public ScheduleEntry setMessageObject(Message msg)
+    {
+        this.chanId = msg.getChannel().getId();
+        this.guildId = msg.getGuild().getId();
+        this.msgId = msg.getId();
+        return this;
+    }
+
 }

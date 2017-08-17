@@ -37,10 +37,12 @@ public class StatsCommand implements Command
         msg += "     Entries: " + Main.getDBDriver().getEventCollection().count() + "\n";
         msg += "   Schedules: " + Main.getDBDriver().getScheduleCollection().count() + "\n";
         msg += "      Guilds: " + Main.getBotJda().getGuilds().size() + "\n";
+        msg += "       Users: " + Main.getBotJda().getUsers().size() + "\n";
         Runtime rt = Runtime.getRuntime();
         msg += "Memory-total: " +rt.totalMemory()/1024/1024 + " MB\n" +
                "      -free : " + rt.freeMemory()/1024/1024 + " MB\n" +
                "      -max  : " + rt.maxMemory()/1024/1024 + " MB\n";
+        msg += "     Threads: " + Thread.activeCount() + "\n";
         RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
         msg += "      Uptime: " + rb.getUptime()/1000/60 + " minute(s)";
         msg += "```";

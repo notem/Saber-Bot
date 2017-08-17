@@ -316,27 +316,11 @@ public class EditCommand implements Command
         int index = 0;
 
         Integer entryId = Integer.decode( "0x" + args[index] );
-        ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
+        ScheduleEntry se = Main.getEntryManager().getEntry( entryId );
 
-        Message msg = entry.getMessageObject();
+        Message msg = se.getMessageObject();
         if( msg==null ) return;
 
-        // initialize variables as the current (old) entry settings
-        String title = entry.getTitle();
-        ArrayList<String> comments = entry.getComments();
-        ZonedDateTime start = entry.getStart();
-        ZonedDateTime end = entry.getEnd();
-        int repeat = entry.getRepeat();
-        Integer rsvpMax = entry.getRsvpMax();
-        ZonedDateTime expire = entry.getExpire();
-
-        boolean quietStart = entry.isQuietStart();
-        boolean quietEnd = entry.isQuietEnd();
-        boolean quietRemind = entry.isQuietRemind();
-
-        String url = entry.getTitleUrl();
-        String imageUrl = entry.getImageUrl();
-        String thumbnailUrl = entry.getThumbnailUrl();
 
         //
         // edit the event if command contains more arguments than the event ID,
@@ -349,11 +333,13 @@ public class EditCommand implements Command
             {
                 case "c":
                 case "comment":
+                    ArrayList<String> comments = se.getComments();
                     switch( args[index++] )   // 3
                     {
                         case "a":
                         case "add" :
                             comments.add( args[index] );
+                            se.setComments(comments);
                             break;
                         case "r":
                         case "remove" :
@@ -365,6 +351,7 @@ public class EditCommand implements Command
                             {
                                 comments.remove(args[index]);
                             }
+                            se.setComments(comments);
                             break;
                         case "s":
                         case "swap":
@@ -372,6 +359,7 @@ public class EditCommand implements Command
                             String b = comments.get(Integer.parseInt(args[index+1])-1);
                             comments.set(Integer.parseInt(args[index])-1, b);
                             comments.set(Integer.parseInt(args[index+1])-1, a);
+                            se.setComments(comments);
                             break;
                     }
                     break;
@@ -379,46 +367,50 @@ public class EditCommand implements Command
                 case "s":
                 case "starts":
                 case "start":
-                    start = ParsingUtilities.parseTime( start, args[index] );
+                    ZonedDateTime newStart = ParsingUtilities.parseTime(se.getStart(), args[index]);
+                    se.setStart(newStart);
 
-                    if(ZonedDateTime.now().isAfter(start)) //add a day if the time has already passed
+                    if(ZonedDateTime.now().isAfter(se.getStart())) //add a day if the time has already passed
                     {
-                        start = start.plusDays(1);
+                        se.setStart(se.getStart().plusDays(1));
                     }
-                    if(start.isAfter(end))        //add a day to end if end is after start
+                    if(se.getStart().isAfter(se.getEnd()))        //add a day to end if end is after start
                     {
-                        end = end.plusDays(1);
+                        se.setEnd(se.getEnd().plusDays(1));
                     }
                     break;
 
                 case "e":
                 case "ends":
                 case "end":
-                    end = ParsingUtilities.parseTime( end, args[index] );
+                    ZonedDateTime newEnd = ParsingUtilities.parseTime(se.getEnd(), args[index]);
+                    se.setEnd(newEnd);
 
-                    if(ZonedDateTime.now().isAfter(end)) //add a day if the time has already passed
-                    {
-                        end = end.plusDays(1);
+                    if(ZonedDateTime.now().isAfter(se.getEnd()))
+                    { // add a day if the time has already passed
+                        se.setEnd(se.getEnd().plusDays(1));
                     }
-                    if(start.isAfter(end))        //add a day to end if end is after start
-                    {
-                        end = end.plusDays(1);
+                    if(se.getStart().isAfter(se.getEnd()))
+                    { // add a day to end if end is after start
+                        se.setEnd(se.getEnd().plusDays(1));
                     }
                     break;
 
                 case "t":
                 case "title":
-                    title = args[index];
+                    se.setTitle(args[index]);
                     break;
 
                 case "d":
                 case "date":
                     LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                    start = start.withMonth(date.getMonthValue())
-                            .withDayOfMonth(date.getDayOfMonth());
-                    end = end.withMonth(date.getMonthValue())
-                            .withDayOfMonth(date.getDayOfMonth());
+                    se.setStart(se.getStart()
+                            .withMonth(date.getMonthValue())
+                            .withDayOfMonth(date.getDayOfMonth()));
+                    se.setEnd(se.getEnd()
+                            .withMonth(date.getMonthValue())
+                            .withDayOfMonth(date.getDayOfMonth()));
                     break;
 
                 case "sd":
@@ -426,11 +418,14 @@ public class EditCommand implements Command
                 case "start-date":
                     LocalDate sdate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                    start = start.withMonth(sdate.getMonthValue())
-                            .withDayOfMonth(sdate.getDayOfMonth());
+                    se.setStart(se.getStart()
+                            .withMonth(sdate.getMonthValue())
+                            .withDayOfMonth(sdate.getDayOfMonth()));
 
-                    if(end.isBefore(start))
-                        end = start.plusDays(1);
+                    if(se.getEnd().isBefore(se.getStart()))
+                    {
+                        se.setEnd(se.getStart());
+                    }
                     break;
 
                 case "ed":
@@ -438,51 +433,56 @@ public class EditCommand implements Command
                 case "end-date":
                     LocalDate edate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                    end = end.withMonth(edate.getMonthValue())
-                            .withDayOfMonth(edate.getDayOfMonth());
+                    se.setEnd(se.getEnd()
+                            .withMonth(edate.getMonthValue())
+                            .withDayOfMonth(edate.getDayOfMonth()));
+
+                    if(se.getEnd().isBefore(se.getStart()))
+                    {
+                        se.setStart(se.getEnd());
+                    }
                     break;
 
                 case "r":
                 case "repeats":
                 case "repeat":
-                    repeat = ParsingUtilities.parseWeeklyRepeat(args[index].toLowerCase());
+                    se.setRepeat(ParsingUtilities.parseWeeklyRepeat(args[index].toLowerCase()));
                     break;
 
                 case "i":
                 case "interval":
-                    repeat = 0b10000000 | Integer.parseInt(args[index]);
+                    se.setRepeat(0b10000000 | Integer.parseInt(args[index]));
                     break;
 
                 case "u":
                 case "url":
-                    url = args[index];
+                    se.setTitleUrl(args[index]);
                     break;
 
                 case "qs":
                 case "quiet-start":
-                    quietStart = !quietStart;
+                    se.setQuietStart(!se.isQuietStart());
                     break;
 
                 case "qe":
                 case "quiet-end":
-                    quietEnd = !quietEnd;
+                    se.setQuietEnd(!se.isQuietEnd());
                     break;
 
                 case "qr":
                 case "quiet-remind":
-                    quietRemind = !quietRemind;
+                    se.setQuietRemind(!se.isQuietRemind());
                     break;
-
 
                 case "max":
                 case "m":
                     if(args[index].toLowerCase().equals("off"))
                     {
-                        rsvpMax = -1;
+                        se.setRsvpMax(-1);
                     }
                     else
                     {
-                        rsvpMax = Integer.valueOf(args[index]);
+                        se.setRsvpMax(Integer.valueOf(args[index]));
                     }
                     break;
 
@@ -494,11 +494,12 @@ public class EditCommand implements Command
                         case "none":
                         case "never":
                         case "null":
-                            expire = null;
+                            se.setExpire(null);
                             break;
                             
                         default:
-                            expire = ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.MIN, start.getZone());
+                            se.setExpire(ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]),
+                                    LocalTime.MIN, se.getStart().getZone()));
                             break;
                     }
 
@@ -508,10 +509,10 @@ public class EditCommand implements Command
                     {
                         case "null":
                         case "off":
-                            imageUrl = null;
+                            se.setImageUrl(null);
                             break;
                         default:
-                            imageUrl = args[index];
+                            se.setImageUrl(args[index]);
                             break;
                     }
                     break;
@@ -522,80 +523,84 @@ public class EditCommand implements Command
                     {
                         case "null":
                         case "off":
-                            thumbnailUrl = null;
+                            se.setThumbnailUrl(null);
                             break;
                         default:
-                            thumbnailUrl = args[index];
+                            se.setThumbnailUrl(args[index]);
                             break;
                     }
                     break;
             }
 
-            Main.getEntryManager().updateEntry(entryId, title, start, end, comments, repeat, url, entry.hasStarted(),
-                    msg, entry.getGoogleId(), entry.getRsvpYes(), entry.getRsvpNo(), entry.getRsvpUndecided(),
-                    quietStart, quietEnd, quietRemind, rsvpMax, expire, imageUrl, thumbnailUrl);
+            Main.getEntryManager().updateEntry(se);
         }
 
         //
         // send the event summary to the command channel
         //
         DateTimeFormatter dtf;
-        if(Main.getScheduleManager().getClockFormat(entry.getScheduleID()).equals("24"))
+        if(Main.getScheduleManager().getClockFormat(se.getScheduleID()).equals("24"))
+        {
             dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
+        }
         else
+        {
             dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mma [z]");
+        }
 
-        String body = "Updated event :id: **"+ Integer.toHexString(entryId) +"** on <#" + entry.getScheduleID() + ">\n```js\n" +
-                "Title:  \"" + title + "\"\n" +
-                "Start:  " + start.format(dtf) + "\n" +
-                "End:    " + end.format(dtf) + "\n" +
-                "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n";
+        String body = "Updated event :id: **"+ Integer.toHexString(entryId) +"** on <#" + se.getScheduleID() + ">\n```js\n" +
+                "Title:  \"" + se.getTitle() + "\"\n" +
+                "Start:  " + se.getStart().format(dtf) + "\n" +
+                "End:    " + se.getEnd().format(dtf) + "\n" +
+                "Repeat: " + MessageGenerator.getRepeatString(se.getRepeat(), true) + " (" + se.getRepeat() + ")" + "\n";
 
-        if(url!=null)
-            body += "Url: \"" + url + "\"\n";
+        if(se.getTitleUrl()!=null)
+        {
+            body += "Url: \"" + se.getTitleUrl() + "\"\n";
+        }
 
-        if(quietStart | quietEnd | quietRemind)
+        if(se.isQuietRemind() | se.isQuietEnd() | se.isQuietStart())
         {
             body += "Quiet: ";
-            if(quietStart)
+            if(se.isQuietStart())
             {
                 body += "start";
-                if(quietEnd & quietRemind)
+                if(se.isQuietEnd() & se.isQuietRemind())
                     body += ", ";
-                else if(quietEnd | quietRemind)
+                else if(se.isQuietEnd() | se.isQuietRemind())
                     body += " and ";
             }
-            if(quietEnd)
+            if(se.isQuietEnd())
             {
                 body += "end";
-                if(quietRemind)
+                if(se.isQuietRemind())
                     body += " and ";
             }
-            if(quietRemind)
+            if(se.isQuietRemind())
             {
                 body += "reminders";
             }
             body += " disabled\n";
         }
 
-        if(rsvpMax>=0)
-            body += "Max: " + rsvpMax + "\n";
+        if(se.getRsvpMax()>=0)
+            body += "Max: " + se.getRsvpMax() + "\n";
 
-        if(expire != null)
-            body += "Expire: \"" + expire.toLocalDate() + "\"\n";
+        if(se.getExpire() != null)
+            body += "Expire: \"" + se.getExpire().toLocalDate() + "\"\n";
 
-        if(imageUrl != null)
-            body += "Image: \"" + imageUrl + "\"\n";
+        if(se.getImageUrl() != null)
+            body += "Image: \"" + se.getImageUrl() + "\"\n";
 
-        if(thumbnailUrl != null)
-            body += "Thumbnail: \"" + thumbnailUrl + "\"\n";
+        if(se.getThumbnailUrl() != null)
+            body += "Thumbnail: \"" + se.getThumbnailUrl() + "\"\n";
 
-        if(!comments.isEmpty())
+        if(!se.getComments().isEmpty())
             body += "// Comments\n";
 
-        for(int i=1; i<comments.size()+1; i++)
+        for(int i=1; i<se.getComments().size()+1; i++)
         {
-            body += "[" + i + "] \"" + comments.get(i-1) + "\"\n";
+            body += "[" + i + "] \"" + se.getComments().get(i-1) + "\"\n";
         }
         body += "```";
 

@@ -31,7 +31,9 @@ public class SyncCommand implements Command
                 "The command imports the next 7 days of events into the channel;" +
                 " the channel will then automatically re-sync once every day.\n\n" +
                 "If ``<calendar address>`` is not included, " +
-                "the address saved in the channel settings will be used.";
+                "the address saved in the channel settings will be used.\n\n" +
+                "For more information concerning Google Calendar setup, reference the " +
+                "online docs at https://nmathe.ws/bots/saber";
 
         String USAGE_BRIEF = "``" + head + "`` - sync a schedule to a google calendar";
 

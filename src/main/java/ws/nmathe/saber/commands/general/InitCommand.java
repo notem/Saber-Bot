@@ -80,6 +80,12 @@ public class InitCommand implements Command
             {
                 return "Your guild's public channel cannot be converted to a schedule!";
             }
+
+            String commandChannelId = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId()).getCommandChannelId();
+            if(chanId.equals(commandChannelId) || chanId.equals(event.getChannel().getId()))
+            {
+                return "Your guild's command channel cannot be converted to a schedule!";
+            }
         }
 
         return "";

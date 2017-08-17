@@ -44,12 +44,19 @@ public class EventListener extends ListenerAdapter
     {
         // store some properties of the message for use later
         String content = event.getMessage().getRawContent();   // the raw string the user sent
-        String userId = event.getAuthor().getId();          // the ID of the user
+        String userId = event.getAuthor().getId();             // the ID of the user
 
         // leave the guild if the message author is black listed
         if(Main.getBotSettingsManager().getBlackList().contains(userId))
         {
             event.getGuild().leave().queue();
+            return;
+        }
+
+        // process admin commands
+        if (content.startsWith(adminPrefix) && userId.equals(adminId))
+        {
+            Main.getCommandHandler().handleCommand(event, 1, Main.getBotSettingsManager().getAdminPrefix());
             return;
         }
 
@@ -60,12 +67,6 @@ public class EventListener extends ListenerAdapter
             if (content.startsWith(prefix + "help") || content.startsWith("help"))
             {
                 Main.getCommandHandler().handleCommand(event, 0, Main.getBotSettingsManager().getCommandPrefix());
-                return;
-            }
-            // admin commands
-            else if (content.startsWith(adminPrefix) && userId.equals(adminId))
-            {
-                Main.getCommandHandler().handleCommand(event, 1, Main.getBotSettingsManager().getAdminPrefix());
                 return;
             }
             return;

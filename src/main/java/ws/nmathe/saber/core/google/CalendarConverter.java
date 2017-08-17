@@ -71,7 +71,7 @@ public class CalendarConverter
                     .execute();
             return true;
         }
-        catch( IOException e )
+        catch( Exception e )
         {
             return false;
         }
@@ -170,13 +170,25 @@ public class CalendarConverter
                 else
                     title = event.getSummary();
 
-                // process event description into event comments
+                // process event description into event comments or other settings
+                String imageUrl = null;
+                String thumbnailUrl = null;
                 if( event.getDescription() != null )
                 {
                     for( String comment : event.getDescription().split("\n") )
                     {
-                        if( !comment.trim().isEmpty() )
+                        if(comment.trim().toLowerCase().startsWith("image:"))
+                        {
+                            imageUrl = comment.trim().toLowerCase().split("image:")[1].trim();
+                        }
+                        else if(comment.trim().toLowerCase().startsWith("thumbnail:"))
+                        {
+                            thumbnailUrl = comment.trim().toLowerCase().split("thumbnail:")[1].trim();
+                        }
+                        else if( !comment.trim().isEmpty() )
+                        {
                             comments.add( comment );
+                        }
                     }
                 }
 
@@ -246,18 +258,32 @@ public class CalendarConverter
                                     eq("googleId", googleId))).first();
                     if(doc != null)
                     {
-                        ScheduleEntry se = Main.getEntryManager().getEntry((Integer) doc.get("_id"));
-                        Main.getEntryManager().updateEntry(se.getId(), title, start, end, comments, repeat,
-                                event.getHtmlLink(), se.hasStarted(), se.getMessageObject(), googleId,
-                                se.getRsvpYes(), se.getRsvpNo(), se.getRsvpUndecided(), se.isQuietStart(),
-                                se.isQuietEnd(), se.isQuietRemind(), se.getRsvpMax(), se.getExpire(),
-                                null, null);
+                        ScheduleEntry se = (new ScheduleEntry(doc))
+                                .setTitle(title)
+                                .setStart(start)
+                                .setEnd(end)
+                                .setRepeat(repeat)
+                                .setTitleUrl(event.getHtmlLink())
+                                .setGoogleId(googleId)
+                                .setExpire(expire)
+                                .setImageUrl(imageUrl)
+                                .setThumbnailUrl(thumbnailUrl);
+
+                        Main.getEntryManager().updateEntry(se);
                     }
                     else
                     {
                         boolean hasStarted = !start.isAfter(ZonedDateTime.now());
-                        Main.getEntryManager().newEntry(title, start, end, comments, repeat,
-                                event.getHtmlLink(), channel, googleId, hasStarted, expire);
+                        ScheduleEntry se = (new ScheduleEntry(channel, title, start, end))
+                                .setRepeat(repeat)
+                                .setTitleUrl(event.getHtmlLink())
+                                .setGoogleId(googleId)
+                                .setExpire(expire)
+                                .setImageUrl(imageUrl)
+                                .setThumbnailUrl(thumbnailUrl)
+                                .setStarted(hasStarted);
+
+                        Main.getEntryManager().newEntry(se);
                     }
 
                     uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);

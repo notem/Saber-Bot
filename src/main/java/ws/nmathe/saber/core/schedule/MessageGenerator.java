@@ -18,30 +18,25 @@ import java.util.List;
 /**
  *  This class is responsible for both parsing a discord message containing information that creates a ScheduleEvent,
  *  as well as is responsible for generating the message that is to be used as the parsable discord schedule entry
- *  TODO: code quality for this class needs to be cleaned up
  */
 public class MessageGenerator
 {
-    // TODO: reduce the number of parameters here. Possibly change to a builder type design.
-    static Message generate(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
-                            int repeat, String url, List<Date> reminders, Integer eId, String cId, String guildId,
-                            List<String> rsvpYes, List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax,
-                            ZonedDateTime expire, boolean quietStart, boolean quietEnd, boolean quietRemind,
-                            String imageUrl, String thumbnailUrl)
+    static Message generate(ScheduleEntry se)
     {
-        String titleUrl = url != null ? url : "https://nmathe.ws/bots/saber";
+        String titleUrl = se.getTitleUrl() != null ? se.getTitleUrl() : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
-        String footerStr = "ID: " + Integer.toHexString(eId);
+        String footerStr = "ID: " + Integer.toHexString(se.getId());
 
-        if(quietEnd || quietRemind || quietStart)
+        if(se.isQuietEnd() || se.isQuietStart() || se.isQuietRemind())
         {
             footerStr += " |";
-            if(quietStart) footerStr += " quiet-start";
-            if(quietEnd) footerStr += " quiet-end";
-            if(quietRemind) footerStr += " quiet-remind";
+            if(se.isQuietStart()) footerStr += " quiet-start";
+            if(se.isQuietEnd()) footerStr += " quiet-end";
+            if(se.isQuietRemind()) footerStr += " quiet-remind";
         }
 
         // generate reminder footer
+        List<Date> reminders = se.getReminders();
         if (!reminders.isEmpty())
         {
             footerStr += " | remind in ";
@@ -71,7 +66,7 @@ public class MessageGenerator
 
         // get embed color from first hoisted bot role
         Color color = Color.DARK_GRAY;
-        List<Role> roles = new ArrayList<>(Main.getBotJda().getGuildById(guildId)
+        List<Role> roles = new ArrayList<>(Main.getBotJda().getGuildById(se.getGuildId())
                 .getMember(Main.getBotJda().getSelfUser()).getRoles());
         while(!roles.isEmpty())
         {
@@ -93,14 +88,15 @@ public class MessageGenerator
         }
         */
 
+        // generate the body of the embed
         String bodyContent;
-        if(Main.getScheduleManager().getStyle(cId).toLowerCase().equals("narrow"))
+        if(Main.getScheduleManager().getStyle(se.getChannelId()).toLowerCase().equals("narrow"))
         {
-            bodyContent = generateBodyNarrow(start, end, cId, repeat, rsvpYes, rsvpNo, rsvpUndecided, rsvpMax);
+            bodyContent = generateBodyNarrow(se);
         }
         else
         {
-            bodyContent = generateBodyFull(start, end, cId, repeat, comments, rsvpYes, rsvpNo, rsvpUndecided, rsvpMax, expire);
+            bodyContent = generateBodyFull(se);
         }
 
 
@@ -108,69 +104,37 @@ public class MessageGenerator
         EmbedBuilder builder = new EmbedBuilder();
         builder.setDescription(bodyContent)
                 .setColor(color)
-                .setAuthor(title, titleUrl, titleImage)
+                .setAuthor(se.getTitle(), titleUrl, titleImage)
                 .setFooter(footerStr, null);
 
-        if(imageUrl != null)
+        if(se.getImageUrl() != null)
         {
-            builder.setImage(imageUrl);
+            builder.setImage(se.getImageUrl());
         }
-        if(thumbnailUrl != null)
+        if(se.getThumbnailUrl() != null)
         {
-            builder.setThumbnail(thumbnailUrl);
+            builder.setThumbnail(se.getThumbnailUrl());
         }
 
         return new MessageBuilder().setEmbed(builder.build()).build();
     }
 
-    private static String generateBodyFull(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
-                                           int eRepeat, List<String> eComments, List<String> rsvpYes,
-                                           List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax,
-                                           ZonedDateTime expire)
+    private static String generateBodyFull(ScheduleEntry se)
     {
-        String timeFormatter;
-        if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
-            timeFormatter = "H:mm";
-        else
-            timeFormatter = "h:mm a";
-
-        // the 'actual' first line (and last line) define format
         String msg = "";
 
-        String dash = "\u2014";
-        String timeLine = "< " + eStart.format(DateTimeFormatter.ofPattern("MMM d"));
-        if( eStart.until(eEnd, ChronoUnit.SECONDS)==0 )
+        // create the upper code block containing the event start/end/repeat/expire info
+        String timeLine = genTimeLine(se);
+        String repeatLine = "> " + getRepeatString(se.getRepeat(), false) + "\n";
+        if(se.getExpire() != null)
         {
-            timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+            repeatLine += "> expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
+                    " " + se.getExpire().getDayOfMonth() + ", " + se.getExpire().getYear() + "\n";
         }
-        else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
-        {
-            if( eStart.toLocalTime().equals(LocalTime.MIN) && eStart.toLocalTime().equals(LocalTime.MIN) )
-                timeLine += " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + " >\n";
-            else
-                timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                        " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
-                        eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
-        }
-        else
-        {
-            timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
-        }
-
-        String repeatLine = "> " + getRepeatString(eRepeat, false) + "\n";
-        String zoneLine = "[" + eStart.getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "]" +
-                MessageGenerator.genTimer(eStart,eEnd) + "\n";
-        if(expire != null)
-        {
-            repeatLine += "> expires " + expire.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
-                    " " + expire.getDayOfMonth() + ", " + expire.getYear() + "\n";
-        }
-
         msg += "```Markdown\n\n" + timeLine + repeatLine + "```\n";
 
         // insert each comment line with a gap line
-        for( String comment : eComments )
+        for( String comment : se.getComments() )
         {
             // code blocks in comments must be close within the comment
             int code = StringUtils.countMatches("```", comment);
@@ -184,11 +148,16 @@ public class MessageGenerator
             }
         }
 
+        // generate the lower code block
+        String zoneLine = "[" + se.getStart().getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "]" +
+                MessageGenerator.genTimer(se.getStart(), se.getEnd()) + "\n";
+
         // if rsvp is enabled, show the number of rsvp
-        if(rsvpYes != null && rsvpNo != null)
+        if(se.getRsvpYes() != null && se.getRsvpNo() != null)
         {
-            String rsvpLine = "- RSVP: <Yes " + rsvpYes.size() + (rsvpMax>=0?"/"+rsvpMax:"") + "> <No " + rsvpNo.size()
-                    + "> <Undecided " + rsvpUndecided.size() + ">\n";
+            String rsvpLine = "- RSVP: <Yes " + se.getRsvpYes().size() + (se.getRsvpMax()>=0?"/"+se.getRsvpMax():"") + ">" +
+                    " <No " + se.getRsvpNo().size() + ">" +
+                    " <Undecided " + se.getRsvpUndecided().size() + ">\n";
             msg += "```Markdown\n\n" + zoneLine + rsvpLine + "```";
         }
         else
@@ -199,50 +168,65 @@ public class MessageGenerator
         return msg;
     }
 
-    private static String generateBodyNarrow(ZonedDateTime eStart, ZonedDateTime eEnd, String cId,
-                                             int eRepeat, List<String> rsvpYes,
-                                             List<String> rsvpNo, List<String> rsvpUndecided, Integer rsvpMax)
+    private static String generateBodyNarrow(ScheduleEntry se)
     {
-        // determine the formatting for clock
-        String timeFormatter;
-        if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
-            timeFormatter = "H:mm";
-        else
-            timeFormatter = "h:mm a";
-
         // create the first line of the body
-        String dash = "\u2014";
-        String timeLine = "< " + eStart.format(DateTimeFormatter.ofPattern("MMM d"));
-        if( eStart.until(eEnd, ChronoUnit.SECONDS)==0 )
-        {
-            timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
-        }
-        else if( eStart.until(eEnd, ChronoUnit.DAYS)>=1 )
-        {
-            if( eStart.toLocalTime().equals(LocalTime.MIN) && eStart.toLocalTime().equals(LocalTime.MIN) )
-                timeLine += " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + " >\n";
-            else
-                timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                        " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
-                        eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
-        }
-        else
-        {
-            timeLine += ", " + eStart.format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " " + dash + " " + eEnd.format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
-        }
+        String timeLine = genTimeLine(se);
 
         // create the second line of the body
-        String lineTwo = "[" + eStart.getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
-                "](" + getRepeatString(eRepeat, true) + ")";
+        String lineTwo = "[" + se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
+                "](" + getRepeatString(se.getRepeat(), true) + ")";
 
         // if rsvp is enabled, show the number of rsvps
-        if(rsvpYes != null && rsvpNo != null)
-            lineTwo += " <Y " + rsvpYes.size() + (rsvpMax>=0?"/"+rsvpMax:"") + "> <N " + rsvpNo.size() + "> <U " + rsvpUndecided.size() + ">\n";
+        if(se.getRsvpYes() != null)
+            lineTwo += " <Y " + se.getRsvpYes().size() + (se.getRsvpMax()>=0?"/"+se.getRsvpMax():"") + "> " +
+                    "<N " + se.getRsvpNo().size() + "> <U " + se.getRsvpUndecided().size() + ">\n";
         else
             lineTwo += "\n";
 
         return "```Markdown\n\n" + timeLine + lineTwo + "```\n";
+    }
+
+    private static String genTimeLine(ScheduleEntry se)
+    {
+        String timeFormatter;
+        if(Main.getScheduleManager().getClockFormat(se.getChannelId()).equals("24"))
+            timeFormatter = "H:mm";
+        else
+            timeFormatter = "h:mm a";
+
+
+        String dash = "\u2014";
+        String timeLine = "< " + se.getStart().format(DateTimeFormatter.ofPattern("MMM d"));
+
+        // event starts and ends at the same time
+        if( se.getStart().until(se.getEnd(), ChronoUnit.SECONDS)==0 )
+        {
+            timeLine += ", " + se.getStart().format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+        }
+        // time span is greater than 1 day
+        else if( se.getStart().until(se.getEnd(), ChronoUnit.DAYS)>=1 )
+        {
+            // all day events
+            if( se.getStart().toLocalTime().equals(LocalTime.MIN) && se.getStart().toLocalTime().equals(LocalTime.MIN) )
+            {
+                timeLine += " " + dash + " " + se.getEnd().format(DateTimeFormatter.ofPattern("MMM d")) + " >\n";
+            }
+            else // all other events
+            {
+                timeLine += ", " + se.getStart().format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                        " " + dash + " " + se.getEnd().format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
+                        se.getEnd().format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+            }
+        }
+        // time span is within 1 day
+        else
+        {
+            timeLine += ", " + se.getStart().format(DateTimeFormatter.ofPattern(timeFormatter)) +
+                    " " + dash + " " + se.getEnd().format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+        }
+
+        return timeLine;
     }
 
     public static String getRepeatString(int bitset, boolean isNarrow)

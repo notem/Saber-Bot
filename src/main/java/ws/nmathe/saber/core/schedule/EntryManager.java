@@ -57,51 +57,49 @@ public class EntryManager
 
     /**
      * Create a new entry on a schedule
-     * @param title     (String) title
-     * @param start     (ZonedDateTime) datetime event starts
-     * @param end       (ZonedDateTime) datetime event ends
-     * @param comments  (List of String)
-     * @param repeat    (int) binary representation of days event repeats
-     * @param url       (String) url for title
-     * @param channel   (MessageChannel) channel to send event's message
+     * @param se (ScheduleEntry) the base ScheduleEntry object to use
      */
-    public Integer newEntry(String title, ZonedDateTime start, ZonedDateTime end, List<String> comments,
-                            int repeat, String url, TextChannel channel, String googleId, boolean hasStarted,
-                            ZonedDateTime expireDate)
+    public Integer newEntry(ScheduleEntry se)
     {
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
-        for(Integer til : Main.getScheduleManager().getDefaultReminders(channel.getId()))
+        for(Integer til : Main.getScheduleManager().getDefaultReminders(se.getChannelId()))
         {
-            if(Instant.now().until(start, ChronoUnit.MINUTES) > til)
+            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > til)
             {
-                reminders.add(Date.from(start.toInstant().minusSeconds(til*60)));
+                reminders.add(Date.from(se.getStart().toInstant().minusSeconds(til*60)));
             }
         }
+        se.setReminders(reminders);
 
         // process expiration date
         Date expire;
-        if (expireDate == null)
+        if (se.getExpire() == null)
+        {
             expire = null;
+        }
         else
-            expire = Date.from(expireDate.toInstant());
+        {
+            expire = Date.from(se.getExpire().toInstant());
+        }
 
-        // is rsvp enabled on the channel? if so, create the entry with an empty list. otherwise set list to null
-        List<String> rsvpList;
-        if( Main.getScheduleManager().isRSVPEnabled(channel.getId()) )
-            rsvpList = new ArrayList<>();
-        else
-            rsvpList = null;
+        // is rsvp enabled on the channel set empty rsvp lists
+        if( Main.getScheduleManager().isRSVPEnabled(se.getChannelId()) )
+        {
+            se.setRsvpYes(new ArrayList<>())
+                    .setRsvpNo(new ArrayList<>())
+                    .setRsvpUndecided(new ArrayList<>());
+        }
 
         // generate event display message
-        Integer newId = this.newId();   // generate a new, unused ID
-        Message message = MessageGenerator.generate(title, start, end, comments, repeat,
-                url, reminders, newId, channel.getId(), channel.getGuild().getId(),
-                rsvpList, rsvpList, rsvpList, -1, expireDate, false,
-                false, false, null, null);
+        se.setId(this.newId());
+
+        Message message = MessageGenerator.generate(se);
 
         // send message to schedule
-        MessageUtilities.sendMsg(message, channel, msg -> {
+        TextChannel channel = Main.getBotJda().getTextChannelById(se.getChannelId());
+        MessageUtilities.sendMsg(message, channel, msg ->
+        {
             String guildId = msg.getGuild().getId();
             String channelId = msg.getChannel().getId();
 
@@ -115,21 +113,21 @@ public class EntryManager
 
             // add new document
             Document entryDocument =
-                    new Document("_id", newId)
-                            .append("title", title)
-                            .append("start", Date.from(start.toInstant()))
-                            .append("end", Date.from(end.toInstant()))
-                            .append("comments", comments)
-                            .append("repeat", repeat)
+                    new Document("_id", se.getId())
+                            .append("title", se.getTitle())
+                            .append("start", Date.from(se.getStart().toInstant()))
+                            .append("end", Date.from(se.getEnd().toInstant()))
+                            .append("comments", se.getComments())
+                            .append("repeat", se.getRepeat())
                             .append("reminders", reminders)
-                            .append("url", url)
-                            .append("hasStarted", hasStarted)
+                            .append("url", se.getTitleUrl())
+                            .append("hasStarted", se.hasStarted())
                             .append("messageId", msg.getId())
                             .append("channelId", channelId)
-                            .append("googleId", googleId)
-                            .append("rsvp_yes", rsvpList)
-                            .append("rsvp_no", rsvpList)
-                            .append("rsvp_undecided", rsvpList)
+                            .append("googleId", se.getGoogleId())
+                            .append("rsvp_yes", se.getRsvpYes())
+                            .append("rsvp_no", se.getRsvpNo())
+                            .append("rsvp_undecided", se.getRsvpUndecided())
                             .append("start_disabled", false)
                             .append("end_disabled", false)
                             .append("reminders_disabled", false)
@@ -151,27 +149,22 @@ public class EntryManager
             }
         });
 
-        return newId;
+        return se.getId();
     }
 
     /**
      * Update an entry with a new configuration
-     * @param entryId   (Integer) ID of the entry
-     * @param title     (String) title
-     * @param start     (ZonedDateTime) datetime event starts
-     * @param end       (ZonedDateTime) datetime event ends
-     * @param comments  (List of String)
-     * @param repeat    (int) binary representation of days event repeats
-     * @param url       (String) url for title
-     * @param origMessage (Message) event's message to be updated
+     * All schedule entry parameters should be filled.
+     * The ID of the ScheduleEntry must not have been changed.
+     * @param se (ScheduleEntry) the new schedule entry object
      */
-    public void updateEntry(Integer entryId, String title, ZonedDateTime start, ZonedDateTime end,
-                            List<String> comments, int repeat, String url, boolean hasStarted,
-                            Message origMessage, String googleId, List<String> rsvpYes, List<String> rsvpNo,
-                            List<String> rsvpUndecided, boolean quietStart, boolean quietEnd,
-                            boolean quietRemind, Integer rsvpMax, ZonedDateTime expireDate,
-                            String imageUrl, String thumbnailUrl)
+    public void updateEntry(ScheduleEntry se)
     {
+
+        Message origMessage = se.getMessageObject();
+        ZonedDateTime start = se.getStart();
+        ZonedDateTime expireDate = se.getExpire();
+
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(origMessage.getChannel().getId()))
@@ -185,15 +178,16 @@ public class EntryManager
         // process expiration date
         Date expire;
         if (expireDate == null)
+        {
             expire = null;
+        }
         else
+        {
             expire = Date.from(expireDate.toInstant());
+        }
 
         // generate event display message
-        Message message = MessageGenerator.generate(title, start, end, comments, repeat,
-                url, reminders, entryId, origMessage.getChannel().getId(), origMessage.getGuild().getId(),
-                rsvpYes, rsvpNo, rsvpUndecided, rsvpMax, expireDate, quietStart, quietEnd, quietRemind,
-                imageUrl, thumbnailUrl);
+        Message message = MessageGenerator.generate(se);
 
         // update message display
         MessageUtilities.editMsg(message, origMessage, msg -> {
@@ -202,31 +196,31 @@ public class EntryManager
 
             // replace whole document
             Document entryDocument =
-                    new Document("_id", entryId)
-                            .append("title", title)
+                    new Document("_id", se.getId())
+                            .append("title", se.getTitle())
                             .append("start", Date.from(start.toInstant()))
-                            .append("end", Date.from(end.toInstant()))
-                            .append("comments", comments)
-                            .append("repeat", repeat)
+                            .append("end", Date.from(se.getEnd().toInstant()))
+                            .append("comments", se.getComments())
+                            .append("repeat", se.getRepeat())
                             .append("reminders", reminders)
-                            .append("url", url)
-                            .append("hasStarted", hasStarted)
+                            .append("url", se.getTitleUrl())
+                            .append("hasStarted", se.hasStarted())
                             .append("messageId", msg.getId())
                             .append("channelId", channelId)
-                            .append("googleId", googleId)
-                            .append("rsvp_yes", rsvpYes)
-                            .append("rsvp_no", rsvpNo)
-                            .append("rsvp_undecided", rsvpUndecided)
-                            .append("start_disabled", quietStart)
-                            .append("end_disabled", quietEnd)
-                            .append("reminders_disabled", quietRemind)
-                            .append("rsvp_max", rsvpMax)
+                            .append("googleId", se.getGoogleId())
+                            .append("rsvp_yes", se.getRsvpYes())
+                            .append("rsvp_no", se.getRsvpNo())
+                            .append("rsvp_undecided", se.getRsvpUndecided())
+                            .append("start_disabled", se.isQuietStart())
+                            .append("end_disabled", se.isQuietEnd())
+                            .append("reminders_disabled", se.isQuietRemind())
+                            .append("rsvp_max", se.getRsvpMax())
                             .append("expire", expire)
-                            .append("image", imageUrl)
-                            .append("thumbnail", thumbnailUrl)
+                            .append("image", se.getImageUrl())
+                            .append("thumbnail", se.getThumbnailUrl())
                             .append("guildId", guildId);
 
-            Main.getDBDriver().getEventCollection().replaceOne(eq("_id", entryId), entryDocument);
+            Main.getDBDriver().getEventCollection().replaceOne(eq("_id", se.getId()), entryDocument);
 
             // auto-sort
             int sortType = Main.getScheduleManager().getAutoSort(channelId);

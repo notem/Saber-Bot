@@ -20,12 +20,14 @@ public class SortCommand implements Command
     {
         String head = prefix + this.name();
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel>```\n" +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel> [<order>]```\n" +
                 "The sort command will re-sort the entries in a schedule." +
-                "\nEntries are reordered so that the top event entry is the next event to begin." +
+                "\nEntries can be reordered in either ascending or descending order by adding 'asc' or 'desc' to the command.\n" +
+                "If the order is omitted from the command, the schedule will be sorted in ascending order." +
                 "\n\n" +
                 "The schedule cannot be modified while in the process of sorting.\n" +
-                "Schedules with more than 15 entries will not be sorted.";
+                "If for some reason your schedule is not unlocked after 10 minutes, visit the support server!\n" +
+                "Fore performance reasons, schedules with more than 15 entries will not be sorted.";
 
         String USAGE_BRIEF = "``" + head + "`` - reorder the schedule by start time";
 

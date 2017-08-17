@@ -3,6 +3,7 @@ package ws.nmathe.saber.commands.general;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.MessageGenerator;
+import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -439,9 +440,15 @@ public class CreateCommand implements Command
 
 
         // send the event summary to the command channel
-        Integer entryId = Main.getEntryManager().newEntry(title, start, end, comments, repeat, url,
-                event.getGuild().getTextChannelById(cId), null, false, expire);
+        ScheduleEntry se = (new ScheduleEntry(event.getGuild().getTextChannelById(cId), title, start, end))
+                .setComments(comments)
+                .setRepeat(repeat)
+                .setTitleUrl(url)
+                .setExpire(expire);
+        Integer entryId = Main.getEntryManager().newEntry(se);
 
+
+        // output results of event creation to command channel
         DateTimeFormatter dtf;
         if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
             dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");

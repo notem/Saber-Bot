@@ -42,7 +42,7 @@ public class GuildSettingsManager
         ArrayList<String> unrestrictedCommands;
         String commandChannelId;
 
-        public GuildSettings(Document guildDocument)
+        GuildSettings(Document guildDocument)
         {
             guildId = guildDocument.getString("_id");
             commandPrefix = guildDocument.getString("prefix");
