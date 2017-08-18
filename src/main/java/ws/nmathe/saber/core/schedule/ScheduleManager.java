@@ -234,7 +234,8 @@ public class ScheduleManager
                 sortOrder = -1;
 
             LinkedList<ScheduleEntry> unsortedEntries = new LinkedList<>();
-            Main.getDBDriver().getEventCollection().find(eq("channelId", cId)).sort(new Document("start", sortOrder))
+            Main.getDBDriver().getEventCollection().find(eq("channelId", cId))
+                    .sort(new Document("start", sortOrder))
                     .forEach((Consumer<? super Document>) document -> unsortedEntries.add(new ScheduleEntry(document)));
 
             // selection sort the entries by timestamp
@@ -246,17 +247,16 @@ public class ScheduleManager
                 ScheduleEntry min = top;
                 for (ScheduleEntry cur : unsortedEntries)
                 {
-                    if(min.getMessageObject()==null || cur.getMessageObject()==null)
+                    if(min.getMessageObject()!=null && cur.getMessageObject()!=null)
                     {
-                        continue;
+                        OffsetDateTime a = min.getMessageObject().getCreationTime();
+                        OffsetDateTime b = cur.getMessageObject().getCreationTime();
+                        if (a.isAfter(b))
+                        {
+                            min = cur;
+                        }
                     }
 
-                    OffsetDateTime a = min.getMessageObject().getCreationTime();
-                    OffsetDateTime b = cur.getMessageObject().getCreationTime();
-                    if (a.isAfter(b))
-                    {
-                        min = cur;
-                    }
                 }
                 // swap messages and update db
                 if(!(min==top))
