@@ -76,6 +76,8 @@ public class ScheduleEntry
         this.entryTitle = title;
         this.entryStart = start;
         this.entryEnd = end;
+
+        this.entryComments = new ArrayList<>();
     }
 
     /**

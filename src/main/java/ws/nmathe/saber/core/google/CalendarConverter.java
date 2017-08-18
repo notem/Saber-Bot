@@ -281,7 +281,8 @@ public class CalendarConverter
                                 .setExpire(expire)
                                 .setImageUrl(imageUrl)
                                 .setThumbnailUrl(thumbnailUrl)
-                                .setStarted(hasStarted);
+                                .setStarted(hasStarted)
+                                .setComments(comments);
 
                         Main.getEntryManager().newEntry(se);
                     }
