@@ -309,7 +309,6 @@ public class EditCommand implements Command
         return ""; // return valid
     }
 
-    // TODO consider reworking the updateEntry command to only update the required attribute
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {

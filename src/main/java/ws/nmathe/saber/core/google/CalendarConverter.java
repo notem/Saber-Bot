@@ -13,6 +13,7 @@ import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.Logging;
+import ws.nmathe.saber.utils.VerifyUtilities;
 
 import java.io.IOException;
 import java.time.*;
@@ -180,10 +181,12 @@ public class CalendarConverter
                         if(comment.trim().toLowerCase().startsWith("image:"))
                         {
                             imageUrl = comment.trim().split("image:")[1].trim();
+                            if(!VerifyUtilities.verifyUrl(imageUrl)) imageUrl = null;
                         }
                         else if(comment.trim().toLowerCase().startsWith("thumbnail:"))
                         {
                             thumbnailUrl = comment.trim().split("thumbnail:")[1].trim();
+                            if(!VerifyUtilities.verifyUrl(thumbnailUrl)) imageUrl = null;
                         }
                         else if( !comment.trim().isEmpty() )
                         {

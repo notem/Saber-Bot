@@ -73,11 +73,32 @@ public class ScheduleEntry
         this.chanId = channel.getId();
         this.guildId = channel.getGuild().getId();
 
+        // entry parameters
         this.entryTitle = title;
         this.entryStart = start;
         this.entryEnd = end;
-
+        this.entryRepeat = 0;
         this.entryComments = new ArrayList<>();
+
+        // rsvp
+        this.rsvpYes = null;
+        this.rsvpNo = null;
+        this.rsvpUndecided = null;
+        this.rsvpYesMax = -1;
+
+        // toggles
+        this.quietStart = false;
+        this.quietEnd = false;
+        this.quietRemind = false;
+
+        // urls
+        this.titleUrl = null;
+        this.imageUrl = null;
+        this.thumbnailUrl = null;
+
+        // misc
+        this.hasStarted = false;
+        this.expire = null;
     }
 
     /**
