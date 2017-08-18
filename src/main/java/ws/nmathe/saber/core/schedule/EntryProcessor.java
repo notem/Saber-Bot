@@ -36,6 +36,7 @@ class EntryProcessor implements Runnable
         this.level = level;
     }
 
+    @SuppressWarnings("unchecked")
     public void run()
     {
         if( level == 0 )    // minute check

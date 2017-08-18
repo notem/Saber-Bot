@@ -120,7 +120,7 @@ public class CalendarConverter
 
         try
         {
-            channel.sendTyping();   // send 'is typing' while the sync is in progress
+            channel.sendTyping().queue();   // send 'is typing' while the sync is in progress
 
             // change the zone to match the calendar
             ZoneId zone = ZoneId.of( events.getTimeZone() );
@@ -136,7 +136,7 @@ public class CalendarConverter
             // convert every entry and add it to the scheduleManager
             for(Event event : events.getItems())
             {
-                channel.sendTyping();   // continue to send 'is typing'
+                channel.sendTyping().queue();   // continue to send 'is typing'
 
                 ZonedDateTime start;
                 ZonedDateTime end;
@@ -179,11 +179,11 @@ public class CalendarConverter
                     {
                         if(comment.trim().toLowerCase().startsWith("image:"))
                         {
-                            imageUrl = comment.trim().toLowerCase().split("image:")[1].trim();
+                            imageUrl = comment.trim().split("image:")[1].trim();
                         }
                         else if(comment.trim().toLowerCase().startsWith("thumbnail:"))
                         {
-                            thumbnailUrl = comment.trim().toLowerCase().split("thumbnail:")[1].trim();
+                            thumbnailUrl = comment.trim().split("thumbnail:")[1].trim();
                         }
                         else if( !comment.trim().isEmpty() )
                         {

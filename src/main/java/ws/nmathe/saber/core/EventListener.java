@@ -210,6 +210,7 @@ public class EventListener extends ListenerAdapter
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onGuildMemberLeave(GuildMemberLeaveEvent event)
     {
         String memberId = event.getMember().getUser().getId();
@@ -249,6 +250,7 @@ public class EventListener extends ListenerAdapter
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onMessageReactionAdd(MessageReactionAddEvent event)
     {
         if(event.getUser().getId().equals(Main.getBotJda().getSelfUser().getId()))

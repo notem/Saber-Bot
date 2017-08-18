@@ -84,6 +84,7 @@ public class ScheduleEntry
      * Constructor for a fully initialized ScheduleEntry
      * @param entryDocument (Document) taken from the events collection in the database backing the bot
      */
+    @SuppressWarnings("unchecked")
     public ScheduleEntry(Document entryDocument)
     {
         // identifiers

@@ -101,7 +101,7 @@ public class ScheduleManager
         try
         {
             channel.createPermissionOverride(channel.getGuild().getMember(Main.getBotJda().getSelfUser()))
-                    .setAllow(channelPerms);
+                    .setAllow(channelPerms).queue();
         }
         catch(PermissionException ignored)
         {} // if Saber does not have the permissions, continue on. . .
@@ -430,6 +430,7 @@ public class ScheduleManager
         return (Date) settings.get("sync_time");
     }
 
+    @SuppressWarnings("unchecked")
     public List<Integer> getDefaultReminders(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();

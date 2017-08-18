@@ -35,6 +35,7 @@ public class GuildSettingsManager
 
     /**
      */
+    @SuppressWarnings("unchecked")
     public static class GuildSettings
     {
         String guildId;
