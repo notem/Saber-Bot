@@ -13,10 +13,17 @@
 
 ### Dependencies
 
-+ [JDA](https://github.com/DV8FromTheWorld/JDA) - 3.0.0_160
++ [JDA](https://github.com/DV8FromTheWorld/JDA) - 3.2.0_244
 + [Unirest](https://github.com/Mashape/unirest-java) - 1.4.9
 + [MongoDB](http://mongodb.github.io/mongo-java-driver/3.4/) - mongodb-driver 3.4.2
-+ [Google API Libraries]()
++ [Google Libraries]()
+   + google-oauth-client - 1.22.0
+   + google-api-client - 1.22.0
+   + google-api-services-calendar - v3-rev227-1.22.0
+   + google-oauth-client-jetty - 1.22.0
+   + guava - 21.0
++ [Toml]() - toml4j - 0.7.1
++ [Apache Commons]() - commons-lang3 - 3.5
 
 ### Suggestions/Complaints
 

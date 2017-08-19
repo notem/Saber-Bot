@@ -85,6 +85,13 @@ public class Pruner implements Runnable
 
                         String channelId = document.getString("channelId");
                         MessageChannel channel = Main.getBotJda().getTextChannelById(channelId);
+                        if(channel==null)
+                        {
+                            Main.getDBDriver().getEventCollection().deleteOne(eq("_id", eventId));
+                            Logging.info(this.getClass(), "Pruned event with ID: " + eventId);
+                            return;
+                        }
+
                         channel.getMessageById(messageId).queue(
                                 message ->
                                 {

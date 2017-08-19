@@ -11,7 +11,6 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -136,11 +135,18 @@ class EntryProcessor implements Runnable
                 query = or(
                         and(
                                 eq("hasStarted",false),
-                                lte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant()))
+                                and(
+                                        lte("start", Date.from(ZonedDateTime.now().plusHours(1).toInstant())),
+                                        gte("start", Date.from(ZonedDateTime.now().plusMinutes(4).toInstant()))
+                                )
                         ),
                         and(
                                 eq("hasStarted", true),
-                                lte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant())))
+                                and(
+                                        lte("end", Date.from(ZonedDateTime.now().plusHours(1).toInstant())),
+                                        gte("end", Date.from(ZonedDateTime.now().plusMinutes(4).toInstant()))
+                                )
+                        )
                 );
 
             }
