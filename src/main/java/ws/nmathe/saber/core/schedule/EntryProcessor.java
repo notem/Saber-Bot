@@ -74,15 +74,15 @@ class EntryProcessor implements Runnable
                         primaryExecutor.execute(() ->
                         {
                             try
-                            {   // if the entry isn't the special exception, update the db entry as started
+                            {    // convert to a POJO and start
+                                (new ScheduleEntry(document)).start();
+
+                                // if the entry isn't the special exception, update the db entry as started
                                 if(!document.getDate("start").equals(document.getDate("end")))
                                 {
                                     Main.getDBDriver().getEventCollection()
                                             .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
                                 }
-
-                                // convert to a POJO and start
-                                (new ScheduleEntry(document)).start();
                             }
                             catch(Exception e)
                             {
