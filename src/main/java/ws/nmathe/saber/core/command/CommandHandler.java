@@ -65,16 +65,20 @@ public class CommandHandler
         {
             if(rateLimiter.isOnCooldown(event.getAuthor().getId()))
             {
+                String alert;
                 if(event.getChannelType().equals(ChannelType.PRIVATE))
                 {
-                    // don't alert private message
-                    return;
+                    alert = "@" + event.getAuthor().getName() +
+                            " [" + event.getAuthor().getId() + "] was rate limited using the '" +
+                            cc.invoke + "' command via DM!";
                 }
-
-                String alert = "@" + event.getAuthor().getName() +
-                        " [" + event.getAuthor().getId() + "] was rate limited on '" +
-                        event.getGuild().getName() +"' [" + event.getGuild().getId() + "] using the '" +
-                        cc.invoke + "' command!";
+                else
+                {
+                    alert = "@" + event.getAuthor().getName() +
+                            " [" + event.getAuthor().getId() + "] was rate limited on '" +
+                            event.getGuild().getName() +"' [" + event.getGuild().getId() + "] using the '" +
+                            cc.invoke + "' command!";
+                }
 
                 // alert admin
                 Logging.warn(this.getClass(), alert);
@@ -106,7 +110,8 @@ public class CommandHandler
                 // do command action if valid arguments
                 if(err.isEmpty())
                 {
-                    executor.submit( () -> {
+                    executor.submit( () ->
+                    {
                         commands.get(cc.invoke).action(cc.prefix, cc.args, cc.event);
 
                         String info = "Executed command [" + cc.event.getMessage().getRawContent() +

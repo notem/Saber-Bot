@@ -187,6 +187,7 @@ public class MessageGenerator
         return "```Markdown\n\n" + timeLine + lineTwo + "```\n";
     }
 
+
     private static String genTimeLine(ScheduleEntry se)
     {
         String timeFormatter;
@@ -229,6 +230,13 @@ public class MessageGenerator
         return timeLine;
     }
 
+    /**
+     * Generated a string describing the repeat settings of an event
+     * @param bitset (int) representing a set of bits where each bit of the digit
+     *               represents has distinct meaning when it comes to an event's recurrence
+     * @param isNarrow (boolean) for use with narrow style events
+     * @return string
+     */
     public static String getRepeatString(int bitset, boolean isNarrow)
     {
         String str;
@@ -341,6 +349,12 @@ public class MessageGenerator
         return str;
     }
 
+    /**
+     * Generated a string describing the current time left before an event begins or ends
+     * @param start the start time of event
+     * @param end the end time of event
+     * @return String
+     */
     private static String genTimer(ZonedDateTime start, ZonedDateTime end)
     {
         String timer;

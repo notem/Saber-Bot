@@ -279,6 +279,18 @@ public class EventListener extends ListenerAdapter
                 List<String> rsvpUndecided = (List<String>) doc.get("rsvp_undecided");
 
                 MessageReaction.ReactionEmote emote = event.getReaction().getEmote();
+                Consumer<Throwable> errorProcessor = e ->
+                    {
+                        if(e instanceof PermissionException)
+                        {
+                            String m = e.getMessage() + ": " + ((PermissionException) e).getPermission();
+                            Logging.warn(MessageUtilities.class, m);
+                        }
+                        else
+                        {
+                            Logging.exception(MessageUtilities.class, e);
+                        }
+                    };
 
                 // if the user added the 'yes'/join emote
                 if(emote.getName().equals(Main.getBotSettingsManager().getYesEmoji()))
@@ -304,7 +316,7 @@ public class EventListener extends ListenerAdapter
                     }
 
                     Main.getEntryManager().reloadEntry(entryId);
-                    event.getReaction().removeReaction(event.getUser()).queue();
+                    event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
                 }
                 // if the user added the 'no'/leave emote
                 else if(emote.getName().equals(Main.getBotSettingsManager().getNoEmoji()))
@@ -330,7 +342,7 @@ public class EventListener extends ListenerAdapter
                     }
 
                     Main.getEntryManager().reloadEntry(entryId);
-                    event.getReaction().removeReaction(event.getUser()).queue();
+                    event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
                 }
                 // if the user added the undecided emote
                 else if(emote.getName().equals(Main.getBotSettingsManager().getClearEmoji()))
@@ -356,12 +368,15 @@ public class EventListener extends ListenerAdapter
                     }
 
                     Main.getEntryManager().reloadEntry(entryId);
-                    event.getReaction().removeReaction(event.getUser()).queue(null, null);
+                    event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
                 }
             }
         }
-        catch(PermissionException ignored)
-        { return; }
+        catch( PermissionException e)
+        {
+            String m = e.getMessage() + ": " + e.getPermission();
+            Logging.warn(MessageUtilities.class, m);
+        }
         catch(Exception e)
         {
             Logging.exception(this.getClass(), e);

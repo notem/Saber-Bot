@@ -36,8 +36,14 @@ public class HttpUtilities
                         .header("Content-Type", "application/json")
                         .body(json).asJson();
             }
-            catch (UnirestException ignored)
-            { }
+            catch (UnirestException e)
+            {
+                Logging.warn(HttpUtilities.class, e.getMessage());
+            }
+            catch (Exception e)
+            {
+                Logging.exception(HttpUtilities.class, e);
+            }
         }
     }
 }

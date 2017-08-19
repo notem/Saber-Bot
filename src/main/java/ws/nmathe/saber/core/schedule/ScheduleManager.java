@@ -57,8 +57,12 @@ public class ScheduleManager
                     .addPermissionOverride(guild.getMember(Main.getBotJda().getSelfUser()),
                             channelPerms, new ArrayList<>()).complete().getId();
         }
-        catch(PermissionException ignored)
-        { return; }
+        catch( PermissionException e)
+        {
+            String m = e.getMessage() + ": " + e.getPermission();
+            Logging.warn(this.getClass(), m);
+            return;
+        }
         catch(Exception e)
         {
             Logging.exception(this.getClass(), e);
@@ -103,8 +107,15 @@ public class ScheduleManager
             channel.createPermissionOverride(channel.getGuild().getMember(Main.getBotJda().getSelfUser()))
                     .setAllow(channelPerms).queue();
         }
-        catch(PermissionException ignored)
-        {} // if Saber does not have the permissions, continue on. . .
+        catch( PermissionException e)
+        {
+            String m = e.getMessage() + ": " + e.getPermission();
+            Logging.warn(this.getClass(), m);
+        }
+        catch(Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+        }
 
         List<Integer> default_reminders = new ArrayList<>();
         default_reminders.add(10);
@@ -138,8 +149,15 @@ public class ScheduleManager
         {
             Main.getBotJda().getTextChannelById(cId).delete().complete();
         }
-        catch(Exception ignored)
-        { }
+        catch(PermissionException e)
+        {
+            String m = e.getMessage() + ": " + e.getPermission();
+            Logging.warn(this.getClass(), m);
+        }
+        catch(Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+        }
 
         Main.getDBDriver().getEventCollection().deleteMany(eq("channelId", cId));
         Main.getDBDriver().getScheduleCollection().deleteOne(eq("_id", cId));
@@ -276,6 +294,11 @@ public class ScheduleManager
                 // reload display
                 top.reloadDisplay();
             }
+        }
+        catch(PermissionException e)
+        {
+            String m = e.getMessage() + ": " + e.getPermission();
+            Logging.warn(this.getClass(), m);
         }
         catch(Exception e)
         {

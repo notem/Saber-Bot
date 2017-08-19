@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -29,6 +30,9 @@ class ScheduleSyncer implements Runnable
 
     public void run()
     {
+        // if the bot is not connected to the discord websocket, do not sync schedules
+        if(JDA.Status.valueOf("CONNECTED") != Main.getBotJda().getStatus()) return;
+
         Logging.info(this.getClass(), "Running schedule syncer. . .");
         Bson query = and(
                         ne("sync_address", "off"),

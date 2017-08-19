@@ -55,6 +55,10 @@ public class CalendarConverter
         {
             Logging.warn(this.getClass(), e.getMessage());
         }
+        catch( Exception e )
+        {
+            Logging.exception(this.getClass(), e);
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.database;
 
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import org.bson.Document;
@@ -17,6 +18,9 @@ public class Pruner implements Runnable
     @Override
     public void run()
     {
+        // if the bot is not connected to the discord websocket, do not prune
+        if(JDA.Status.valueOf("CONNECTED") != Main.getBotJda().getStatus()) return;
+
         Logging.info(this.getClass(), "Running database pruner. . .");
         // purge guild setting entries for any guild not connected to the bot
         Main.getDBDriver().getGuildCollection().find()

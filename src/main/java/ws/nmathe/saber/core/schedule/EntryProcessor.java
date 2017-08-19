@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.core.JDA;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
@@ -39,6 +40,9 @@ class EntryProcessor implements Runnable
     @SuppressWarnings("unchecked")
     public void run()
     {
+        // if the bot is not connected to the discord websocket, do not process events
+        if(JDA.Status.valueOf("CONNECTED") != Main.getBotJda().getStatus()) return;
+
         if( level == 0 )    // minute check
         {
             Logging.info(this.getClass(), "Started processing entries at level 0. . .");
@@ -48,7 +52,8 @@ class EntryProcessor implements Runnable
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        primaryExecutor.execute(() -> {
+                        primaryExecutor.execute(() ->
+                        {
                             // convert to scheduleEntry object and start
                             try
                             {
@@ -66,7 +71,8 @@ class EntryProcessor implements Runnable
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        primaryExecutor.execute(() -> {
+                        primaryExecutor.execute(() ->
+                        {
                             try
                             {   // if the entry isn't the special exception, update the db entry as started
                                 if(!document.getDate("start").equals(document.getDate("end")))
