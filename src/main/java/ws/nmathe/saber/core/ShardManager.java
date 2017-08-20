@@ -54,8 +54,7 @@ public class ShardManager
 
                     JDA jda = jdaBuilder.buildAsync();
 
-                    // only one shard needs to rotate the games list
-                    if(shardId == 0) this.setGamesList(jda);
+                    this.setGamesList(jda);
 
                     this.jdaShards.put(shardId, jda);
                 }
@@ -203,7 +202,15 @@ public class ShardManager
                 {
                     @Override
                     public String getName()
-                    { return games.next(); }
+                    {
+                        String name = games.next();
+                        if(isSharding())
+                        {
+                            name = name.replace("$shardId", jda.getShardInfo().getShardId()+"");
+                            name = name.replace("$shardTotal", jda.getShardInfo().getShardTotal()+"");
+                        }
+                        return name;
+                    }
 
                     @Override
                     public String getUrl()
