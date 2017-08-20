@@ -45,6 +45,8 @@ public class ShardsCommand implements Command
                         "    Guilds: \"" + shard.getGuilds().size() + "\"\n" +
                         "     Users: \"" + shard.getUsers().size() + "\"\n";
             }
+
+            msg += "```";
         }
         MessageUtilities.sendMsg(msg, event.getTextChannel(), null);
     }
