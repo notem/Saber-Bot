@@ -4,10 +4,14 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import java.util.function.Consumer;
+
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.where;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 
@@ -22,8 +26,15 @@ public class Pruner implements Runnable
         if(JDA.Status.valueOf("CONNECTED") != Main.getBotJda().getStatus()) return;
 
         Logging.info(this.getClass(), "Running database pruner. . .");
+
         // purge guild setting entries for any guild not connected to the bot
-        Main.getDBDriver().getGuildCollection().find()
+        Bson query = new Document();
+        if(Main.isSharding())
+        {
+            query = and(query, where(Main.getShardingEvalString("_id")));
+        }
+
+        Main.getDBDriver().getGuildCollection().find(query)
                 .projection(fields(include("_id")))
                 .forEach((Consumer<? super Document>) document ->
                 {
@@ -46,7 +57,13 @@ public class Pruner implements Runnable
                 });
 
         // purge schedule entries that the bot cannot connect to
-        Main.getDBDriver().getScheduleCollection().find()
+        query = new Document();
+        if(Main.isSharding())
+        {
+            query = and(query, where(Main.getShardingEvalString("guildId")));
+        }
+
+        Main.getDBDriver().getScheduleCollection().find(query)
                 .projection(fields(include("_id")))
                 .forEach((Consumer<? super Document>) document ->
                 {
@@ -67,8 +84,15 @@ public class Pruner implements Runnable
                     }
                 });
 
+
         // purge events for which the bot cannot access the message
-        Main.getDBDriver().getEventCollection().find()
+        query = new Document();
+        if(Main.isSharding())
+        {
+            query = and(query, where(Main.getShardingEvalString("guildId")));
+        }
+
+        Main.getDBDriver().getEventCollection().find(query)
                 .projection(fields(include("_id", "messageId", "channelId")))
                 .forEach((Consumer<? super Document>) document ->
                 {

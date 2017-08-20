@@ -1,5 +1,7 @@
 package ws.nmathe.saber.commands.admin;
 
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.ChannelType;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -33,20 +35,33 @@ public class StatsCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        String msg = "```python\n";
-        msg += "     Entries: " + Main.getDBDriver().getEventCollection().count() + "\n";
-        msg += "   Schedules: " + Main.getDBDriver().getScheduleCollection().count() + "\n";
-        msg += "      Guilds: " + Main.getBotJda().getGuilds().size() + "\n";
-        msg += "       Users: " + Main.getBotJda().getUsers().size() + "\n";
+        JDA.ShardInfo info = Main.getBotJda().getShardInfo();
         Runtime rt = Runtime.getRuntime();
-        msg += "Memory-total: " +rt.totalMemory()/1024/1024 + " MB\n" +
-               "      -free : " + rt.freeMemory()/1024/1024 + " MB\n" +
-               "      -max  : " + rt.maxMemory()/1024/1024 + " MB\n";
-        msg += "     Threads: " + Thread.activeCount() + "\n";
         RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-        msg += "      Uptime: " + rb.getUptime()/1000/60 + " minute(s)";
-        msg += "```";
 
-        MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );
+        String msg = "```python\n" +
+                "\"Database\"\n" +
+                "     Entries: " + Main.getDBDriver().getEventCollection().count() + "\n" +
+                "   Schedules: " + Main.getDBDriver().getScheduleCollection().count() + "\n" +
+                "\n\"Sharding\"\n" +
+                "     ShardId: " + info.getShardId() + "/" + info.getShardTotal() + "\n" +
+                "      Guilds: " + Main.getBotJda().getGuilds().size() + "\n" +
+                "       Users: " + Main.getBotJda().getUsers().size() + "\n" +
+                "\n\"Application\"\n" +
+                "Memory-total: " +rt.totalMemory()/1024/1024 + " MB\n" +
+                "      -free : " + rt.freeMemory()/1024/1024 + " MB\n" +
+                "      -max  : " + rt.maxMemory()/1024/1024 + " MB\n" +
+                "     Threads: " + Thread.activeCount() + "\n" +
+                "      Uptime: " + rb.getUptime()/1000/60 + " minute(s)" +
+                "```";
+
+        if(event.isFromType(ChannelType.PRIVATE))
+        {
+            MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );
+        }
+        else
+        {
+            MessageUtilities.sendMsg( msg, event.getTextChannel(), null );
+        }
     }
 }

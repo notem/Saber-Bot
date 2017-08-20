@@ -2,6 +2,7 @@ package ws.nmathe.saber.core.settings;
 
 import com.moandjiezana.toml.Toml;
 import com.moandjiezana.toml.TomlWriter;
+import ws.nmathe.saber.utils.Logging;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -39,7 +40,8 @@ public class BotSettingsManager
                 try
                 {
                     input.close();
-                } catch (IOException e)
+                }
+                catch (IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -59,6 +61,10 @@ public class BotSettingsManager
         {
             io.printStackTrace();
         }
+        catch (Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+        }
         finally
         {
             if (output != null)
@@ -66,7 +72,8 @@ public class BotSettingsManager
                 try
                 {
                     output.close();
-                } catch (IOException e)
+                }
+                catch (IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -82,8 +89,10 @@ public class BotSettingsManager
             input = new FileInputStream("./" + FILENAME);
             settings = (new Toml()).read(input).to(BotSettings.class);
         }
-        catch (IOException ignored)
-        { }
+        catch (Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+        }
         finally
         {
             if (input != null)
@@ -91,7 +100,8 @@ public class BotSettingsManager
                 try
                 {
                     input.close();
-                } catch (IOException e)
+                }
+                catch (IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -121,7 +131,9 @@ public class BotSettingsManager
         String rsvp_no;
         String rsvp_clear;
         String google_service_key;
-        Integer log_level;
+        int log_level;
+        int shard_id;
+        int shard_total;
 
         BotSettings()
         {
@@ -130,6 +142,9 @@ public class BotSettingsManager
             google_service_key = "./saber-g-id.json";
             mongodb = "mongodb://localhost:27017";
             log_level = 4;
+
+            shard_id = 0;
+            shard_total = 1;
 
             prefix = "!";
             admin_prefix = "s.";
@@ -258,8 +273,18 @@ public class BotSettingsManager
         return settings.google_service_key;
     }
 
-    public Integer getLogLevel()
+    public int getLogLevel()
     {
         return settings.log_level;
+    }
+
+    public int getShardId()
+    {
+        return settings.shard_id;
+    }
+
+    public int getShardTotal()
+    {
+        return settings.shard_total;
     }
 }

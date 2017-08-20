@@ -48,11 +48,21 @@ public class Main
 
         try // build the bot
         {
-            jda = new JDABuilder(AccountType.BOT)
+            JDABuilder jdaBuilder = new JDABuilder(AccountType.BOT)
                     .setToken(botSettingsManager.getToken())
                     .setStatus(OnlineStatus.ONLINE)
-                    .setCorePoolSize(20) // small core pool size seems to correlate with event issues
-                    .buildBlocking();
+                    .setCorePoolSize(2);
+
+            // handle sharding
+            int shardId = botSettingsManager.getShardId();
+            int shardTotal = botSettingsManager.getShardTotal();
+            if(shardTotal > 0)
+            {
+                jdaBuilder.useSharding(shardId, shardTotal);
+            }
+
+            jda = jdaBuilder.buildBlocking();
+
             jda.addEventListener(new EventListener());
             jda.setAutoReconnect(true);
 
@@ -137,5 +147,17 @@ public class Main
     public static void reloadNowPlayingList()
     {
         games = Iterables.cycle(botSettingsManager.getNowPlayingList()).iterator();
+    }
+
+    public static boolean isSharding()
+    {
+        return jda.getShardInfo() != null;
+    }
+
+    public static String getShardingEvalString(String field)
+    {
+        int shardId = jda.getShardInfo().getShardId();
+        int shardTotal = jda.getShardInfo().getShardId();
+        return "(this." + field + " >> 22) % " + shardTotal + " = " + shardId;
     }
 }

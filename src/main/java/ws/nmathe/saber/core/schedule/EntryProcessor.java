@@ -48,6 +48,12 @@ class EntryProcessor implements Runnable
 
             // process entries which are ending
             Bson query = and(eq("hasStarted",true), lte("end", new Date()));
+
+            if(Main.isSharding())   // this code snippet needs to be repeated for each query
+            {   // modify the query to only include guilds managed by the shard
+                query = and(query, where(Main.getShardingEvalString("guildId")));
+            }
+
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
@@ -67,6 +73,11 @@ class EntryProcessor implements Runnable
 
             // process entries which are starting
             query = and(eq("hasStarted",false), lte("start", new Date()));
+            if(Main.isSharding())   // this code snippet needs to be repeated for each query
+            {   // modify the query to only include guilds managed by the shard
+                query = and(query, where(Main.getShardingEvalString("guildId")));
+            }
+
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
@@ -92,6 +103,11 @@ class EntryProcessor implements Runnable
 
             // process entries with reminders
             query = and(eq("hasStarted",false), lte("reminders", new Date()));
+            if(Main.isSharding())   // this code snippet needs to be repeated for each query
+            {   // modify the query to only include guilds managed by the shard
+                query = and(query, where(Main.getShardingEvalString("guildId")));
+            }
+
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
@@ -156,6 +172,11 @@ class EntryProcessor implements Runnable
 
                 // delete message objects
                 query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
+                if(Main.isSharding())   // this code snippet needs to be repeated for each query
+                {   // modify the query to only include guilds managed by the shard
+                    query = and(query, where(Main.getShardingEvalString("guildId")));
+                }
+
                 Main.getDBDriver().getEventCollection().find(query)
                         .forEach((Consumer<? super Document>) document->
                         {
@@ -165,9 +186,13 @@ class EntryProcessor implements Runnable
 
                 // bulk delete entries from the database
                 query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
+                if(Main.isSharding())   // this code snippet needs to be repeated for each query
+                {   // modify the query to only include guilds managed by the shard
+                    query = and(query, where(Main.getShardingEvalString("guildId")));
+                }
                 Main.getDBDriver().getEventCollection().deleteMany(query);
 
-                /// remove expiring events
+                // adjust timers
                 query = or(and(
                         eq("hasStarted",false),
                         and(
@@ -195,6 +220,11 @@ class EntryProcessor implements Runnable
                                 eq("hasStarted", true),
                                 gte("end", Date.from(ZonedDateTime.now().plusDays(1).toInstant()))));
 
+            }
+
+            if(Main.isSharding())   // this code snippet needs to be repeated for each query
+            {   // modify the query to only include guilds managed by the shard
+                query = and(query, where(Main.getShardingEvalString("guildId")));
             }
 
             // reload entries based on the appropriate query

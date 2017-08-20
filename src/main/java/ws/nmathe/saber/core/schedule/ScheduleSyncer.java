@@ -37,12 +37,20 @@ class ScheduleSyncer implements Runnable
         Bson query = and(
                         ne("sync_address", "off"),
                         lte("sync_time", new Date()));
+
+        if(Main.isSharding())
+        {
+            // modify query to include guilds managed by the shard
+            query = and(query, where(Main.getShardingEvalString("guildId")));
+        }
+
         Main.getDBDriver().getScheduleCollection()
                 .find(query)
                 .projection(fields(include("_id", "sync_time", "sync_address")))
                 .forEach((Consumer<? super Document>) document ->
         {
-            executor.execute(() -> {
+            executor.execute(() ->
+            {
                 try
                 {
                     String scheduleId = (String) document.get("_id");

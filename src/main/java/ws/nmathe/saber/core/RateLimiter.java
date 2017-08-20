@@ -35,7 +35,8 @@ public class RateLimiter
     {
         // if rate limiter is constructed without a threshold, use bot settings.
         long threshold = this.threshold==0 ? Main.getBotSettingsManager().getCooldownThreshold() : this.threshold;
-        if(timestampMap.containsKey(userId)) {
+        if(timestampMap.containsKey(userId))
+        {
             long time = timestampMap.get(userId);
             if(System.currentTimeMillis() - time <= threshold)
             {

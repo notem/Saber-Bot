@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -23,9 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.nin;
+import static com.mongodb.client.model.Filters.*;
 
 /**
  * Reads the next 7 days of events on a google calendar and converts
@@ -299,10 +298,17 @@ public class CalendarConverter
             }
 
             // purge channel of all entries on schedule that aren't in uniqueEvents
-            Main.getDBDriver().getEventCollection()
-                    .find(and(
+            Bson query = and(
                             eq("channelId", channel.getId()),
-                            nin("googleId", uniqueEvents)))
+                            nin("googleId", uniqueEvents));
+
+            if(Main.isSharding())
+            {   // modify the query to only include guilds managed by the shard
+                query = and(query, where(Main.getShardingEvalString("guildId")));
+            }
+
+            Main.getDBDriver().getEventCollection()
+                    .find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
                         ScheduleEntry entry = Main.getEntryManager().getEntry((Integer) document.get("_id"));
