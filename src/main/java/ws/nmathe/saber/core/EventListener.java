@@ -46,6 +46,11 @@ public class EventListener extends ListenerAdapter
         String content = event.getMessage().getRawContent();   // the raw string the user sent
         String userId = event.getAuthor().getId();             // the ID of the user
 
+        // ignore messages sent by itself
+        // originally I didn't want to do this, however with inclusion of custom command prefix
+        // infinite loops are easy to cause when using a prefix that triggers on the error message
+        if(userId.equals(Main.getBotJda().getSelfUser().getId())) return;
+
         // leave the guild if the message author is black listed
         if(Main.getBotSettingsManager().getBlackList().contains(userId))
         {
