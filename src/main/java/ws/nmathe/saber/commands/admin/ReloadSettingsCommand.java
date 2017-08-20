@@ -31,6 +31,7 @@ public class ReloadSettingsCommand implements Command
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
         Main.getBotSettingsManager().reloadSettings();
+        Main.getShardManager().loadGamesList();
         MessageUtilities.sendPrivateMsg("Reloaded bot settings!", event.getAuthor(), null);
     }
 }
