@@ -282,7 +282,7 @@ public class CalendarConverter
                     }
                     else
                     {
-                        boolean hasStarted = !start.isAfter(ZonedDateTime.now());
+                        boolean hasStarted = start.isAfter(ZonedDateTime.now());
                         ScheduleEntry se = (new ScheduleEntry(channel, title, start, end))
                                 .setRepeat(repeat)
                                 .setTitleUrl(event.getHtmlLink())
