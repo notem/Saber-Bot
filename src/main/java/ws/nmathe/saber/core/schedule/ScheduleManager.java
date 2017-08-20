@@ -64,7 +64,8 @@ public class ScheduleManager
         }
         catch( PermissionException e)
         {
-            Logging.warn(this.getClass(), e.getMessage());
+            String m = e.getMessage() + ": Guild ID " + gId;
+            Logging.warn(this.getClass(), m);
             return;
         }
         catch(Exception e)
@@ -115,7 +116,7 @@ public class ScheduleManager
         }
         catch( PermissionException e)
         {
-            String m = e.getMessage() + ": " + e.getPermission();
+            String m = e.getMessage() + ": Guild ID " + channel.getGuild().getId();
             Logging.warn(this.getClass(), m);
         }
         catch(Exception e)

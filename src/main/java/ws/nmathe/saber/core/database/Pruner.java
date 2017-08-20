@@ -57,7 +57,7 @@ public class Pruner implements Runnable
         // purge schedule entries that the bot cannot connect to
         query = new Document();
         Main.getDBDriver().getScheduleCollection().find(query)
-                .projection(fields(include("_id")))
+                .projection(fields(include("_id", "guildId")))
                 .forEach((Consumer<? super Document>) document ->
                 {
                     try

@@ -17,12 +17,16 @@ import java.time.*;
 import java.util.List;
 
 /**
- *  This class is responsible for both parsing a discord message containing information that creates a ScheduleEvent,
- *  as well as is responsible for generating the message that is to be used as the parsable discord schedule entry
+ * This class is responsible for generating the event's message for display in the Discord client
  */
 public class MessageGenerator
 {
-    static Message generate(ScheduleEntry se)
+    /**
+     * Primary method which generates a complete Discord message object for the event
+     * @param se (ScheduleEntry) to generate a message display
+     * @return the message to be used to display the event in it's associated Discord channel
+     */
+    public static Message generate(ScheduleEntry se)
     {
         JDA jda = Main.getShardManager().getJDA(se.getGuildId());
 
@@ -122,6 +126,13 @@ public class MessageGenerator
         return new MessageBuilder().setEmbed(builder.build()).build();
     }
 
+
+    /**
+     * Generates the body content of the discord message for events using the
+     * "full" display style
+     * @param se the ScheduleEntry Object represented by the display
+     * @return the body content as a string
+     */
     private static String generateBodyFull(ScheduleEntry se)
     {
         String msg = "";
@@ -171,6 +182,13 @@ public class MessageGenerator
         return msg;
     }
 
+
+    /**
+     * Generates the body content of the discord message for events using the
+     * "narrow" display style
+     * @param se the ScheduleEntry Object represented by the display
+     * @return the body content as a string
+     */
     private static String generateBodyNarrow(ScheduleEntry se)
     {
         // create the first line of the body
@@ -191,6 +209,12 @@ public class MessageGenerator
     }
 
 
+    /**
+     * Generates the line of text which indicates the time the event begins and ends
+     * Used by both generateBody...() methods
+     * @param se the ScheduleEntry Object represented by the display
+     * @return the body content as a string
+     */
     private static String genTimeLine(ScheduleEntry se)
     {
         String timeFormatter;
@@ -232,6 +256,7 @@ public class MessageGenerator
 
         return timeLine;
     }
+
 
     /**
      * Generated a string describing the repeat settings of an event
@@ -351,6 +376,7 @@ public class MessageGenerator
         }
         return str;
     }
+
 
     /**
      * Generated a string describing the current time left before an event begins or ends

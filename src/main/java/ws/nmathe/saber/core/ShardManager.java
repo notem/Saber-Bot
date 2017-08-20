@@ -14,6 +14,7 @@ import ws.nmathe.saber.utils.Logging;
 import java.util.*;
 
 /**
+ * The ShardManager manages the JDA objects used to interface with the Discord api
  */
 public class ShardManager
 {

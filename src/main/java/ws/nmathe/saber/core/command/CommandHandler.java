@@ -59,6 +59,13 @@ public class CommandHandler
         adminCommands.put((new ShardsCommand()).name(), new ShardsCommand());
     }
 
+    /**
+     * Processes a MessageReceivedEvent into a command using the command parser
+     * and executes the command
+     * @param event (MessageReceivedEvent) containing the command
+     * @param type (Integer) the type of command, 0 for public, 1 for admin
+     * @param prefix (String) the prefix of the command (depends on guild)
+     */
     public void handleCommand(MessageReceivedEvent event, Integer type, String prefix)
     {
         CommandParser.CommandContainer cc = commandParser.parse(event, prefix);
@@ -99,6 +106,10 @@ public class CommandHandler
 
     }
 
+    /**
+     * Executes a public/general command
+     * @param cc (CommandContainer) holding the command information
+     */
     private void handleGeneralCommand(CommandParser.CommandContainer cc)
     {
         // if the invoking command appears in commands
@@ -146,6 +157,10 @@ public class CommandHandler
         }
     }
 
+    /**
+     * Executes administrative commands
+     * @param cc (CommandContainer) holding the command information
+     */
     private void handleAdminCommand(CommandParser.CommandContainer cc)
     {
         // for admin commands

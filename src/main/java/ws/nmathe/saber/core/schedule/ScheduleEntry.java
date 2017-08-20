@@ -102,6 +102,7 @@ public class ScheduleEntry
         this.expire = null;
     }
 
+
     /**
      * Constructor for a fully initialized ScheduleEntry
      * @param entryDocument (Document) taken from the events collection in the database backing the bot
@@ -151,6 +152,7 @@ public class ScheduleEntry
                 ZonedDateTime.ofInstant(entryDocument.getDate("expire").toInstant(), zone);
     }
 
+
     /**
      * If an event's notification was sent more than three minutes late, notify the discord user who administrates
      * the bot application
@@ -170,19 +172,19 @@ public class ScheduleEntry
         }
     }
 
+
     /**
-     * send an event reminder announcement
+     * handles sending reminder notifications
      */
     public void remind()
     {
         Message msg = this.getMessageObject();
-        if(msg == null)
-            return;
-        if(this.quietRemind)
-            return;
 
-        if(this.entryStart.isAfter(ZonedDateTime.now()))  // dont send reminders after an event has started
-        {// send the remind announcement
+        if(msg == null) return;         // if msg object is bad
+        if(this.quietRemind) return;    // if the event's reminders are silenced
+
+        if(this.entryStart.isAfter(ZonedDateTime.now()))  // don't send reminders after an event has started
+        {
             String remindMsg =
                     ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
             List<TextChannel> channels =
@@ -198,7 +200,7 @@ public class ScheduleEntry
     }
 
     /**
-     * Handles when an entries's start time expires
+     * Handles when an event begins
      */
     public void start()
     {
@@ -245,7 +247,7 @@ public class ScheduleEntry
     }
 
     /**
-     * handles when an entry's end time expires
+     * handles when an event ends
      */
     public void end()
     {
@@ -280,8 +282,9 @@ public class ScheduleEntry
         this.repeat();
     }
 
+
     /**
-     *
+     * Determines what needs to be done to an event when an event ends
      */
     private void repeat()
     {
@@ -312,6 +315,7 @@ public class ScheduleEntry
         }
     }
 
+
     /**
      * Edits the displayed Message to indicate the time remaining until
      * the entry is scheduled to begin/end
@@ -324,6 +328,7 @@ public class ScheduleEntry
 
         MessageUtilities.editMsg(MessageGenerator.generate(this), msg, null);
     }
+
 
     /**
      * determines how many days until the event is scheduled to repeat next from the current time
@@ -369,8 +374,9 @@ public class ScheduleEntry
         return daysTil; // if this is zero, eRepeat was zero
     }
 
-
-    /// Getters
+    /*
+     * getters
+     */
 
     public boolean hasStarted()
     {
@@ -516,7 +522,9 @@ public class ScheduleEntry
         return msg;
     }
 
-    /// Setters
+    /*
+     * Setters
+     */
 
     public ScheduleEntry setTitle(String title)
     {

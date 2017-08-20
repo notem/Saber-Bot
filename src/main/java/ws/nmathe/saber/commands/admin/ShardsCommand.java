@@ -1,6 +1,7 @@
 package ws.nmathe.saber.commands.admin;
 
 import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -48,6 +49,14 @@ public class ShardsCommand implements Command
 
             msg += "```";
         }
-        MessageUtilities.sendMsg(msg, event.getTextChannel(), null);
+
+        if(event.isFromType(ChannelType.PRIVATE))
+        {
+            MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );
+        }
+        else
+        {
+            MessageUtilities.sendMsg( msg, event.getTextChannel(), null );
+        }
     }
 }
