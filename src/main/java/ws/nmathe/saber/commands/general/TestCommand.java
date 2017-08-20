@@ -5,6 +5,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
@@ -69,17 +70,24 @@ public class TestCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        int index = 0;
+        try
+        {
+            int index = 0;
 
-        Integer entryId = Integer.decode( "0x" + args[index] );
-        ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
+            Integer entryId = Integer.decode( "0x" + args[index] );
+            ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
 
-        Message msg = entry.getMessageObject();
-        if( msg==null )
-            return;
+            Message msg = entry.getMessageObject();
+            if( msg==null )
+                return;
 
-        String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getMessageObject().getChannel().getId());
-        String remindMsg = ParsingUtilities.parseMsgFormat(format, entry);
-        MessageUtilities.sendMsg(remindMsg, event.getChannel(), null);
+            String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getMessageObject().getChannel().getId());
+            String remindMsg = ParsingUtilities.parseMsgFormat(format, entry);
+            MessageUtilities.sendMsg(remindMsg, event.getChannel(), null);
+        }
+        catch(Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+        }
     }
 }

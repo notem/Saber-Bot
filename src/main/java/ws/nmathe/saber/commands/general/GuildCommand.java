@@ -5,6 +5,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.settings.GuildSettingsManager.GuildSettings;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import java.util.ArrayList;
 
@@ -125,65 +126,72 @@ public class GuildCommand implements Command
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
-        GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-
-        if(args.length > 0)
+        try
         {
-            ArrayList<String> commands;
-            switch(args[0])
+            GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
+
+            if(args.length > 0)
             {
-                case "r":
-                case "restrict":
-                    commands = guildSettings.getUnrestrictedCommands();
-                    commands.remove(args[1]);
-                    guildSettings.setUnrestrictedCommands(commands);
-                    break;
+                ArrayList<String> commands;
+                switch(args[0])
+                {
+                    case "r":
+                    case "restrict":
+                        commands = guildSettings.getUnrestrictedCommands();
+                        commands.remove(args[1]);
+                        guildSettings.setUnrestrictedCommands(commands);
+                        break;
 
-                case "u":
-                case "unrestrict":
-                    commands = guildSettings.getUnrestrictedCommands();
-                    commands.add(args[1]);
-                    guildSettings.setUnrestrictedCommands(commands);
-                    break;
+                    case "u":
+                    case "unrestrict":
+                        commands = guildSettings.getUnrestrictedCommands();
+                        commands.add(args[1]);
+                        guildSettings.setUnrestrictedCommands(commands);
+                        break;
 
-                case "p":
-                case "prefix":
-                    guildSettings.setPrefix(args[1]);
-                    break;
+                    case "p":
+                    case "prefix":
+                        guildSettings.setPrefix(args[1]);
+                        break;
 
-                case "c":
-                case "control":
-                    String trimmed = args[1].replace("<#", "").replace(">","");
-                    guildSettings.setCommandChannelId(trimmed);
-                    break;
+                    case "c":
+                    case "control":
+                        String trimmed = args[1].replace("<#", "").replace(">","");
+                        guildSettings.setCommandChannelId(trimmed);
+                        break;
+                }
             }
-        }
 
-        // send settings message
-        String body = "```js\n" +
-                "// Guild Settings\n" +
-                "[prefix]  \"" + guildSettings.getPrefix() + "\"\n";
+            // send settings message
+            String body = "```js\n" +
+                    "// Guild Settings\n" +
+                    "[prefix]  \"" + guildSettings.getPrefix() + "\"\n";
 
-        if(guildSettings.getCommandChannelId() != null)
-        {
-            body += "[control] \"#" + event.getGuild().getTextChannelById(guildSettings.getCommandChannelId()).getName() + "\"";
-        }
-        else
-        {
-            body += "[control] \"#" + Main.getBotSettingsManager().getControlChan() + "\" (default)";
-        }
+            if(guildSettings.getCommandChannelId() != null)
+            {
+                body += "[control] \"#" + event.getGuild().getTextChannelById(guildSettings.getCommandChannelId()).getName() + "\"";
+            }
+            else
+            {
+                body += "[control] \"#" + Main.getBotSettingsManager().getControlChan() + "\" (default)";
+            }
 
-        body += "``````js\n// Command Settings\nRestricted Commands:\n";
-        for(String command : guildSettings.getRestrictedCommands())
-        {
-            body += "\"" + command + "\" ";
+            body += "``````js\n// Command Settings\nRestricted Commands:\n";
+            for(String command : guildSettings.getRestrictedCommands())
+            {
+                body += "\"" + command + "\" ";
+            }
+            body += "\nUnrestricted commands:\n";
+            for(String command : guildSettings.getUnrestrictedCommands())
+            {
+                body += "\"" + command + "\" ";
+            }
+            body += "```";
+            MessageUtilities.sendMsg(body, event.getChannel(), null);
         }
-        body += "\nUnrestricted commands:\n";
-        for(String command : guildSettings.getUnrestrictedCommands())
+        catch(Exception e)
         {
-            body += "\"" + command + "\" ";
+            Logging.exception(this.getClass(), e);
         }
-        body += "```";
-        MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }

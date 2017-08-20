@@ -1,5 +1,7 @@
 package ws.nmathe.saber.core;
 
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
@@ -40,16 +42,20 @@ public class EventListener extends ListenerAdapter
     private final RateLimiter reactionLimiter = new RateLimiter(Main.getBotSettingsManager().getCooldownThreshold());
 
     @Override
+    public void onReady(ReadyEvent event)
+    {
+        if(event.getJDA().getShardInfo() != null)
+        {
+            Logging.info(this.getClass(), "Shard " + event.getJDA().getShardInfo().getShardId() + " ready!");
+        }
+    }
+
+    @Override
     public void onMessageReceived(MessageReceivedEvent event)
     {
         // store some properties of the message for use later
         String content = event.getMessage().getRawContent();   // the raw string the user sent
         String userId = event.getAuthor().getId();             // the ID of the user
-
-        // ignore messages sent by itself
-        // originally I didn't want to do this, however with inclusion of custom command prefix
-        // infinite loops are easy to cause when using a prefix that triggers on the error message
-        if(userId.equals(Main.getBotJda().getSelfUser().getId())) return;
 
         // leave the guild if the message author is black listed
         if(Main.getBotSettingsManager().getBlackList().contains(userId))
@@ -77,6 +83,15 @@ public class EventListener extends ListenerAdapter
             return;
         }
 
+        // stop processing if the event is not from a guild text channel
+        if (!event.isFromType(ChannelType.TEXT)) return;
+
+        // ignore messages sent by itself
+        // originally I didn't want to do this, however with inclusion of custom command prefix
+        // infinite loops are easy to cause when using a prefix that triggers on the error message
+        if(userId.equals(event.getJDA().getSelfUser().getId())) return;
+
+
         // leave guild if the guild is blacklisted
         if(Main.getBotSettingsManager().getBlackList().contains(event.getGuild().getId()))
         {
@@ -88,7 +103,7 @@ public class EventListener extends ListenerAdapter
         if (Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId()).contains(event.getChannel().getId()))
         {
             // delete all other user's messages
-            if (!userId.equals(Main.getBotJda().getSelfUser().getId()))
+            if (!userId.equals(event.getJDA().getSelfUser().getId()))
             {
                 MessageUtilities.deleteMsg(event.getMessage(), null);
                 return;
@@ -97,8 +112,8 @@ public class EventListener extends ListenerAdapter
 
         // command processing
         GuildSettingsManager.GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-        String prefix = content.startsWith("<@"+Main.getBotJda().getSelfUser().getId()+"> ") ?
-                "<@"+Main.getBotJda().getSelfUser().getId()+"> " : guildSettings.getPrefix();
+        String prefix = content.startsWith("<@"+event.getJDA().getSelfUser().getId()+"> ") ?
+                "<@"+event.getJDA().getSelfUser().getId()+"> " : guildSettings.getPrefix();
         if(content.startsWith(prefix))
         {
             // check if command is restricted on the guild
@@ -161,9 +176,13 @@ public class EventListener extends ListenerAdapter
             return;
         }
 
+        // identify which shard is responsible for the guild
+        String guildId = event.getGuild().getId();
+        JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
+
         // send welcome message to the server owner
         String welcomeMessage = "```diff\n- Joined```\n" +
-                "**" + Main.getBotJda().getSelfUser().getName() + "**, a calendar bot, has been added to the guild own, '"
+                "**" + jda.getSelfUser().getName() + "**, a calendar bot, has been added to the guild own, '"
                 + event.getGuild().getName() + "'." +
                 "\n\n" +
                 "If this is your first time using the bot, you will need to create a new channel in your guild named" +
@@ -258,10 +277,13 @@ public class EventListener extends ListenerAdapter
     @SuppressWarnings("unchecked")
     public void onMessageReactionAdd(MessageReactionAddEvent event)
     {
-        if(event.getUser().getId().equals(Main.getBotJda().getSelfUser().getId()))
-            return;
-        if(reactionLimiter.isOnCooldown(event.getUser().getId()))
-            return;
+        // stop processing if the event is not from a guild text channel
+        if (!event.isFromType(ChannelType.TEXT)) return;
+
+        // don't process reactions added by the bot
+        if(event.getUser().getId().equals(event.getJDA().getSelfUser().getId())) return;
+
+        if(reactionLimiter.isOnCooldown(event.getUser().getId())) return;
 
         // if the schedule is rsvp enabled and the user added an rsvp emoji to the event
         // add the user to the appropriate rsvp list and remove the emoji

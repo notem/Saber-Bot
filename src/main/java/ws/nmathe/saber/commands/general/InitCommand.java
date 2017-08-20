@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.util.List;
@@ -59,7 +60,7 @@ public class InitCommand implements Command
     {
         String head = prefix + this.name();
 
-        if(!event.getGuild().getMember(Main.getBotJda().getSelfUser())
+        if(!event.getGuild().getMember(event.getJDA().getSelfUser())
                 .getPermissions().contains(Permission.MANAGE_CHANNEL))
             return "I need the Manage Channels permission to create a new schedule!";
 
@@ -94,64 +95,71 @@ public class InitCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        String body;
-        if(args.length > 0)
+        try
         {
-            boolean isAChannel = false;
-            TextChannel chan = null;
-            String chanId = null;
-            try
+            String body;
+            if(args.length > 0)
             {
-                chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
-                chan = event.getGuild().getTextChannelById(chanId);
-                if(chan != null) isAChannel = true;
-            }
-            catch(Exception ignored)
-            {}
-
-            if(!isAChannel) // use the argument as the new channel's name
-            {
-                String chanTitle = args[0].replaceAll("[^A-Za-z0-9_ -]","").replace(" ","_");
-                Main.getScheduleManager().createSchedule(event.getGuild().getId(), chanTitle);
-                body = "A new schedule channel named **" + chanTitle.toLowerCase() + "** has been created!";
-
-                body += "\nYou can now use the create command to create events on that schedule, or the sync command to sync " +
-                        "that schedule to a Google Calendar.";
-            }
-            else // convert the channel to a schedule
-            {
-                if(Main.getScheduleManager().isASchedule(chan.getId()))
-                {   // clear the channel of events
-                    TextChannel finalChan = chan;
-                    Main.getDBDriver().getEventCollection().find(eq("channelId", chan.getId()))
-                            .forEach((Consumer<? super Document>) document ->
-                            {
-                                String msgId = document.getString("messageId");
-                                finalChan.deleteMessageById(msgId).complete();
-                                Main.getEntryManager().removeEntry(document.getInteger("_id"));
-                            });
-
-                    body = "The schedule <#" + chanId + "> has been cleared!";
+                boolean isAChannel = false;
+                TextChannel chan = null;
+                String chanId = null;
+                try
+                {
+                    chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
+                    chan = event.getGuild().getTextChannelById(chanId);
+                    if(chan != null) isAChannel = true;
                 }
-                else
-                {   // create a new schedule
-                    Main.getScheduleManager().createSchedule(chan);
-                    body = "The channel <#" + chanId + "> has been converted to a schedule channel!";
+                catch(Exception ignored)
+                {}
+
+                if(!isAChannel) // use the argument as the new channel's name
+                {
+                    String chanTitle = args[0].replaceAll("[^A-Za-z0-9_ -]","").replace(" ","_");
+                    Main.getScheduleManager().createSchedule(event.getGuild().getId(), chanTitle);
+                    body = "A new schedule channel named **" + chanTitle.toLowerCase() + "** has been created!";
 
                     body += "\nYou can now use the create command to create events on that schedule, or the sync command to sync " +
                             "that schedule to a Google Calendar.";
                 }
+                else // convert the channel to a schedule
+                {
+                    if(Main.getScheduleManager().isASchedule(chan.getId()))
+                    {   // clear the channel of events
+                        TextChannel finalChan = chan;
+                        Main.getDBDriver().getEventCollection().find(eq("channelId", chan.getId()))
+                                .forEach((Consumer<? super Document>) document ->
+                                {
+                                    String msgId = document.getString("messageId");
+                                    finalChan.deleteMessageById(msgId).complete();
+                                    Main.getEntryManager().removeEntry(document.getInteger("_id"));
+                                });
+
+                        body = "The schedule <#" + chanId + "> has been cleared!";
+                    }
+                    else
+                    {   // create a new schedule
+                        Main.getScheduleManager().createSchedule(chan);
+                        body = "The channel <#" + chanId + "> has been converted to a schedule channel!";
+
+                        body += "\nYou can now use the create command to create events on that schedule, or the sync command to sync " +
+                                "that schedule to a Google Calendar.";
+                    }
+                }
             }
+            else // create a new schedule using the default name
+            {
+                Main.getScheduleManager().createSchedule(event.getGuild().getId(), null);
+                body = "A new schedule channel named **new_schedule** has been created!";
+
+                body += "\nYou can now use the create command to create events on that schedule, or the sync command to sync " +
+                        "that schedule to a Google Calendar.";
+            }
+
+            MessageUtilities.sendMsg(body, event.getChannel(), null);
         }
-        else // create a new schedule using the default name
+        catch(Exception e)
         {
-            Main.getScheduleManager().createSchedule(event.getGuild().getId(), null);
-            body = "A new schedule channel named **new_schedule** has been created!";
-
-            body += "\nYou can now use the create command to create events on that schedule, or the sync command to sync " +
-                    "that schedule to a Google Calendar.";
+            Logging.exception(this.getClass(), e);
         }
-
-        MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }

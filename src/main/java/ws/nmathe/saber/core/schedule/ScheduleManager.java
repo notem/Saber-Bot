@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
@@ -21,6 +22,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Projections.fields;
+import static com.mongodb.client.model.Projections.include;
 import static com.mongodb.client.model.Updates.set;
 
 /**
@@ -45,6 +48,8 @@ public class ScheduleManager
      */
     public void createSchedule(String gId, String optional)
     {
+        JDA jda = Main.getShardManager().getJDA(gId);
+
         Collection<Permission> channelPerms = Stream.of(Permission.MESSAGE_ADD_REACTION,
                 Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY,
                 Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_ATTACH_FILES)
@@ -52,15 +57,14 @@ public class ScheduleManager
         String cId;
         try
         {
-            Guild guild = Main.getBotJda().getGuildById(gId);
+            Guild guild = jda.getGuildById(gId);
             cId = guild.getController().createTextChannel(optional!=null ? optional : "new_schedule")
-                    .addPermissionOverride(guild.getMember(Main.getBotJda().getSelfUser()),
+                    .addPermissionOverride(guild.getMember(jda.getSelfUser()),
                             channelPerms, new ArrayList<>()).complete().getId();
         }
         catch( PermissionException e)
         {
-            String m = e.getMessage() + ": " + e.getPermission();
-            Logging.warn(this.getClass(), m);
+            Logging.warn(this.getClass(), e.getMessage());
             return;
         }
         catch(Exception e)
@@ -97,6 +101,8 @@ public class ScheduleManager
      */
     public void createSchedule(TextChannel channel)
     {
+        JDA jda = Main.getShardManager().getJDA(channel.getGuild().getId());
+
         // attempt to set the channel permissions
         Collection<Permission> channelPerms = Stream.of(Permission.MESSAGE_ADD_REACTION,
                 Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY,
@@ -104,7 +110,7 @@ public class ScheduleManager
                 .collect(Collectors.toList());
         try
         {
-            channel.createPermissionOverride(channel.getGuild().getMember(Main.getBotJda().getSelfUser()))
+            channel.createPermissionOverride(channel.getGuild().getMember(jda.getSelfUser()))
                     .setAllow(channelPerms).queue();
         }
         catch( PermissionException e)
@@ -145,9 +151,16 @@ public class ScheduleManager
      */
     public void deleteSchedule(String cId)
     {
+        // identify which shard is responsible for the schedule
+        Document doc = Main.getDBDriver().getScheduleCollection()
+                .find(eq("_id", cId))
+                .projection(fields(include("guildId")))
+                .first();
+        JDA jda = Main.getShardManager().getJDA(doc.getString("guildId"));
+
         try
         {
-            Main.getBotJda().getTextChannelById(cId).delete().complete();
+            jda.getTextChannelById(cId).delete().complete();
         }
         catch(PermissionException e)
         {
@@ -243,8 +256,15 @@ public class ScheduleManager
         // always unlock the schedule at finish regardless of success or failure
         try
         {
+            // identify which shard is responsible for the schedule
+            Document doc = Main.getDBDriver().getScheduleCollection()
+                    .find(eq("_id", cId))
+                    .projection(fields(include("guildId")))
+                    .first();
+            JDA jda = Main.getShardManager().getJDA(doc.getString("guildId"));
+
             // find the message channel and send the 'is typing' while processing
-            MessageChannel chan = Main.getBotJda().getTextChannelById(cId);
+            MessageChannel chan = jda.getTextChannelById(cId);
             chan.sendTyping().queue();
 
             int sortOrder = 1;

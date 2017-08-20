@@ -3,6 +3,7 @@ package ws.nmathe.saber.commands.general;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 /**
@@ -77,19 +78,26 @@ public class SortCommand implements Command
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
-        int index = 0;
-        String cId = args[index].replace("<#","").replace(">","");
-
-        if(args.length <= 1 || args[1].equalsIgnoreCase("asc"))
+        try
         {
-            Main.getScheduleManager().sortSchedule(cId, false);
-        }
-        else if(args.length > 1 && args[1].equalsIgnoreCase("desc"))
-        {
-            Main.getScheduleManager().sortSchedule(cId, true);
-        }
+            int index = 0;
+            String cId = args[index].replace("<#","").replace(">","");
 
-        String content = "I have finished sorting <#" + cId + ">!";
-        MessageUtilities.sendMsg(content, event.getChannel(), null);
+            if(args.length <= 1 || args[1].equalsIgnoreCase("asc"))
+            {
+                Main.getScheduleManager().sortSchedule(cId, false);
+            }
+            else if(args.length > 1 && args[1].equalsIgnoreCase("desc"))
+            {
+                Main.getScheduleManager().sortSchedule(cId, true);
+            }
+
+            String content = "I have finished sorting <#" + cId + ">!";
+            MessageUtilities.sendMsg(content, event.getChannel(), null);
+        }
+        catch(Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+        }
     }
 }

@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -69,24 +70,31 @@ public class SyncCommand implements Command
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
-        String cId = args[0].replace("<#","").replace(">","");
-        TextChannel channel = event.getGuild().getTextChannelById(cId);
-
-        String address;
-        if( args.length == 1 )
-            address = Main.getScheduleManager().getAddress(cId);
-        else
+        try
         {
-            address = args[1];
+            String cId = args[0].replace("<#","").replace(">","");
+            TextChannel channel = event.getGuild().getTextChannelById(cId);
 
-            // enable auto-sync'ing timezone
-            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("timezone_sync", true));
+            String address;
+            if( args.length == 1 )
+                address = Main.getScheduleManager().getAddress(cId);
+            else
+            {
+                address = args[1];
+
+                // enable auto-sync'ing timezone
+                Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("timezone_sync", true));
+            }
+
+            Main.getCalendarConverter().syncCalendar(address, channel);
+            Main.getScheduleManager().setAddress(cId,address);
+
+            String content = "I have finished syncing <#" + cId + ">!";
+            MessageUtilities.sendMsg(content, event.getChannel(), null);
         }
-
-        Main.getCalendarConverter().syncCalendar(address, channel);
-        Main.getScheduleManager().setAddress(cId,address);
-
-        String content = "I have finished syncing <#" + cId + ">!";
-        MessageUtilities.sendMsg(content, event.getChannel(), null);
+        catch(Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+        }
     }
 }

@@ -240,242 +240,249 @@ public class CreateCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        String cId = args[0].replace("<#","").replace(">","");
-        ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
-
-        // Initialize variables with safe defaults
-        String title = "";
-        LocalTime startTime = ZonedDateTime.now(zone).toLocalTime();
-        LocalTime endTime = null;
-        ArrayList<String> comments = new ArrayList<>();
-        int repeat = 0;
-        LocalDate startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
-        LocalDate endDate = null;
-        String url = null;
-        LocalDate expireDate = null;
-
-        boolean channelFlag = false;
-        boolean titleFlag = false;
-        boolean startFlag = false;
-        boolean endFlag = false;
-        boolean repeatFlag = false;
-        boolean dateFlag = false;
-        boolean startDateFlag = false;
-        boolean endDateFlag = false;
-        boolean urlFlag = false;
-        boolean intervalFlag = false;
-        boolean expireFlag = false;
-
-        for( String arg : args )
+        try
         {
-            if(!channelFlag)
+            String cId = args[0].replace("<#","").replace(">","");
+            ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
+
+            // Initialize variables with safe defaults
+            String title = "";
+            LocalTime startTime = ZonedDateTime.now(zone).toLocalTime();
+            LocalTime endTime = null;
+            ArrayList<String> comments = new ArrayList<>();
+            int repeat = 0;
+            LocalDate startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
+            LocalDate endDate = null;
+            String url = null;
+            LocalDate expireDate = null;
+
+            boolean channelFlag = false;
+            boolean titleFlag = false;
+            boolean startFlag = false;
+            boolean endFlag = false;
+            boolean repeatFlag = false;
+            boolean dateFlag = false;
+            boolean startDateFlag = false;
+            boolean endDateFlag = false;
+            boolean urlFlag = false;
+            boolean intervalFlag = false;
+            boolean expireFlag = false;
+
+            for( String arg : args )
             {
-                channelFlag = true;
-            }
-            else if(!titleFlag)
-            {
-                titleFlag = true;
-                title = arg;
-            }
-            else if(!startFlag)
-            {
-                startFlag = true;
-                startTime = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
-            }
-            else if(!endFlag && VerifyUtilities.verifyTime(arg))
-            {
-                endFlag = true;
-                endTime = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
-            }
-            else
-            {
-                if (!endFlag) // skip end if not provided at this point
+                if(!channelFlag)
+                {
+                    channelFlag = true;
+                }
+                else if(!titleFlag)
+                {
+                    titleFlag = true;
+                    title = arg;
+                }
+                else if(!startFlag)
+                {
+                    startFlag = true;
+                    startTime = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
+                }
+                else if(!endFlag && VerifyUtilities.verifyTime(arg))
                 {
                     endFlag = true;
-                }
-                if (repeatFlag)
-                {
-                    repeat = ParsingUtilities.parseWeeklyRepeat(arg.toLowerCase());
-                    repeatFlag = false;
-                }
-                else if (dateFlag)
-                {
-                    startDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
-                    endDate = startDate;
-                    dateFlag = false;
-                }
-                else if (startDateFlag)
-                {
-                    startDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
-                    startDateFlag = false;
-                }
-                else if (endDateFlag)
-                {
-                    endDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
-                    endDateFlag = false;
-                }
-                else if (urlFlag)
-                {
-                    url = arg;
-                    urlFlag = false;
-                }
-                else if (intervalFlag)
-                {
-                    repeat = 0b10000000 | Integer.parseInt(arg);
-                    intervalFlag = false;
-                }
-                else if (expireFlag)
-                {
-                    switch(arg.toLowerCase())
-                    {
-                        case "none":
-                        case "never":
-                        case "null":
-                            expireDate = null;
-                            break;
-
-                        default:
-                            expireDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
-                            break;
-                    }
+                    endTime = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
                 }
                 else
                 {
-                    switch(arg.toLowerCase())
+                    if (!endFlag) // skip end if not provided at this point
                     {
-                        case "r":
-                        case "repeat":
-                        case "repeats":
-                            repeatFlag = true;
-                            break;
+                        endFlag = true;
+                    }
+                    if (repeatFlag)
+                    {
+                        repeat = ParsingUtilities.parseWeeklyRepeat(arg.toLowerCase());
+                        repeatFlag = false;
+                    }
+                    else if (dateFlag)
+                    {
+                        startDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                        endDate = startDate;
+                        dateFlag = false;
+                    }
+                    else if (startDateFlag)
+                    {
+                        startDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                        startDateFlag = false;
+                    }
+                    else if (endDateFlag)
+                    {
+                        endDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                        endDateFlag = false;
+                    }
+                    else if (urlFlag)
+                    {
+                        url = arg;
+                        urlFlag = false;
+                    }
+                    else if (intervalFlag)
+                    {
+                        repeat = 0b10000000 | Integer.parseInt(arg);
+                        intervalFlag = false;
+                    }
+                    else if (expireFlag)
+                    {
+                        switch(arg.toLowerCase())
+                        {
+                            case "none":
+                            case "never":
+                            case "null":
+                                expireDate = null;
+                                break;
 
-                        case "d":
-                        case "date":
-                            dateFlag = true;
-                            break;
+                            default:
+                                expireDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch(arg.toLowerCase())
+                        {
+                            case "r":
+                            case "repeat":
+                            case "repeats":
+                                repeatFlag = true;
+                                break;
 
-                        case "ed":
-                        case "end date":
-                        case "end-date":
-                            endDateFlag = true;
-                            break;
+                            case "d":
+                            case "date":
+                                dateFlag = true;
+                                break;
 
-                        case "sd":
-                        case "start date":
-                        case "start-date":
-                            startDateFlag = true;
-                            break;
+                            case "ed":
+                            case "end date":
+                            case "end-date":
+                                endDateFlag = true;
+                                break;
 
-                        case "u":
-                            urlFlag = true;
-                            break;
+                            case "sd":
+                            case "start date":
+                            case "start-date":
+                                startDateFlag = true;
+                                break;
 
-                        case "i":
-                        case "interval":
-                            intervalFlag = true;
-                            break;
+                            case "u":
+                                urlFlag = true;
+                                break;
 
-                        case "ex":
-                        case "expire":
-                            expireFlag = true;
-                            break;
+                            case "i":
+                            case "interval":
+                                intervalFlag = true;
+                                break;
 
-                        case "today":
-                            startDate = ZonedDateTime.now(zone).toLocalDate();
-                            endDate = ZonedDateTime.now(zone).toLocalDate();
-                            break;
+                            case "ex":
+                            case "expire":
+                                expireFlag = true;
+                                break;
 
-                        case "tomorrow":
-                            startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
-                            endDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
-                            break;
+                            case "today":
+                                startDate = ZonedDateTime.now(zone).toLocalDate();
+                                endDate = ZonedDateTime.now(zone).toLocalDate();
+                                break;
 
-                        default:
-                            comments.add(arg);
-                            break;
+                            case "tomorrow":
+                                startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
+                                endDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
+                                break;
+
+                            default:
+                                comments.add(arg);
+                                break;
+                        }
                     }
                 }
             }
-        }
 
-        // handle all day events
-        if(startTime.equals(endTime) && (startTime.equals(LocalTime.MIN)||startTime.equals(LocalTime.MAX)) && endDate==null)
+            // handle all day events
+            if(startTime.equals(endTime) && (startTime.equals(LocalTime.MIN)||startTime.equals(LocalTime.MAX)) && endDate==null)
+            {
+                endDate = LocalDate.from(startDate).plusDays(1);
+            }
+
+            // if the end time has not been filled, copy start time
+            if(endTime == null)
+            {
+                endTime = LocalTime.from(startTime);
+            }
+
+            // if the end date has not been filled, copy start date
+            if(endDate == null)
+            {
+                endDate = LocalDate.from(startDate);
+            }
+
+            // create the zoned date time using the schedule's timezone
+            ZonedDateTime start = ZonedDateTime.of( startDate, startTime, zone );
+            ZonedDateTime end = ZonedDateTime.of( endDate, endTime, zone );
+            ZonedDateTime expire = expireDate == null ? null : ZonedDateTime.of(expireDate, LocalTime.MIN, zone);
+
+            // add a year to the date if the provided date is past current time
+            Instant now = Instant.now();
+            if(now.isAfter(start.toInstant()))
+            {
+                start = start.plusYears(1);
+            }
+            if(now.isAfter(end.toInstant()))
+            {
+                end = end.plusYears(1);
+            }
+
+            // add a day to end if end is after start
+            if(start.isAfter(end))
+            {
+                end = start.plusDays(1);
+            }
+
+
+            // send the event summary to the command channel
+            ScheduleEntry se = (new ScheduleEntry(event.getGuild().getTextChannelById(cId), title, start, end))
+                    .setComments(comments)
+                    .setRepeat(repeat)
+                    .setTitleUrl(url)
+                    .setExpire(expire);
+            Integer entryId = Main.getEntryManager().newEntry(se);
+
+
+            // output results of event creation to command channel
+            DateTimeFormatter dtf;
+            if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
+                dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
+            else
+                dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mm a [z]");
+
+            String body = "New event created :id: **"+ Integer.toHexString(entryId) +"** on <#" + cId + ">\n```js\n" +
+                    "Title:  \"" + title + "\"\n" +
+                    "Start:  " + start.format(dtf) + "\n" +
+                    "End:    " + end.format(dtf) + "\n" +
+                    "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n" ;
+
+            if(url!=null)
+                body += "Url: \"" + url + "\"\n";
+
+            if(expireDate != null)
+                body += "Expire: \"" + expireDate + "\"";
+
+            if(!comments.isEmpty())
+                body += "// Comments\n";
+
+            for(int i=1; i<comments.size()+1; i++)
+            {
+                body += "[" + i + "] \"" + comments.get(i-1) + "\"\n";
+            }
+            body += "```";
+
+            MessageUtilities.sendMsg(body, event.getChannel(), null);
+        }
+        catch(Exception e)
         {
-            endDate = LocalDate.from(startDate).plusDays(1);
+            Logging.exception(this.getClass(), e);
         }
-
-        // if the end time has not been filled, copy start time
-        if(endTime == null)
-        {
-            endTime = LocalTime.from(startTime);
-        }
-
-        // if the end date has not been filled, copy start date
-        if(endDate == null)
-        {
-            endDate = LocalDate.from(startDate);
-        }
-
-        // create the zoned date time using the schedule's timezone
-        ZonedDateTime start = ZonedDateTime.of( startDate, startTime, zone );
-        ZonedDateTime end = ZonedDateTime.of( endDate, endTime, zone );
-        ZonedDateTime expire = expireDate == null ? null : ZonedDateTime.of(expireDate, LocalTime.MIN, zone);
-
-        // add a year to the date if the provided date is past current time
-        Instant now = Instant.now();
-        if(now.isAfter(start.toInstant()))
-        {
-            start = start.plusYears(1);
-        }
-        if(now.isAfter(end.toInstant()))
-        {
-            end = end.plusYears(1);
-        }
-
-        // add a day to end if end is after start
-        if(start.isAfter(end))
-        {
-            end = start.plusDays(1);
-        }
-
-
-        // send the event summary to the command channel
-        ScheduleEntry se = (new ScheduleEntry(event.getGuild().getTextChannelById(cId), title, start, end))
-                .setComments(comments)
-                .setRepeat(repeat)
-                .setTitleUrl(url)
-                .setExpire(expire);
-        Integer entryId = Main.getEntryManager().newEntry(se);
-
-
-        // output results of event creation to command channel
-        DateTimeFormatter dtf;
-        if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
-            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
-        else
-            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mm a [z]");
-
-        String body = "New event created :id: **"+ Integer.toHexString(entryId) +"** on <#" + cId + ">\n```js\n" +
-                "Title:  \"" + title + "\"\n" +
-                "Start:  " + start.format(dtf) + "\n" +
-                "End:    " + end.format(dtf) + "\n" +
-                "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n" ;
-
-        if(url!=null)
-            body += "Url: \"" + url + "\"\n";
-
-        if(expireDate != null)
-            body += "Expire: \"" + expireDate + "\"";
-
-        if(!comments.isEmpty())
-            body += "// Comments\n";
-
-        for(int i=1; i<comments.size()+1; i++)
-        {
-            body += "[" + i + "] \"" + comments.get(i-1) + "\"\n";
-        }
-        body += "```";
-
-        MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }

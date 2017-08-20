@@ -39,9 +39,6 @@ class EntryProcessor implements Runnable
     @SuppressWarnings("unchecked")
     public void run()
     {
-        // if the bot is not connected to the discord websocket, do not process events
-        if(JDA.Status.valueOf("CONNECTED") != Main.getBotJda().getStatus()) return;
-
         if( level == 0 )    // minute check
         {
             Logging.info(this.getClass(), "Started processing entries at level 0. . .");
@@ -49,14 +46,16 @@ class EntryProcessor implements Runnable
             // process entries which are ending
             Bson query = and(eq("hasStarted",true), lte("end", new Date()));
 
-            if(Main.isSharding())   // this code snippet needs to be repeated for each query
-            {   // modify the query to only include guilds managed by the shard
-                query = and(query, where(Main.getShardingEvalString("guildId")));
-            }
-
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
+                        // identify which shard is responsible for the schedule
+                        String guildId = document.getString("guildId");
+                        JDA jda = Main.getShardManager().getJDA(guildId);
+
+                        // if the shard is not connected, do process the event
+                        if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
                         primaryExecutor.execute(() ->
                         {
                             // convert to scheduleEntry object and start
@@ -73,14 +72,16 @@ class EntryProcessor implements Runnable
 
             // process entries which are starting
             query = and(eq("hasStarted",false), lte("start", new Date()));
-            if(Main.isSharding())   // this code snippet needs to be repeated for each query
-            {   // modify the query to only include guilds managed by the shard
-                query = and(query, where(Main.getShardingEvalString("guildId")));
-            }
-
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
+                        // identify which shard is responsible for the schedule
+                        String guildId = document.getString("guildId");
+                        JDA jda = Main.getShardManager().getJDA(guildId);
+
+                        // if the shard is not connected, do process the event
+                        if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
                         primaryExecutor.execute(() ->
                         {
                             try
@@ -103,14 +104,17 @@ class EntryProcessor implements Runnable
 
             // process entries with reminders
             query = and(eq("hasStarted",false), lte("reminders", new Date()));
-            if(Main.isSharding())   // this code snippet needs to be repeated for each query
-            {   // modify the query to only include guilds managed by the shard
-                query = and(query, where(Main.getShardingEvalString("guildId")));
-            }
 
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
+                        // identify which shard is responsible for the schedule
+                        String guildId = document.getString("guildId");
+                        JDA jda = Main.getShardManager().getJDA(guildId);
+
+                        // if the shard is not connected, do process the event
+                        if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
                         primaryExecutor.execute(() ->
                         {
                             try
@@ -170,26 +174,8 @@ class EntryProcessor implements Runnable
             {
                 Logging.info(this.getClass(), "Processing entries at level 2. . .");
 
-                // delete message objects
-                query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
-                if(Main.isSharding())   // this code snippet needs to be repeated for each query
-                {   // modify the query to only include guilds managed by the shard
-                    query = and(query, where(Main.getShardingEvalString("guildId")));
-                }
-
-                Main.getDBDriver().getEventCollection().find(query)
-                        .forEach((Consumer<? super Document>) document->
-                        {
-                            ScheduleEntry se = new ScheduleEntry(document);
-                            MessageUtilities.deleteMsg(se.getMessageObject(), null);
-                        });
-
                 // bulk delete entries from the database
                 query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
-                if(Main.isSharding())   // this code snippet needs to be repeated for each query
-                {   // modify the query to only include guilds managed by the shard
-                    query = and(query, where(Main.getShardingEvalString("guildId")));
-                }
                 Main.getDBDriver().getEventCollection().deleteMany(query);
 
                 // adjust timers
@@ -222,16 +208,19 @@ class EntryProcessor implements Runnable
 
             }
 
-            if(Main.isSharding())   // this code snippet needs to be repeated for each query
-            {   // modify the query to only include guilds managed by the shard
-                query = and(query, where(Main.getShardingEvalString("guildId")));
-            }
-
             // reload entries based on the appropriate query
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
-                        secondaryExecutor.execute(() -> {
+                        // identify which shard is responsible for the schedule
+                        String guildId = document.getString("guildId");
+                        JDA jda = Main.getShardManager().getJDA(guildId);
+
+                        // if the shard is not connected, do process the event
+                        if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
+                        secondaryExecutor.execute(() ->
+                        {
                             try
                             {   // convert to scheduleEntry object and start
                                 (new ScheduleEntry(document)).reloadDisplay();

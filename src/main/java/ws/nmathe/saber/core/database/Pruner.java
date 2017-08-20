@@ -22,26 +22,24 @@ public class Pruner implements Runnable
     @Override
     public void run()
     {
-        // if the bot is not connected to the discord websocket, do not prune
-        if(JDA.Status.valueOf("CONNECTED") != Main.getBotJda().getStatus()) return;
-
         Logging.info(this.getClass(), "Running database pruner. . .");
 
         // purge guild setting entries for any guild not connected to the bot
         Bson query = new Document();
-        if(Main.isSharding())
-        {
-            query = and(query, where(Main.getShardingEvalString("_id")));
-        }
-
         Main.getDBDriver().getGuildCollection().find(query)
                 .projection(fields(include("_id")))
                 .forEach((Consumer<? super Document>) document ->
                 {
                     try
                     {
+                        // identify which shard is responsible for the schedule
                         String guildId = document.getString("_id");
-                        Guild guild = Main.getBotJda().getGuildById(guildId);
+                        JDA jda = Main.getShardManager().getShard(guildId);
+
+                        // if the shard is not connected, do not prune
+                        if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
+                        Guild guild = jda.getGuildById(guildId);
                         if(guild == null)
                         {
                             Main.getDBDriver().getGuildCollection().deleteOne(eq("_id", guildId));
@@ -58,19 +56,21 @@ public class Pruner implements Runnable
 
         // purge schedule entries that the bot cannot connect to
         query = new Document();
-        if(Main.isSharding())
-        {
-            query = and(query, where(Main.getShardingEvalString("guildId")));
-        }
-
         Main.getDBDriver().getScheduleCollection().find(query)
                 .projection(fields(include("_id")))
                 .forEach((Consumer<? super Document>) document ->
                 {
                     try
                     {
+                        // identify which shard is responsible for the schedule
+                        String guildId = document.getString("guildId");
+                        JDA jda = Main.getShardManager().getShard(guildId);
+
+                        // if the shard is not connected, do not prune
+                        if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
                         String chanId = document.getString("_id");
-                        MessageChannel channel = Main.getBotJda().getTextChannelById(chanId);
+                        MessageChannel channel = jda.getTextChannelById(chanId);
                         if(channel == null)
                         {
                             Main.getDBDriver().getEventCollection().deleteMany(eq("channeldId", chanId));
@@ -87,17 +87,20 @@ public class Pruner implements Runnable
 
         // purge events for which the bot cannot access the message
         query = new Document();
-        if(Main.isSharding())
-        {
-            query = and(query, where(Main.getShardingEvalString("guildId")));
-        }
-
         Main.getDBDriver().getEventCollection().find(query)
-                .projection(fields(include("_id", "messageId", "channelId")))
+                .projection(fields(include("_id", "messageId", "channelId", "guildId")))
                 .forEach((Consumer<? super Document>) document ->
                 {
                     try
                     {
+                        // identify which shard is responsible for the schedule
+                        String guildId = document.getString("guildId");
+                        JDA jda = Main.getShardManager().getShard(guildId);
+
+                        // if the shard is not connected, do not prune
+                        if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
+                        // validate message id
                         Integer eventId = document.getInteger("_id");
                         String messageId = document.getString("messageId");
                         if(messageId == null)
@@ -107,8 +110,9 @@ public class Pruner implements Runnable
                             return;
                         }
 
+                        // validate channel id
                         String channelId = document.getString("channelId");
-                        MessageChannel channel = Main.getBotJda().getTextChannelById(channelId);
+                        MessageChannel channel = jda.getTextChannelById(channelId);
                         if(channel==null)
                         {
                             Main.getDBDriver().getEventCollection().deleteOne(eq("_id", eventId));
@@ -116,6 +120,7 @@ public class Pruner implements Runnable
                             return;
                         }
 
+                        // validate message is accessible
                         channel.getMessageById(messageId).queue(
                                 message ->
                                 {

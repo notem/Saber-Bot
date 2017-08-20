@@ -6,6 +6,7 @@ import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.MessageGenerator;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
@@ -312,297 +313,304 @@ public class EditCommand implements Command
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
-        int index = 0;
-
-        Integer entryId = Integer.decode( "0x" + args[index] );
-        ScheduleEntry se = Main.getEntryManager().getEntry( entryId );
-
-        Message msg = se.getMessageObject();
-        if( msg==null ) return;
-
-
-        //
-        // edit the event if command contains more arguments than the event ID,
-        // otherwise skip this and print out the event configuration
-        if(args.length > 1)
+        try
         {
-            index++;    // 1
+            int index = 0;
 
-            switch( args[index++] )     // 2
+            Integer entryId = Integer.decode( "0x" + args[index] );
+            ScheduleEntry se = Main.getEntryManager().getEntry( entryId );
+
+            Message msg = se.getMessageObject();
+            if( msg==null ) return;
+
+
+            //
+            // edit the event if command contains more arguments than the event ID,
+            // otherwise skip this and print out the event configuration
+            if(args.length > 1)
             {
-                case "c":
-                case "comment":
-                    ArrayList<String> comments = se.getComments();
-                    switch( args[index++] )   // 3
-                    {
-                        case "a":
-                        case "add" :
-                            comments.add( args[index] );
-                            se.setComments(comments);
-                            break;
-                        case "r":
-                        case "remove" :
-                            if(VerifyUtilities.verifyInteger(args[index]))
-                            {
-                                comments.remove( Integer.parseInt(args[index])-1 );
-                            }
-                            else
-                            {
-                                comments.remove(args[index]);
-                            }
-                            se.setComments(comments);
-                            break;
-                        case "s":
-                        case "swap":
-                            String a = comments.get(Integer.parseInt(args[index])-1);
-                            String b = comments.get(Integer.parseInt(args[index+1])-1);
-                            comments.set(Integer.parseInt(args[index])-1, b);
-                            comments.set(Integer.parseInt(args[index+1])-1, a);
-                            se.setComments(comments);
-                            break;
-                    }
-                    break;
+                index++;    // 1
 
-                case "s":
-                case "starts":
-                case "start":
-                    ZonedDateTime newStart = ParsingUtilities.parseTime(se.getStart(), args[index]);
-                    se.setStart(newStart);
+                switch( args[index++] )     // 2
+                {
+                    case "c":
+                    case "comment":
+                        ArrayList<String> comments = se.getComments();
+                        switch( args[index++] )   // 3
+                        {
+                            case "a":
+                            case "add" :
+                                comments.add( args[index] );
+                                se.setComments(comments);
+                                break;
+                            case "r":
+                            case "remove" :
+                                if(VerifyUtilities.verifyInteger(args[index]))
+                                {
+                                    comments.remove( Integer.parseInt(args[index])-1 );
+                                }
+                                else
+                                {
+                                    comments.remove(args[index]);
+                                }
+                                se.setComments(comments);
+                                break;
+                            case "s":
+                            case "swap":
+                                String a = comments.get(Integer.parseInt(args[index])-1);
+                                String b = comments.get(Integer.parseInt(args[index+1])-1);
+                                comments.set(Integer.parseInt(args[index])-1, b);
+                                comments.set(Integer.parseInt(args[index+1])-1, a);
+                                se.setComments(comments);
+                                break;
+                        }
+                        break;
 
-                    if(ZonedDateTime.now().isAfter(se.getStart())) //add a day if the time has already passed
-                    {
-                        se.setStart(se.getStart().plusDays(1));
-                    }
-                    if(se.getStart().isAfter(se.getEnd()))        //add a day to end if end is after start
-                    {
-                        se.setEnd(se.getEnd().plusDays(1));
-                    }
-                    break;
+                    case "s":
+                    case "starts":
+                    case "start":
+                        ZonedDateTime newStart = ParsingUtilities.parseTime(se.getStart(), args[index]);
+                        se.setStart(newStart);
 
-                case "e":
-                case "ends":
-                case "end":
-                    ZonedDateTime newEnd = ParsingUtilities.parseTime(se.getEnd(), args[index]);
-                    se.setEnd(newEnd);
+                        if(ZonedDateTime.now().isAfter(se.getStart())) //add a day if the time has already passed
+                        {
+                            se.setStart(se.getStart().plusDays(1));
+                        }
+                        if(se.getStart().isAfter(se.getEnd()))        //add a day to end if end is after start
+                        {
+                            se.setEnd(se.getEnd().plusDays(1));
+                        }
+                        break;
 
-                    if(ZonedDateTime.now().isAfter(se.getEnd()))
-                    { // add a day if the time has already passed
-                        se.setEnd(se.getEnd().plusDays(1));
-                    }
-                    if(se.getStart().isAfter(se.getEnd()))
-                    { // add a day to end if end is after start
-                        se.setEnd(se.getEnd().plusDays(1));
-                    }
-                    break;
+                    case "e":
+                    case "ends":
+                    case "end":
+                        ZonedDateTime newEnd = ParsingUtilities.parseTime(se.getEnd(), args[index]);
+                        se.setEnd(newEnd);
 
-                case "t":
-                case "title":
-                    se.setTitle(args[index]);
-                    break;
+                        if(ZonedDateTime.now().isAfter(se.getEnd()))
+                        { // add a day if the time has already passed
+                            se.setEnd(se.getEnd().plusDays(1));
+                        }
+                        if(se.getStart().isAfter(se.getEnd()))
+                        { // add a day to end if end is after start
+                            se.setEnd(se.getEnd().plusDays(1));
+                        }
+                        break;
 
-                case "d":
-                case "date":
-                    LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                    case "t":
+                    case "title":
+                        se.setTitle(args[index]);
+                        break;
 
-                    se.setStart(se.getStart()
-                            .withMonth(date.getMonthValue())
-                            .withDayOfMonth(date.getDayOfMonth()));
-                    se.setEnd(se.getEnd()
-                            .withMonth(date.getMonthValue())
-                            .withDayOfMonth(date.getDayOfMonth()));
-                    break;
+                    case "d":
+                    case "date":
+                        LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                case "sd":
-                case "start date":
-                case "start-date":
-                    LocalDate sdate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                        se.setStart(se.getStart()
+                                .withMonth(date.getMonthValue())
+                                .withDayOfMonth(date.getDayOfMonth()));
+                        se.setEnd(se.getEnd()
+                                .withMonth(date.getMonthValue())
+                                .withDayOfMonth(date.getDayOfMonth()));
+                        break;
 
-                    se.setStart(se.getStart()
-                            .withMonth(sdate.getMonthValue())
-                            .withDayOfMonth(sdate.getDayOfMonth()));
+                    case "sd":
+                    case "start date":
+                    case "start-date":
+                        LocalDate sdate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                    if(se.getEnd().isBefore(se.getStart()))
-                    {
-                        se.setEnd(se.getStart());
-                    }
-                    break;
+                        se.setStart(se.getStart()
+                                .withMonth(sdate.getMonthValue())
+                                .withDayOfMonth(sdate.getDayOfMonth()));
 
-                case "ed":
-                case "end date":
-                case "end-date":
-                    LocalDate edate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                        if(se.getEnd().isBefore(se.getStart()))
+                        {
+                            se.setEnd(se.getStart());
+                        }
+                        break;
 
-                    se.setEnd(se.getEnd()
-                            .withMonth(edate.getMonthValue())
-                            .withDayOfMonth(edate.getDayOfMonth()));
+                    case "ed":
+                    case "end date":
+                    case "end-date":
+                        LocalDate edate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                    if(se.getEnd().isBefore(se.getStart()))
-                    {
-                        se.setStart(se.getEnd());
-                    }
-                    break;
+                        se.setEnd(se.getEnd()
+                                .withMonth(edate.getMonthValue())
+                                .withDayOfMonth(edate.getDayOfMonth()));
 
-                case "r":
-                case "repeats":
-                case "repeat":
-                    se.setRepeat(ParsingUtilities.parseWeeklyRepeat(args[index].toLowerCase()));
-                    break;
+                        if(se.getEnd().isBefore(se.getStart()))
+                        {
+                            se.setStart(se.getEnd());
+                        }
+                        break;
 
-                case "i":
-                case "interval":
-                    se.setRepeat(0b10000000 | Integer.parseInt(args[index]));
-                    break;
+                    case "r":
+                    case "repeats":
+                    case "repeat":
+                        se.setRepeat(ParsingUtilities.parseWeeklyRepeat(args[index].toLowerCase()));
+                        break;
 
-                case "u":
-                case "url":
-                    se.setTitleUrl(args[index]);
-                    break;
+                    case "i":
+                    case "interval":
+                        se.setRepeat(0b10000000 | Integer.parseInt(args[index]));
+                        break;
 
-                case "qs":
-                case "quiet-start":
-                    se.setQuietStart(!se.isQuietStart());
-                    break;
+                    case "u":
+                    case "url":
+                        se.setTitleUrl(args[index]);
+                        break;
 
-                case "qe":
-                case "quiet-end":
-                    se.setQuietEnd(!se.isQuietEnd());
-                    break;
+                    case "qs":
+                    case "quiet-start":
+                        se.setQuietStart(!se.isQuietStart());
+                        break;
 
-                case "qr":
-                case "quiet-remind":
-                    se.setQuietRemind(!se.isQuietRemind());
-                    break;
+                    case "qe":
+                    case "quiet-end":
+                        se.setQuietEnd(!se.isQuietEnd());
+                        break;
 
-                case "max":
-                case "m":
-                    if(args[index].toLowerCase().equals("off"))
-                    {
-                        se.setRsvpMax(-1);
-                    }
-                    else
-                    {
-                        se.setRsvpMax(Integer.valueOf(args[index]));
-                    }
-                    break;
+                    case "qr":
+                    case "quiet-remind":
+                        se.setQuietRemind(!se.isQuietRemind());
+                        break;
 
-                case "ex":
-                case "expire":
-                    switch(args[index])
-                    {
-                        case "off":
-                        case "none":
-                        case "never":
-                        case "null":
-                            se.setExpire(null);
-                            break;
-                            
-                        default:
-                            se.setExpire(ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]),
-                                    LocalTime.MIN, se.getStart().getZone()));
-                            break;
-                    }
+                    case "max":
+                    case "m":
+                        if(args[index].toLowerCase().equals("off"))
+                        {
+                            se.setRsvpMax(-1);
+                        }
+                        else
+                        {
+                            se.setRsvpMax(Integer.valueOf(args[index]));
+                        }
+                        break;
 
-                case "im":
-                case "image":
-                    switch(args[index])
-                    {
-                        case "null":
-                        case "off":
-                            se.setImageUrl(null);
-                            break;
-                        default:
-                            se.setImageUrl(args[index]);
-                            break;
-                    }
-                    break;
+                    case "ex":
+                    case "expire":
+                        switch(args[index])
+                        {
+                            case "off":
+                            case "none":
+                            case "never":
+                            case "null":
+                                se.setExpire(null);
+                                break;
 
-                case "th":
-                case "thumbnail":
-                    switch(args[index])
-                    {
-                        case "null":
-                        case "off":
-                            se.setThumbnailUrl(null);
-                            break;
-                        default:
-                            se.setThumbnailUrl(args[index]);
-                            break;
-                    }
-                    break;
+                            default:
+                                se.setExpire(ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]),
+                                        LocalTime.MIN, se.getStart().getZone()));
+                                break;
+                        }
+
+                    case "im":
+                    case "image":
+                        switch(args[index])
+                        {
+                            case "null":
+                            case "off":
+                                se.setImageUrl(null);
+                                break;
+                            default:
+                                se.setImageUrl(args[index]);
+                                break;
+                        }
+                        break;
+
+                    case "th":
+                    case "thumbnail":
+                        switch(args[index])
+                        {
+                            case "null":
+                            case "off":
+                                se.setThumbnailUrl(null);
+                                break;
+                            default:
+                                se.setThumbnailUrl(args[index]);
+                                break;
+                        }
+                        break;
+                }
+
+                Main.getEntryManager().updateEntry(se);
             }
 
-            Main.getEntryManager().updateEntry(se);
-        }
-
-        //
-        // send the event summary to the command channel
-        //
-        DateTimeFormatter dtf;
-        if(Main.getScheduleManager().getClockFormat(se.getScheduleID()).equals("24"))
-        {
-            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
-        }
-        else
-        {
-            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mma [z]");
-        }
-
-        String body = "Updated event :id: **"+ Integer.toHexString(entryId) +"** on <#" + se.getScheduleID() + ">\n```js\n" +
-                "Title:  \"" + se.getTitle() + "\"\n" +
-                "Start:  " + se.getStart().format(dtf) + "\n" +
-                "End:    " + se.getEnd().format(dtf) + "\n" +
-                "Repeat: " + MessageGenerator.getRepeatString(se.getRepeat(), true) + " (" + se.getRepeat() + ")" + "\n";
-
-        if(se.getTitleUrl()!=null)
-        {
-            body += "Url: \"" + se.getTitleUrl() + "\"\n";
-        }
-
-        if(se.isQuietRemind() | se.isQuietEnd() | se.isQuietStart())
-        {
-            body += "Quiet: ";
-            if(se.isQuietStart())
+            //
+            // send the event summary to the command channel
+            //
+            DateTimeFormatter dtf;
+            if(Main.getScheduleManager().getClockFormat(se.getScheduleID()).equals("24"))
             {
-                body += "start";
-                if(se.isQuietEnd() & se.isQuietRemind())
-                    body += ", ";
-                else if(se.isQuietEnd() | se.isQuietRemind())
-                    body += " and ";
+                dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
             }
-            if(se.isQuietEnd())
+            else
             {
-                body += "end";
+                dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mma [z]");
+            }
+
+            String body = "Updated event :id: **"+ Integer.toHexString(entryId) +"** on <#" + se.getScheduleID() + ">\n```js\n" +
+                    "Title:  \"" + se.getTitle() + "\"\n" +
+                    "Start:  " + se.getStart().format(dtf) + "\n" +
+                    "End:    " + se.getEnd().format(dtf) + "\n" +
+                    "Repeat: " + MessageGenerator.getRepeatString(se.getRepeat(), true) + " (" + se.getRepeat() + ")" + "\n";
+
+            if(se.getTitleUrl()!=null)
+            {
+                body += "Url: \"" + se.getTitleUrl() + "\"\n";
+            }
+
+            if(se.isQuietRemind() | se.isQuietEnd() | se.isQuietStart())
+            {
+                body += "Quiet: ";
+                if(se.isQuietStart())
+                {
+                    body += "start";
+                    if(se.isQuietEnd() & se.isQuietRemind())
+                        body += ", ";
+                    else if(se.isQuietEnd() | se.isQuietRemind())
+                        body += " and ";
+                }
+                if(se.isQuietEnd())
+                {
+                    body += "end";
+                    if(se.isQuietRemind())
+                        body += " and ";
+                }
                 if(se.isQuietRemind())
-                    body += " and ";
+                {
+                    body += "reminders";
+                }
+                body += " disabled\n";
             }
-            if(se.isQuietRemind())
+
+            if(se.getRsvpMax()>=0)
+                body += "Max: " + se.getRsvpMax() + "\n";
+
+            if(se.getExpire() != null)
+                body += "Expire: \"" + se.getExpire().toLocalDate() + "\"\n";
+
+            if(se.getImageUrl() != null)
+                body += "Image: \"" + se.getImageUrl() + "\"\n";
+
+            if(se.getThumbnailUrl() != null)
+                body += "Thumbnail: \"" + se.getThumbnailUrl() + "\"\n";
+
+            if(!se.getComments().isEmpty())
+                body += "// Comments\n";
+
+            for(int i=1; i<se.getComments().size()+1; i++)
             {
-                body += "reminders";
+                body += "[" + i + "] \"" + se.getComments().get(i-1) + "\"\n";
             }
-            body += " disabled\n";
+            body += "```";
+
+            MessageUtilities.sendMsg(body, event.getChannel(), null);
         }
-
-        if(se.getRsvpMax()>=0)
-            body += "Max: " + se.getRsvpMax() + "\n";
-
-        if(se.getExpire() != null)
-            body += "Expire: \"" + se.getExpire().toLocalDate() + "\"\n";
-
-        if(se.getImageUrl() != null)
-            body += "Image: \"" + se.getImageUrl() + "\"\n";
-
-        if(se.getThumbnailUrl() != null)
-            body += "Thumbnail: \"" + se.getThumbnailUrl() + "\"\n";
-
-        if(!se.getComments().isEmpty())
-            body += "// Comments\n";
-
-        for(int i=1; i<se.getComments().size()+1; i++)
+        catch(Exception e)
         {
-            body += "[" + i + "] \"" + se.getComments().get(i-1) + "\"\n";
+            Logging.exception(this.getClass(), e);
         }
-        body += "```";
-
-        MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }

@@ -19,7 +19,7 @@ public class HttpUtilities
         String auth = Main.getBotSettingsManager().getWebToken();
         if( auth != null )
         {
-            HttpUtilities.updateStats_abal(Main.getBotJda().getGuilds().size(), auth);
+            HttpUtilities.updateStats_abal(Main.getShardManager().getGuilds().size(), auth);
         }
     }
 
@@ -31,7 +31,7 @@ public class HttpUtilities
 
             try
             {
-                Unirest.post("https://bots.discord.pw/api/bots/" + Main.getBotJda().getSelfUser().getId() + "/stats")
+                Unirest.post("https://bots.discord.pw/api/bots/" + Main.getShardManager().getJDA().getSelfUser().getId() + "/stats")
                         .header("Authorization", auth)
                         .header("Content-Type", "application/json")
                         .body(json).asJson();

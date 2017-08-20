@@ -1,6 +1,7 @@
 package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Role;
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +24,8 @@ public class MessageGenerator
 {
     static Message generate(ScheduleEntry se)
     {
+        JDA jda = Main.getShardManager().getJDA(se.getGuildId());
+
         String titleUrl = se.getTitleUrl() != null ? se.getTitleUrl() : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
         String footerStr = "ID: " + Integer.toHexString(se.getId());
@@ -66,8 +69,8 @@ public class MessageGenerator
 
         // get embed color from first hoisted bot role
         Color color = Color.DARK_GRAY;
-        List<Role> roles = new ArrayList<>(Main.getBotJda().getGuildById(se.getGuildId())
-                .getMember(Main.getBotJda().getSelfUser()).getRoles());
+
+        List<Role> roles = new ArrayList<>(jda.getGuildById(se.getGuildId()).getMember(jda.getSelfUser()).getRoles());
         while(!roles.isEmpty())
         {
             if(roles.get(0).isHoisted())

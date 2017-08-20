@@ -56,6 +56,7 @@ public class CommandHandler
         adminCommands.put((new StatsCommand()).name(), new StatsCommand());
         adminCommands.put((new ReloadSettingsCommand()).name(), new ReloadSettingsCommand());
         adminCommands.put((new ClearLocksCommand()).name(), new ClearLocksCommand());
+        adminCommands.put((new ShardsCommand()).name(), new ShardsCommand());
     }
 
     public void handleCommand(MessageReceivedEvent event, Integer type, String prefix)
@@ -82,7 +83,7 @@ public class CommandHandler
 
                 // alert admin
                 Logging.warn(this.getClass(), alert);
-                User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+                User admin = event.getJDA().getUserById(Main.getBotSettingsManager().getAdminId());
                 if(admin != null)
                 {
                     MessageUtilities.sendPrivateMsg(alert, admin, null);
@@ -129,7 +130,7 @@ public class CommandHandler
             }
             catch(Exception e)
             {
-                User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+                User admin = cc.event.getJDA().getUserById(Main.getBotSettingsManager().getAdminId());
                 if(admin != null)
                 {
                     MessageUtilities.sendPrivateMsg(e.toString(), admin, null);
@@ -162,7 +163,7 @@ public class CommandHandler
             }
             catch(Exception e)
             {
-                User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+                User admin = cc.event.getJDA().getUserById(Main.getBotSettingsManager().getAdminId());
                 if(admin != null)
                 {
                     MessageUtilities.sendPrivateMsg(e.getLocalizedMessage(), admin, null);

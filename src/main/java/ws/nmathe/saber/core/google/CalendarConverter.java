@@ -3,6 +3,7 @@ package ws.nmathe.saber.core.google;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -94,6 +95,8 @@ public class CalendarConverter
         {   // safety check to insure syncCalendar is being applied to a valid channel
             return;
         }
+
+        JDA jda = Main.getShardManager().getJDA(channel.getGuild().getId());
 
         Events events;
         String calLink;
@@ -302,11 +305,6 @@ public class CalendarConverter
                             eq("channelId", channel.getId()),
                             nin("googleId", uniqueEvents));
 
-            if(Main.isSharding())
-            {   // modify the query to only include guilds managed by the shard
-                query = and(query, where(Main.getShardingEvalString("guildId")));
-            }
-
             Main.getDBDriver().getEventCollection()
                     .find(query)
                     .forEach((Consumer<? super Document>) document ->
@@ -321,7 +319,7 @@ public class CalendarConverter
                     });
 
             // set channel topic
-            boolean hasPerms = channel.getGuild().getMember(Main.getBotJda().getSelfUser())
+            boolean hasPerms = channel.getGuild().getMember(jda.getSelfUser())
                     .hasPermission(channel, Permission.MANAGE_CHANNEL);
             if(hasPerms)
             {
@@ -329,8 +327,6 @@ public class CalendarConverter
                 {
                     channel.getManagerUpdatable().getTopicField().setValue(calLink).update().queue();
                 }
-                catch(PermissionException ignored)
-                {}
                 catch(Exception e)
                 {
                     Logging.exception(this.getClass(), e);

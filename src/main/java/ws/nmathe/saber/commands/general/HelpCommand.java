@@ -13,14 +13,14 @@ import java.util.Collection;
  */
 public class HelpCommand implements Command
 {
-    private String INTRO = "```diff\n- Intro```\nI am **" + Main.getBotJda().getSelfUser().getName() + "**, the event scheduling discord bot." +
+    private String INTRO = "```diff\n- Intro```\nI am **" + Main.getShardManager().getJDA().getSelfUser().getName() + "**, the event scheduling discord bot." +
             " I can provide your discord with basic event schedule management.\nInvite me to your discord and create " +
             "a dedicated command channel named **" + Main.getBotSettingsManager().getControlChan() + "** to get started.\n\n" +
 
             "github: <https://github.com/notem/Saber-Bot>\n" +
             "userdocs: <https://nmathe.ws/bots/saber>\n" +
             "support: <https://discord.gg/ZQZnXsC>\n" +
-            "invite: <https://discordapp.com/api/oauth2/authorize?client_id=" + Main.getBotJda().getSelfUser().getId() +
+            "invite: <https://discordapp.com/api/oauth2/authorize?client_id=" + Main.getShardManager().getJDA().getSelfUser().getId() +
             "&scope=bot&permissions=523344>\n\n";
 
     @Override

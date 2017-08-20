@@ -37,12 +37,12 @@ public class GlobalMsgCommand implements Command
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
         String msg = "";
-        for( String arg : args )
+        for(String arg : args)
         {
             msg += arg + " ";
         }
 
-        for( Guild guild : Main.getBotJda().getGuilds() )
+        for(Guild guild : Main.getShardManager().getGuilds())
         {
             String channelId = Main.getGuildSettingsManager().getGuildSettings(guild.getId()).getCommandChannelId();
             if(channelId == null) // look for default control channel name

@@ -30,25 +30,23 @@ class ScheduleSyncer implements Runnable
 
     public void run()
     {
-        // if the bot is not connected to the discord websocket, do not sync schedules
-        if(JDA.Status.valueOf("CONNECTED") != Main.getBotJda().getStatus()) return;
-
         Logging.info(this.getClass(), "Running schedule syncer. . .");
         Bson query = and(
                         ne("sync_address", "off"),
                         lte("sync_time", new Date()));
-
-        if(Main.isSharding())
-        {
-            // modify query to include guilds managed by the shard
-            query = and(query, where(Main.getShardingEvalString("guildId")));
-        }
 
         Main.getDBDriver().getScheduleCollection()
                 .find(query)
                 .projection(fields(include("_id", "sync_time", "sync_address")))
                 .forEach((Consumer<? super Document>) document ->
         {
+            // identify which shard is responsible for the schedule
+            String guildId = document.getString("guildId");
+            JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
+
+            // if the shard is not connected, do not sync schedules
+            if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
             executor.execute(() ->
             {
                 try
@@ -68,9 +66,9 @@ class ScheduleSyncer implements Runnable
                     {
                         Main.getCalendarConverter().syncCalendar(
                                 (String) document.get("sync_address"),
-                                Main.getBotJda().getTextChannelById(document.getString("_id")));
+                                jda.getTextChannelById(document.getString("_id")));
 
-                        TextChannel channel = Main.getBotJda().getTextChannelById(document.getString("_id"));
+                        TextChannel channel = jda.getTextChannelById(document.getString("_id"));
                         Logging.info(this.getClass(), "Synchronized schedule #" + channel.getName() + " [" +
                                 document.getString("_id") + "] on '" + channel.getGuild().getName() + "' [" +
                                 channel.getGuild().getId() + "]");

@@ -35,7 +35,7 @@ public class StatsCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        JDA.ShardInfo info = Main.getBotJda().getShardInfo();
+        JDA.ShardInfo info = event.getJDA().getShardInfo();
         Runtime rt = Runtime.getRuntime();
         RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
 
@@ -45,8 +45,8 @@ public class StatsCommand implements Command
                 "   Schedules: " + Main.getDBDriver().getScheduleCollection().count() + "\n" +
                 "\n\"Sharding\"\n" +
                 "     ShardId: " + info.getShardId() + "/" + info.getShardTotal() + "\n" +
-                "      Guilds: " + Main.getBotJda().getGuilds().size() + "\n" +
-                "       Users: " + Main.getBotJda().getUsers().size() + "\n" +
+                "      Guilds: " + event.getJDA().getGuilds().size() + "\n" +
+                "       Users: " + event.getJDA().getUsers().size() + "\n" +
                 "\n\"Application\"\n" +
                 "Memory-total: " +rt.totalMemory()/1024/1024 + " MB\n" +
                 "      -free : " + rt.freeMemory()/1024/1024 + " MB\n" +

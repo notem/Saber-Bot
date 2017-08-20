@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
@@ -161,7 +162,9 @@ public class ScheduleEntry
         long diff =  Instant.now().getEpochSecond() - time.plusSeconds(60*3).getEpochSecond();
         if(diff > 0)
         {
-            User admin = Main.getBotJda().getUserById(Main.getBotSettingsManager().getAdminId());
+            JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
+
+            User admin = jda.getUserById(Main.getBotSettingsManager().getAdminId());
             MessageUtilities.sendPrivateMsg("Event **" + this.entryTitle + "**'s [" + this.entryId + "] " +
                     type + " notification was sent **" + diff/60 + "** minutes late!", admin, null);
         }
@@ -499,9 +502,9 @@ public class ScheduleEntry
         Message msg;
         try
         {
-            msg = Main.getBotJda()
-                    //.getGuildById(this.guildId)
-                    .getTextChannelById(this.chanId)
+            JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
+
+            msg = jda.getTextChannelById(this.chanId)
                     .getMessageById(this.msgId)
                     .complete();
         }
@@ -641,5 +644,4 @@ public class ScheduleEntry
         this.msgId = msg.getId();
         return this;
     }
-
 }

@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
@@ -61,6 +62,11 @@ public class EntryManager
      */
     public Integer newEntry(ScheduleEntry se)
     {
+        // identify which shard is responsible for the schedule
+        String guildId = se.getGuildId();
+        String channelId = se.getChannelId();
+        JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
+
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(se.getChannelId()))
@@ -97,12 +103,9 @@ public class EntryManager
         Message message = MessageGenerator.generate(se);
 
         // send message to schedule
-        TextChannel channel = Main.getBotJda().getTextChannelById(se.getChannelId());
+        TextChannel channel = jda.getTextChannelById(channelId);
         MessageUtilities.sendMsg(message, channel, msg ->
         {
-            String guildId = msg.getGuild().getId();
-            String channelId = msg.getChannel().getId();
-
             // add reaction options if rsvp is enabled
             if( Main.getScheduleManager().isRSVPEnabled(channelId) )
             {

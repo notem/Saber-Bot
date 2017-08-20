@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -84,31 +85,38 @@ public class DeleteCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        if( args[0].equals("all") )
+        try
         {
-            // delete all schedule
-            Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId())
-                    .forEach(cId -> Main.getScheduleManager().deleteSchedule(cId));
-            MessageUtilities.sendMsg("All events and schedules for this guild has been cleared.", event.getChannel(), null);
-        }
-        else if(VerifyUtilities.verifyHex(args[0]))
-        {
-            // delete single event
-            Integer entryId = Integer.decode("0x" + args[0]);
-            ScheduleEntry entry = Main.getEntryManager().getEntry(entryId);
-            Message msg = entry.getMessageObject();
-            if( msg==null )
-                return;
+            if( args[0].equals("all") )
+            {
+                // delete all schedule
+                Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId())
+                        .forEach(cId -> Main.getScheduleManager().deleteSchedule(cId));
+                MessageUtilities.sendMsg("All events and schedules for this guild has been cleared.", event.getChannel(), null);
+            }
+            else if(VerifyUtilities.verifyHex(args[0]))
+            {
+                // delete single event
+                Integer entryId = Integer.decode("0x" + args[0]);
+                ScheduleEntry entry = Main.getEntryManager().getEntry(entryId);
+                Message msg = entry.getMessageObject();
+                if( msg==null )
+                    return;
 
-            Main.getEntryManager().removeEntry(entryId);
-            MessageUtilities.deleteMsg(msg, null);
-            MessageUtilities.sendMsg("The event with :id: " + entryId + " removed.", event.getChannel(), null);
+                Main.getEntryManager().removeEntry(entryId);
+                MessageUtilities.deleteMsg(msg, null);
+                MessageUtilities.sendMsg("The event with :id: " + entryId + " removed.", event.getChannel(), null);
+            }
+            else
+            {
+                // delete schedule
+                Main.getScheduleManager().deleteSchedule(args[0].replace("<#","").replace(">",""));
+                MessageUtilities.sendMsg("That schedule has been removed", event.getChannel(), null);
+            }
         }
-        else
+        catch(Exception e)
         {
-            // delete schedule
-            Main.getScheduleManager().deleteSchedule(args[0].replace("<#","").replace(">",""));
-            MessageUtilities.sendMsg("That schedule has been removed", event.getChannel(), null);
+            Logging.exception(this.getClass(), e);
         }
     }
 }

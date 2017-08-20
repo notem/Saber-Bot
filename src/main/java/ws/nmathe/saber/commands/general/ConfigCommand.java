@@ -7,6 +7,7 @@ import ws.nmathe.saber.commands.Command;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
@@ -311,326 +312,347 @@ public class ConfigCommand implements Command
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
-        int index = 0;
-        String cId = args[index].replace("<#","").replace(">","");
-        TextChannel scheduleChan = event.getGuild()
-                .getTextChannelById(args[index].replace("<#","").replace(">",""));
-
-        index++;
-
-        if (args.length > 1)
+        try
         {
-            switch (args[index++])
+            int index = 0;
+            String cId = args[index].replace("<#","").replace(">","");
+            TextChannel scheduleChan = event.getGuild()
+                    .getTextChannelById(args[index].replace("<#","").replace(">",""));
+
+            index++;
+
+            if (args.length > 1)
             {
-                case "m":
-                case "msg":
-                    String msgFormat;
-                    switch(args[index].toLowerCase())
-                    {
-                        case "reset":
-                        case "default":
-                            msgFormat = Main.getBotSettingsManager().getAnnounceFormat();
-                            break;
+                switch (args[index++])
+                {
+                    case "m":
+                    case "msg":
+                        String msgFormat;
+                        switch(args[index].toLowerCase())
+                        {
+                            case "reset":
+                            case "default":
+                                msgFormat = Main.getBotSettingsManager().getAnnounceFormat();
+                                break;
 
-                        default:
-                            msgFormat = args[index];
-                            break;
-                    }
-                    Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), msgFormat);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
-                    break;
+                            default:
+                                msgFormat = args[index];
+                                break;
+                        }
+                        Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), msgFormat);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
+                        break;
 
-                case "ch":
-                case "chan":
-                    String chanName;
-                    String chanId = args[index].replace("<#","").replace(">","");
-                    try
-                    {
-                        TextChannel tmp = event.getGuild().getTextChannelById(chanId);
-                        if(tmp!=null)
-                            chanName = tmp.getName();
-                        else
-                            chanName = args[index];
-                    }
-                    catch(Exception e)
-                    {
-                        chanName = args[index];
-                    }
-
-                    Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
-                    break;
-
-
-                case "em":
-                case "end-msg":
-                    String endFormat;
-                    switch(args[index].toLowerCase())
-                    {
-                        case "reset":
-                        case "default":
-                        case "null":
-                            endFormat = null;
-                            break;
-
-                        default:
-                            endFormat = args[index];
-                            break;
-                    }
-                    Main.getScheduleManager().setEndAnnounceFormat(scheduleChan.getId(), endFormat);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
-                    break;
-
-                case "ech":
-                case "end-chan":
-                    String endChanName;
-                    switch(args[index].toLowerCase())
-                    {
-                        case "reset":
-                        case "default":
-                        case "null":
-                            endChanName = null;
-                            break;
-
-                        default:
-                            String endChanId = args[index].replace("<#","").replace(">","");
-                            try
-                            {
-                                TextChannel tmp = event.getGuild().getTextChannelById(endChanId);
-                                if(tmp!=null)
-                                    endChanName = tmp.getName();
-                                else
-                                    endChanName = args[index];
-                            }
-                            catch(Exception e)
-                            {
-                                endChanName = args[index];
-                            }
-                    }
-                    Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanName);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
-                    break;
-
-                case "z":
-                case "zone":
-                    ZoneId zone = ZoneId.of(args[index]);
-                    Main.getScheduleManager().setTimeZone(scheduleChan.getId(), zone);
-
-                    // correct/reload the event displays
-                    Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
-                            .forEach((Consumer<? super Document>) document ->
-                                    {
-                                        Integer id = document.getInteger("_id");
-
-                                        // if the timezone conversion causes the end go past 24:00
-                                        // the date needs to be corrected
-                                        ScheduleEntry se = Main.getEntryManager().getEntry(id);
-                                        if(se.getStart().isAfter(se.getEnd()))
-                                        {
-                                            Main.getDBDriver().getEventCollection().updateOne(
-                                                    eq("_id", id),
-                                                    set("end", Date.from(se.getEnd().plusDays(1).toInstant()))
-                                            );
-                                        }
-
-                                        // reload the entry's display to match new timezone
-                                        Main.getEntryManager().reloadEntry(id);
-                                    });
-
-                    // disable auto-sync'ing timezone
-                    Main.getDBDriver().getScheduleCollection()
-                            .updateOne(eq("_id", scheduleChan.getId()), set("timezone_sync", false));
-
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
-                    break;
-
-                case "cl":
-                case "clock":
-                    Main.getScheduleManager().setClockFormat(scheduleChan.getId(), args[index]);
-
-                    // reload the schedule display
-                    Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
-                            .forEach((Consumer<? super Document>) document ->
-                                    Main.getEntryManager().reloadEntry((Integer) document.get("_id")));
-
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
-                    break;
-
-                case "s":
-                case "sync":
-                    if( Main.getCalendarConverter().checkValidAddress(args[index]) )
-                        Main.getScheduleManager().setAddress(scheduleChan.getId(), args[index]);
-                    else
-                        Main.getScheduleManager().setAddress(scheduleChan.getId(), "off");
-
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
-                    break;
-
-                case "t":
-                case "time":
-                    ZonedDateTime syncTime = ParsingUtilities.parseTime(
-                            ZonedDateTime.now(Main.getScheduleManager().getTimeZone(cId)),
-                            args[index]
-                    );
-
-                    // don't allow times set in the past
-                    if(syncTime.isBefore(ZonedDateTime.now()))
-                        syncTime.plusDays(1);
-
-                    Main.getScheduleManager().setSyncTime(cId, Date.from(syncTime.toInstant()));
-
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 4), event.getChannel(), null);
-                    break;
-
-                case "r":
-                case "remind":
-                    List<Integer> rem;
-                    if(args[index].toLowerCase().equals("off"))
-                        rem = new ArrayList<>();
-                    else
-                        rem = ParsingUtilities.parseReminderStr(args[index]);
-
-                    Main.getScheduleManager().setDefaultReminders(cId, rem);
-
-                    // for every entry on channel, update
-                    Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
-                            .forEach((Consumer<? super Document>) document ->
-                            {
-                                // generate new entry reminders
-                                List<Date> reminders = new ArrayList<>();
-                                Instant start = ((Date) document.get("start")).toInstant();
-                                for(Integer til : rem)
-                                {
-                                    if(Instant.now().until(start, ChronoUnit.MINUTES) > til)
-                                    {
-                                        reminders.add(Date.from(start.minusSeconds(til*60)));
-                                    }
-                                }
-
-                                // update db
-                                Main.getDBDriver().getEventCollection()
-                                        .updateOne(eq("_id", document.get("_id")), set("reminders", reminders));
-
-                                // reload displayed message
-                                Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
-                            });
-
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
-                    break;
-
-                case "rm":
-                case "remind-msg":
-                    String remindFormat;
-                    switch(args[index].toLowerCase())
-                    {
-                        case "reset":
-                        case "default":
-                        case "null":
-                            remindFormat = null;
-                            break;
-
-                        default:
-                            remindFormat = args[index];
-                            break;
-                    }
-                    Main.getScheduleManager().setReminderFormat(scheduleChan.getId(), remindFormat);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
-                    break;
-
-                case "rc":
-                case "remind-chan":
-                    switch(args[index].toLowerCase())
-                    {
-                        case "reset":
-                        case "default":
-                        case "null":
-                            chanName = null;
-                            break;
-
-                        default:
-                            chanId = args[index].replace("<#","").replace(">","");
-                            try
-                            {
-                                TextChannel tmp2 = event.getGuild().getTextChannelById(chanId);
-                                if(tmp2!=null)
-                                    chanName = tmp2.getName();
-                                else
-                                    chanName = args[index];
-                            }
-                            catch(Exception e)
-                            {
+                    case "ch":
+                    case "chan":
+                        String chanName;
+                        String chanId = args[index].replace("<#","").replace(">","");
+                        try
+                        {
+                            TextChannel tmp = event.getGuild().getTextChannelById(chanId);
+                            if(tmp!=null)
+                                chanName = tmp.getName();
+                            else
                                 chanName = args[index];
-                            }
-                            break;
-                    }
-                    Main.getScheduleManager().setReminderChan(scheduleChan.getId(), chanName);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
-                    break;
-
-                case "rsvp":
-                    boolean enabled = Main.getScheduleManager().isRSVPEnabled(cId);
-                    boolean new_enabled;
-                    switch(args[index].toLowerCase())
-                    {
-                        case "on":
-                        case "true":
-                        case "yes":
-                        case "y":
-                            new_enabled = true;
-                            break;
-
-                        default:
-                            new_enabled = false;
-                            break;
-                    }
-
-                    if(enabled != new_enabled)
-                    {
-                        if(new_enabled)
-                        {
-                            // update every entry on the schedule
-                            Main.getDBDriver().getEventCollection().updateMany(
-                                    eq("channelId", scheduleChan.getId()),
-                                    and(set("rsvp_yes", new ArrayList<>()), set("rsvp_no", new ArrayList<>()),
-                                            set("rsvp_undecided", new ArrayList<>())));
-
-                            // for each entry on the schedule
-                            Main.getDBDriver().getEventCollection()
-                                    .find(eq("channelId", scheduleChan.getId()))
-                                    .forEach((Consumer<? super Document>) document ->
-                                    {
-                                        // add reaction options
-                                        Message msg = event.getGuild()
-                                                .getTextChannelById(document.getString("channelId"))
-                                                .getMessageById(document.getString("messageId"))
-                                                .complete();
-
-                                        msg.addReaction(Main.getBotSettingsManager().getYesEmoji()).queue();
-                                        msg.addReaction(Main.getBotSettingsManager().getNoEmoji()).queue();
-                                        msg.addReaction(Main.getBotSettingsManager().getClearEmoji()).queue();
-                                    });
                         }
+                        catch(Exception e)
+                        {
+                            chanName = args[index];
+                        }
+
+                        Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
+                        break;
+
+
+                    case "em":
+                    case "end-msg":
+                        String endFormat;
+                        switch(args[index].toLowerCase())
+                        {
+                            case "reset":
+                            case "default":
+                            case "null":
+                                endFormat = null;
+                                break;
+
+                            default:
+                                endFormat = args[index];
+                                break;
+                        }
+                        Main.getScheduleManager().setEndAnnounceFormat(scheduleChan.getId(), endFormat);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
+                        break;
+
+                    case "ech":
+                    case "end-chan":
+                        String endChanName;
+                        switch(args[index].toLowerCase())
+                        {
+                            case "reset":
+                            case "default":
+                            case "null":
+                                endChanName = null;
+                                break;
+
+                            default:
+                                String endChanId = args[index].replace("<#","").replace(">","");
+                                try
+                                {
+                                    TextChannel tmp = event.getGuild().getTextChannelById(endChanId);
+                                    if(tmp!=null)
+                                        endChanName = tmp.getName();
+                                    else
+                                        endChanName = args[index];
+                                }
+                                catch(Exception e)
+                                {
+                                    endChanName = args[index];
+                                }
+                        }
+                        Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanName);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
+                        break;
+
+                    case "z":
+                    case "zone":
+                        ZoneId zone = ZoneId.of(args[index]);
+                        Main.getScheduleManager().setTimeZone(scheduleChan.getId(), zone);
+
+                        // correct/reload the event displays
+                        Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
+                                .forEach((Consumer<? super Document>) document ->
+                                {
+                                    Integer id = document.getInteger("_id");
+
+                                    // if the timezone conversion causes the end go past 24:00
+                                    // the date needs to be corrected
+                                    ScheduleEntry se = Main.getEntryManager().getEntry(id);
+                                    if(se.getStart().isAfter(se.getEnd()))
+                                    {
+                                        Main.getDBDriver().getEventCollection().updateOne(
+                                                eq("_id", id),
+                                                set("end", Date.from(se.getEnd().plusDays(1).toInstant()))
+                                        );
+                                    }
+
+                                    // reload the entry's display to match new timezone
+                                    Main.getEntryManager().reloadEntry(id);
+                                });
+
+                        // disable auto-sync'ing timezone
+                        Main.getDBDriver().getScheduleCollection()
+                                .updateOne(eq("_id", scheduleChan.getId()), set("timezone_sync", false));
+
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                        break;
+
+                    case "cl":
+                    case "clock":
+                        Main.getScheduleManager().setClockFormat(scheduleChan.getId(), args[index]);
+
+                        // reload the schedule display
+                        Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
+                                .forEach((Consumer<? super Document>) document ->
+                                        Main.getEntryManager().reloadEntry((Integer) document.get("_id")));
+
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                        break;
+
+                    case "s":
+                    case "sync":
+                        if( Main.getCalendarConverter().checkValidAddress(args[index]) )
+                            Main.getScheduleManager().setAddress(scheduleChan.getId(), args[index]);
                         else
+                            Main.getScheduleManager().setAddress(scheduleChan.getId(), "off");
+
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                        break;
+
+                    case "t":
+                    case "time":
+                        ZonedDateTime syncTime = ParsingUtilities.parseTime(
+                                ZonedDateTime.now(Main.getScheduleManager().getTimeZone(cId)),
+                                args[index]
+                        );
+
+                        // don't allow times set in the past
+                        if(syncTime.isBefore(ZonedDateTime.now()))
+                            syncTime.plusDays(1);
+
+                        Main.getScheduleManager().setSyncTime(cId, Date.from(syncTime.toInstant()));
+
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 4), event.getChannel(), null);
+                        break;
+
+                    case "r":
+                    case "remind":
+                        List<Integer> rem;
+                        if(args[index].toLowerCase().equals("off"))
+                            rem = new ArrayList<>();
+                        else
+                            rem = ParsingUtilities.parseReminderStr(args[index]);
+
+                        Main.getScheduleManager().setDefaultReminders(cId, rem);
+
+                        // for every entry on channel, update
+                        Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
+                                .forEach((Consumer<? super Document>) document ->
+                                {
+                                    // generate new entry reminders
+                                    List<Date> reminders = new ArrayList<>();
+                                    Instant start = ((Date) document.get("start")).toInstant();
+                                    for(Integer til : rem)
+                                    {
+                                        if(Instant.now().until(start, ChronoUnit.MINUTES) > til)
+                                        {
+                                            reminders.add(Date.from(start.minusSeconds(til*60)));
+                                        }
+                                    }
+
+                                    // update db
+                                    Main.getDBDriver().getEventCollection()
+                                            .updateOne(eq("_id", document.get("_id")), set("reminders", reminders));
+
+                                    // reload displayed message
+                                    Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
+                                });
+
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                        break;
+
+                    case "rm":
+                    case "remind-msg":
+                        String remindFormat;
+                        switch(args[index].toLowerCase())
                         {
-                            // update every entry on the schedule
-                            Main.getDBDriver().getEventCollection().updateMany(
-                                    eq("channelId", scheduleChan.getId()),
-                                    and(set("rsvp_yes", null), set("rsvp_no", null), set("rsvp_undecided", null)));
+                            case "reset":
+                            case "default":
+                            case "null":
+                                remindFormat = null;
+                                break;
+
+                            default:
+                                remindFormat = args[index];
+                                break;
+                        }
+                        Main.getScheduleManager().setReminderFormat(scheduleChan.getId(), remindFormat);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                        break;
+
+                    case "rc":
+                    case "remind-chan":
+                        switch(args[index].toLowerCase())
+                        {
+                            case "reset":
+                            case "default":
+                            case "null":
+                                chanName = null;
+                                break;
+
+                            default:
+                                chanId = args[index].replace("<#","").replace(">","");
+                                try
+                                {
+                                    TextChannel tmp2 = event.getGuild().getTextChannelById(chanId);
+                                    if(tmp2!=null)
+                                        chanName = tmp2.getName();
+                                    else
+                                        chanName = args[index];
+                                }
+                                catch(Exception e)
+                                {
+                                    chanName = args[index];
+                                }
+                                break;
+                        }
+                        Main.getScheduleManager().setReminderChan(scheduleChan.getId(), chanName);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                        break;
+
+                    case "rsvp":
+                        boolean enabled = Main.getScheduleManager().isRSVPEnabled(cId);
+                        boolean new_enabled;
+                        switch(args[index].toLowerCase())
+                        {
+                            case "on":
+                            case "true":
+                            case "yes":
+                            case "y":
+                                new_enabled = true;
+                                break;
+
+                            default:
+                                new_enabled = false;
+                                break;
+                        }
+
+                        if(enabled != new_enabled)
+                        {
+                            if(new_enabled)
+                            {
+                                // update every entry on the schedule
+                                Main.getDBDriver().getEventCollection().updateMany(
+                                        eq("channelId", scheduleChan.getId()),
+                                        and(set("rsvp_yes", new ArrayList<>()), set("rsvp_no", new ArrayList<>()),
+                                                set("rsvp_undecided", new ArrayList<>())));
+
+                                // for each entry on the schedule
+                                Main.getDBDriver().getEventCollection()
+                                        .find(eq("channelId", scheduleChan.getId()))
+                                        .forEach((Consumer<? super Document>) document ->
+                                        {
+                                            // add reaction options
+                                            Message msg = event.getGuild()
+                                                    .getTextChannelById(document.getString("channelId"))
+                                                    .getMessageById(document.getString("messageId"))
+                                                    .complete();
+
+                                            msg.addReaction(Main.getBotSettingsManager().getYesEmoji()).queue();
+                                            msg.addReaction(Main.getBotSettingsManager().getNoEmoji()).queue();
+                                            msg.addReaction(Main.getBotSettingsManager().getClearEmoji()).queue();
+                                        });
+                            }
+                            else
+                            {
+                                // update every entry on the schedule
+                                Main.getDBDriver().getEventCollection().updateMany(
+                                        eq("channelId", scheduleChan.getId()),
+                                        and(set("rsvp_yes", null), set("rsvp_no", null), set("rsvp_undecided", null)));
+
+                                // for each entry on the schedule
+                                Main.getDBDriver().getEventCollection()
+                                        .find(eq("channelId", scheduleChan.getId()))
+                                        .forEach((Consumer<? super Document>) document ->
+                                        {
+                                            // clear reactions
+                                            event.getGuild().getTextChannelById(document.getString("channelId"))
+                                                    .getMessageById(document.getString("messageId")).complete()
+                                                    .clearReactions().queue();
+                                        });
+                            }
+
+                            // set schedule settings
+                            Main.getScheduleManager().setRSVPEnable(cId, new_enabled);
 
                             // for each entry on the schedule
                             Main.getDBDriver().getEventCollection()
                                     .find(eq("channelId", scheduleChan.getId()))
                                     .forEach((Consumer<? super Document>) document ->
-                                    {
-                                        // clear reactions
-                                        event.getGuild().getTextChannelById(document.getString("channelId"))
-                                                .getMessageById(document.getString("messageId")).complete()
-                                                .clearReactions().queue();
-                                    });
+                                            Main.getEntryManager().reloadEntry(document.getInteger("_id"))
+                                    );
                         }
 
-                        // set schedule settings
-                        Main.getScheduleManager().setRSVPEnable(cId, new_enabled);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                        break;
+
+                    case "st":
+                    case "style":
+                        String style = args[index].toLowerCase();
+                        if(style.equals("full"))
+                            Main.getScheduleManager().setStyle(cId, style);
+                        else if(style.equals("narrow"))
+                            Main.getScheduleManager().setStyle(cId, style);
 
                         // for each entry on the schedule
                         Main.getDBDriver().getEventCollection()
@@ -638,71 +660,57 @@ public class ConfigCommand implements Command
                                 .forEach((Consumer<? super Document>) document ->
                                         Main.getEntryManager().reloadEntry(document.getInteger("_id"))
                                 );
-                    }
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                        break;
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
-                    break;
+                    case "l":
+                    case "len":
+                    case "length":
+                        Main.getScheduleManager().setSyncLength(cId, Integer.parseInt(args[index]));
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 4), event.getChannel(), null);
+                        break;
 
-                case "st":
-                case "style":
-                    String style = args[index].toLowerCase();
-                    if(style.equals("full"))
-                        Main.getScheduleManager().setStyle(cId, style);
-                    else if(style.equals("narrow"))
-                        Main.getScheduleManager().setStyle(cId, style);
+                    case "so":
+                    case "sort":
+                        int sortType;
+                        switch(args[index])
+                        {
+                            case "on":
+                            case "asc":
+                            case "ascending":
+                                sortType = 1;
+                                break;
+                            case "desc":
+                            case "descending":
+                                sortType = 2;
+                                break;
+                            default:
+                                sortType = 0;
+                                break;
+                        }
+                        Main.getScheduleManager().setAutoSort(cId, sortType);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
 
-                    // for each entry on the schedule
-                    Main.getDBDriver().getEventCollection()
-                            .find(eq("channelId", scheduleChan.getId()))
-                            .forEach((Consumer<? super Document>) document ->
-                                    Main.getEntryManager().reloadEntry(document.getInteger("_id"))
-                            );
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
-                    break;
-
-                case "l":
-                case "len":
-                case "length":
-                    Main.getScheduleManager().setSyncLength(cId, Integer.parseInt(args[index]));
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 4), event.getChannel(), null);
-                    break;
-
-                case "so":
-                case "sort":
-                    int sortType;
-                    switch(args[index])
-                    {
-                        case "on":
-                        case "asc":
-                        case "ascending":
-                            sortType = 1;
-                            break;
-                        case "desc":
-                        case "descending":
-                            sortType = 2;
-                            break;
-                        default:
-                            sortType = 0;
-                            break;
-                    }
-                    Main.getScheduleManager().setAutoSort(cId, sortType);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
-
-                    // now sort the schedule
-                    if(sortType == 1)
-                    {
-                        Main.getScheduleManager().sortSchedule(cId, false);
-                    }
-                    if(sortType == 2)
-                    {
-                        Main.getScheduleManager().sortSchedule(cId, true);
-                    }
-                    break;
+                        // now sort the schedule
+                        if(sortType == 1)
+                        {
+                            Main.getScheduleManager().sortSchedule(cId, false);
+                        }
+                        if(sortType == 2)
+                        {
+                            Main.getScheduleManager().sortSchedule(cId, true);
+                        }
+                        break;
+                }
+            }
+            else    // print out all settings
+            {
+                MessageUtilities.sendMsg(this.genMsgStr(cId, 0), event.getChannel(), null);
             }
         }
-        else    // print out all settings
+        catch(Exception e)
         {
-            MessageUtilities.sendMsg(this.genMsgStr(cId, 0), event.getChannel(), null);
+            Logging.exception(this.getClass(), e);
         }
     }
 

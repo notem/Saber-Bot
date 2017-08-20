@@ -132,7 +132,7 @@ public class BotSettingsManager
         String rsvp_clear;
         String google_service_key;
         int log_level;
-        int shard_id;
+        List<Integer> shards;
         int shard_total;
 
         BotSettings()
@@ -143,8 +143,8 @@ public class BotSettingsManager
             mongodb = "mongodb://localhost:27017";
             log_level = 4;
 
-            shard_id = 0;
-            shard_total = 1;
+            shards = new ArrayList<>();
+            shard_total = 0;
 
             prefix = "!";
             admin_prefix = "s.";
@@ -278,9 +278,9 @@ public class BotSettingsManager
         return settings.log_level;
     }
 
-    public int getShardId()
+    public List<Integer> getShards()
     {
-        return settings.shard_id;
+        return settings.shards;
     }
 
     public int getShardTotal()

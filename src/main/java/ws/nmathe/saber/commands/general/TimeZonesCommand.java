@@ -1,6 +1,7 @@
 package ws.nmathe.saber.commands.general;
 
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
@@ -49,26 +50,33 @@ public class TimeZonesCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        Set<String> zones = ZoneId.getAvailableZoneIds();
-
-        String msg = "**Available options for time zones**\n";
-        for (String zone : zones )
+        try
         {
-            if (msg.length() > 1900)
-            {
-                MessageUtilities.sendMsg(msg, event.getChannel(), null);
-                try
-                {Thread.sleep(1000);}
-                catch( Exception ignored )
-                { }
-                msg = "**continued. . .**\n";
-            }
-            if( args.length == 0 )
-                msg += "  " + zone + "\n";
-            else if( zone.toUpperCase().contains(args[0].toUpperCase()) )
-                msg += "  " + zone + "\n";
-        }
+            Set<String> zones = ZoneId.getAvailableZoneIds();
 
-        MessageUtilities.sendMsg(msg, event.getChannel(), null);
+            String msg = "**Available options for time zones**\n";
+            for (String zone : zones )
+            {
+                if (msg.length() > 1900)
+                {
+                    MessageUtilities.sendMsg(msg, event.getChannel(), null);
+                    try
+                    {Thread.sleep(1000);}
+                    catch( Exception ignored )
+                    { }
+                    msg = "**continued. . .**\n";
+                }
+                if( args.length == 0 )
+                    msg += "  " + zone + "\n";
+                else if( zone.toUpperCase().contains(args[0].toUpperCase()) )
+                    msg += "  " + zone + "\n";
+            }
+
+            MessageUtilities.sendMsg(msg, event.getChannel(), null);
+        }
+        catch(Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+        }
     }
 }
