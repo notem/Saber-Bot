@@ -52,7 +52,7 @@ public class ShardManager
                             .setAutoReconnect(true)
                             .useSharding(shardId, shardTotal);
 
-                    JDA jda = jdaBuilder.buildAsync();
+                    JDA jda = jdaBuilder.buildBlocking();
 
                     this.setGamesList(jda);
 
@@ -187,10 +187,9 @@ public class ShardManager
 
     /**
      * Initializes a schedule timer which iterates the "NowPlaying" game list for a JDA object
-     * Needs only to be set for one shard when sharding
-     * @param jda primary JDA
+     * @param shard JDA object
      */
-    private void setGamesList(JDA jda)
+    private void setGamesList(JDA shard)
     {
         // cycle "now playing" message every 30 seconds
         (new Timer()).scheduleAtFixedRate(new TimerTask()
@@ -198,7 +197,7 @@ public class ShardManager
             @Override
             public void run()
             {
-                jda.getPresence().setGame(new Game()
+                shard.getPresence().setGame(new Game()
                 {
                     @Override
                     public String getName()
@@ -206,8 +205,8 @@ public class ShardManager
                         String name = games.next();
                         if(isSharding())
                         {
-                            name = name.replace("$shardId", jda.getShardInfo().getShardId()+"");
-                            name = name.replace("$shardTotal", jda.getShardInfo().getShardTotal()+"");
+                            name = name.replace("$shardId", shard.getShardInfo().getShardId()+"");
+                            name = name.replace("$shardTotal", shard.getShardInfo().getShardTotal()+"");
                         }
                         return name;
                     }

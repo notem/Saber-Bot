@@ -43,6 +43,7 @@ public class StatsCommand implements Command
                 "\"Database\"\n" +
                 "     Entries: " + Main.getDBDriver().getEventCollection().count() + "\n" +
                 "   Schedules: " + Main.getDBDriver().getScheduleCollection().count() + "\n" +
+                "      Guilds: " + Main.getDBDriver().getGuildCollection().count() + "\n" +
                 "\n\"Sharding\"\n" +
                 "     ShardId: " + info.getShardId() + "/" + info.getShardTotal() + "\n" +
                 "      Guilds: " + event.getJDA().getGuilds().size() + "\n" +

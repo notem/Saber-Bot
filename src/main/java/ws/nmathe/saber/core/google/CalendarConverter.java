@@ -265,6 +265,8 @@ public class CalendarConverter
                             .find(and(
                                     eq("channelId", channel.getId()),
                                     eq("googleId", googleId))).first();
+
+                    boolean hasStarted = start.isAfter(ZonedDateTime.now());
                     if(doc != null)
                     {
                         ScheduleEntry se = (new ScheduleEntry(doc))
@@ -276,13 +278,13 @@ public class CalendarConverter
                                 .setGoogleId(googleId)
                                 .setExpire(expire)
                                 .setImageUrl(imageUrl)
+                                .setStarted(hasStarted)
                                 .setThumbnailUrl(thumbnailUrl);
 
                         Main.getEntryManager().updateEntry(se);
                     }
                     else
                     {
-                        boolean hasStarted = start.isAfter(ZonedDateTime.now());
                         ScheduleEntry se = (new ScheduleEntry(channel, title, start, end))
                                 .setRepeat(repeat)
                                 .setTitleUrl(event.getHtmlLink())
