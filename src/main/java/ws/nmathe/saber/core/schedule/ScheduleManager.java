@@ -286,10 +286,12 @@ public class ScheduleManager
                 ScheduleEntry min = top;
                 for (ScheduleEntry cur : unsortedEntries)
                 {
-                    if(min.getMessageObject()!=null && cur.getMessageObject()!=null)
+                    Message minMsg = min.getMessageObject();
+                    Message topMsg = cur.getMessageObject();
+                    if(minMsg!=null && topMsg!=null)
                     {
-                        OffsetDateTime a = min.getMessageObject().getCreationTime();
-                        OffsetDateTime b = cur.getMessageObject().getCreationTime();
+                        OffsetDateTime a = minMsg.getCreationTime();
+                        OffsetDateTime b = topMsg.getCreationTime();
                         if (a.isAfter(b))
                         {
                             min = cur;
@@ -318,7 +320,7 @@ public class ScheduleManager
         }
         catch(PermissionException e)
         {
-            String m = e.getMessage() + ": " + e.getPermission();
+            String m = e.getMessage() + ": Channel ID " + cId;
             Logging.warn(this.getClass(), m);
         }
         catch(Exception e)

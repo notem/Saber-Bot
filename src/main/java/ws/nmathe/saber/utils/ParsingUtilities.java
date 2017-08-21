@@ -158,6 +158,18 @@ public class ParsingUtilities
                     case '%' :
                         announceMsg += '%';
                         break;
+
+                    case 'u' :
+                        announceMsg += entry.getTitleUrl();
+                        break;
+
+                    case 'v' :
+                        announceMsg += entry.getImageUrl();
+                        break;
+
+                    case 'w':
+                        announceMsg += entry.getThumbnailUrl();
+                        break;
                 }
 
             }

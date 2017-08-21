@@ -49,25 +49,37 @@ public class MessageGenerator
             footerStr += " | remind in ";
             long minutes = Instant.now().until(reminders.get(0).toInstant(), ChronoUnit.MINUTES);
             if(minutes<=120)
+            {
                 footerStr += " " + minutes + "m";
+            }
             else
+            {
                 footerStr += " " + (int) Math.ceil(minutes/60) + "h";
+            }
             for (int i=1; i<reminders.size()-1; i++)
             {
                 minutes = Instant.now().until(reminders.get(i).toInstant(), ChronoUnit.MINUTES);
                 if(minutes<=120)
+                {
                     footerStr += ", " + minutes + "m";
+                }
                 else
+                {
                     footerStr += ", " + (int) Math.ceil(minutes/60) + "h";
+                }
             }
             if (reminders.size()>1)
             {
                 minutes = Instant.now().until(reminders.get(reminders.size()-1).toInstant(), ChronoUnit.MINUTES);
                 footerStr += " and ";
                 if(minutes<=120)
+                {
                     footerStr += minutes + "m";
+                }
                 else
+                {
                     footerStr += (int) Math.ceil(minutes/60) + "h";
+                }
             }
         }
 

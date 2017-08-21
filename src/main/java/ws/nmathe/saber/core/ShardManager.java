@@ -54,7 +54,7 @@ public class ShardManager
 
                     JDA jda = jdaBuilder.buildBlocking();
 
-                    this.setGamesList(jda);
+                    if(shardId==0) this.setGamesList(jda);
 
                     this.jdaShards.put(shardId, jda);
                 }
@@ -202,13 +202,7 @@ public class ShardManager
                     @Override
                     public String getName()
                     {
-                        String name = games.next();
-                        if(isSharding())
-                        {
-                            name = name.replace("$shardId", shard.getShardInfo().getShardId()+"");
-                            name = name.replace("$shardTotal", shard.getShardInfo().getShardTotal()+"");
-                        }
-                        return name;
+                        return games.next();
                     }
 
                     @Override

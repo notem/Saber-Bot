@@ -266,7 +266,7 @@ public class CalendarConverter
                                     eq("channelId", channel.getId()),
                                     eq("googleId", googleId))).first();
 
-                    boolean hasStarted = start.isAfter(ZonedDateTime.now());
+                    boolean hasStarted = start.isBefore(ZonedDateTime.now());
                     if(doc != null)
                     {
                         ScheduleEntry se = (new ScheduleEntry(doc))
