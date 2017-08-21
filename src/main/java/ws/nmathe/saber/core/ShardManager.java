@@ -7,11 +7,15 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 
+import javax.security.auth.login.LoginException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The ShardManager manages the JDA objects used to interface with the Discord api
@@ -38,26 +42,39 @@ public class ShardManager
             // handle sharding
             if(shardTotal > 0)
             {
-                jdaShards = new TreeMap<Integer, JDA>();
+                this.jdaShards = new TreeMap<Integer, JDA>();
 
-                for(Integer shardId : shards)
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() ->
                 {
-                    Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
+                    try
+                    {
+                        for(Integer shardId : shards)
+                        {
+                            Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
 
-                    JDABuilder jdaBuilder = new JDABuilder(AccountType.BOT)
-                            .setToken(Main.getBotSettingsManager().getToken())
-                            .setStatus(OnlineStatus.ONLINE)
-                            .setCorePoolSize(2)
-                            .addEventListener(new EventListener())
-                            .setAutoReconnect(true)
-                            .useSharding(shardId, shardTotal);
+                            JDABuilder jdaBuilder = new JDABuilder(AccountType.BOT)
+                                    .setToken(Main.getBotSettingsManager().getToken())
+                                    .setStatus(OnlineStatus.ONLINE)
+                                    .setCorePoolSize(2)
+                                    .addEventListener(new EventListener())
+                                    .setAutoReconnect(true)
+                                    .useSharding(shardId, shardTotal);
 
-                    JDA jda = jdaBuilder.buildBlocking();
+                            JDA jda = jdaBuilder.buildBlocking();
 
-                    if(shardId==0) this.setGamesList(jda);
+                            if(shardId==0) this.setGamesList(jda);
 
-                    this.jdaShards.put(shardId, jda);
-                }
+                            this.jdaShards.put(shardId, jda);
+                        }
+
+                        executor.shutdown();
+                    }
+                    catch(Exception e)
+                    {
+                        Logging.exception(this.getClass(), e);
+                    }
+                });
             }
             else // no sharding
             {
