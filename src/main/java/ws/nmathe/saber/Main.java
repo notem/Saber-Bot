@@ -33,12 +33,12 @@ public class Main
             System.exit(0);
         }
 
+        mongoDriver.init();         // ready database
+        calendarConverter.init();   // connect to calendar service
+
         // create the shard manager
         shardManager = new ShardManager(botSettingsManager.getShards(), botSettingsManager.getShardTotal());
 
-        mongoDriver.init();         // ready database
-
-        calendarConverter.init();   // connect to calendar service
         entryManager.init();        // start timers
         commandHandler.init();      // ready commands
 
