@@ -44,6 +44,25 @@ public class ShardManager
             {
                 this.jdaShards = new TreeMap<Integer, JDA>();
 
+
+                Logging.info(this.getClass(), "Starting shard " + shards.get(0) + ". . .");
+
+                // build the first shard synchronously with Main
+                JDA jda = new JDABuilder(AccountType.BOT)
+                        .setToken(Main.getBotSettingsManager().getToken())
+                        .setStatus(OnlineStatus.ONLINE)
+                        .setCorePoolSize(2)
+                        .addEventListener(new EventListener())
+                        .setAutoReconnect(true)
+                        .useSharding(shards.get(0), shardTotal)
+                        .buildBlocking();
+
+                this.setGamesList(jda);
+                this.jdaShards.put(shards.get(0), jda);
+
+                shards.remove(0);
+
+                // build remaining shards synchronously (for clean startup) but concurrently with Main
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() ->
                 {
@@ -53,19 +72,17 @@ public class ShardManager
                         {
                             Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
 
-                            JDABuilder jdaBuilder = new JDABuilder(AccountType.BOT)
+                            JDA shard = new JDABuilder(AccountType.BOT)
                                     .setToken(Main.getBotSettingsManager().getToken())
                                     .setStatus(OnlineStatus.ONLINE)
                                     .setCorePoolSize(2)
                                     .addEventListener(new EventListener())
                                     .setAutoReconnect(true)
-                                    .useSharding(shardId, shardTotal);
+                                    .useSharding(shardId, shardTotal)
+                                    .buildBlocking();
 
-                            JDA jda = jdaBuilder.buildBlocking();
-
-                            if(shardId==0) this.setGamesList(jda);
-
-                            this.jdaShards.put(shardId, jda);
+                            this.setGamesList(shard);
+                            this.jdaShards.put(shardId, shard);
                         }
 
                         executor.shutdown();
