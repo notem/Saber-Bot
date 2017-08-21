@@ -13,16 +13,6 @@ import java.util.Collection;
  */
 public class HelpCommand implements Command
 {
-    private String INTRO = "```diff\n- Intro```\nI am **" + Main.getShardManager().getJDA().getSelfUser().getName() + "**, the event scheduling discord bot." +
-            " I can provide your discord with basic event schedule management.\nInvite me to your discord and create " +
-            "a dedicated command channel named **" + Main.getBotSettingsManager().getControlChan() + "** to get started.\n\n" +
-
-            "github: <https://github.com/notem/Saber-Bot>\n" +
-            "userdocs: <https://nmathe.ws/bots/saber>\n" +
-            "support: <https://discord.gg/ZQZnXsC>\n" +
-            "invite: <https://discordapp.com/api/oauth2/authorize?client_id=" + Main.getShardManager().getJDA().getSelfUser().getId() +
-            "&scope=bot&permissions=523344>\n\n";
-
     @Override
     public String name()
     {
@@ -57,6 +47,16 @@ public class HelpCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
+        String INTRO = "```diff\n- Intro```\nI am **" + Main.getShardManager().getJDA().getSelfUser().getName() + "**, the event scheduling discord bot." +
+                " I can provide your discord with basic event schedule management.\nInvite me to your discord and create " +
+                "a dedicated command channel named **" + Main.getBotSettingsManager().getControlChan() + "** to get started.\n\n" +
+
+                "github: <https://github.com/notem/Saber-Bot>\n" +
+                "userdocs: <https://nmathe.ws/bots/saber>\n" +
+                "support: <https://discord.gg/ZQZnXsC>\n" +
+                "invite: <https://discordapp.com/api/oauth2/authorize?client_id=" + Main.getShardManager().getJDA().getSelfUser().getId() +
+                "&scope=bot&permissions=523344>\n\n";
+
         String head = prefix + this.name();
 
         String USAGE_EXTENDED = "To get detailed information concerning the usage of any of these" +
