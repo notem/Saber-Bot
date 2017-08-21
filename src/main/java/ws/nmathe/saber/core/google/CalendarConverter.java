@@ -180,6 +180,7 @@ public class CalendarConverter
                 // process event description into event comments or other settings
                 String imageUrl = null;
                 String thumbnailUrl = null;
+                Integer rsvpMax = -1;
                 if( event.getDescription() != null )
                 {
                     for( String comment : event.getDescription().split("\n") )
@@ -193,6 +194,14 @@ public class CalendarConverter
                         {
                             thumbnailUrl = comment.trim().split("thumbnail:")[1].trim();
                             if(!VerifyUtilities.verifyUrl(thumbnailUrl)) imageUrl = null;
+                        }
+                        else if(comment.trim().toLowerCase().startsWith("max:"))
+                        {
+                            String str = comment.trim().split("max:")[1].trim();
+                            if(VerifyUtilities.verifyInteger(str) && Integer.parseInt(str) >= 0)
+                            {
+                                rsvpMax = Integer.parseInt(str);
+                            }
                         }
                         else if( !comment.trim().isEmpty() )
                         {
@@ -279,7 +288,8 @@ public class CalendarConverter
                                 .setExpire(expire)
                                 .setImageUrl(imageUrl)
                                 .setStarted(hasStarted)
-                                .setThumbnailUrl(thumbnailUrl);
+                                .setThumbnailUrl(thumbnailUrl)
+                                .setRsvpMax(rsvpMax);
 
                         Main.getEntryManager().updateEntry(se);
                     }
@@ -293,7 +303,8 @@ public class CalendarConverter
                                 .setImageUrl(imageUrl)
                                 .setThumbnailUrl(thumbnailUrl)
                                 .setStarted(hasStarted)
-                                .setComments(comments);
+                                .setComments(comments)
+                                .setRsvpMax(rsvpMax);
 
                         Main.getEntryManager().newEntry(se);
                     }

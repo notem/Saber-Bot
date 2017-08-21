@@ -574,9 +574,10 @@ public class ScheduleEntry
         return this;
     }
 
-    public void setRsvpMax(Integer max)
+    public ScheduleEntry setRsvpMax(Integer max)
     {
         this.rsvpYesMax = max;
+        return this;
     }
 
     public ScheduleEntry setRsvpYes(List<String> rsvp)
