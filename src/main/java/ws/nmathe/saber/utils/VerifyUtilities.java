@@ -117,7 +117,7 @@ public class VerifyUtilities
     {
         try
         {
-            new URL(arg);
+            (new URL(arg)).getContent();
         }
         catch(Exception e)
         {

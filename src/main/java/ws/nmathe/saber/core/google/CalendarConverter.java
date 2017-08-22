@@ -122,11 +122,11 @@ public class CalendarConverter
             return;
         }
 
-        // lock the schedule for syncing
-        Main.getScheduleManager().lock(channel.getId());
-
         try
         {
+            // lock the schedule for syncing
+            Main.getScheduleManager().lock(channel.getId());
+
             channel.sendTyping().queue();   // send 'is typing' while the sync is in progress
 
             // change the zone to match the calendar
@@ -221,7 +221,7 @@ public class CalendarConverter
                     }
                     catch( IOException e )
                     {
-                        continue; // skip this event (I don't know what happened!)
+                        recurrence = null;
                     }
                 }
                 if( recurrence != null )
