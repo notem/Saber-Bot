@@ -74,6 +74,8 @@ public class CalendarConverter
             Events events = service.events().list(address)
                     .setMaxResults(1)
                     .execute();
+
+            events.getItems().get(0).getSummary();
             return true;
         }
         catch( Exception e )
@@ -276,7 +278,7 @@ public class CalendarConverter
                                     eq("googleId", googleId))).first();
 
                     boolean hasStarted = start.isBefore(ZonedDateTime.now());
-                    if(doc != null)
+                    if(doc != null && (new ScheduleEntry(doc)).getMessageObject() != null)
                     {
                         ScheduleEntry se = (new ScheduleEntry(doc))
                                 .setTitle(title)

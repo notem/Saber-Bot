@@ -165,6 +165,8 @@ public class EntryManager
     {
 
         Message origMessage = se.getMessageObject();
+        if(origMessage == null) return;
+
         ZonedDateTime start = se.getStart();
         ZonedDateTime expireDate = se.getExpire();
 
@@ -193,7 +195,8 @@ public class EntryManager
         Message message = MessageGenerator.generate(se);
 
         // update message display
-        MessageUtilities.editMsg(message, origMessage, msg -> {
+        MessageUtilities.editMsg(message, origMessage, msg ->
+        {
             String guildId = msg.getGuild().getId();
             String channelId = msg.getChannel().getId();
 

@@ -162,14 +162,6 @@ public class EventListener extends ListenerAdapter
     }
 
     @Override
-    public void onMessageDelete( MessageDeleteEvent event )
-    {
-        // delete the event if the delete message was an event message
-        Main.getDBDriver().getEventCollection()
-                .findOneAndDelete(eq("messageId", event.getMessageId()));
-    }
-
-    @Override
     public void onGuildJoin( GuildJoinEvent event )
     {
         // leave guild if guild is blacklisted
@@ -222,14 +214,19 @@ public class EventListener extends ListenerAdapter
     }
 
     @Override
+    public void onMessageDelete( MessageDeleteEvent event )
+    {
+        // delete the event if the delete message was an event message
+        Main.getDBDriver().getEventCollection().findOneAndDelete(eq("messageId", event.getMessageId()));
+    }
+
+    @Override
     public void onTextChannelDelete(TextChannelDeleteEvent event)
     {
         String cId = event.getChannel().getId();
-        Document scheduleDocument = Main.getDBDriver().getScheduleCollection()
-                .find(eq("_id", cId)).first();
 
         // if the deleted channel was a schedule, clear the db entries
-        if(scheduleDocument != null)
+        if(Main.getScheduleManager().isASchedule(cId))
         {
             Main.getDBDriver().getEventCollection().deleteMany(eq("channelId", cId));
             Main.getDBDriver().getScheduleCollection().deleteOne(eq("_id", cId));
@@ -311,11 +308,7 @@ public class EventListener extends ListenerAdapter
             MessageReaction.ReactionEmote emote = event.getReaction().getEmote();
             Consumer<Throwable> errorProcessor = e ->
             {
-                if(e instanceof PermissionException)
-                {
-                    String m = e.getMessage() + ": " + event.getGuild().getId();
-                    Logging.warn(MessageUtilities.class, m);
-                }
+                if(e instanceof PermissionException) { return; }
                 else
                 {
                     Logging.exception(MessageUtilities.class, e);
@@ -401,11 +394,7 @@ public class EventListener extends ListenerAdapter
                 event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
             }
         }
-        catch( PermissionException e)
-        {
-            String m = e.getMessage() + ": Guild ID " + event.getGuild().getId();
-            Logging.warn(MessageUtilities.class, m);
-        }
+        catch( PermissionException ignored) { }
         catch(Exception e)
         {
             Logging.exception(this.getClass(), e);

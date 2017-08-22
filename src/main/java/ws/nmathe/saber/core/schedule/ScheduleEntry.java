@@ -185,10 +185,8 @@ public class ScheduleEntry
 
         if(this.entryStart.isAfter(ZonedDateTime.now()))  // don't send reminders after an event has started
         {
-            String remindMsg =
-                    ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
-            List<TextChannel> channels =
-                    msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getReminderChan(this.chanId), true);
+            String remindMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
+            List<TextChannel> channels = msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getReminderChan(this.chanId), true);
 
             for( TextChannel chan : channels )
             {
@@ -212,10 +210,8 @@ public class ScheduleEntry
         { // send the start announcement
             if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15))) // dont send start announcements if 10 minutes late
             {
-                String startMsg =
-                        ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
-                List<TextChannel> channels =
-                        msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getStartAnnounceChan(this.chanId), true);
+                String startMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
+                List<TextChannel> channels = msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getStartAnnounceChan(this.chanId), true);
 
                 for( TextChannel chan : channels )
                 {
@@ -259,10 +255,8 @@ public class ScheduleEntry
         {
             if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(15))) // dont send end announcement if 60 minutes late
             {// send the end announcement
-                String endMsg =
-                        ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
-                List<TextChannel> channels =
-                        eMsg.getGuild().getTextChannelsByName(Main.getScheduleManager().getEndAnnounceChan(this.chanId), true);
+                String endMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
+                List<TextChannel> channels = eMsg.getGuild().getTextChannelsByName(Main.getScheduleManager().getEndAnnounceChan(this.chanId), true);
 
                 for( TextChannel chan : channels)
                 {
@@ -305,6 +299,7 @@ public class ScheduleEntry
             // set the new start and end
             this.entryStart = newStart;
             this.entryEnd = newEnd;
+            this.setStarted(false);
 
             Main.getEntryManager().updateEntry(this);
         }

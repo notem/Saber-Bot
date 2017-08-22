@@ -30,11 +30,7 @@ public class MessageUtilities
         {
             chan.sendMessage(content).queue(action, e -> Logging.exception(MessageUtilities.class, e) );
         }
-        catch( PermissionException e)
-        {
-            String m = e.getMessage() + ": " + e.getPermission();
-            Logging.warn(MessageUtilities.class, m);
-        }
+        catch( PermissionException ignored) { }
         catch( Exception e)
         {
             Logging.exception(MessageUtilities.class, e);
@@ -50,22 +46,14 @@ public class MessageUtilities
         {
             chan.sendMessage(message).queue(action, e ->
             {
-                if(e instanceof PermissionException)
-                {
-                    String m = e.getMessage() + ": " + ((PermissionException) e).getPermission();
-                    Logging.warn(MessageUtilities.class, m);
-                }
+                if(e instanceof PermissionException) { return; }
                 else
                 {
                     Logging.exception(MessageUtilities.class, e);
                 }
             });
         }
-        catch( PermissionException e)
-        {
-            String m = e.getMessage() + ": " + e.getPermission();
-            Logging.warn(MessageUtilities.class, m);
-        }
+        catch( PermissionException ignored) { }
         catch(Exception e)
         {
             Logging.warn(MessageUtilities.class, e.getMessage());
@@ -81,12 +69,7 @@ public class MessageUtilities
         {
             return chan.sendMessage(message).complete();
         }
-        catch( PermissionException e)
-        {
-            String m = e.getMessage() + ": " + e.getPermission();
-            Logging.warn(MessageUtilities.class, m);
-            return null;
-        }
+        catch( PermissionException e) { return null; }
         catch(Exception e)
         {
             Logging.exception( MessageUtilities.class, e );
@@ -110,11 +93,7 @@ public class MessageUtilities
         {
             sendMsg(content, user.openPrivateChannel().complete(), action);
         }
-        catch( PermissionException e)
-        {
-            String m = e.getMessage() + ": " + e.getPermission();
-            Logging.warn(MessageUtilities.class, m);
-        }
+        catch( PermissionException ignored) { }
         catch( Exception e)
         {
             Logging.exception( MessageUtilities.class, e );
@@ -136,11 +115,8 @@ public class MessageUtilities
         {
             msg.editMessage(content).queue( action, e -> Logging.exception(MessageUtilities.class, e));
         }
-        catch( PermissionException e)
-        {
-            String m = e.getMessage() + ": " + e.getPermission();
-            Logging.warn(MessageUtilities.class, m);
-        }
+        catch( PermissionException ignored)
+        {}
         catch( Exception e)
         {
             Logging.exception( MessageUtilities.class, e );
@@ -156,10 +132,7 @@ public class MessageUtilities
             msg.editMessage(newMsg).queue(action, e ->
             {
                 if(e instanceof PermissionException)
-                {
-                    String m = e.getMessage() + ": " + ((PermissionException) e).getPermission();
-                    Logging.warn(MessageUtilities.class, m);
-                }
+                { return; }
                 else
                 {
                     Logging.exception(MessageUtilities.class, e);
@@ -168,7 +141,7 @@ public class MessageUtilities
         }
         catch( PermissionException e)
         {
-            String m = e.getMessage() + ": " + e.getPermission();
+            String m = "Could not update message on GuildID " + msg.getGuild().getId() + ": " + e.getMessage();
             Logging.warn(MessageUtilities.class, m);
         }
         catch(Exception e)
@@ -186,12 +159,7 @@ public class MessageUtilities
         {
             return msg.editMessage(newMsg).complete();
         }
-        catch( PermissionException e)
-        {
-            String m = e.getMessage() + ": " + e.getPermission();
-            Logging.warn(MessageUtilities.class, m);
-            return null;
-        }
+        catch( PermissionException e) { return null; }
         catch( Exception e)
         {
             Logging.exception( MessageUtilities.class, e );
@@ -212,21 +180,14 @@ public class MessageUtilities
             msg.delete().queue(action, e ->
             {
                 if(e instanceof PermissionException)
-                {
-                    String m = e.getMessage() + ": " + ((PermissionException) e).getPermission();
-                    Logging.warn(MessageUtilities.class, m);
-                }
+                { return; }
                 else
                 {
                     Logging.exception(MessageUtilities.class, e);
                 }
             });
         }
-        catch( PermissionException e)
-        {
-            String m = e.getMessage() + ": " + e.getPermission();
-            Logging.warn(MessageUtilities.class, m);
-        }
+        catch( PermissionException ignored) { }
         catch( Exception e)
         {
             Logging.exception(MessageUtilities.class, e);

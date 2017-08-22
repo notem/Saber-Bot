@@ -160,15 +160,15 @@ public class ParsingUtilities
                         break;
 
                     case 'u' :
-                        announceMsg += entry.getTitleUrl();
+                        announceMsg += entry.getTitleUrl()==null?"":entry.getTitleUrl();
                         break;
 
                     case 'v' :
-                        announceMsg += entry.getImageUrl();
+                        announceMsg += entry.getImageUrl()==null?"":entry.getImageUrl();
                         break;
 
                     case 'w':
-                        announceMsg += entry.getThumbnailUrl();
+                        announceMsg += entry.getThumbnailUrl()==null?"":entry.getThumbnailUrl();
                         break;
                 }
 
