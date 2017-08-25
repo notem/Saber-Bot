@@ -16,6 +16,7 @@ import javax.security.auth.login.LoginException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 /**
  * The ShardManager manages the JDA objects used to interface with the Discord api
@@ -23,6 +24,7 @@ import java.util.concurrent.Executors;
 public class ShardManager
 {
     private Map<Integer, JDA> jdaShards = null;
+    private Integer shardTotal = null;
     private JDA jda = null;
     private Iterator<String> games;
 
@@ -36,6 +38,7 @@ public class ShardManager
     {
         // initialize the list of 'Now Playing' games
         this.loadGamesList();
+        this.shardTotal = shardTotal;
 
         try // build the bot
         {
@@ -44,22 +47,19 @@ public class ShardManager
             {
                 this.jdaShards = new TreeMap<Integer, JDA>();
 
-
                 Logging.info(this.getClass(), "Starting shard " + shards.get(0) + ". . .");
 
                 // build the first shard synchronously with Main
                 JDA jda = new JDABuilder(AccountType.BOT)
                         .setToken(Main.getBotSettingsManager().getToken())
                         .setStatus(OnlineStatus.ONLINE)
-                        .setCorePoolSize(2)
+                        .setCorePoolSize(8)
                         .addEventListener(new EventListener())
                         .setAutoReconnect(true)
                         .useSharding(shards.get(0), shardTotal)
                         .buildBlocking();
 
-                this.setGamesList(jda);
                 this.jdaShards.put(shards.get(0), jda);
-
                 shards.remove(0);
 
                 // build remaining shards synchronously (for clean startup) but concurrently with Main
@@ -81,10 +81,10 @@ public class ShardManager
                                     .useSharding(shardId, shardTotal)
                                     .buildBlocking();
 
-                            this.setGamesList(shard);
                             this.jdaShards.put(shardId, shard);
                         }
 
+                        this.setGamesList();
                         executor.shutdown();
                     }
                     catch(Exception e)
@@ -103,10 +103,10 @@ public class ShardManager
                         .setCorePoolSize(2)
                         .buildBlocking();
 
-                this.setGamesList(jda);
-
                 this.jda.addEventListener(new EventListener());
                 this.jda.setAutoReconnect(true);
+
+                this.setGamesList();
 
             }
         }
@@ -220,10 +220,43 @@ public class ShardManager
 
 
     /**
-     * Initializes a schedule timer which iterates the "NowPlaying" game list for a JDA object
-     * @param shard JDA object
+     * Shuts down and recreates a JDA shard
+     * @param shardId (Integer) shardID of the JDA shard
      */
-    private void setGamesList(JDA shard)
+    public void restartShard(Integer shardId)
+    {
+        try
+        {
+            this.getShard(shardId).shutdownNow();
+            this.jdaShards.remove(shardId);
+
+            Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
+
+            JDA shard = new JDABuilder(AccountType.BOT)
+                    .setToken(Main.getBotSettingsManager().getToken())
+                    .setStatus(OnlineStatus.ONLINE)
+                    .setCorePoolSize(2)
+                    .addEventListener(new EventListener())
+                    .setAutoReconnect(true)
+                    .useSharding(shardId, this.shardTotal)
+                    .buildBlocking();
+
+            this.jdaShards.put(shardId, shard);
+        }
+        catch(RateLimitedException e)
+        {
+            Logging.warn(this.getClass(), e.getMessage() + " : " + e.getRateLimitedRoute());
+        }
+        catch(Exception e)
+        {
+            Logging.exception(this.getClass(), e);
+        }
+    }
+
+    /**
+     * Initializes a schedule timer which iterates the "NowPlaying" game list for a JDA object
+     */
+    private void setGamesList()
     {
         // cycle "now playing" message every 30 seconds
         (new Timer()).scheduleAtFixedRate(new TimerTask()
@@ -231,22 +264,38 @@ public class ShardManager
             @Override
             public void run()
             {
-                shard.getPresence().setGame(new Game()
+                Consumer<JDA> task = (shard)->
                 {
-                    @Override
-                    public String getName()
+                    shard.getPresence().setGame(new Game()
                     {
-                        return games.next();
+                        @Override
+                        public String getName()
+                        {
+                            return games.next();
+                        }
+
+                        @Override
+                        public String getUrl()
+                        { return "https://nmathe.ws/bots/saber"; }
+
+                        @Override
+                        public GameType getType()
+                        { return GameType.DEFAULT; }
+                    });
+                };
+
+                if(isSharding())
+                {
+                    for(JDA shard : getShards())
+                    {
+                        task.accept(shard);
                     }
+                }
+                else
+                {
+                    task.accept(getJDA());
+                }
 
-                    @Override
-                    public String getUrl()
-                    { return "https://nmathe.ws/bots/saber"; }
-
-                    @Override
-                    public GameType getType()
-                    { return GameType.DEFAULT; }
-                });
             }
         }, 0, 30*1000);
     }

@@ -1,5 +1,6 @@
 package ws.nmathe.saber.commands.general;
 
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
@@ -163,7 +164,9 @@ public class GuildCommand implements Command
             }
 
             // send settings message
+            JDA.ShardInfo shardInfo = event.getJDA().getShardInfo();
             String body = "```js\n" +
+                    "// Shard-" + shardInfo.getShardId() + " of " + shardInfo.getShardTotal() + "\n" +
                     "// Guild Settings\n" +
                     "[prefix]  \"" + guildSettings.getPrefix() + "\"\n";
 
