@@ -221,7 +221,11 @@ public class ParsingUtilities
         Matcher matcher = Pattern.compile("\\d+").matcher(arg);
         while (matcher.find())
         {
-            list.add(Integer.parseInt(matcher.group()));
+            String group = matcher.group();
+            if(VerifyUtilities.verifyInteger(group))
+            {
+                list.add(Integer.parseInt(group));
+            }
         }
         return list;
     }
