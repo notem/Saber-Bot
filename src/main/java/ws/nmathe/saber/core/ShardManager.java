@@ -53,7 +53,7 @@ public class ShardManager
                 JDA jda = new JDABuilder(AccountType.BOT)
                         .setToken(Main.getBotSettingsManager().getToken())
                         .setStatus(OnlineStatus.ONLINE)
-                        .setCorePoolSize(8)
+                        .setCorePoolSize(12)
                         .addEventListener(new EventListener())
                         .setAutoReconnect(true)
                         .useSharding(shards.get(0), shardTotal)
@@ -75,7 +75,7 @@ public class ShardManager
                             JDA shard = new JDABuilder(AccountType.BOT)
                                     .setToken(Main.getBotSettingsManager().getToken())
                                     .setStatus(OnlineStatus.ONLINE)
-                                    .setCorePoolSize(2)
+                                    .setCorePoolSize(6)
                                     .addEventListener(new EventListener())
                                     .setAutoReconnect(true)
                                     .useSharding(shardId, shardTotal)
@@ -100,7 +100,7 @@ public class ShardManager
                 this.jda = new JDABuilder(AccountType.BOT)
                         .setToken(Main.getBotSettingsManager().getToken())
                         .setStatus(OnlineStatus.ONLINE)
-                        .setCorePoolSize(2)
+                        .setCorePoolSize(20)
                         .buildBlocking();
 
                 this.jda.addEventListener(new EventListener());
@@ -235,7 +235,7 @@ public class ShardManager
             JDA shard = new JDABuilder(AccountType.BOT)
                     .setToken(Main.getBotSettingsManager().getToken())
                     .setStatus(OnlineStatus.ONLINE)
-                    .setCorePoolSize(2)
+                    .setCorePoolSize(6)
                     .addEventListener(new EventListener())
                     .setAutoReconnect(true)
                     .useSharding(shardId, this.shardTotal)
