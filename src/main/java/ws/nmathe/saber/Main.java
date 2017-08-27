@@ -39,9 +39,6 @@ public class Main
         // create the shard manager
         shardManager = new ShardManager(botSettingsManager.getShards(), botSettingsManager.getShardTotal());
 
-        entryManager.init();        // start timers
-        commandHandler.init();      // ready commands
-
         HttpUtilities.updateStats();
     }
 

@@ -89,6 +89,10 @@ public class ShardManager
 
                         this.startGamesTimer();
                         this.startRestartTimer();
+
+                        Main.getEntryManager().init();
+                        Main.getCommandHandler().init();
+
                         executor.shutdown();
                     }
                     catch(Exception e)
@@ -112,6 +116,9 @@ public class ShardManager
 
                 this.startGamesTimer();
                 this.startRestartTimer();
+
+                Main.getEntryManager().init();
+                Main.getCommandHandler().init();
             }
         }
         catch( Exception e )
@@ -314,7 +321,7 @@ public class ShardManager
             @Override
             public void run()
             {
-                Long responseThreshold = (long) 1000000; // place holder value
+                Long responseThreshold = (long) 200000; // place holder value
                 if(isSharding())
                 {
                     for(JDA shard : getShards())
