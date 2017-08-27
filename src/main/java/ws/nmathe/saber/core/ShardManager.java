@@ -12,7 +12,6 @@ import net.dv8tion.jda.core.utils.MiscUtil;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 
-import javax.security.auth.login.LoginException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,10 +22,14 @@ import java.util.function.Consumer;
  */
 public class ShardManager
 {
-    private Map<Integer, JDA> jdaShards = null;
     private Integer shardTotal = null;
-    private JDA jda = null;
+    private Map<Integer, JDA> jdaShards = null;     // used only when sharded
+    private JDA jda = null;                         // used only when unsharded
+
     private Iterator<String> games;
+
+    private Integer primaryPoolSize = 15;   // used by the jda responsible for handling DMs
+    private Integer secondaryPoolSize = 6;  // used by all other shards
 
     /**
      * Populates the shard manager with initialized JDA shards (if sharding)
@@ -53,7 +56,7 @@ public class ShardManager
                 JDA jda = new JDABuilder(AccountType.BOT)
                         .setToken(Main.getBotSettingsManager().getToken())
                         .setStatus(OnlineStatus.ONLINE)
-                        .setCorePoolSize(12)
+                        .setCorePoolSize(primaryPoolSize)
                         .addEventListener(new EventListener())
                         .setAutoReconnect(true)
                         .useSharding(shards.get(0), shardTotal)
@@ -75,7 +78,7 @@ public class ShardManager
                             JDA shard = new JDABuilder(AccountType.BOT)
                                     .setToken(Main.getBotSettingsManager().getToken())
                                     .setStatus(OnlineStatus.ONLINE)
-                                    .setCorePoolSize(6)
+                                    .setCorePoolSize(secondaryPoolSize)
                                     .addEventListener(new EventListener())
                                     .setAutoReconnect(true)
                                     .useSharding(shardId, shardTotal)
@@ -84,7 +87,8 @@ public class ShardManager
                             this.jdaShards.put(shardId, shard);
                         }
 
-                        this.setGamesList();
+                        this.startGamesTimer();
+                        this.startRestartTimer();
                         executor.shutdown();
                     }
                     catch(Exception e)
@@ -100,14 +104,14 @@ public class ShardManager
                 this.jda = new JDABuilder(AccountType.BOT)
                         .setToken(Main.getBotSettingsManager().getToken())
                         .setStatus(OnlineStatus.ONLINE)
-                        .setCorePoolSize(20)
+                        .setCorePoolSize(primaryPoolSize)
                         .buildBlocking();
 
                 this.jda.addEventListener(new EventListener());
                 this.jda.setAutoReconnect(true);
 
-                this.setGamesList();
-
+                this.startGamesTimer();
+                this.startRestartTimer();
             }
         }
         catch( Exception e )
@@ -227,15 +231,15 @@ public class ShardManager
     {
         try
         {
-            this.getShard(shardId).shutdownNow();
+            Logging.info(this.getClass(), "Shutting down shard-" + shardId + ". . .");
+            this.getShard(shardId).shutdown();
             this.jdaShards.remove(shardId);
 
-            Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
-
+            Logging.info(this.getClass(), "Starting shard-" + shardId + ". . .");
             JDA shard = new JDABuilder(AccountType.BOT)
                     .setToken(Main.getBotSettingsManager().getToken())
                     .setStatus(OnlineStatus.ONLINE)
-                    .setCorePoolSize(6)
+                    .setCorePoolSize(secondaryPoolSize)
                     .addEventListener(new EventListener())
                     .setAutoReconnect(true)
                     .useSharding(shardId, this.shardTotal)
@@ -256,7 +260,7 @@ public class ShardManager
     /**
      * Initializes a schedule timer which iterates the "NowPlaying" game list for a JDA object
      */
-    private void setGamesList()
+    private void startGamesTimer()
     {
         // cycle "now playing" message every 30 seconds
         (new Timer()).scheduleAtFixedRate(new TimerTask()
@@ -298,5 +302,60 @@ public class ShardManager
 
             }
         }, 0, 30*1000);
+    }
+
+    /**
+     * Initializes a scheduled timer which restarts jda instances upon exceeding a max response total
+     */
+    private void startRestartTimer()
+    {
+        (new Timer()).scheduleAtFixedRate(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                Long responseThreshold = (long) 1000000; // place holder value
+                if(isSharding())
+                {
+                    for(JDA shard : getShards())
+                    {
+                        if(shard.getResponseTotal() > responseThreshold)
+                        {
+                            restartShard(shard.getShardInfo().getShardId());
+                        }
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        if(jda.getResponseTotal() > responseThreshold)
+                        {
+
+                            Logging.info(this.getClass(), "Shutting down primary jda. . .");
+                            jda.shutdown();
+
+                            Logging.info(this.getClass(), "Restarting primary jda. . .");
+                            jda = new JDABuilder(AccountType.BOT)
+                                    .setToken(Main.getBotSettingsManager().getToken())
+                                    .setStatus(OnlineStatus.ONLINE)
+                                    .setCorePoolSize(primaryPoolSize)
+                                    .addEventListener(new EventListener())
+                                    .setAutoReconnect(true)
+                                    .buildBlocking();
+                        }
+                    }
+                    catch(RateLimitedException e)
+                    {
+                        Logging.warn(this.getClass(), e.getMessage() + " : " + e.getRateLimitedRoute());
+                    }
+                    catch(Exception e)
+                    {
+                        Logging.exception(this.getClass(), e);
+                    }
+                }
+
+            }
+        }, 0, 60*60*1000);
     }
 }

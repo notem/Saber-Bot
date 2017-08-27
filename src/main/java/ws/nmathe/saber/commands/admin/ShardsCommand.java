@@ -7,6 +7,8 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.MessageUtilities;
 
+import java.util.function.Consumer;
+
 /**
  */
 public class ShardsCommand implements Command
@@ -32,6 +34,18 @@ public class ShardsCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
+        Consumer<String> sendMsg = (msg) ->
+        {
+            if(event.isFromType(ChannelType.PRIVATE))
+            {
+                MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );
+            }
+            else
+            {
+                MessageUtilities.sendMsg( msg, event.getTextChannel(), null );
+            }
+        };
+
         String msg = "I am not sharded!";
         if(Main.getShardManager().isSharding())
         {
@@ -55,22 +69,23 @@ public class ShardsCommand implements Command
             {
                 JDA.ShardInfo info = shard.getShardInfo();
                 msg += "\n[Shard-" + info.getShardId() + "]\n" +
-                        "    Status: \"" + shard.getStatus().toString() + "\"\n" +
-                        "      Ping: \"" + shard.getPing() + "\"\n" +
-                        "    Guilds: \"" + shard.getGuilds().size() + "\"\n" +
-                        "     Users: \"" + shard.getUsers().size() + "\"\n";
+                        "       Status: \"" + shard.getStatus().toString() + "\"\n" +
+                        "         Ping: \"" + shard.getPing() + "\"\n" +
+                        "       Guilds: \"" + shard.getGuilds().size() + "\"\n" +
+                        "        Users: \"" + shard.getUsers().size() + "\"\n" +
+                        "ResponseTotal: \"" + shard.getResponseTotal() + "\"\n";
+
+                if(msg.length() > 1900)
+                {
+                    msg += "```";
+                    sendMsg.accept(msg);
+                    msg = "```javascript\n";
+                }
             }
 
             msg += "```";
         }
 
-        if(event.isFromType(ChannelType.PRIVATE))
-        {
-            MessageUtilities.sendPrivateMsg( msg, event.getAuthor(), null );
-        }
-        else
-        {
-            MessageUtilities.sendMsg( msg, event.getTextChannel(), null );
-        }
+        sendMsg.accept(msg);
     }
 }

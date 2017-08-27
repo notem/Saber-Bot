@@ -41,19 +41,20 @@ public class StatsCommand implements Command
 
         String msg = "```python\n" +
                 "\"Database\"\n" +
-                "     Entries: " + Main.getDBDriver().getEventCollection().count() + "\n" +
-                "   Schedules: " + Main.getDBDriver().getScheduleCollection().count() + "\n" +
-                "      Guilds: " + Main.getDBDriver().getGuildCollection().count() + "\n" +
-                "\n\"Sharding\"\n" +
-                "     ShardId: " + info.getShardId() + "/" + info.getShardTotal() + "\n" +
-                "      Guilds: " + event.getJDA().getGuilds().size() + "\n" +
-                "       Users: " + event.getJDA().getUsers().size() + "\n" +
+                "      Entries: " + Main.getDBDriver().getEventCollection().count() + "\n" +
+                "    Schedules: " + Main.getDBDriver().getScheduleCollection().count() + "\n" +
+                "       Guilds: " + Main.getDBDriver().getGuildCollection().count() + "\n" +
+                "\n\"Shard\"\n" +
+                "      ShardId: " + info.getShardId() + "/" + info.getShardTotal() + "\n" +
+                "       Guilds: " + event.getJDA().getGuilds().size() + "\n" +
+                "        Users: " + event.getJDA().getUsers().size() + "\n" +
+                "ResponseTotal: " + event.getJDA().getResponseTotal() + "\n" +
                 "\n\"Application\"\n" +
-                "Memory-total: " +rt.totalMemory()/1024/1024 + " MB\n" +
-                "      -free : " + rt.freeMemory()/1024/1024 + " MB\n" +
-                "      -max  : " + rt.maxMemory()/1024/1024 + " MB\n" +
-                "     Threads: " + Thread.activeCount() + "\n" +
-                "      Uptime: " + rb.getUptime()/1000/60 + " minute(s)" +
+                " Memory-total: " +rt.totalMemory()/1024/1024 + " MB\n" +
+                "       -free : " + rt.freeMemory()/1024/1024 + " MB\n" +
+                "       -max  : " + rt.maxMemory()/1024/1024 + " MB\n" +
+                "      Threads: " + Thread.activeCount() + "\n" +
+                "       Uptime: " + rb.getUptime()/1000/60 + " minute(s)" +
                 "```";
 
         if(event.isFromType(ChannelType.PRIVATE))
