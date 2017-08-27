@@ -74,8 +74,12 @@ public class CalendarConverter
             Events events = service.events().list(address)
                     .setMaxResults(1)
                     .execute();
+            events.getTimeZone();
 
-            events.getItems().get(0).getSummary();
+            Event ev = events.getItems().get(0);
+            ev.getId();
+            ev.getDescription();
+
             return true;
         }
         catch( Exception e )

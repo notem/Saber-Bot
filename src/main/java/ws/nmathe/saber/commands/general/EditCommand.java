@@ -131,6 +131,18 @@ public class EditCommand implements Command
                         {
                             return "I cannot use **" + args[index] + "** to remove a comment!";
                         }
+                        if(VerifyUtilities.verifyInteger(args[index]))
+                        {
+                            Integer it = Integer.parseInt(args[index]);
+                            if(it > entry.getComments().size())
+                            {
+                                return "The event doesn't have a comment number " + it + "!";
+                            }
+                            if(it < 1)
+                            {
+                                return "The comment number must be above 0!";
+                            }
+                        }
                         break;
                     case "s":
                     case "swap":

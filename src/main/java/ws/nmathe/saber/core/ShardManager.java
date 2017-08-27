@@ -321,7 +321,7 @@ public class ShardManager
             @Override
             public void run()
             {
-                Long responseThreshold = (long) 200000; // place holder value
+                Integer responseThreshold = 300000; // place holder value
                 if(isSharding())
                 {
                     for(JDA shard : getShards())
