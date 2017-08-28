@@ -266,6 +266,7 @@ public class ShardManager
 
     /**
      * Initializes a schedule timer which iterates the "NowPlaying" game list for a JDA object
+     * Runs every 30 seconds
      */
     private void startGamesTimer()
     {
@@ -313,6 +314,7 @@ public class ShardManager
 
     /**
      * Initializes a scheduled timer which restarts jda instances upon exceeding a max response total
+     * Runs every 5 minutes
      */
     private void startRestartTimer()
     {
@@ -321,9 +323,10 @@ public class ShardManager
             @Override
             public void run()
             {
-                Integer responseThreshold = 300000; // place holder value
+                Long responseThreshold = 500000L; // place holder value
                 if(isSharding())
                 {
+                    Logging.info(ShardManager.class, "Checking shards for automatic restart. . .");
                     for(JDA shard : getShards())
                     {
                         if(shard.getResponseTotal() > responseThreshold)
@@ -334,12 +337,13 @@ public class ShardManager
                 }
                 else
                 {
+                    Logging.info(ShardManager.class, "Checking primary jda for automatic restart. . .");
                     try
                     {
                         if(jda.getResponseTotal() > responseThreshold)
                         {
 
-                            Logging.info(this.getClass(), "Shutting down primary jda. . .");
+                            Logging.info(ShardManager.class, "Shutting down primary jda. . .");
                             jda.shutdown();
 
                             Logging.info(this.getClass(), "Restarting primary jda. . .");
@@ -363,6 +367,6 @@ public class ShardManager
                 }
 
             }
-        }, 0, 60*60*1000);
+        }, 0, 300*1000);
     }
 }

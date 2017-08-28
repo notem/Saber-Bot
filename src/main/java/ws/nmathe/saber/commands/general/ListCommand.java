@@ -80,6 +80,10 @@ public class ListCommand implements Command
                 return "The schedule that the entry is on is not rsvp enabled!";
             }
         }
+        else
+        {
+            return "Argument *" + args[index] + "* is not a valid entry ID!";
+        }
 
         index++;
 
