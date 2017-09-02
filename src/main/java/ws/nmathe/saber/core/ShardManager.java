@@ -15,6 +15,8 @@ import ws.nmathe.saber.utils.Logging;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -30,6 +32,8 @@ public class ShardManager
 
     private Integer primaryPoolSize = 15;   // used by the jda responsible for handling DMs
     private Integer secondaryPoolSize = 6;  // used by all other shards
+
+    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     /**
      * Populates the shard manager with initialized JDA shards (if sharding)
@@ -250,7 +254,7 @@ public class ShardManager
                     .addEventListener(new EventListener())
                     .setAutoReconnect(true)
                     .useSharding(shardId, this.shardTotal)
-                    .buildBlocking();
+                    .buildAsync();
 
             this.jdaShards.put(shardId, shard);
         }
@@ -312,61 +316,66 @@ public class ShardManager
         }, 0, 30*1000);
     }
 
+
     /**
-     * Initializes a scheduled timer which restarts jda instances upon exceeding a max response total
+     * Schedules a runnable to task to restart shards after a certain number of responses is reached.
      * Runs every 5 minutes
      */
     private void startRestartTimer()
     {
-        (new Timer()).scheduleAtFixedRate(new TimerTask()
+        Runnable runnable = new Runnable()
         {
             @Override
             public void run()
             {
-                Long responseThreshold = 500000L; // place holder value
-                if(isSharding())
+                try
                 {
-                    Logging.info(ShardManager.class, "Checking shards for automatic restart. . .");
-                    for(JDA shard : getShards())
+                    Long responseThreshold = 500000L; // place holder value
+                    if(isSharding())
                     {
-                        if(shard.getResponseTotal() > responseThreshold)
+                        Logging.info(ShardManager.class, "Checking shards for automatic restart. . .");
+                        for(JDA shard : getShards())
                         {
-                            restartShard(shard.getShardInfo().getShardId());
+                            if(shard.getResponseTotal() > responseThreshold)
+                            {
+                                restartShard(shard.getShardInfo().getShardId());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Logging.info(ShardManager.class, "Checking primary jda for automatic restart. . .");
+                        try
+                        {
+                            if(jda.getResponseTotal() > responseThreshold)
+                            {
+
+                                Logging.info(ShardManager.class, "Shutting down primary jda. . .");
+                                jda.shutdown();
+
+                                Logging.info(this.getClass(), "Restarting primary jda. . .");
+                                jda = new JDABuilder(AccountType.BOT)
+                                        .setToken(Main.getBotSettingsManager().getToken())
+                                        .setStatus(OnlineStatus.ONLINE)
+                                        .setCorePoolSize(primaryPoolSize)
+                                        .addEventListener(new EventListener())
+                                        .setAutoReconnect(true)
+                                        .buildAsync();
+                            }
+                        }
+                        catch(RateLimitedException e)
+                        {
+                            Logging.warn(this.getClass(), e.getMessage() + " : " + e.getRateLimitedRoute());
                         }
                     }
                 }
-                else
+                catch(Exception e)
                 {
-                    Logging.info(ShardManager.class, "Checking primary jda for automatic restart. . .");
-                    try
-                    {
-                        if(jda.getResponseTotal() > responseThreshold)
-                        {
-
-                            Logging.info(ShardManager.class, "Shutting down primary jda. . .");
-                            jda.shutdown();
-
-                            Logging.info(this.getClass(), "Restarting primary jda. . .");
-                            jda = new JDABuilder(AccountType.BOT)
-                                    .setToken(Main.getBotSettingsManager().getToken())
-                                    .setStatus(OnlineStatus.ONLINE)
-                                    .setCorePoolSize(primaryPoolSize)
-                                    .addEventListener(new EventListener())
-                                    .setAutoReconnect(true)
-                                    .buildBlocking();
-                        }
-                    }
-                    catch(RateLimitedException e)
-                    {
-                        Logging.warn(this.getClass(), e.getMessage() + " : " + e.getRateLimitedRoute());
-                    }
-                    catch(Exception e)
-                    {
-                        Logging.exception(this.getClass(), e);
-                    }
+                    Logging.exception(ShardManager.class, e);
                 }
-
             }
-        }, 0, 300*1000);
+        };
+
+        scheduler.scheduleAtFixedRate(runnable,60, 300, TimeUnit.SECONDS);
     }
 }

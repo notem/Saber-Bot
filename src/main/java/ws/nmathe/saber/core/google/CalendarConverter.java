@@ -295,8 +295,8 @@ public class CalendarConverter
                                 .setImageUrl(imageUrl)
                                 .setStarted(hasStarted)
                                 .setThumbnailUrl(thumbnailUrl)
+                                .setComments(comments)
                                 .setRsvpMax(rsvpMax);
-
                         Main.getEntryManager().updateEntry(se);
                     }
                     else
@@ -371,10 +371,8 @@ public class CalendarConverter
             catch (InterruptedException e)
             { Logging.warn(this.getClass(), e.getMessage()); }
 
-            if(sortType == 1)
-                Main.getScheduleManager().sortSchedule(channel.getId(), false);
-            if(sortType == 2)
-                Main.getScheduleManager().sortSchedule(channel.getId(), true);
+            if(sortType == 1) Main.getScheduleManager().sortSchedule(channel.getId(), false);
+            if(sortType == 2) Main.getScheduleManager().sortSchedule(channel.getId(), true);
         }
     }
 }
