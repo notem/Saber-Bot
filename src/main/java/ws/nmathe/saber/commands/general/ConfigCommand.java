@@ -939,7 +939,7 @@ public class ConfigCommand implements Command
                 Map<String, String> options = Main.getScheduleManager().getRSVPOptions(cId);
                 for(String key : options.keySet())
                 {
-                    content += "   " + key + " - " + options.get(key) + "\n";
+                    content += " " + key + " - " + options.get(key) + "\n";
                 }
 
                 content += "```";

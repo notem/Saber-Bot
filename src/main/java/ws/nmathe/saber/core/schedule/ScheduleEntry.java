@@ -372,8 +372,8 @@ public class ScheduleEntry
 
     public boolean isFull(String type)
     {
-        Integer limit = this.rsvpLimits.get(type);
-        Integer size = this.rsvpMembers.get(type).size();
+        Integer limit = this.rsvpLimits.get(type)==null ? -1 : this.rsvpLimits.get(type);
+        Integer size = this.rsvpMembers.get(type)==null ? 0 : this.rsvpMembers.get(type).size();
         return (limit > -1) && (size > limit);
     }
 

@@ -182,8 +182,10 @@ public class MessageGenerator
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
             String rsvpLine = "";
-            for(String type : Main.getScheduleManager().getRSVPOptions(se.getChannelId()).values())
+            Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
+            for(String key : options.keySet()) // I iterate over the keys rather than the values to keep a order consistent with reactions
             {
+                String type = options.get(key);
                 rsvpLine += "<" + type + " " + se.getRsvpMembersOfType(type).size() +
                         (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
             }
@@ -218,8 +220,10 @@ public class MessageGenerator
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
             String rsvpLine = "";
-            for(String type : Main.getScheduleManager().getRSVPOptions(se.getChannelId()).values())
+            Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
+            for(String key : options.keySet())  // I iterate over the keys rather than the values to keep a order consistent with reactions
             {
+                String type = options.get(key);
                 rsvpLine += "<" + type.charAt(0) + " " + se.getRsvpMembersOfType(type).size() +
                         (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
             }
