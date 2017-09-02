@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
+import net.dv8tion.jda.core.requests.SessionReconnectQueue;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
@@ -77,6 +78,10 @@ public class ShardManager
                     {
                         for(Integer shardId : shards)
                         {
+                            // sleep for 5 seconds before continuing
+                            try { Thread.sleep(5*1000); }
+                            catch (InterruptedException ignored) {}
+
                             Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
 
                             JDA shard = new JDABuilder(AccountType.BOT)
@@ -86,6 +91,7 @@ public class ShardManager
                                     .addEventListener(new EventListener())
                                     .setAutoReconnect(true)
                                     .useSharding(shardId, shardTotal)
+                                    .setReconnectQueue(new SessionReconnectQueue())
                                     .buildBlocking();
 
                             this.jdaShards.put(shardId, shard);
@@ -254,6 +260,7 @@ public class ShardManager
                     .addEventListener(new EventListener())
                     .setAutoReconnect(true)
                     .useSharding(shardId, this.shardTotal)
+                    .setReconnectQueue(new SessionReconnectQueue())
                     .buildAsync();
 
             this.jdaShards.put(shardId, shard);
@@ -282,22 +289,7 @@ public class ShardManager
             {
                 Consumer<JDA> task = (shard)->
                 {
-                    shard.getPresence().setGame(new Game()
-                    {
-                        @Override
-                        public String getName()
-                        {
-                            return games.next();
-                        }
-
-                        @Override
-                        public String getUrl()
-                        { return "https://nmathe.ws/bots/saber"; }
-
-                        @Override
-                        public GameType getType()
-                        { return GameType.DEFAULT; }
-                    });
+                    shard.getPresence().setGame(Game.of(games.next(), "https://nmathe.ws/bots/saber"));
                 };
 
                 if(isSharding())
