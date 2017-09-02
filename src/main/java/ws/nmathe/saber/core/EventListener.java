@@ -21,6 +21,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -298,99 +300,43 @@ public class EventListener extends ListenerAdapter
             if(doc == null) return;
 
             ScheduleEntry se = new ScheduleEntry(doc);
-            Integer entryId = doc.getInteger("_id");
+            MessageReaction.ReactionEmote emote = event.getReactionEmote();
 
-            // current list of players
-            List<String> rsvpYes = (List<String>) doc.get("rsvp_yes");
-            List<String> rsvpNo = (List<String>) doc.get("rsvp_no");
-            List<String> rsvpUndecided = (List<String>) doc.get("rsvp_undecided");
-
-            MessageReaction.ReactionEmote emote = event.getReaction().getEmote();
-            Consumer<Throwable> errorProcessor = e ->
+            Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
+            if(options.containsKey(emote.getName()))
             {
-                if(e instanceof PermissionException) { return; }
-                else
+                // if the rsvp category is full, do nothing
+                if(!se.isFull(emote.getName()))
                 {
-                    Logging.exception(MessageUtilities.class, e);
-                }
-            };
+                    // remove the user from any other rsvp lists for that event
+                    for(String type : options.values())
+                    {
+                        List<String> members = se.getRsvpMembersOfType(type);
+                        members.remove(event.getUser().getId());
+                        se.setRsvpMembers(type, members);
+                    }
 
-            // if the user added the 'yes'/join emote
-            if(emote.getName().equals(Main.getBotSettingsManager().getYesEmoji()))
-            {
-                // add user to yes list (only if the event has not filled)
-                if(!rsvpYes.contains(event.getUser().getId()) && !se.isFull())
-                {
-                    rsvpYes.add(event.getUser().getId());
-                    Main.getDBDriver().getEventCollection()
-                            .updateOne(eq("_id", entryId), set("rsvp_yes", rsvpYes));
-                }   // remove user from no list
-                if(rsvpNo.contains(event.getUser().getId()))
-                {
-                    rsvpNo.remove(event.getUser().getId());
-                    Main.getDBDriver().getEventCollection()
-                            .updateOne(eq("_id", entryId), set("rsvp_no", rsvpNo));
-                }   // remove user from undecided list
-                if(rsvpUndecided.contains(event.getUser().getId()))
-                {
-                    rsvpUndecided.remove(event.getUser().getId());
-                    Main.getDBDriver().getEventCollection()
-                            .updateOne(eq("_id", entryId), set("rsvp_undecided", rsvpUndecided));
+                    // add the user to the rsvp type
+                    String type = options.get(emote.getName());
+                    List<String> members = se.getRsvpMembersOfType(type);
+                    members.add(event.getUser().getId());
+                    se.setRsvpMembers(type, members);
+
+                    Main.getEntryManager().updateEntry(se); // update the entry
                 }
 
-                Main.getEntryManager().reloadEntry(entryId);
-                event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
-            }
-            // if the user added the 'no'/leave emote
-            else if(emote.getName().equals(Main.getBotSettingsManager().getNoEmoji()))
-            {
-                // add user to no list
-                if(!rsvpNo.contains(event.getUser().getId()))
+                // attempt to remove the reaction
+                Consumer<Throwable> errorProcessor = e ->
                 {
-                    rsvpNo.add(event.getUser().getId());
-                    Main.getDBDriver().getEventCollection()
-                            .updateOne(eq("_id", entryId), set("rsvp_no", rsvpNo));
-                }   // remove user from yes list
-                if(rsvpYes.contains(event.getUser().getId()))
-                {
-                    rsvpYes.remove(event.getUser().getId());
-                    Main.getDBDriver().getEventCollection()
-                            .updateOne(eq("_id", entryId), set("rsvp_yes", rsvpYes));
-                }   // remove user from undecided list
-                if(rsvpUndecided.contains(event.getUser().getId()))
-                {
-                    rsvpUndecided.remove(event.getUser().getId());
-                    Main.getDBDriver().getEventCollection()
-                            .updateOne(eq("_id", entryId), set("rsvp_undecided", rsvpUndecided));
-                }
-
-                Main.getEntryManager().reloadEntry(entryId);
-                event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
-            }
-            // if the user added the undecided emote
-            else if(emote.getName().equals(Main.getBotSettingsManager().getClearEmoji()))
-            {
-                // add user to undecided list
-                if(!rsvpUndecided.contains(event.getUser().getId()))
-                {
-                    rsvpUndecided.add(event.getUser().getId());
-                    Main.getDBDriver().getEventCollection()
-                            .updateOne(eq("_id", entryId), set("rsvp_undecided", rsvpUndecided));
-                }   // remove user from yes list
-                if(rsvpYes.contains(event.getUser().getId()))
-                {
-                    rsvpYes.remove(event.getUser().getId());
-                    Main.getDBDriver().getEventCollection()
-                            .updateOne(eq("_id", entryId), set("rsvp_yes", rsvpYes));
-                }   // remove user from no list
-                if(rsvpNo.contains(event.getUser().getId()))
-                {
-                    rsvpNo.remove(event.getUser().getId());
-                    Main.getDBDriver().getEventCollection()
-                            .updateOne(eq("_id", entryId), set("rsvp_no", rsvpNo));
-                }
-
-                Main.getEntryManager().reloadEntry(entryId);
+                    if(e instanceof PermissionException)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        Logging.exception(this.getClass(), e);
+                    }
+                };
                 event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
             }
         }

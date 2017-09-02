@@ -315,6 +315,10 @@ public class EditCommand implements Command
                 }
                 break;
 
+            case "limit":
+            case "l":
+                break;
+
             default:
                 return "**" + args[index-1] + "** is not an option I know of! Please use the ``help`` command to see available options!";
         }
@@ -488,18 +492,6 @@ public class EditCommand implements Command
                         se.setQuietRemind(!se.isQuietRemind());
                         break;
 
-                    case "max":
-                    case "m":
-                        if(args[index].toLowerCase().equals("off"))
-                        {
-                            se.setRsvpMax(-1);
-                        }
-                        else
-                        {
-                            se.setRsvpMax(Integer.valueOf(args[index]));
-                        }
-                        break;
-
                     case "ex":
                     case "expire":
                         switch(args[index])
@@ -543,6 +535,12 @@ public class EditCommand implements Command
                                 se.setThumbnailUrl(args[index]);
                                 break;
                         }
+                        break;
+
+                    case "limit":
+                    case "l":
+                        String[] tmp = args[index].split("-");
+                        se.setRsvpLimit(tmp[0], Integer.parseInt(tmp[1]));
                         break;
                 }
 
@@ -596,9 +594,6 @@ public class EditCommand implements Command
                 }
                 body += " disabled\n";
             }
-
-            if(se.getRsvpMax()>=0)
-                body += "Max: " + se.getRsvpMax() + "\n";
 
             if(se.getExpire() != null)
                 body += "Expire: \"" + se.getExpire().toLocalDate() + "\"\n";

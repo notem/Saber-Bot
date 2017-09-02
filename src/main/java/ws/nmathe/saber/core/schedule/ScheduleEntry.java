@@ -12,9 +12,7 @@ import ws.nmathe.saber.utils.Logging;
 
 import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
@@ -39,10 +37,8 @@ public class ScheduleEntry
     private List<Date> reminders;
 
     // rsvp
-    private List<String> rsvpYes;
-    private Integer rsvpYesMax;
-    private List<String> rsvpNo;
-    private List<String> rsvpUndecided;
+    private Map<String, List<String>> rsvpMembers;
+    private Map<String, Integer> rsvpLimits;
 
     // urls
     private String titleUrl;
@@ -82,10 +78,8 @@ public class ScheduleEntry
         this.entryComments = new ArrayList<>();
 
         // rsvp
-        this.rsvpYes = null;
-        this.rsvpNo = null;
-        this.rsvpUndecided = null;
-        this.rsvpYesMax = -1;
+        this.rsvpMembers = new HashMap<>();
+        this.rsvpLimits = new HashMap<>();
 
         // toggles
         this.quietStart = false;
@@ -128,10 +122,8 @@ public class ScheduleEntry
         this.reminders = (List<Date>) entryDocument.get("reminders");
 
         // rsvp
-        this.rsvpYes = (List<String>) entryDocument.get("rsvp_yes");
-        this.rsvpYesMax = entryDocument.get("rsvp_max") != null ? entryDocument.getInteger("rsvp_max") : -1;
-        this.rsvpNo = (List<String>) entryDocument.get("rsvp_no");
-        this.rsvpUndecided = (List<String>) entryDocument.get("rsvp_undecided");
+        this.rsvpMembers = (Map<String, List<String>>) entryDocument.get("rsvp_members");
+        this.rsvpLimits = (Map<String, Integer>) entryDocument.get("rsvp_limits");
 
         // urls
         this.titleUrl = entryDocument.getString("url");
@@ -378,9 +370,11 @@ public class ScheduleEntry
         return this.hasStarted;
     }
 
-    public boolean isFull()
+    public boolean isFull(String type)
     {
-        return !(this.rsvpYesMax == -1) && (this.rsvpYes.size() >= this.rsvpYesMax);
+        Integer limit = this.rsvpLimits.get(type);
+        Integer size = this.rsvpMembers.get(type).size();
+        return (limit > -1) && (size > limit);
     }
 
     public String getTitle()
@@ -433,24 +427,34 @@ public class ScheduleEntry
         return this.chanId;
     }
 
-    public Integer getRsvpMax()
+    public Integer getRsvpLimit(String type)
     {
-        return this.rsvpYesMax;
+        Integer limit = this.rsvpLimits.get(type);
+        if(limit == null)
+        {
+            return -1;
+        }
+        return limit;
     }
 
-    public List<String> getRsvpYes()
+    public List<String> getRsvpMembersOfType(String type)
     {
-        return this.rsvpYes;
+        List<String> members = this.rsvpMembers.get(type);
+        if(members == null)
+        {
+            return new ArrayList<>();
+        }
+        return members;
     }
 
-    public List<String> getRsvpNo()
+    public Map getRsvpMembers()
     {
-        return this.rsvpNo;
+        return this.rsvpMembers;
     }
 
-    public List<String> getRsvpUndecided()
+    public Map getRsvpLimits()
     {
-        return this.rsvpUndecided;
+        return this.rsvpLimits;
     }
 
     public ZonedDateTime getExpire()
@@ -569,30 +573,6 @@ public class ScheduleEntry
         return this;
     }
 
-    public ScheduleEntry setRsvpMax(Integer max)
-    {
-        this.rsvpYesMax = max;
-        return this;
-    }
-
-    public ScheduleEntry setRsvpYes(List<String> rsvp)
-    {
-        this.rsvpYes = rsvp;
-        return this;
-    }
-
-    public ScheduleEntry setRsvpNo(List<String> rsvp)
-    {
-        this.rsvpNo = rsvp;
-        return this;
-    }
-
-    public ScheduleEntry setRsvpUndecided(List<String> rsvp)
-    {
-        this.rsvpUndecided = rsvp;
-        return this;
-    }
-
     public ScheduleEntry setExpire(ZonedDateTime expire)
     {
         this.expire = expire;
@@ -646,6 +626,38 @@ public class ScheduleEntry
         this.chanId = msg.getChannel().getId();
         this.guildId = msg.getGuild().getId();
         this.msgId = msg.getId();
+        return this;
+    }
+
+    public ScheduleEntry setRsvpLimit(String type, Integer limit)
+    {
+        if(rsvpLimits.containsKey(type))
+        {
+            this.rsvpLimits.replace(type, limit);
+        }
+        else
+        {
+            this.rsvpLimits.put(type, limit);
+        }
+        return this;
+    }
+
+    public ScheduleEntry setRsvpLimits(Map<String, Integer> limits)
+    {
+        this.rsvpLimits = limits;
+        return this;
+    }
+
+    public ScheduleEntry setRsvpMembers(String type, List<String> members)
+    {
+        if(this.rsvpMembers.containsKey(type))
+        {
+            this.rsvpMembers.replace(type, members);
+        }
+        else
+        {
+            this.rsvpMembers.put(type, members);
+        }
         return this;
     }
 }

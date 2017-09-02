@@ -8,12 +8,9 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -92,9 +89,10 @@ public class EntryManager
         // is rsvp enabled on the channel set empty rsvp lists
         if( Main.getScheduleManager().isRSVPEnabled(se.getChannelId()) )
         {
-            se.setRsvpYes(new ArrayList<>())
-                    .setRsvpNo(new ArrayList<>())
-                    .setRsvpUndecided(new ArrayList<>());
+            for(String type : Main.getScheduleManager().getRSVPOptions(se.getChannelId()).values())
+            {
+                se.setRsvpMembers(type, new ArrayList<>());
+            }
         }
 
         // generate event display message
@@ -109,9 +107,10 @@ public class EntryManager
             // add reaction options if rsvp is enabled
             if( Main.getScheduleManager().isRSVPEnabled(channelId) )
             {
-                msg.addReaction(Main.getBotSettingsManager().getYesEmoji()).queue();
-                msg.addReaction(Main.getBotSettingsManager().getNoEmoji()).queue();
-                msg.addReaction(Main.getBotSettingsManager().getClearEmoji()).queue();
+                for(String emoji : Main.getScheduleManager().getRSVPOptions(channelId).keySet())
+                {
+                    msg.addReaction(emoji).queue();
+                }
             }
 
             // add new document
@@ -128,9 +127,8 @@ public class EntryManager
                             .append("messageId", msg.getId())
                             .append("channelId", channelId)
                             .append("googleId", se.getGoogleId())
-                            .append("rsvp_yes", se.getRsvpYes())
-                            .append("rsvp_no", se.getRsvpNo())
-                            .append("rsvp_undecided", se.getRsvpUndecided())
+                            .append("rsvp_members", se.getRsvpMembers())
+                            .append("rsvp_limits", se.getRsvpLimits())
                             .append("start_disabled", false)
                             .append("end_disabled", false)
                             .append("reminders_disabled", false)
@@ -214,13 +212,11 @@ public class EntryManager
                             .append("messageId", msg.getId())
                             .append("channelId", channelId)
                             .append("googleId", se.getGoogleId())
-                            .append("rsvp_yes", se.getRsvpYes())
-                            .append("rsvp_no", se.getRsvpNo())
-                            .append("rsvp_undecided", se.getRsvpUndecided())
+                            .append("rsvp_members", se.getRsvpMembers())
+                            .append("rsvp_limits", se.getRsvpLimits())
                             .append("start_disabled", se.isQuietStart())
                             .append("end_disabled", se.isQuietEnd())
                             .append("reminders_disabled", se.isQuietRemind())
-                            .append("rsvp_max", se.getRsvpMax())
                             .append("expire", expire)
                             .append("image", se.getImageUrl())
                             .append("thumbnail", se.getThumbnailUrl())

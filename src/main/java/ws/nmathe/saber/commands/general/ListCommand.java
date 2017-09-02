@@ -12,8 +12,7 @@ import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -162,20 +161,14 @@ public class ListCommand implements Command
         {
             int index = 0;
             Integer entryId = Integer.decode("0x" + args[index++]);
-            ScheduleEntry entry = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
+            ScheduleEntry se = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
 
-            List<String> rsvpYes = entry.getRsvpYes();
-            List<String> rsvpNo = entry.getRsvpNo();
-            List<String> rsvpUndecided = entry.getRsvpUndecided();
             String content = "";
 
             List<String> userFilters = new ArrayList<>();
             List<String> roleFilters = new ArrayList<>();
             boolean filterByType = false;
-            boolean typeYes = false;
-            boolean typeNo = false;
-            boolean typeUndecided = false;
-            boolean typeNoInput = false;
+            Set<String> typeFilters = new HashSet<>();
 
             boolean mobileFlag = false;
             boolean IdFlag = false;
@@ -209,123 +202,55 @@ public class ListCommand implements Command
                     case "t":
                     case "type":
                         filterByType = true;
-                        switch(filterValue)
-                        {
-                            case "no":
-                                typeNo = true;
-                                break;
-                            case "yes":
-                                typeYes = true;
-                                break;
-                            case "undecided":
-                                typeUndecided = true;
-                                break;
-                            case "no-input":
-                                typeNoInput = true;
-                                break;
-                        }
+                        typeFilters.add(filterValue);
+                        break;
                 }
             }
 
-            if(!filterByType || typeYes)
+            Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
+            for(String type : options.values())
             {
-                content += "**RSVP'ed \"Yes\"\n======================**\n";
-                for(String id : rsvpYes)
+                if(!filterByType || typeFilters.contains(type))
                 {
-                    if(content.length() > 1900)
+                    content += "**RSVP'ed \"" + type + "\"\n======================**\n";
+                    List<String> members = se.getRsvpMembersOfType(type);
+                    for(String id : members)
                     {
-                        MessageUtilities.sendMsg(content, event.getChannel(), null);
-                        content = "*continued. . .* \n";
-                    }
-                    Member member = event.getGuild().getMemberById(id);
-                    if(this.checkMember(member, userFilters, roleFilters))
-                    {
-                        if(mobileFlag)
+                        if(content.length() > 1900)
                         {
-                            content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
+                            MessageUtilities.sendMsg(content, event.getChannel(), null);
+                            content = "*continued. . .* \n";
                         }
-                        else if(IdFlag)
+                        Member member = event.getGuild().getMemberById(id);
+                        if(this.checkMember(member, userFilters, roleFilters))
                         {
-                            content += " \\<@" + id + ">\n";
-                        }
-                        else
-                        {
-                            content += " <@" + id + ">\n";
+                            if(mobileFlag)
+                            {
+                                content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
+                            }
+                            else if(IdFlag)
+                            {
+                                content += " \\<@" + id + ">\n";
+                            }
+                            else
+                            {
+                                content += " <@" + id + ">\n";
+                            }
                         }
                     }
                 }
             }
 
-            if(!filterByType || typeNo)
-            {
-                content += "\n**RSVP'ed \"No\"\n======================**\n";
-                for(String id : rsvpNo)
-                {
-                    if(content.length() > 1900)
-                    {
-                        MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
-                                (new EmbedBuilder()).setDescription(content).build()
-                        ).build(), event.getChannel(), null);
-                        content = "*continued. . .* \n";
-                    }
-                    Member member = event.getGuild().getMemberById(id);
-                    if(this.checkMember(member, userFilters, roleFilters))
-                    {
-                        if(mobileFlag)
-                        {
-                            content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
-                        }
-                        else if(IdFlag)
-                        {
-                            content += " \\<@" + id + ">\n";
-                        }
-                        else
-                        {
-                            content += " <@" + id + ">\n";
-                        }
-                    }
-                }
-            }
-
-            if(!filterByType || typeUndecided)
-            {
-                content += "**\nRSVP'ed \"Undecided\"\n======================**\n";
-                for(String id : rsvpUndecided)
-                {
-                    if(content.length() > 1900)
-                    {
-                        MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
-                                (new EmbedBuilder()).setDescription(content).build()
-                        ).build(), event.getChannel(), null);
-                        content = "*continued. . .* \n";
-                    }
-                    Member member = event.getGuild().getMemberById(id);
-                    if(this.checkMember(member, userFilters, roleFilters))
-                    {
-                        if(mobileFlag)
-                        {
-                            content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
-                        }
-                        else if(IdFlag)
-                        {
-                            content += " \\<@" + id + ">\n";
-                        }
-                        else
-                        {
-                            content += " <@" + id + ">\n";
-                        }
-                    }
-                }
-            }
-
-            if(!filterByType || typeNoInput)
+            if(!filterByType || typeFilters.contains("no-input"))
             {
                 List<String> undecided = event.getGuild().getMembers().stream()
                         .filter(member -> checkMember(member, userFilters, roleFilters))
                         .map(member -> member.getUser().getId()).collect(Collectors.toList());
-                undecided.removeAll(rsvpYes);
-                undecided.removeAll(rsvpNo);
-                undecided.removeAll(rsvpUndecided);
+
+                for(String type : options.values())
+                {
+                    undecided.removeAll(se.getRsvpMembersOfType(type));
+                }
 
                 content += "**\nNo input\n======================\n**";
                 if(!filterByType & undecided.size() > 10)
@@ -356,8 +281,9 @@ public class ListCommand implements Command
                 }
             }
 
-            String titleUrl = entry.getTitleUrl()==null?"https://nnmathe.ws/saber":entry.getTitleUrl();
-            String title = entry.getTitle()+" ["+Integer.toHexString(entryId)+"]";
+            // build and send the embedded message object
+            String titleUrl = se.getTitleUrl()==null ? "https://nnmathe.ws/saber": se.getTitleUrl();
+            String title = se.getTitle()+" ["+Integer.toHexString(entryId)+"]";
             MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
                     (new EmbedBuilder())
                             .setDescription(content)
@@ -398,5 +324,4 @@ public class ListCommand implements Command
         }
         return false;
     }
-
 }

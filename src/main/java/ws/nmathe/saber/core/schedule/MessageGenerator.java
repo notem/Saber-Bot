@@ -179,11 +179,15 @@ public class MessageGenerator
                 MessageGenerator.genTimer(se.getStart(), se.getEnd()) + "\n";
 
         // if rsvp is enabled, show the number of rsvp
-        if(se.getRsvpYes() != null && se.getRsvpNo() != null)
+        if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
-            String rsvpLine = "- RSVP: <Yes " + se.getRsvpYes().size() + (se.getRsvpMax()>=0?"/"+se.getRsvpMax():"") + ">" +
-                    " <No " + se.getRsvpNo().size() + ">" +
-                    " <Undecided " + se.getRsvpUndecided().size() + ">\n";
+            String rsvpLine = "";
+            for(String type : Main.getScheduleManager().getRSVPOptions(se.getChannelId()).values())
+            {
+                rsvpLine += "<" + type + " " + se.getRsvpMembersOfType(type).size() +
+                        (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
+            }
+
             msg += "```Markdown\n\n" + zoneLine + rsvpLine + "```";
         }
         else
@@ -211,11 +215,21 @@ public class MessageGenerator
                 "](" + getRepeatString(se.getRepeat(), true) + ")";
 
         // if rsvp is enabled, show the number of rsvps
-        if(se.getRsvpYes() != null)
-            lineTwo += " <Y " + se.getRsvpYes().size() + (se.getRsvpMax()>=0?"/"+se.getRsvpMax():"") + "> " +
-                    "<N " + se.getRsvpNo().size() + "> <U " + se.getRsvpUndecided().size() + ">\n";
+        if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
+        {
+            String rsvpLine = "";
+            for(String type : Main.getScheduleManager().getRSVPOptions(se.getChannelId()).values())
+            {
+                rsvpLine += "<" + type.charAt(0) + " " + se.getRsvpMembersOfType(type).size() +
+                        (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
+            }
+
+            lineTwo += rsvpLine;
+        }
         else
+        {
             lineTwo += "\n";
+        }
 
         return "```Markdown\n\n" + timeLine + lineTwo + "```\n";
     }

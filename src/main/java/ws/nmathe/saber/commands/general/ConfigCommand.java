@@ -1,6 +1,6 @@
 package ws.nmathe.saber.commands.general;
 
-import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.Emote;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.and;
@@ -114,7 +115,7 @@ public class ConfigCommand implements Command
                 case "message":
                     if (args.length < 3)
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [chan] msg <new config>]``, " +
+                                "Use ``" + cmd + " [#channel] msg <new config>]``, " +
                                 "where ``<new config>`` is the message format string to use when create announcement and remind messages.\n" +
                                 "Reference the ``help`` command information for ``config`` to learn more about custom announcement messages.";
                     break;
@@ -124,7 +125,7 @@ public class ConfigCommand implements Command
                 case "channel":
                     if (args.length < 3)
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [chan] chan <new config>``, " +
+                                "Use ``" + cmd + " [#chan] chan <new config>``, " +
                                 "where ``<new config>`` is a discord channel to which announcement messages should be sent.\n";
                     break;
 
@@ -133,7 +134,7 @@ public class ConfigCommand implements Command
                 case "end-msg":
                     if (args.length < 3)
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [chan] end-msg <new config>``, " +
+                                "Use ``" + cmd + " [#channel] end-msg <new config>``, " +
                                 "where ``<new config>`` is the message format string to use when create event end messages.\n" +
                                 "This overrides the ``[msg]`` setting for events which are ending.\n" +
                                 "Reference the ``help`` command information for ``config`` to learn more about custom announcement messages.";
@@ -143,7 +144,7 @@ public class ConfigCommand implements Command
                 case "end-chan":
                     if (args.length < 3)
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [chan] end-chan <new config>``, " +
+                                "Use ``" + cmd + " [#channel] end-chan <new config>``, " +
                                 "where <new config> is a discord channel to which event end messages should be sent.\n" +
                                 "This overrides the ``[chan]`` setting for events which are ending.";
                     break;
@@ -152,7 +153,7 @@ public class ConfigCommand implements Command
                 case "zone":
                     if (args.length < 3)
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [chan] zone <new config>``, where ``<new config>`` is a valid timezone string." +
+                                "Use ``" + cmd + " [#channel] zone <new config>``, where ``<new config>`` is a valid timezone string." +
                                 "\nA list of valid timezones can be seen using the ``zones`` command).";
                     try
                     {
@@ -169,7 +170,7 @@ public class ConfigCommand implements Command
                 case "clock":
                     if (args.length < 3)
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [chan] clock <new config>``, " +
+                                "Use ``" + cmd + " [#channel] clock <new config>``, " +
                                 "where ``<new config>`` is **\"12\"** for 12 hour format (am/pm), or **\"24\"** for full 24 hour time.";
 
                     if( !args[index].equals("24") && !args[index].equals("12"))
@@ -181,7 +182,7 @@ public class ConfigCommand implements Command
                 case "sync":
                     if (args.length < 3)
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [chan] sync <new config>``, " +
+                                "Use ``" + cmd + " [#channel] sync <new config>``, " +
                                 "where ``<new config>`` is a google calendar address or **\"off\"**";
                     if( args[index].equals("off") )
                         return "";
@@ -193,7 +194,7 @@ public class ConfigCommand implements Command
                 case "time":
                     if (args.length < 3)
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [chan] time <new config>``, " +
+                                "Use ``" + cmd + " [#channel] time <new config>``, " +
                                 "where ``<new config>`` is the time of day to which the schedule should be automatically " +
                                 "resync to the linked google calendar address.";
                     if(!VerifyUtilities.verifyTime(args[index]))
@@ -251,6 +252,48 @@ public class ConfigCommand implements Command
                                 "Use ``" + cmd + " [chan] rsvp <new config>``, " +
                                 "where <new config> should be \"on\" to enable the rsvp feature, or \"off\" to " +
                                 "disable the feature.\n";
+                    switch(args[index])
+                    {
+                        case "add":
+                        case "a":
+                            index++;
+                            String[] tmp1 = args[index].split("-");
+                            if(tmp1.length != 2)
+                            {
+                                return "Argument *" + args[index] + "* is not properly formed for the ``add`` option!\n" +
+                                        "Use ``" + cmd + " [#channel] rsvp add [emoji]-[name]`` to add a new rsvp option " +
+                                        "where [emoji] is the discord emoji for the rsvp option to use and " +
+                                        "[name] is the display name of the rsvp option.";
+                            }
+
+                            // verify input is a valid unicode emoji
+                            final String regex = "([\\u20a0-\\u32ff\\ud83c\\udc00-\\ud83d\\udeff\\udbb9\\udce5-\\udbb9\\udcee])";
+                            if(!tmp1[0].matches(regex))
+                            {
+                                List<Emote> emotes = event.getJDA().getEmotesByName(args[index].replace(":",""), true);
+                                if(emotes.isEmpty())
+                                {
+                                    return "*" + tmp1[0] + "* is not an emoji!";
+                                }
+                            }
+                            break;
+
+                        case "remove":
+                        case "r":
+                            break;
+
+                        case "off":
+                        case "on":
+                        case "true":
+                        case "false":
+                            break;
+
+                        default:
+                            return "Argument *" + args[index] + "* is not an appropriate argument!\n" +
+                                    "Use ``" + cmd + " [#channel] rsvp [on|off]`` to enable/disable rsvp on the schedule.\n" +
+                                    "Use ``" + cmd + " [#channel] rsvp add [emoji]-[name]`` to add a new rsvp option.\n" +
+                                    "Use ``" + cmd + " [#channel] rsvp remove [emoji|name]`` to remove an rsvp option.";
+                    }
                     break;
 
                 case "st":
@@ -572,22 +615,74 @@ public class ConfigCommand implements Command
 
                     case "rsvp":
                         boolean enabled = Main.getScheduleManager().isRSVPEnabled(cId);
-                        boolean new_enabled;
-                        switch(args[index].toLowerCase())
+                        Map<String, String> options = Main.getScheduleManager().getRSVPOptions(cId);
+                        Boolean new_enabled = null;
+                        switch(args[index++].toLowerCase())
                         {
+                            case "add":
+                            case "a":
+                                String[] tmp = args[index].split("-");
+                                options.put(tmp[0].trim(), tmp[1].trim());
+                                Main.getScheduleManager().setRSVPOptions(cId, options);
+                                break;
+
+                            case "remove":
+                            case "r":
+                                if(options.containsKey(args[index]))
+                                {
+                                    options.remove(args[index]);
+                                }
+                                else if(options.containsValue(args[index]))
+                                {
+                                    options.values().remove(args[index]);
+                                }
+                                Main.getScheduleManager().setRSVPOptions(cId, options);
+                                break;
+
                             case "on":
                             case "true":
-                            case "yes":
-                            case "y":
                                 new_enabled = true;
                                 break;
 
-                            default:
+                            case "off":
+                            case "false":
                                 new_enabled = false;
                                 break;
                         }
 
-                        if(enabled != new_enabled)
+                        // if add or remove option was used, clear the reactions and re-add the new reactions
+                        if(new_enabled == null)
+                        {
+                            // for each entry on the schedule
+                            Main.getDBDriver().getEventCollection()
+                                    .find(eq("channelId", scheduleChan.getId()))
+                                    .forEach((Consumer<? super Document>) document ->
+                                    {
+                                        // clear reactions
+                                        event.getGuild().getTextChannelById(document.getString("channelId"))
+                                                .getMessageById(document.getString("messageId")).complete()
+                                                .clearReactions().queue();
+
+                                        // add reaction options
+                                        event.getGuild()
+                                                .getTextChannelById(document.getString("channelId"))
+                                                .getMessageById(document.getString("messageId"))
+                                                .queue(msg ->
+                                                {
+                                                    Map<String, String> map = Main.getScheduleManager()
+                                                            .getRSVPOptions(document.getString("channelId"));
+
+                                                    for(String emoji : map.keySet())
+                                                    {
+                                                        msg.addReaction(emoji).queue();
+                                                    }
+                                                });
+
+                                        Main.getEntryManager().reloadEntry(document.getInteger("_id"));
+                                    });
+                        }
+                        // otherwise, if the rsvp setting was changes
+                        else if(enabled != new_enabled)
                         {
                             if(new_enabled)
                             {
@@ -603,14 +698,21 @@ public class ConfigCommand implements Command
                                         .forEach((Consumer<? super Document>) document ->
                                         {
                                             // add reaction options
-                                            Message msg = event.getGuild()
+                                             event.getGuild()
                                                     .getTextChannelById(document.getString("channelId"))
                                                     .getMessageById(document.getString("messageId"))
-                                                    .complete();
+                                                    .queue(msg ->
+                                                    {
+                                                        Map<String, String> map = Main.getScheduleManager()
+                                                                .getRSVPOptions(document.getString("channelId"));
 
-                                            msg.addReaction(Main.getBotSettingsManager().getYesEmoji()).queue();
-                                            msg.addReaction(Main.getBotSettingsManager().getNoEmoji()).queue();
-                                            msg.addReaction(Main.getBotSettingsManager().getClearEmoji()).queue();
+                                                        for(String emoji : map.keySet())
+                                                        {
+                                                            msg.addReaction(emoji).queue();
+                                                        }
+                                                    });
+
+                                            Main.getEntryManager().reloadEntry(document.getInteger("_id"));
                                         });
                             }
                             else
@@ -629,21 +731,16 @@ public class ConfigCommand implements Command
                                             event.getGuild().getTextChannelById(document.getString("channelId"))
                                                     .getMessageById(document.getString("messageId")).complete()
                                                     .clearReactions().queue();
+
+                                            Main.getEntryManager().reloadEntry(document.getInteger("_id"));
                                         });
                             }
 
                             // set schedule settings
                             Main.getScheduleManager().setRSVPEnable(cId, new_enabled);
-
-                            // for each entry on the schedule
-                            Main.getDBDriver().getEventCollection()
-                                    .find(eq("channelId", scheduleChan.getId()))
-                                    .forEach((Consumer<? super Document>) document ->
-                                            Main.getEntryManager().reloadEntry(document.getInteger("_id"))
-                                    );
                         }
 
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 5), event.getChannel(), null);
                         break;
 
                     case "st":
@@ -722,6 +819,7 @@ public class ConfigCommand implements Command
      *              2 - reminder settings
      *              3 - miscellaneous settings
      *              4 - sync settings
+     *              5 - rsvp settings
      * @param cId (String) the ID of the schedule/channel
      * @param type (int) the type code for the message to generate
      * @return (String) the message to display
@@ -751,8 +849,7 @@ public class ConfigCommand implements Command
                                 "(using [chan])") +
                         "```";
 
-                if(type == 1)
-                    break;
+                if(type == 1) break;
             case 2:
                 List<Integer> reminders = Main.getScheduleManager().getDefaultReminders(cId);
                 String reminderStr = "";
@@ -786,8 +883,7 @@ public class ConfigCommand implements Command
                                 "(using [chan])") +
                         "```";
 
-                if(type == 2)
-                    break;
+                if(type == 2) break;
             case 3:
                 int sortType = Main.getScheduleManager().getAutoSort(cId);
                 String sort = "";
@@ -810,16 +906,13 @@ public class ConfigCommand implements Command
                         "\"" + zone + "\"" +
                         "\n[clock]  " +
                         "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"" +
-                        "\n[rsvp]   " +
-                        "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"" +
                         "\n[style]  " +
                         "\"" + Main.getScheduleManager().getStyle(cId).toLowerCase() + "\"" +
                         "\n[sort]   " +
                         "\"" + sort + "\"" +
                         "```";
 
-                if(type == 3)
-                    break;
+                if(type == 3) break;
             case 4:
                 Date syncTime = Main.getScheduleManager().getSyncTime(cId);
                 OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
@@ -835,8 +928,23 @@ public class ConfigCommand implements Command
                         "\"" + Main.getScheduleManager().getSyncLength(cId) + "\"" +
                         "```";
 
-                if(type == 4)
-                    break;
+                if(type == 4) break;
+            case 5:
+                content += "```js\n" +
+                        "// RSVP Settings" +
+                        "\n[rsvp]   " +
+                        "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"" +
+                        "\n<options>\n";
+
+                Map<String, String> options = Main.getScheduleManager().getRSVPOptions(cId);
+                for(String key : options.keySet())
+                {
+                    content += "   " + key + " - " + options.get(key) + "\n";
+                }
+
+                content += "```";
+
+                if(type == 5) break;
         }
 
         return content;

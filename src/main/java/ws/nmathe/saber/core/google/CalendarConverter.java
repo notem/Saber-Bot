@@ -20,9 +20,7 @@ import ws.nmathe.saber.utils.VerifyUtilities;
 import java.io.IOException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.*;
@@ -147,6 +145,7 @@ public class CalendarConverter
             HashSet<String> uniqueEvents = new HashSet<>(); // a set of all unique (not child of a recurring event) events
 
             // convert every entry and add it to the scheduleManager
+            Map<String, Integer> rsvpLimits = new HashMap<>();
             for(Event event : events.getItems())
             {
                 channel.sendTyping().queue();   // continue to send 'is typing'
@@ -186,7 +185,6 @@ public class CalendarConverter
                 // process event description into event comments or other settings
                 String imageUrl = null;
                 String thumbnailUrl = null;
-                Integer rsvpMax = -1;
                 if( event.getDescription() != null )
                 {
                     for( String comment : event.getDescription().split("\n") )
@@ -201,13 +199,21 @@ public class CalendarConverter
                             thumbnailUrl = comment.trim().split("thumbnail:")[1].trim();
                             if(!VerifyUtilities.verifyUrl(thumbnailUrl)) imageUrl = null;
                         }
-                        else if(comment.trim().toLowerCase().startsWith("max:"))
+                        else if(comment.trim().toLowerCase().startsWith("limit:"))
                         {
-                            String str = comment.trim().split("max:")[1].trim();
-                            if(VerifyUtilities.verifyInteger(str) && Integer.parseInt(str) >= 0)
+                            String[] str = comment.trim().split("limit:")[1].trim().split("-");
+
+                            if(str.length == 2)
                             {
-                                rsvpMax = Integer.parseInt(str);
+                                String type = str[0];
+                                Integer limit = -1;
+                                if(VerifyUtilities.verifyInteger(str[1]))
+                                {
+                                    limit = Integer.parseInt(str[1]);
+                                }
+                                rsvpLimits.put(type, limit);
                             }
+
                         }
                         else if( !comment.trim().isEmpty() )
                         {
@@ -295,8 +301,9 @@ public class CalendarConverter
                                 .setImageUrl(imageUrl)
                                 .setStarted(hasStarted)
                                 .setThumbnailUrl(thumbnailUrl)
-                                .setComments(comments)
-                                .setRsvpMax(rsvpMax);
+                                .setRsvpLimits(rsvpLimits)
+                                .setComments(comments);
+
                         Main.getEntryManager().updateEntry(se);
                     }
                     else
@@ -309,8 +316,8 @@ public class CalendarConverter
                                 .setImageUrl(imageUrl)
                                 .setThumbnailUrl(thumbnailUrl)
                                 .setStarted(hasStarted)
-                                .setComments(comments)
-                                .setRsvpMax(rsvpMax);
+                                .setRsvpLimits(rsvpLimits)
+                                .setComments(comments);
 
                         Main.getEntryManager().newEntry(se);
                     }
