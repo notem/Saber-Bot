@@ -14,10 +14,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
@@ -26,7 +23,7 @@ import java.util.function.Consumer;
 public class ShardManager
 {
     private Integer shardTotal = null;
-    private Map<Integer, JDA> jdaShards = null;     // used only when sharded
+    private ConcurrentMap<Integer, JDA> jdaShards = null;     // used only when sharded
     private JDA jda = null;                         // used only when unsharded
 
     private Iterator<String> games;
@@ -53,7 +50,7 @@ public class ShardManager
             // handle sharding
             if(shardTotal > 0)
             {
-                this.jdaShards = new TreeMap<Integer, JDA>();
+                this.jdaShards = new ConcurrentHashMap<>();
 
                 Logging.info(this.getClass(), "Starting shard " + shards.get(0) + ". . .");
 
