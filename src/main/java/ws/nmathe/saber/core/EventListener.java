@@ -303,24 +303,41 @@ public class EventListener extends ListenerAdapter
             MessageReaction.ReactionEmote emote = event.getReactionEmote();
 
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
+            boolean emoteIsRSVP = false;
+            String emoteKey = "";
+            // does options contain the emote's name?
             if(options.containsKey(emote.getName()))
             {
-                // if the rsvp category is full, do nothing
-                if(!se.isFull(emote.getName()))
+                emoteIsRSVP = true;
+                emoteKey = emote.getName();
+            }
+            // does options contain the emote's ID?
+            else if(options.containsKey(emote.getId()))
+            {
+                emoteIsRSVP = true;
+                emoteKey = emote.getId();
+            }
+            // only if options contained the emote's name or ID
+            if(emoteIsRSVP)
+            {
+                // get the name of the rsvp group
+                String name = options.get(emoteKey);
+
+                // if the rsvp group is full, do nothing
+                if(!se.isFull(name))
                 {
                     // remove the user from any other rsvp lists for that event
-                    for(String type : options.values())
+                    for(String group : options.values())
                     {
-                        List<String> members = se.getRsvpMembersOfType(type);
+                        List<String> members = se.getRsvpMembersOfType(group);
                         members.remove(event.getUser().getId());
-                        se.setRsvpMembers(type, members);
+                        se.setRsvpMembers(group, members);
                     }
 
                     // add the user to the rsvp type
-                    String type = options.get(emote.getName());
-                    List<String> members = se.getRsvpMembersOfType(type);
+                    List<String> members = se.getRsvpMembersOfType(name);
                     members.add(event.getUser().getId());
-                    se.setRsvpMembers(type, members);
+                    se.setRsvpMembers(name, members);
 
                     Main.getEntryManager().updateEntry(se); // update the entry
                 }
@@ -328,11 +345,7 @@ public class EventListener extends ListenerAdapter
                 // attempt to remove the reaction
                 Consumer<Throwable> errorProcessor = e ->
                 {
-                    if(e instanceof PermissionException)
-                    {
-                        return;
-                    }
-                    else
+                    if(!(e instanceof PermissionException))
                     {
                         Logging.exception(this.getClass(), e);
                     }

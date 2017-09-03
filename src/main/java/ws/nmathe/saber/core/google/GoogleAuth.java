@@ -40,7 +40,8 @@ public class GoogleAuth
         try
         {
             HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-        } catch (Throwable t) {
+        } catch (Throwable t)
+        {
             t.printStackTrace();
             System.exit(1);
         }

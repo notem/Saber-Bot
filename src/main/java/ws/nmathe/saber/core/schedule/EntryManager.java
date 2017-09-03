@@ -1,6 +1,8 @@
 package ws.nmathe.saber.core.schedule;
 
+import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
@@ -107,9 +109,18 @@ public class EntryManager
             // add reaction options if rsvp is enabled
             if( Main.getScheduleManager().isRSVPEnabled(channelId) )
             {
-                for(String emoji : Main.getScheduleManager().getRSVPOptions(channelId).keySet())
+                Map<String, String> map = Main.getScheduleManager().getRSVPOptions(channelId);
+                for(String emoji : map.keySet())
                 {
-                    msg.addReaction(emoji).queue();
+                    if(EmojiManager.isEmoji(emoji))
+                    {
+                        msg.addReaction(emoji).queue();
+                    }
+                    else
+                    {
+                        Emote emote = msg.getJDA().getEmoteById(emoji);
+                        msg.addReaction(emote).queue();
+                    }
                 }
             }
 

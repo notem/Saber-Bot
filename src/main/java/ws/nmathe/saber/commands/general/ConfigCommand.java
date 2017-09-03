@@ -1,5 +1,7 @@
 package ws.nmathe.saber.commands.general;
 
+import com.vdurmont.emoji.EmojiManager;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Emote;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
@@ -20,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
 
@@ -43,18 +44,18 @@ public class ConfigCommand implements Command
         String USAGE_EXTENDED = "```diff\n- Usage\n" + cmd + " <channel> [<option> <new config>]```\n" +
                 "The config command can be used to both view and " +
                 "change schedule settings. To view a schedule's current settings, supply only the ``<channel>`` argument.\n" +
-                "The full list of setting options can be found when using the command with no <option> or <new config> parameters.\n" +
-                "To modify any settings, use the term inside the brackets as the parameter of <option> and supply the " +
-                "new setting configuration as the final <new config> parameter." +
+                "The full list of setting options can be found when using the command with no <option> or <new config> parameters." +
                 "\n\n" +
-                "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config 'sync' and 'remind' options." +
+                "To modify any settings, use the term inside the brackets as the parameter of <option> and supply the " +
+                "new setting configuration as the final <new config> parameter.\n" +
+                "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config ``sync`` and ``remind`` options." +
                 "\n\n" +
                 "```diff\n+ Event Reminders```\n" +
                 "Events can be configured to send reminder announcements at configured thresholds before an event begins.\n" +
                 "To configure the times at which events on the schedule should send reminders, use the 'remind' with an " +
                 "argument containing the relative times to remind delimited by spaces (see examples).\n" +
                 "Reminder messages are defined by a configured format, see below." +
-                "\n\n splithere" +
+                "splithere" +
                 "```diff\n+ Custom announcements and reminders```\n" +
                 "When an event begins or ends an announcement message is sent to the configured channel.\n" +
                 "The message that is sent is determined from the message format the schedule is configured to use." +
@@ -65,18 +66,31 @@ public class ConfigCommand implements Command
                 " 'begins' or 'ends'\n**%%** will insert %." +
                 "\n\n" +
                 "If you wish to create a multi-line message like the default message format, new lines can be entered using" +
-                " SHIFT+Enter. However, be sure to encapsulate the entire string (new lines included) in quotations." +
+                " SHIFT+Enter.\n" +
+                "However, be sure to encapsulate the entire string (new lines included) in quotations." +
                 "\n\n" +
-                "To reset a custom message or channel to the default pass **reset** as the command parameter.";
+                "To reset a custom message or channel to the default pass **reset** as the command parameter." +
+                "splithere" +
+                "```diff\n+ Event RSVP```\n" +
+                "Schedules can be configured to allow users to RSVP to events on the schedule.\n" +
+                "To enable RSVP for the schedule, use the ``rsvp`` option and provide the argument **on** (see Examples for details)\n" +
+                "\nCustom rsvp options can be configured by using ``rsvp add`` and ``rsvp remove``.\n" +
+                "When adding a new rsvp group two arguments are necessary: the first argument denotes the name for the rsvp group," +
+                "the second argument is the emoticon to use as the message reaction button.\n" +
+                "Custom discord emoticons are allowed.\n" +
+                "\nWhen removing an rsvp group, simply provide the group's name as an argument.";
 
         String USAGE_BRIEF = "``" + cmd + "`` - configure a schedule's settings";
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + cmd + " #schedule``\n" +
-                "``" + cmd + " #guild_events msg \"@here The event %t %a. %c1\"``\n" +
-                "``" + cmd + " #guild_events remind \"10, 20, 30 min\"``\n" +
-                "``" + cmd + " #events_channel chan \"general\"``" +
-                "``" + cmd + " #guild_events remind-msg \"reset\"``";
+        String EXAMPLES = "```diff\n- Examples```" +
+                "\n``" + cmd + " #guild_events``" +
+                "\n``" + cmd + " #guild_events msg \"@here The event %t %a. %c1\"``" +
+                "\n``" + cmd + " #guild_events remind \"10, 20, 30 min\"``" +
+                "\n``" + cmd + " #events_channel chan \"general\"``" +
+                "\n``" + cmd + " #events_channel remind-msg \"reset\"``" +
+                "\n``" + cmd + " #schedule rsvp on``" +
+                "\n``" + cmd + " #schedule rsvp add DPS :crossed_swords:``" +
+                "\n``" + cmd + " #schedule rsvp remove Undecided``";
 
         if( brief )
             return USAGE_BRIEF;
@@ -257,24 +271,29 @@ public class ConfigCommand implements Command
                         case "add":
                         case "a":
                             index++;
-                            String[] tmp1 = args[index].split("-");
-                            if(tmp1.length != 2)
+                            if(args.length != 5)
                             {
                                 return "Argument *" + args[index] + "* is not properly formed for the ``add`` option!\n" +
-                                        "Use ``" + cmd + " [#channel] rsvp add [emoji]-[name]`` to add a new rsvp option " +
+                                        "Use ``" + cmd + " [#channel] rsvp add [name] [emoji]`` to add a new rsvp option " +
                                         "where [emoji] is the discord emoji for the rsvp option to use and " +
                                         "[name] is the display name of the rsvp option.";
                             }
 
-                            // verify input is a valid unicode emoji
-                            final String regex = "([\\u20a0-\\u32ff\\ud83c\\udc00-\\ud83d\\udeff\\udbb9\\udce5-\\udbb9\\udcee])";
-                            if(!tmp1[0].matches(regex))
+                            // verify input is either a valid unicode emoji or discord emoji
+                            if(!EmojiManager.isEmoji(args[index+1]))
                             {
-                                List<Emote> emotes = event.getJDA().getEmotesByName(args[index].replace(":",""), true);
-                                if(emotes.isEmpty())
+                                String emoteId = args[index+1].replaceAll("[^\\d]", "");
+                                Emote emote = event.getJDA().getEmoteById(emoteId);
+                                if(emote == null)
                                 {
-                                    return "*" + tmp1[0] + "* is not an emoji!";
+                                    return "*" + args[index+1] + "* is not an emoji!\n" +
+                                            "Your emoji must be a valid unicode emoji or custom discord emoji!";
                                 }
+                            }
+                            if(Main.getScheduleManager().getRSVPOptions(cId).values().contains(args[index].trim()))
+                            {
+                                return "RSVP group name *" + args[index] + "* already exists!\n" +
+                                        "Please choose a different name for your rsvp group!";
                             }
                             break;
 
@@ -383,7 +402,7 @@ public class ConfigCommand implements Command
                                 break;
                         }
                         Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), msgFormat);
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "ch":
@@ -404,7 +423,7 @@ public class ConfigCommand implements Command
                         }
 
                         Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                         break;
 
 
@@ -424,7 +443,7 @@ public class ConfigCommand implements Command
                                 break;
                         }
                         Main.getScheduleManager().setEndAnnounceFormat(scheduleChan.getId(), endFormat);
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "ech":
@@ -454,7 +473,7 @@ public class ConfigCommand implements Command
                                 }
                         }
                         Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanName);
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "z":
@@ -487,7 +506,7 @@ public class ConfigCommand implements Command
                         Main.getDBDriver().getScheduleCollection()
                                 .updateOne(eq("_id", scheduleChan.getId()), set("timezone_sync", false));
 
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "cl":
@@ -499,7 +518,7 @@ public class ConfigCommand implements Command
                                 .forEach((Consumer<? super Document>) document ->
                                         Main.getEntryManager().reloadEntry((Integer) document.get("_id")));
 
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "s":
@@ -509,7 +528,7 @@ public class ConfigCommand implements Command
                         else
                             Main.getScheduleManager().setAddress(scheduleChan.getId(), "off");
 
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "t":
@@ -525,7 +544,7 @@ public class ConfigCommand implements Command
 
                         Main.getScheduleManager().setSyncTime(cId, Date.from(syncTime.toInstant()));
 
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 4), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 4, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "r":
@@ -561,7 +580,7 @@ public class ConfigCommand implements Command
                                     Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
                                 });
 
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "rm":
@@ -580,7 +599,7 @@ public class ConfigCommand implements Command
                                 break;
                         }
                         Main.getScheduleManager().setReminderFormat(scheduleChan.getId(), remindFormat);
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "rc":
@@ -610,7 +629,7 @@ public class ConfigCommand implements Command
                                 break;
                         }
                         Main.getScheduleManager().setReminderChan(scheduleChan.getId(), chanName);
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "rsvp":
@@ -621,8 +640,12 @@ public class ConfigCommand implements Command
                         {
                             case "add":
                             case "a":
-                                String[] tmp = args[index].split("-");
-                                options.put(tmp[0].trim(), tmp[1].trim());
+                                String emoji = args[index+1].trim();
+                                if(!EmojiManager.isEmoji(emoji))
+                                {
+                                    emoji = emoji.replaceAll("[^\\d]","");
+                                }
+                                options.put(emoji, args[index].trim());
                                 Main.getScheduleManager().setRSVPOptions(cId, options);
                                 break;
 
@@ -674,7 +697,15 @@ public class ConfigCommand implements Command
 
                                                     for(String emoji : map.keySet())
                                                     {
-                                                        msg.addReaction(emoji).queue();
+                                                        if(EmojiManager.isEmoji(emoji))
+                                                        {
+                                                            msg.addReaction(emoji).queue();
+                                                        }
+                                                        else
+                                                        {
+                                                            Emote emote = event.getJDA().getEmoteById(emoji);
+                                                            msg.addReaction(emote).queue();
+                                                        }
                                                     }
                                                 });
 
@@ -686,12 +717,6 @@ public class ConfigCommand implements Command
                         {
                             if(new_enabled)
                             {
-                                // update every entry on the schedule
-                                Main.getDBDriver().getEventCollection().updateMany(
-                                        eq("channelId", scheduleChan.getId()),
-                                        and(set("rsvp_yes", new ArrayList<>()), set("rsvp_no", new ArrayList<>()),
-                                                set("rsvp_undecided", new ArrayList<>())));
-
                                 // for each entry on the schedule
                                 Main.getDBDriver().getEventCollection()
                                         .find(eq("channelId", scheduleChan.getId()))
@@ -708,7 +733,15 @@ public class ConfigCommand implements Command
 
                                                         for(String emoji : map.keySet())
                                                         {
-                                                            msg.addReaction(emoji).queue();
+                                                            if(EmojiManager.isEmoji(emoji))
+                                                            {
+                                                                msg.addReaction(emoji).queue();
+                                                            }
+                                                            else
+                                                            {
+                                                                Emote emote = event.getJDA().getEmoteById(emoji);
+                                                                msg.addReaction(emote).queue();
+                                                            }
                                                         }
                                                     });
 
@@ -717,11 +750,6 @@ public class ConfigCommand implements Command
                             }
                             else
                             {
-                                // update every entry on the schedule
-                                Main.getDBDriver().getEventCollection().updateMany(
-                                        eq("channelId", scheduleChan.getId()),
-                                        and(set("rsvp_yes", null), set("rsvp_no", null), set("rsvp_undecided", null)));
-
                                 // for each entry on the schedule
                                 Main.getDBDriver().getEventCollection()
                                         .find(eq("channelId", scheduleChan.getId()))
@@ -740,16 +768,14 @@ public class ConfigCommand implements Command
                             Main.getScheduleManager().setRSVPEnable(cId, new_enabled);
                         }
 
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 5), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 5, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "st":
                     case "style":
                         String style = args[index].toLowerCase();
-                        if(style.equals("full"))
-                            Main.getScheduleManager().setStyle(cId, style);
-                        else if(style.equals("narrow"))
-                            Main.getScheduleManager().setStyle(cId, style);
+                        if(style.equals("full")) Main.getScheduleManager().setStyle(cId, style);
+                        else if(style.equals("narrow")) Main.getScheduleManager().setStyle(cId, style);
 
                         // for each entry on the schedule
                         Main.getDBDriver().getEventCollection()
@@ -757,14 +783,14 @@ public class ConfigCommand implements Command
                                 .forEach((Consumer<? super Document>) document ->
                                         Main.getEntryManager().reloadEntry(document.getInteger("_id"))
                                 );
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "l":
                     case "len":
                     case "length":
                         Main.getScheduleManager().setSyncLength(cId, Integer.parseInt(args[index]));
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 4), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 4, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "so":
@@ -786,7 +812,7 @@ public class ConfigCommand implements Command
                                 break;
                         }
                         Main.getScheduleManager().setAutoSort(cId, sortType);
-                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3), event.getChannel(), null);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 3, event.getJDA()), event.getChannel(), null);
 
                         // now sort the schedule
                         if(sortType == 1)
@@ -802,7 +828,7 @@ public class ConfigCommand implements Command
             }
             else    // print out all settings
             {
-                MessageUtilities.sendMsg(this.genMsgStr(cId, 0), event.getChannel(), null);
+                MessageUtilities.sendMsg(this.genMsgStr(cId, 0, event.getJDA()), event.getChannel(), null);
             }
         }
         catch(Exception e)
@@ -824,7 +850,7 @@ public class ConfigCommand implements Command
      * @param type (int) the type code for the message to generate
      * @return (String) the message to display
      */
-    private String genMsgStr(String cId, int type)
+    private String genMsgStr(String cId, int type, JDA jda)
     {
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
         String content = "**Configuration for** <#" + cId + ">\n";
@@ -934,12 +960,20 @@ public class ConfigCommand implements Command
                         "// RSVP Settings" +
                         "\n[rsvp]   " +
                         "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"" +
-                        "\n<options>\n";
+                        "\n<Groups>\n";
 
                 Map<String, String> options = Main.getScheduleManager().getRSVPOptions(cId);
                 for(String key : options.keySet())
                 {
-                    content += " " + key + " - " + options.get(key) + "\n";
+                    if(EmojiManager.isEmoji(key))
+                    {
+                        content += " " + options.get(key) + " - " + key + "\n";
+                    }
+                    else
+                    {
+                        String displayName = jda.getEmoteById(key).getName();
+                        content += " " + options.get(key) + " - :" + displayName + ":";
+                    }
                 }
 
                 content += "```";

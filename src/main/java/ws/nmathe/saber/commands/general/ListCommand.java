@@ -38,7 +38,8 @@ public class ListCommand implements Command
                 prefix + "config #channel rsvp on``\n" +
                 "\nThe list may be filtered by either users or roles by appending \"r: @role\", \"u: @user\", or " +
                 "\"t: [type]\" to the command.\n" +
-                "Any number of filters may be appended to the command.\n\n" +
+                "Any number of filters may be appended to the command.\n" +
+                "To display only users who have not rsvp'ed, use *no-input* as the ``[type]``.\n\n" +
                 "The list command has two optional 'modes' of display. \n" +
                 "If the term 'mobile' is added as an argument to the command, non-mentionable usernames will be displayed.\n" +
                 "If the term 'id' is added as an argument, usernames will be displayed as they escaped mentionable ID tags.";
@@ -66,10 +67,11 @@ public class ListCommand implements Command
 
         int index = 0;
 
+        ScheduleEntry entry;
         if (VerifyUtilities.verifyHex(args[index]))
         {
             Integer entryId = Integer.decode("0x" + args[index]);
-            ScheduleEntry entry = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
+            entry = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
             if (entry == null)
             {
                 return "The requested entry does not exist!";
@@ -131,17 +133,11 @@ public class ListCommand implements Command
 
                 case "t":
                 case "type":
-                    switch(filterValue)
+                    Map<String, String> options = Main.getScheduleManager().getRSVPOptions(entry.getChannelId());
+                    if(!options.values().contains(filterValue))
                     {
-                        case "no":
-                        case "yes":
-                        case "undecided":
-                        case "no-input":
-                            break;
-
-                        default:
-                            return "Invalid [type] for type filter!" +
-                                    "\nPossible filter types are \"no\", \"yes\", \"undecided\", or \"no-input\".";
+                        return "Invalid ``[type]`` for type filter!" +
+                                "``[type]`` must be either an rsvp group used on that event or \"no-input\".";
                     }
                     break;
 
@@ -212,7 +208,7 @@ public class ListCommand implements Command
             {
                 if(!filterByType || typeFilters.contains(type))
                 {
-                    content += "**RSVP'ed \"" + type + "\"\n======================**\n";
+                    content += "**\"" + type + "\"\n======================**\n";
                     List<String> members = se.getRsvpMembersOfType(type);
                     for(String id : members)
                     {

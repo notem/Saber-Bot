@@ -30,16 +30,17 @@ public class GuildCommand implements Command
                 "Issuing the guild command without arguments will output the current settings for your discord server.\n\n" +
                 "Options for <option> are: ``restrict``, ``unrestrict``, ``prefix``, and ``control``.\n" +
                 "\n```diff\n+ (Un)Restricted Commands```\n" +
-                "Commands may be configured as either 'restricted' or 'unrestricted' using the 'restrict' and 'unrestrict' command options.\n\n" +
+                "Commands may be configured as either 'restricted' or 'unrestricted' using the ``restrict`` and ``unrestrict`` command options.\n\n" +
                 "A restricted command can only be used in the designated control channel.\n" +
                 "Unrestricted commands may be used in any channel the bot is allowed to view, and by anyone who can post in those channels.";
 
         String USAGE_BRIEF = "``" + head + "`` - adjust guild-wide settings";
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " control #bot_management``\n" +
-                "``" + head + " unrestrict help``\n" +
-                "``" + head + " prefix $``";
+        String EXAMPLES = "```diff\n- Examples```" +
+                "\n``" + head + " control #bot_management``" +
+                "\n``" + head + " unrestrict help``" +
+                "\n``" + head + " restrict create``" +
+                "\n``" + head + " prefix $``";
 
         if( brief )
             return USAGE_BRIEF;

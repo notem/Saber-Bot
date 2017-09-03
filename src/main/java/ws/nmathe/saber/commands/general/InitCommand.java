@@ -42,10 +42,10 @@ public class InitCommand implements Command
                 "\nThe argument should either be an existing #channel, or the name of the schedule you wish to create." +
                 "\nIf omitted, a new schedule named 'new_schedule' will be created.";
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + "``\n" +
-                "``" + head + " \"Guild Events\"``" +
-                "``" + head + " #events";
+        String EXAMPLES = "```diff\n- Examples```" +
+                "\n``" + head + "``" +
+                "\n``" + head + " \"Guild Events\"``" +
+                "\n``" + head + " #events``";
 
         String USAGE_BRIEF = "``" + head + "`` - initialize a new schedule";
 

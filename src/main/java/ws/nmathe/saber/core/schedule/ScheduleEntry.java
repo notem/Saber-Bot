@@ -78,8 +78,8 @@ public class ScheduleEntry
         this.entryComments = new ArrayList<>();
 
         // rsvp
-        this.rsvpMembers = new HashMap<>();
-        this.rsvpLimits = new HashMap<>();
+        this.rsvpMembers = new LinkedHashMap<>();
+        this.rsvpLimits = new LinkedHashMap<>();
 
         // toggles
         this.quietStart = false;
@@ -122,8 +122,8 @@ public class ScheduleEntry
         this.reminders = (List<Date>) entryDocument.get("reminders");
 
         // rsvp
-        this.rsvpMembers = (Map<String, List<String>>) entryDocument.get("rsvp_members");
-        this.rsvpLimits = (Map<String, Integer>) entryDocument.get("rsvp_limits");
+        this.rsvpMembers = (Map) entryDocument.get("rsvp_members");
+        this.rsvpLimits = (Map) entryDocument.get("rsvp_limits");
 
         // urls
         this.titleUrl = entryDocument.getString("url");

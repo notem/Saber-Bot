@@ -77,7 +77,7 @@ public class ScheduleManager
         List<Integer> default_reminders = new ArrayList<>();
         default_reminders.add(10);
 
-        Map<String, String> default_rsvp = new HashMap<>();
+        Map<String, String> default_rsvp = new LinkedHashMap<>();
         default_rsvp.put(Main.getBotSettingsManager().getYesEmoji(), "Yes");
         default_rsvp.put(Main.getBotSettingsManager().getNoEmoji(), "No");
         default_rsvp.put(Main.getBotSettingsManager().getClearEmoji(), "Undecided");
@@ -133,7 +133,7 @@ public class ScheduleManager
         List<Integer> default_reminders = new ArrayList<>();
         default_reminders.add(10);
 
-        Map<String, String> default_rsvp = new HashMap<>();
+        Map<String, String> default_rsvp = new LinkedHashMap<>();
         default_rsvp.put(Main.getBotSettingsManager().getYesEmoji(), "Yes");
         default_rsvp.put(Main.getBotSettingsManager().getNoEmoji(), "No");
         default_rsvp.put(Main.getBotSettingsManager().getClearEmoji(), "Undecided");
@@ -661,7 +661,10 @@ public class ScheduleManager
         Map<String, String> map = (Map) settings.get("rsvp_options");
         if(map == null)
         {
-            return new HashMap<>();
+            map = new LinkedHashMap<>();
+            map.put(Main.getBotSettingsManager().getYesEmoji(), "Yes");
+            map.put(Main.getBotSettingsManager().getNoEmoji(), "No");
+            map.put(Main.getBotSettingsManager().getClearEmoji(), "Undecided");
         }
         return map;
     }

@@ -28,7 +28,7 @@ public class SortCommand implements Command
                 "\n\n" +
                 "The schedule cannot be modified while in the process of sorting.\n" +
                 "If for some reason your schedule is not unlocked after 10 minutes, visit the support server!\n" +
-                "Fore performance reasons, schedules with more than 15 entries will not be sorted.";
+                "For performance reasons, schedules with more than 15 entries will not be sorted.";
 
         String USAGE_BRIEF = "``" + head + "`` - reorder the schedule by start time";
 

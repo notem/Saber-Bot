@@ -48,15 +48,19 @@ public class EditCommand implements Command
                 "This argument identifies what comment operation to do. The operations are ``add``, ``remove``, and ``swap``." +
                 "\nSee the examples for their usage." +
                 "\n\n" +
+                "```diff\n+ Announcement Silencing```\n" +
                 "Announcements for individual events can be toggled on-off using any of these three options: " +
                 "``quiet-start``, ``quiet-end``, ``quiet-remind``\n" +
                 "No additional arguments need to be provided when using one of the ``quiet-`` options." +
-                "\n\nsplithere" +
+                "splithere" +
+                "```diff\n+ RSVP Limits```\n" +
                 "If the schedule that the event is placed on is rsvp enabled (which may be turned on using the ``config`` command)" +
-                " a limit to the number of users who may rsvp 'yes' can be set using the ``max`` option.\n" +
-                "The ``max`` option requires one additional argument, which is the maximum number of players allowed to rsvp for the event.\n" +
+                " a limit to the number of users who may rsvp as a particular group can be set using the ``limit`` option.\n" +
+                "The ``limit`` option requires two additional arguments: the first of which should be the name of the rsvp group to " +
+                "limit and the second argument should the be number of max individuals allowed to rsvp for that group.\n" +
                 "Use \"off\" as the argument to remove a previously set limit." +
                 "\n\n" +
+                "```diff\n+ Image and Thumbnail```\n" +
                 "The thumbnail and image of the event's discord embed can be set through the 'thumbnail' and 'image' options.\n" +
                 "Provide a full url direct link to the image as the argument.\n" +
                 "The thumbnail of the event should appear as a small image to the right of the event's description.\n" +
@@ -65,13 +69,14 @@ public class EditCommand implements Command
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + head + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
                 "\n``" + head + " 80c0sd09 comment remove 3``" +
-                "\n``" + head + " 09adff3 comment swap 1 2" +
+                "\n``" + head + " 09adff3 comment swap 1 2``" +
                 "\n``" + head + " 0abf2991 start 21:15``" +
                 "\n``" + head + " 49afaf2 end 2:15pm``" +
                 "\n``" + head + " 409fa22 start-date 10/9``" +
                 "\n``" + head + " a00af9a repeat \"Sun, Tue, Fri\"``" +
                 "\n``" + head + " 0912af9 quiet-start``" +
-                "\n``" + head + " a901992 expire 2019/1/1" +
+                "\n``" + head + " a901992 expire 2019/1/1``" +
+                "\n``" + head + " 90aff9a limit Yes 15``" +
                 "";
 
         String USAGE_BRIEF = "``" + head + "`` - modify an event";
@@ -147,8 +152,10 @@ public class EditCommand implements Command
                     case "s":
                     case "swap":
                         if(args.length != 5)
+                        {
                             return "That's not enough arguments for *comment swap*!" +
                                     "\nUse ``"+ head +" [id] comment swap [number] [number]``";
+                        }
                         if(!VerifyUtilities.verifyInteger(args[index]))
                         {
                             return "Argument **" + args[index] + "** is not a number!";
@@ -176,31 +183,45 @@ public class EditCommand implements Command
             case "starts":
             case "start":
                 if(args.length != 3)
+                {
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                             "Use ``" + head + " "+args[index-2]+" "+args[index-1]+" [start time]``";
-                if( !VerifyUtilities.verifyTime( args[index] ) )
+                }
+                if(!VerifyUtilities.verifyTime(args[index]))
+                {
                     return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
-                if( entry.hasStarted() )
+                }
+                if(entry.hasStarted())
+                {
                     return "You cannot modify the start time after the event has already started.";
+                }
                 break;
 
             case "e":
             case "ends":
             case "end":
                 if(args.length != 3)
+                {
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                             "Use ``" + head + " "+args[index-2]+" "+args[index-1]+" [end time]``";
+                }
                 if( !VerifyUtilities.verifyTime( args[index] ) )
+                {
                     return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
+                }
                 break;
 
             case "t":
             case "title":
                 if(args.length != 3)
+                {
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                             "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [\"title\"]``";
+                }
                 if( args[index].length() > 255 )
+                {
                     return "Your title can be at most 255 characters!";
+                }
                 break;
 
             case "d":
@@ -210,10 +231,14 @@ public class EditCommand implements Command
             case "ed":
             case "end-date":
                 if(args.length != 3)
+                {
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                             "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [date]``";
-                if( !VerifyUtilities.verifyDate( args[index] ) )
+                }
+                if(!VerifyUtilities.verifyDate(args[index]))
+                {
                     return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                }
 
                 ZoneId zone = Main.getScheduleManager().getTimeZone(entry.getScheduleID());
                 ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.now(zone), zone);
@@ -223,35 +248,51 @@ public class EditCommand implements Command
                 }
 
                 if(entry.hasStarted())
+                {
                     return "You cannot modify the date of events which have already started!";
+                }
                 break;
 
             case "r":
             case "repeats":
             case "repeat":
                 if(args.length != 3)
+                {
+
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                             "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [repeat]``";
+                }
                 break;
 
             case "i":
             case "interval":
                 if(args.length != 3)
+                {
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                             "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [number]``";
+                }
                 if(!VerifyUtilities.verifyInteger(args[index]))
+                {
                     return "**" + args[index] + "** is not a number!";
+                }
                 if(Integer.parseInt(args[index]) < 1)
+                {
                     return "Your repeat interval can't be negative!";
+                }
                 break;
 
             case "u":
             case "url":
                 if(args.length != 3)
+                {
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                             "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [url]``";
+                }
                 if (!VerifyUtilities.verifyUrl(args[index]))
-                    return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
+                {
+                    return "**" + args[index] + "** doesn't look like a url to me!" +
+                            "\nRemember to include the ``http://`` portion of the url!";
+                }
                 break;
 
             case "qs":
@@ -261,26 +302,23 @@ public class EditCommand implements Command
             case "qr":
             case "quiet-remind":
                 if (args.length > 2)
+                {
                     return "That's too many arguments for **"+args[index-1]+"**!" +
                             " Just use ``" + head + args[index-2] + args[index-1] + "``!";
+                }
                 break;
 
             case "max":
             case "m":
-                if (args.length > 3)
-                    return "That's too many arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+ head + " " + args[index-2] + " " + args[index-1] + " [rsvp max]``";
-                if (!VerifyUtilities.verifyInteger(args[index]))
-                    return "The rsvp max must be a number!";
-                if (Integer.valueOf(args[index])<0)
-                    return "The rsvp max cannot be negative!";
-                break;
+                return "The ``max`` option has been made obsolete. Please use the ``limit`` option in it's place.";
 
             case "ex":
             case "expire":
                 if(args.length != 3)
+                {
                     return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                             "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [date]``";
+                }
                 switch(args[index])
                 {
                     case "none":
@@ -289,10 +327,14 @@ public class EditCommand implements Command
                         return "";
 
                     default:
-                        if( !VerifyUtilities.verifyDate( args[index] ) )
+                        if(!VerifyUtilities.verifyDate( args[index] ))
+                        {
                             return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                        }
                         if(ParsingUtilities.parseDateStr(args[index]).isBefore(LocalDate.now()))
+                        {
                             return "That date is in the past!";
+                        }
                         return "";
                 }
 
@@ -301,8 +343,10 @@ public class EditCommand implements Command
             case "th":
             case "thumbnail":
                 if(args.length != 3)
-                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                {
+                    return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
                             "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [url]``";
+                }
                 switch(args[index])
                 {
                     case "off":
@@ -317,6 +361,21 @@ public class EditCommand implements Command
 
             case "limit":
             case "l":
+                if(args.length != 4)
+                {
+                    return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
+                            "Use ``"+ head + " "+args[index-2]+" "+args[index-1]+" [group] [limit]`` where ``[group]`` " +
+                            "is the name of the rsvp group you wish to limit and ``[limit]`` maximum number of participants to allow.";
+                }
+                if(!Main.getScheduleManager().getRSVPOptions(entry.getChannelId()).containsValue(args[index]))
+                {
+                    return "*" + args[index] + "* is not an rsvp group for that event's schedule!";
+                }
+                index++;
+                if(!args[index].equalsIgnoreCase("off") && !VerifyUtilities.verifyInteger(args[index]))
+                {
+                    return "*" + args[index] + "* is not a number!\nTo disable the rsvp group's limit use \"off\".";
+                }
                 break;
 
             default:
@@ -539,8 +598,7 @@ public class EditCommand implements Command
 
                     case "limit":
                     case "l":
-                        String[] tmp = args[index].split("-");
-                        se.setRsvpLimit(tmp[0], Integer.parseInt(tmp[1]));
+                        se.setRsvpLimit(args[index], Integer.parseInt(args[index+1]));
                         break;
                 }
 

@@ -32,7 +32,8 @@ public class CreateCommand implements Command
 
         String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel> <title> <start> [<end> <extra>]```\n" +
                 "The create command will add a new entry to a schedule.\n" +
-                "Entries MUST be initialized with a title, and a start time.\n" +
+                "Entries MUST be initialized with a title, and a start time." +
+                "\n\n" +
                 "The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
                 "optional am/pm appended on the end.\n" +
                 "Optionally, events can be configured with comments, repeat settings, and a start/end dates." +
