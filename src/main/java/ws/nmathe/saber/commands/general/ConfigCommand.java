@@ -715,6 +715,9 @@ public class ConfigCommand implements Command
                         // otherwise, if the rsvp setting was changes
                         else if(enabled != new_enabled)
                         {
+                            // set schedule settings
+                            Main.getScheduleManager().setRSVPEnable(cId, new_enabled);
+
                             if(new_enabled)
                             {
                                 // for each entry on the schedule
@@ -763,9 +766,6 @@ public class ConfigCommand implements Command
                                             Main.getEntryManager().reloadEntry(document.getInteger("_id"));
                                         });
                             }
-
-                            // set schedule settings
-                            Main.getScheduleManager().setRSVPEnable(cId, new_enabled);
                         }
 
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 5, event.getJDA()), event.getChannel(), null);

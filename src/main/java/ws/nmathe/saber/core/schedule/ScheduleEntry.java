@@ -122,8 +122,8 @@ public class ScheduleEntry
         this.reminders = (List<Date>) entryDocument.get("reminders");
 
         // rsvp
-        this.rsvpMembers = (Map) entryDocument.get("rsvp_members");
-        this.rsvpLimits = (Map) entryDocument.get("rsvp_limits");
+        this.rsvpMembers = (Map) (entryDocument.get("rsvp_members")==null ? new LinkedHashMap<>() : entryDocument.get("rsvp_members"));
+        this.rsvpLimits = (Map) (entryDocument.get("rsvp_limits")==null ? new LinkedHashMap<>() : entryDocument.get("rsvp_limits"));
 
         // urls
         this.titleUrl = entryDocument.getString("url");
