@@ -37,7 +37,7 @@ class ScheduleSyncer implements Runnable
 
         Main.getDBDriver().getScheduleCollection()
                 .find(query)
-                .projection(fields(include("_id", "sync_time", "sync_address")))
+                .projection(fields(include("_id", "sync_time", "sync_address", "guildId")))
                 .forEach((Consumer<? super Document>) document ->
         {
             executor.execute(() ->

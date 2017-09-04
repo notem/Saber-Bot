@@ -184,13 +184,14 @@ public class EntryManager
 
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
-        for(Integer til : Main.getScheduleManager().getDefaultReminders(origMessage.getChannel().getId()))
+        for(Integer til : Main.getScheduleManager().getDefaultReminders(se.getChannelId()))
         {
-            if(Instant.now().until(start, ChronoUnit.MINUTES) > til)
+            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > til)
             {
-                reminders.add(Date.from(start.toInstant().minusSeconds(til*60)));
+                reminders.add(Date.from(se.getStart().toInstant().minusSeconds(til*60)));
             }
         }
+        se.setReminders(reminders);
 
         // process expiration date
         Date expire;
@@ -304,10 +305,13 @@ public class EntryManager
                 .find(eq("_id", entryId)).first();
 
         if (entryDocument != null)
+        {
             return new ScheduleEntry(entryDocument);
-
+        }
         else    // otherwise return null
+        {
             return null;
+        }
     }
 
     /**
@@ -322,10 +326,13 @@ public class EntryManager
                 .find(and(eq("_id", entryId), eq("guildId",guildId))).first();
 
         if (entryDocument != null)
+        {
             return new ScheduleEntry(entryDocument);
-
+        }
         else    // otherwise return null
+        {
             return null;
+        }
     }
 
     /**
