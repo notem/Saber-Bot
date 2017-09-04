@@ -750,6 +750,15 @@ public class ScheduleManager
 
     public void setRSVPOptions(String cId, Map<String, String> options)
     {
-        Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("rsvp_options", options));
+        Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
+        if(!doc.containsKey("rsvp_options"))
+        {
+            doc.append("rsvp_options", options);
+            Main.getDBDriver().getScheduleCollection().replaceOne(eq("_id", cId), doc);
+        }
+        else
+        {
+            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("rsvp_options", options));
+        }
     }
 }
