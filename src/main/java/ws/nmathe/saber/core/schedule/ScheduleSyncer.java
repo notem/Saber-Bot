@@ -45,6 +45,7 @@ class ScheduleSyncer implements Runnable
             JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
 
             // if the shard is not connected, do not sync schedules
+            if(jda == null) return;
             if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
             executor.execute(() ->

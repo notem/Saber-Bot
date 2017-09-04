@@ -42,10 +42,8 @@ public class SyncCommand implements Command
                 "``" + head + " #new_schedule g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com``" +
                 "\n``" + head + " #new_schedule``";
 
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        if( brief ) return USAGE_BRIEF;
+        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
 
     @Override
@@ -54,16 +52,24 @@ public class SyncCommand implements Command
         String head = prefix + this.name();
 
         if( args.length < 1 )
+        {
             return "That's not enough arguments! Use ``" + head + " <channel> [<calendar address>]``";
+        }
         if( args.length > 2)
+        {
             return "That's too many arguments! Use ``" + head + " <channel> [<calendar address>]``";
+        }
 
         String cId = args[0].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId))
+        {
             return "Channel " + args[0] + " is not on my list of schedule channels for your guild.";
+        }
 
         if(Main.getScheduleManager().isLocked(cId))
+        {
             return "Schedule is locked while sorting or syncing. Please try again after I finish.";
+        }
         return "";
     }
 

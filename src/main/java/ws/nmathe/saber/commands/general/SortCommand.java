@@ -35,10 +35,8 @@ public class SortCommand implements Command
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + head + " #schedule``\n";
 
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        if( brief ) return USAGE_BRIEF;
+        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
 
     @Override
@@ -54,7 +52,7 @@ public class SortCommand implements Command
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
-                    "Use the ``" + head + "`` command to create a new schedule!";
+                    "Use the ``" + prefix + "init`` command to create a new schedule!";
 
         if(Main.getScheduleManager().isLocked(cId))
             return "Schedule is locked while sorting or syncing. Please try again after I finish.";

@@ -56,6 +56,7 @@ class EntryProcessor implements Runnable
                             JDA jda = Main.getShardManager().getJDA(guildId);
 
                             // if the shard is not connected, do process the event
+                            if(jda == null) return;
                             if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
                             primaryExecutor.execute(() ->
@@ -82,6 +83,7 @@ class EntryProcessor implements Runnable
                             JDA jda = Main.getShardManager().getJDA(guildId);
 
                             // if the shard is not connected, do process the event
+                            if(jda == null) return;
                             if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
                             primaryExecutor.execute(() ->
@@ -115,6 +117,7 @@ class EntryProcessor implements Runnable
                             JDA jda = Main.getShardManager().getJDA(guildId);
 
                             // if the shard is not connected, do process the event
+                            if(jda == null) return;
                             if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
                             primaryExecutor.execute(() ->
@@ -219,6 +222,7 @@ class EntryProcessor implements Runnable
                             JDA jda = Main.getShardManager().getJDA(guildId);
 
                             // if the shard is not connected, do process the event
+                            if(jda == null) return;
                             if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
                             secondaryExecutor.execute(() ->

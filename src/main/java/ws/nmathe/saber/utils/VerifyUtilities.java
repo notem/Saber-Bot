@@ -2,6 +2,7 @@ package ws.nmathe.saber.utils;
 
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 /**
  * static methods used to verify user input for the verify() method of commands
@@ -124,5 +125,17 @@ public class VerifyUtilities
             return false;
         }
         return true;
+    }
+
+    public static boolean verifyZone(String arg)
+    {
+        for(String validZone : ZoneId.getAvailableZoneIds())
+        {
+            if(validZone.equalsIgnoreCase(arg))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

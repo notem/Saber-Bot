@@ -92,88 +92,99 @@ public class ConfigCommand implements Command
                 "\n``" + cmd + " #schedule rsvp add DPS :crossed_swords:``" +
                 "\n``" + cmd + " #schedule rsvp remove Undecided``";
 
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        if( brief ) return USAGE_BRIEF;
+        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
 
     @Override
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String cmd = prefix + this.name();
-
         int index = 0;
 
         if (args.length < 1)
+        {
             return "That's not enough arguments! Use ``" + cmd + " <channel> [<option> <new config>]``";
+        }
 
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
+        {
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
-                    "Use the ``" + cmd + "`` command to create a new schedule!";
+                    "Use the ``" + prefix + "init`` command to create a new schedule!";
+        }
 
         if(Main.getScheduleManager().isLocked(cId))
+        {
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
+        }
 
         index++;
 
         if (args.length > 1)
         {
             if (args.length < 2)
+            {
                 return "That's not enough arguments! Use ``" + cmd + " <channel> [<option> <new config>]``";
+            }
             switch( args[index++] )
             {
                 case "m":
                 case "msg":
                 case "message":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] msg <new config>]``, " +
                                 "where ``<new config>`` is the message format string to use when create announcement and remind messages.\n" +
                                 "Reference the ``help`` command information for ``config`` to learn more about custom announcement messages.";
+                    }
                     break;
 
                 case "ch":
                 case "chan":
                 case "channel":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#chan] chan <new config>``, " +
                                 "where ``<new config>`` is a discord channel to which announcement messages should be sent.\n";
+                    }
                     break;
 
 
                 case "em":
                 case "end-msg":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] end-msg <new config>``, " +
                                 "where ``<new config>`` is the message format string to use when create event end messages.\n" +
                                 "This overrides the ``[msg]`` setting for events which are ending.\n" +
                                 "Reference the ``help`` command information for ``config`` to learn more about custom announcement messages.";
+                    }
                     break;
 
                 case "ech":
                 case "end-chan":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] end-chan <new config>``, " +
                                 "where <new config> is a discord channel to which event end messages should be sent.\n" +
                                 "This overrides the ``[chan]`` setting for events which are ending.";
+                    }
                     break;
 
                 case "z":
                 case "zone":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] zone <new config>``, where ``<new config>`` is a valid timezone string." +
                                 "\nA list of valid timezones can be seen using the ``zones`` command).";
-                    try
-                    {
-                        ZoneId.of(args[index]);
                     }
-                    catch(Exception e)
+                    if(!VerifyUtilities.verifyZone(args[index]))
                     {
                         return "**" + args[index] +  "** is not a valid timezone! Use the ``zones`` command to learn " +
                                 "what options are available.";
@@ -183,36 +194,49 @@ public class ConfigCommand implements Command
                 case "cl":
                 case "clock":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] clock <new config>``, " +
                                 "where ``<new config>`` is **\"12\"** for 12 hour format (am/pm), or **\"24\"** for full 24 hour time.";
-
+                    }
                     if( !args[index].equals("24") && !args[index].equals("12"))
+                    {
                         return "Argument **" + args[index] +  "** is not a valid option. Argument must be **24** " +
                                 "or **12**";
+                    }
                     break;
 
                 case "sy":
                 case "sync":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] sync <new config>``, " +
                                 "where ``<new config>`` is a google calendar address or **\"off\"**";
+                    }
                     if( args[index].equals("off") )
+                    {
                         return "";
+                    }
                     if( !Main.getCalendarConverter().checkValidAddress(args[index]) )
+                    {
                         return "I cannot sync to **" + args[index] + "**! Provide a valid google calendar url or **off**.";
+                    }
                     break;
 
                 case "t":
                 case "time":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] time <new config>``, " +
                                 "where ``<new config>`` is the time of day to which the schedule should be automatically " +
                                 "resync to the linked google calendar address.";
+                    }
                     if(!VerifyUtilities.verifyTime(args[index]))
+                    {
                         return "I cannot parse ``" + args[index] + "`` into a time!";
+                    }
                     break;
 
                 case "r":
@@ -220,6 +244,7 @@ public class ConfigCommand implements Command
                 case "reminder":
                 case "reminders":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [chan] remind <new config>``, " +
                                 "where ``<new config>`` are the times before an event that reminder messages should be sent.\n" +
@@ -227,45 +252,57 @@ public class ConfigCommand implements Command
                                 "schedule to send reminder messages 10, 20, and 30 minutes before the even begins.\n" +
                                 "To disable reminders completely, use *\"off\".";
 
+                    }
                     if(args[index].toLowerCase().equals("off"))
+                    {
                         return "";
+                    }
 
                     List<Integer> list = ParsingUtilities.parseReminderStr(args[index]);
                     if (list.size() <= 0)
+                    {
                         return "I could not parse out any times!";
+                    }
                     if (list.size() > 10)
+                    {
                         return "More than 10 reminders are not allowed!";
+                    }
                     for(Integer i : list)
                     {
-                        if (i<5)
-                            return "Reminders under 5 minutes are not allowed!";
+                        if (i<5) return "Reminders under 5 minutes are not allowed!";
                     }
                     break;
 
                 case "rm":
                 case "remind-msg":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [chan] remind-msg <new config>``, " +
                                 "where ``<new config>`` is the message format string to use when sending remind messages.\n" +
                                 "This setting will override the ``[msg]`` option for reminders.\n" +
                                 "Reference the ``help`` command information for ``config`` to learn more about custom announcement messages.";
+                    }
                     break;
 
                 case "rch":
                 case "remind-chan":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [chan] remind-chan <new config>``, " +
                                 "where ``<new config>`` is a discord channel to which announcement messages should be sent.\n";
+                    }
                     break;
 
                 case "rsvp":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [chan] rsvp <new config>``, " +
                                 "where <new config> should be \"on\" to enable the rsvp feature, or \"off\" to " +
                                 "disable the feature.\n";
+                    }
                     switch(args[index])
                     {
                         case "add":
@@ -308,46 +345,58 @@ public class ConfigCommand implements Command
                             break;
 
                         default:
+                        {
                             return "Argument *" + args[index] + "* is not an appropriate argument!\n" +
                                     "Use ``" + cmd + " [#channel] rsvp [on|off]`` to enable/disable rsvp on the schedule.\n" +
                                     "Use ``" + cmd + " [#channel] rsvp add [emoji]-[name]`` to add a new rsvp option.\n" +
                                     "Use ``" + cmd + " [#channel] rsvp remove [emoji|name]`` to remove an rsvp option.";
+                        }
                     }
                     break;
 
                 case "st":
                 case "style":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [chan] style <new config>``, " +
                                 "where ``<new config>`` can either be **\"full\"** to display events in the lengthy full information style, or **\"narrow\"** to " +
                                 "to display events in a compressed, smaller style.\n";
+                    }
                     break;
 
                 case "l":
                 case "len":
                 case "length":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [chan] length <new config>``, " +
                                 "where ``<new config>`` is the length of time (in days) to which the linked google " +
                                 "calendar should be synced.\nFor example, \"7\" will sync a weeks worth events to " +
                                 "the schedule and \"30\" will have the schedule display the full month of events.";
+                    }
 
                     if(!VerifyUtilities.verifyInteger(args[index]))
+                    {
                         return "*" + args[index] + "*" + " is not an integer!\n This option takes a ";
+                    }
                     Integer len = Integer.parseInt(args[index]);
                     if(len>30 || len<1)
+                    {
                         return "The sync length must be an integer between 1 and 30!";
+                    }
                     break;
 
                 case "so":
                 case "sort":
                     if (args.length < 3)
+                    {
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [chan] sort <new config>``, " +
                                 "where ``<new config>`` may be either **\"asc\"** to automatically sort the schedule in ascending order," +
                                 " **\"desc\"** for descending order, or **\"off\"** to disable auto-sorting.";
+                    }
 
                     switch(args[index])
                     {
@@ -363,8 +412,10 @@ public class ConfigCommand implements Command
                     }
 
                 default:
+                {
                     return "Argument **" + args[index-1] + "** is not a configurable setting! Options are **msg**, " +
                             "**chan**, **zone**, **clock**, **sync**, **time**, and **remind**.";
+                }
             }
         }
 
@@ -478,7 +529,7 @@ public class ConfigCommand implements Command
 
                     case "z":
                     case "zone":
-                        ZoneId zone = ZoneId.of(args[index]);
+                        ZoneId zone = ParsingUtilities.parseZone(args[index]);
                         Main.getScheduleManager().setTimeZone(scheduleChan.getId(), zone);
 
                         // correct/reload the event displays

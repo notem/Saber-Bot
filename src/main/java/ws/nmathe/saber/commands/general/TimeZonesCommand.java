@@ -67,9 +67,13 @@ public class TimeZonesCommand implements Command
                     msg = "**continued. . .**\n";
                 }
                 if( args.length == 0 )
+                {
                     msg += "  " + zone + "\n";
+                }
                 else if( zone.toUpperCase().contains(args[0].toUpperCase()) )
+                {
                     msg += "  " + zone + "\n";
+                }
             }
 
             MessageUtilities.sendMsg(msg, event.getChannel(), null);

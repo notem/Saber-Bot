@@ -42,10 +42,8 @@ public class GuildCommand implements Command
                 "\n``" + head + " restrict create``" +
                 "\n``" + head + " prefix $``";
 
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        if( brief ) return USAGE_BRIEF;
+        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
 
     @Override
@@ -62,37 +60,53 @@ public class GuildCommand implements Command
                 case "r":
                 case "restrict":
                     if(args.length < 2)
+                    {
                         return "That's not enough arguments!\n" +
                                 "The correct usage is ``" + head + " restrict [cmd]`` where ``[cmd]`` " +
                                 "is the name of the command you wish to restrict.\n" +
                                 "Restricted commands may only be used inside the bot control channel.";
+                    }
                     if(!Main.getCommandHandler().getCommandNames().contains(args[1].toLowerCase()))
+                    {
                         return "**" + args[1] + "** is not a valid command name! Make sure to not include the prefix!";
+                    }
                     if(guildSettings.getRestrictedCommands().contains(args[1]))
+                    {
                         return "**" + args[1] + "** is already restricted!";
+                    }
                     break;
 
                 case "u":
                 case "unrestrict":
                     if(args.length < 2)
+                    {
                         return "That's not enough arguments!\n" +
                                 "The correct usage is ``" + head + " restrict [cmd]`` where ``[cmd]`` " +
                                 "is the name of the command you wish to unrestrict.\n" +
                                 "Unrestricted commands may be used by anyone outside the bot control channel.";
+                    }
                     if(!Main.getCommandHandler().getCommandNames().contains(args[1].toLowerCase()))
+                    {
                         return "**" + args[1] + "** is not a valid command name! Make sure to not include the prefix!";
+                    }
                     if(guildSettings.getUnrestrictedCommands().contains(args[1]))
+                    {
                         return "**" + args[1] + "** is already unrestricted!";
+                    }
                     break;
 
                 case "p":
                 case "prefix":
                     if(args.length < 2)
+                    {
                         return "That's not enough arguments!\n" +
                                 "The correct usage is ``" + head + " prefix [arg]`` where ``[arg]`` " +
                                 "is the new command prefix for me on this guild.";
+                    }
                     if(prefix.length() > 30)
+                    {
                         return "Your custom prefix is to long! Your prefix can be at most 30 characters.";
+                    }
                     break;
 
                 case "c":

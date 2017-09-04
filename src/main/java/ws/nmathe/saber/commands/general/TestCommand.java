@@ -78,8 +78,7 @@ public class TestCommand implements Command
             ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
 
             Message msg = entry.getMessageObject();
-            if( msg==null )
-                return;
+            if( msg==null ) return;
 
             String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getMessageObject().getChannel().getId());
             String remindMsg = ParsingUtilities.parseMsgFormat(format, entry);

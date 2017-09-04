@@ -1,15 +1,19 @@
 package ws.nmathe.saber.utils;
 
 import org.apache.commons.lang3.StringUtils;
+import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -182,6 +186,11 @@ public class ParsingUtilities
         return announceMsg;
     }
 
+    /**
+     * Parses out the intended event repeat information from user input
+     * @param str (String) the user input
+     * @return (int) an integer representing the repeat information (stored in binary)
+     */
     public static int parseWeeklyRepeat(String str)
     {
         str = str.toLowerCase();
@@ -215,6 +224,13 @@ public class ParsingUtilities
         return bits;
     }
 
+
+    /**
+     * Parses user supplied input for information indicating the reminder intervals to use for a schedule's
+     * reminder settings
+     * @param arg (String) user input
+     * @return (List<Integer>) a list of integers representing the time (in minutes) before an event starts
+     */
     public static List<Integer> parseReminderStr(String arg)
     {
         List<Integer> list = new ArrayList<>();
@@ -230,6 +246,12 @@ public class ParsingUtilities
         return list;
     }
 
+
+    /**
+     * Parses user input for a date information
+     * @param arg (String)
+     * @return
+     */
     public static LocalDate parseDateStr(String arg)
     {
         switch (arg)
@@ -257,5 +279,24 @@ public class ParsingUtilities
                 }
                 return date;
         }
+    }
+
+
+    /**
+     * Parses user supplied input for zone information
+     * Allows for zone names to be inputted without proper capitalization
+     * @param userInput (String) user input
+     * @return (ZoneId) zone information as parsed
+     */
+    public static ZoneId parseZone(String userInput)
+    {
+        for(String validZone : ZoneId.getAvailableZoneIds())
+        {
+            if(validZone.equalsIgnoreCase(userInput))
+            {
+                return ZoneId.of(validZone);
+            }
+        }
+        return ZoneId.of(Main.getBotSettingsManager().getTimeZone());
     }
 }

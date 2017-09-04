@@ -51,10 +51,8 @@ public class ListCommand implements Command
                 "``" + head + " 01d9aff \"u: @notem\"\n" +
                 "``" + head + " 0a9dda2 mobile \"t: yes\" \"t: no\" \"t: undecided\"";
 
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + USAGE_EXAMPLES;
+        if( brief ) return USAGE_BRIEF;
+        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + USAGE_EXAMPLES;
     }
 
     @Override
@@ -63,7 +61,9 @@ public class ListCommand implements Command
         String head = prefix + this.name();
 
         if (args.length==0)
+        {
             return "That's not enough arguments! Use ``" + head + " <ID> [filters]``";
+        }
 
         int index = 0;
 

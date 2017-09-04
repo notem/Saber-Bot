@@ -30,17 +30,17 @@ public class HelpCommand implements Command
 
         String USAGE_BRIEF = "``" + head + "`` - receive help message";
 
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED;
+        if( brief ) return USAGE_BRIEF;
+        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED;
     }
 
     @Override
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         if(args.length>1)
+        {
             return "That's too many arguments!";
+        }
         return "";
     }
 

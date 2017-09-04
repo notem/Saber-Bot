@@ -301,10 +301,12 @@ public class EditCommand implements Command
             case "quiet-end":
             case "qr":
             case "quiet-remind":
+            case "quiet-all":
+            case "qa":
                 if (args.length > 2)
                 {
                     return "That's too many arguments for **"+args[index-1]+"**!" +
-                            " Just use ``" + head + args[index-2] + args[index-1] + "``!";
+                            " Use ``" + head +" "+ args[index-2] +" "+ args[index-1] + "``!";
                 }
                 break;
 
@@ -549,6 +551,18 @@ public class EditCommand implements Command
                     case "qr":
                     case "quiet-remind":
                         se.setQuietRemind(!se.isQuietRemind());
+                        break;
+
+                    case "qa":
+                    case "quiet-all":
+                        if(se.isQuietRemind() && se.isQuietEnd() && se.isQuietStart())
+                        {
+                            se.setQuietRemind(false).setQuietEnd(false).setQuietStart(false);
+                        }
+                        else
+                        {
+                            se.setQuietRemind(true).setQuietEnd(true).setQuietStart(true);
+                        }
                         break;
 
                     case "ex":

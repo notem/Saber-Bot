@@ -37,6 +37,7 @@ public class Pruner implements Runnable
                         JDA jda = Main.getShardManager().getShard(guildId);
 
                         // if the shard is not connected, do not prune
+                        if(jda == null) return;
                         if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
                         Guild guild = jda.getGuildById(guildId);
@@ -67,6 +68,7 @@ public class Pruner implements Runnable
                         JDA jda = Main.getShardManager().getShard(guildId);
 
                         // if the shard is not connected, do not prune
+                        if(jda == null) return;
                         if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
                         String chanId = document.getString("_id");
@@ -98,6 +100,7 @@ public class Pruner implements Runnable
                         JDA jda = Main.getShardManager().getShard(guildId);
 
                         // if the shard is not connected, do not prune
+                        if(jda == null) return;
                         if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
                         // validate message id

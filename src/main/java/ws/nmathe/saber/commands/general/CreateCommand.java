@@ -78,10 +78,8 @@ public class CreateCommand implements Command
 
         String USAGE_BRIEF = "``" + head + "`` - add an event to a schedule";
 
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        if( brief ) return USAGE_BRIEF;
+        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
     @Override
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
@@ -91,40 +89,51 @@ public class CreateCommand implements Command
         int index = 0;
 
         if (args.length < 3)
+        {
             return "That's not enough arguments! Use ``" + head + " <channel> <title> <start> [<end> <extra>]``";
+        }
 
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
+        {
             return "Channel " + args[index] + " is not a schedule for your guild. " +
-                    "Use the ``" + head + "`` command to create a new schedule!";
+                    "Use the ``" + prefix + "init`` command to create a new schedule!";
+        }
 
         if( Main.getScheduleManager().isLocked(cId) )
+        {
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
+        }
 
         index++;
 
         // check <title>
         if( args[index].length() > 255 )
+        {
             return "Your title can be at most 255 characters!";
+        }
 
         index++;
 
         // check <start>
         if( !VerifyUtilities.verifyTime( args[index] ) )
+        {
             return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
+        }
 
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
         ZonedDateTime startTime = ParsingUtilities.parseTime(ZonedDateTime.now(zone), args[index]);
 
         // if minimum args, then ok
-        if (args.length == 3)
-            return "";
+        if (args.length == 3) return "";
 
         index++;
 
         // if <end> fails verification, assume <end> has been omitted
         if( VerifyUtilities.verifyTime( args[index] ) )
+        {
             index++;
+        }
 
         // check remaining args
         if( args.length - 1 > index )
@@ -450,13 +459,16 @@ public class CreateCommand implements Command
                     .setExpire(expire);
             Integer entryId = Main.getEntryManager().newEntry(se);
 
-
             // output results of event creation to command channel
             DateTimeFormatter dtf;
             if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
+            {
                 dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
+            }
             else
+            {
                 dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mm a [z]");
+            }
 
             String body = "New event created :id: **"+ Integer.toHexString(entryId) +"** on <#" + cId + ">\n```js\n" +
                     "Title:  \"" + title + "\"\n" +
@@ -464,14 +476,11 @@ public class CreateCommand implements Command
                     "End:    " + end.format(dtf) + "\n" +
                     "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n" ;
 
-            if(url!=null)
-                body += "Url: \"" + url + "\"\n";
+            if(url!=null) body += "Url: \"" + url + "\"\n";
 
-            if(expireDate != null)
-                body += "Expire: \"" + expireDate + "\"";
+            if(expireDate != null) body += "Expire: \"" + expireDate + "\"";
 
-            if(!comments.isEmpty())
-                body += "// Comments\n";
+            if(!comments.isEmpty()) body += "// Comments\n";
 
             for(int i=1; i<comments.size()+1; i++)
             {

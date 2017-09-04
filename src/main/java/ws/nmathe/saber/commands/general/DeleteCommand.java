@@ -51,9 +51,13 @@ public class DeleteCommand implements Command
         String head = prefix + this.name();
 
         if (args.length>1)
+        {
             return "Too many arguments! Use ``" + head + " <ID|channel|'all'>``";
+        }
         if (args.length==0)
+        {
             return "Not enough arguments! Use ``" + head + " <ID|channel|'all'>``";
+        }
 
         // pass if "all"
         if (args[0].equals("all"))
