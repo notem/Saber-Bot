@@ -339,7 +339,7 @@ public class EventListener extends ListenerAdapter
                     members.add(event.getUser().getId());
                     se.setRsvpMembers(name, members);
 
-                    Main.getEntryManager().updateEntry(se); // update the entry
+                    Main.getEntryManager().updateEntry(se, false); // update the entry
                 }
 
                 // attempt to remove the reaction

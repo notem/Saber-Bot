@@ -293,7 +293,7 @@ public class ScheduleEntry
             this.entryEnd = newEnd;
             this.setStarted(false);
 
-            Main.getEntryManager().updateEntry(this);
+            Main.getEntryManager().updateEntry(this, true);
         }
         else // otherwise remove entry and delete the message
         {
@@ -374,7 +374,7 @@ public class ScheduleEntry
     {
         Integer limit = this.rsvpLimits.get(type)==null ? -1 : this.rsvpLimits.get(type);
         Integer size = this.rsvpMembers.get(type)==null ? 0 : this.rsvpMembers.get(type).size();
-        return (limit > -1) && (size > limit);
+        return (limit > -1) && (size >= limit);
     }
 
     public String getTitle()

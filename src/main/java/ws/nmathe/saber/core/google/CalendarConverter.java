@@ -304,7 +304,7 @@ public class CalendarConverter
                                 .setRsvpLimits(rsvpLimits)
                                 .setComments(comments);
 
-                        Main.getEntryManager().updateEntry(se);
+                        Main.getEntryManager().updateEntry(se, false);
                     }
                     else
                     {
@@ -319,7 +319,7 @@ public class CalendarConverter
                                 .setRsvpLimits(rsvpLimits)
                                 .setComments(comments);
 
-                        Main.getEntryManager().newEntry(se);
+                        Main.getEntryManager().newEntry(se, false);
                     }
 
                     uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);

@@ -457,7 +457,7 @@ public class CreateCommand implements Command
                     .setRepeat(repeat)
                     .setTitleUrl(url)
                     .setExpire(expire);
-            Integer entryId = Main.getEntryManager().newEntry(se);
+            Integer entryId = Main.getEntryManager().newEntry(se, true);
 
             // output results of event creation to command channel
             DateTimeFormatter dtf;

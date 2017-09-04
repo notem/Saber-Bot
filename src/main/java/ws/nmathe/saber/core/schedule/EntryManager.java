@@ -59,7 +59,7 @@ public class EntryManager
      * Create a new entry on a schedule
      * @param se (ScheduleEntry) the base ScheduleEntry object to use
      */
-    public Integer newEntry(ScheduleEntry se)
+    public Integer newEntry(ScheduleEntry se, boolean sort)
     {
         // identify which shard is responsible for the schedule
         String guildId = se.getGuildId();
@@ -150,14 +150,17 @@ public class EntryManager
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
 
             // auto-sort
-            int sortType = Main.getScheduleManager().getAutoSort(channelId);
-            if(sortType == 1)
+            if(sort)
             {
-                Main.getScheduleManager().sortSchedule(channelId, false);
-            }
-            if(sortType == 2)
-            {
-                Main.getScheduleManager().sortSchedule(channelId, true);
+                int sortType = Main.getScheduleManager().getAutoSort(channelId);
+                if(sortType == 1)
+                {
+                    Main.getScheduleManager().sortSchedule(channelId, false);
+                }
+                if(sortType == 2)
+                {
+                    Main.getScheduleManager().sortSchedule(channelId, true);
+                }
             }
         });
 
@@ -170,7 +173,7 @@ public class EntryManager
      * The ID of the ScheduleEntry must not have been changed.
      * @param se (ScheduleEntry) the new schedule entry object
      */
-    public void updateEntry(ScheduleEntry se)
+    public void updateEntry(ScheduleEntry se, boolean sort)
     {
 
         Message origMessage = se.getMessageObject();
@@ -236,14 +239,17 @@ public class EntryManager
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", se.getId()), entryDocument);
 
             // auto-sort
-            int sortType = Main.getScheduleManager().getAutoSort(channelId);
-            if(sortType == 1)
+            if(sort)
             {
-                Main.getScheduleManager().sortSchedule(channelId, false);
-            }
-            if(sortType == 2)
-            {
-                Main.getScheduleManager().sortSchedule(channelId, true);
+                int sortType = Main.getScheduleManager().getAutoSort(channelId);
+                if(sortType == 1)
+                {
+                    Main.getScheduleManager().sortSchedule(channelId, false);
+                }
+                if(sortType == 2)
+                {
+                    Main.getScheduleManager().sortSchedule(channelId, true);
+                }
             }
         });
     }

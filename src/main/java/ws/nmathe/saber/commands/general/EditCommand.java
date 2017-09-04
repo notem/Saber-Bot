@@ -616,7 +616,7 @@ public class EditCommand implements Command
                         break;
                 }
 
-                Main.getEntryManager().updateEntry(se);
+                Main.getEntryManager().updateEntry(se, true);
             }
 
             //
