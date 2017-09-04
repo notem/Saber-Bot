@@ -575,12 +575,12 @@ public class EditCommand implements Command
                             case "null":
                                 se.setExpire(null);
                                 break;
-
                             default:
                                 se.setExpire(ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]),
                                         LocalTime.MIN, se.getStart().getZone()));
                                 break;
                         }
+                        break;
 
                     case "im":
                     case "image":
@@ -650,9 +650,13 @@ public class EditCommand implements Command
                 {
                     body += "start";
                     if(se.isQuietEnd() & se.isQuietRemind())
+                    {
                         body += ", ";
+                    }
                     else if(se.isQuietEnd() | se.isQuietRemind())
+                    {
                         body += " and ";
+                    }
                 }
                 if(se.isQuietEnd())
                 {
@@ -667,17 +671,13 @@ public class EditCommand implements Command
                 body += " disabled\n";
             }
 
-            if(se.getExpire() != null)
-                body += "Expire: \"" + se.getExpire().toLocalDate() + "\"\n";
+            if(se.getExpire() != null) body += "Expire: \"" + se.getExpire().toLocalDate() + "\"\n";
 
-            if(se.getImageUrl() != null)
-                body += "Image: \"" + se.getImageUrl() + "\"\n";
+            if(se.getImageUrl() != null) body += "Image: \"" + se.getImageUrl() + "\"\n";
 
-            if(se.getThumbnailUrl() != null)
-                body += "Thumbnail: \"" + se.getThumbnailUrl() + "\"\n";
+            if(se.getThumbnailUrl() != null) body += "Thumbnail: \"" + se.getThumbnailUrl() + "\"\n";
 
-            if(!se.getComments().isEmpty())
-                body += "// Comments\n";
+            if(!se.getComments().isEmpty()) body += "// Comments\n";
 
             for(int i=1; i<se.getComments().size()+1; i++)
             {

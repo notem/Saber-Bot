@@ -320,7 +320,16 @@ public class ConfigCommand implements Command
                             if(!EmojiManager.isEmoji(args[index+1]))
                             {
                                 String emoteId = args[index+1].replaceAll("[^\\d]", "");
-                                Emote emote = event.getJDA().getEmoteById(emoteId);
+                                Emote emote;
+                                try
+                                {
+                                    emote = event.getJDA().getEmoteById(emoteId);
+                                }
+                                catch(Exception e)
+                                {
+                                    return "*" + args[index+1] + "* is not an emoji!\n" +
+                                            "Your emoji must be a valid unicode emoji or custom discord emoji!";
+                                }
                                 if(emote == null)
                                 {
                                     return "*" + args[index+1] + "* is not an emoji!\n" +
