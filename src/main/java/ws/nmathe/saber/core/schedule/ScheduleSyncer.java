@@ -40,19 +40,19 @@ class ScheduleSyncer implements Runnable
                 .projection(fields(include("_id", "sync_time", "sync_address")))
                 .forEach((Consumer<? super Document>) document ->
         {
-            // identify which shard is responsible for the schedule
-            String guildId = document.getString("guildId");
-            JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
-
-            // if the shard is not connected, do not sync schedules
-            if(jda == null) return;
-            if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
-
             executor.execute(() ->
             {
                 try
                 {
-                    String scheduleId = (String) document.get("_id");
+                    // identify which shard is responsible for the schedule
+                    String guildId = document.getString("guildId");
+                    JDA jda = Main.getShardManager().getJDA(guildId);
+
+                    // if the shard is not connected, do not sync schedules
+                    if(jda == null) return;
+                    if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
+                    String scheduleId = document.getString("_id");
 
                     // add one day to sync_time
                     Date syncTime = Date.from(ZonedDateTime.ofInstant(document.getDate("sync_time").toInstant(),
@@ -66,7 +66,7 @@ class ScheduleSyncer implements Runnable
                     if(Main.getCalendarConverter().checkValidAddress(document.getString("sync_address")))
                     {
                         Main.getCalendarConverter().syncCalendar(
-                                (String) document.get("sync_address"),
+                                document.getString("sync_address"),
                                 jda.getTextChannelById(document.getString("_id")));
 
                         TextChannel channel = jda.getTextChannelById(document.getString("_id"));
