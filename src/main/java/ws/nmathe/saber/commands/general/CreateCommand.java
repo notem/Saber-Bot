@@ -2,13 +2,11 @@ package ws.nmathe.saber.commands.general;
 
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
-import ws.nmathe.saber.core.schedule.MessageGenerator;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -450,44 +448,19 @@ public class CreateCommand implements Command
                 end = start.plusDays(1);
             }
 
-
-            // send the event summary to the command channel
+            // create the dummy schedule entry
             ScheduleEntry se = (new ScheduleEntry(event.getGuild().getTextChannelById(cId), title, start, end))
                     .setComments(comments)
                     .setRepeat(repeat)
                     .setTitleUrl(url)
                     .setExpire(expire);
+
+            // finalize the schedule entry
             Integer entryId = Main.getEntryManager().newEntry(se, true);
 
-            // output results of event creation to command channel
-            DateTimeFormatter dtf;
-            if(Main.getScheduleManager().getClockFormat(cId).equals("24"))
-            {
-                dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
-            }
-            else
-            {
-                dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mm a [z]");
-            }
-
-            String body = "New event created :id: **"+ Integer.toHexString(entryId) +"** on <#" + cId + ">\n```js\n" +
-                    "Title:  \"" + title + "\"\n" +
-                    "Start:  " + start.format(dtf) + "\n" +
-                    "End:    " + end.format(dtf) + "\n" +
-                    "Repeat: " + MessageGenerator.getRepeatString(repeat, true) + " (" + repeat + ")" + "\n" ;
-
-            if(url!=null) body += "Url: \"" + url + "\"\n";
-
-            if(expireDate != null) body += "Expire: \"" + expireDate + "\"";
-
-            if(!comments.isEmpty()) body += "// Comments\n";
-
-            for(int i=1; i<comments.size()+1; i++)
-            {
-                body += "[" + i + "] \"" + comments.get(i-1) + "\"\n";
-            }
-            body += "```";
-
+            // send the event summary to the command channel
+            String body = "New event created :id: **"+ Integer.toHexString(entryId) +"** on <#" + cId + ">\n" +
+                    "```js\n" + se.toString() + "\n```";
             MessageUtilities.sendMsg(body, event.getChannel(), null);
         }
         catch(Exception e)

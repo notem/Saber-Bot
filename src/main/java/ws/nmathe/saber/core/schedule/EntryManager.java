@@ -110,26 +110,7 @@ public class EntryManager
             if( Main.getScheduleManager().isRSVPEnabled(channelId) )
             {
                 Map<String, String> map = Main.getScheduleManager().getRSVPOptions(channelId);
-                for(String emoji : map.keySet())
-                {
-                    if(EmojiManager.isEmoji(emoji))
-                    {
-                        msg.addReaction(emoji).queue();
-                    }
-                    else
-                    {
-                        Emote emote;
-                        for(JDA shard : Main.getShardManager().getShards())
-                        {
-                            emote = shard.getEmoteById(emoji);
-                            if(emote != null)
-                            {
-                                msg.addReaction(emote).queue();
-                                break;
-                            }
-                        }
-                    }
-                }
+                addRSVPReactions(map, msg);
             }
 
             // add new document
@@ -158,18 +139,7 @@ public class EntryManager
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
 
             // auto-sort
-            if(sort)
-            {
-                int sortType = Main.getScheduleManager().getAutoSort(channelId);
-                if(sortType == 1)
-                {
-                    Main.getScheduleManager().sortSchedule(channelId, false);
-                }
-                if(sortType == 2)
-                {
-                    Main.getScheduleManager().sortSchedule(channelId, true);
-                }
-            }
+            autoSort(sort, channelId);
         });
 
         return se.getId();
@@ -248,19 +218,60 @@ public class EntryManager
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", se.getId()), entryDocument);
 
             // auto-sort
-            if(sort)
+            autoSort(sort, channelId);
+        });
+    }
+
+
+    /**
+     * adds rsvp reactions to a message
+     * @param options (Map) mapping of rsvp emojis to rsvp names
+     * @param message (Message) discord message object
+     */
+    public static void addRSVPReactions(Map<String, String> options, Message message)
+    {
+        for(String emoji : options.keySet())
+        {
+            if(EmojiManager.isEmoji(emoji))
             {
-                int sortType = Main.getScheduleManager().getAutoSort(channelId);
-                if(sortType == 1)
+                message.addReaction(emoji).queue();
+            }
+            else
+            {
+                Emote emote;
+                for(JDA shard : Main.getShardManager().getShards())
                 {
-                    Main.getScheduleManager().sortSchedule(channelId, false);
-                }
-                if(sortType == 2)
-                {
-                    Main.getScheduleManager().sortSchedule(channelId, true);
+                    emote = shard.getEmoteById(emoji);
+                    if(emote != null)
+                    {
+                        message.addReaction(emote).queue();
+                        break;
+                    }
                 }
             }
-        });
+        }
+    }
+
+
+    /**
+     * Handles automatic sorting of a channel
+     * @param sort (boolean) should the channel be sorted?
+     * @param channelId (String) ID of the channel to sort
+     */
+    public static void autoSort(boolean sort, String channelId)
+    {
+        if(sort)
+        {
+            int sortType = Main.getScheduleManager().getAutoSort(channelId);
+            if(sortType == 1)
+            {
+                Main.getScheduleManager().sortSchedule(channelId, false);
+            }
+            if(sortType == 2)
+            {
+                Main.getScheduleManager().sortSchedule(channelId, true);
+            }
+        }
     }
 
     /**

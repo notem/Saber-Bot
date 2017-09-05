@@ -2,6 +2,7 @@ package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.User;
+import org.apache.http.annotation.Obsolete;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -11,6 +12,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.utils.Logging;
 
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -195,12 +197,12 @@ public class ScheduleEntry
     public void start()
     {
         Message msg = this.getMessageObject();
-        if( msg == null )
-            return;
+        if( msg == null ) return;
 
         if(!this.quietStart)
-        { // send the start announcement
-            if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15))) // dont send start announcements if 10 minutes late
+        {
+            // dont send start announcements if 15 minutes late
+            if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
                 String startMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
                 List<TextChannel> channels = msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getStartAnnounceChan(this.chanId), true);
@@ -240,13 +242,14 @@ public class ScheduleEntry
     public void end()
     {
         Message eMsg = this.getMessageObject();
-        if( eMsg==null )
-            return;
+        if( eMsg==null ) return;
 
         if(!this.quietEnd)
         {
-            if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(15))) // dont send end announcement if 60 minutes late
-            {// send the end announcement
+            // dont send end announcement if 15 minutes late
+            if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(15)))
+            {
+                // send the end announcement
                 String endMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
                 List<TextChannel> channels = eMsg.getGuild().getTextChannelsByName(Main.getScheduleManager().getEndAnnounceChan(this.chanId), true);
 
@@ -310,9 +313,7 @@ public class ScheduleEntry
     void reloadDisplay()
     {
         Message msg = this.getMessageObject();
-        if( msg == null )
-            return;
-
+        if( msg == null ) return;
         MessageUtilities.editMsg(MessageGenerator.generate(this), msg, null);
     }
 
@@ -334,23 +335,32 @@ public class ScheduleEntry
         int dayOfWeek = entryStart.getDayOfWeek().getValue();
         int dayAsBitSet;
         if( dayOfWeek == 7 ) //sunday
+        {
             dayAsBitSet = 1;
+        }
         else                //monday - saturday
+        {
             dayAsBitSet = 1<<dayOfWeek;
+        }
 
         // if repeats on same weekday next week
         if( (dayAsBitSet | this.entryRepeat) == dayAsBitSet )
+        {
             return 7;
+        }
 
         // if the eighth bit is off, the event repeats on fixed days of the week (ie. on tuesday and wednesday)
         int daysTil = 0;
-        // else repeats earlier
         for( int i = 1; i < 7; i++)
         {
             if( dayAsBitSet == 0b1000000 )      //if bitset is SATURDAY, then
+            {
                 dayAsBitSet = 0b0000001;        //set bitset to SUNDAY
+            }
             else
+            {
                 dayAsBitSet <<= 1;     // else, set to the next day
+            }
 
             if( (dayAsBitSet & this.entryRepeat) == dayAsBitSet )
             {
@@ -447,12 +457,12 @@ public class ScheduleEntry
         return members;
     }
 
-    public Map getRsvpMembers()
+    public Map<String, List<String>> getRsvpMembers()
     {
         return this.rsvpMembers;
     }
 
-    public Map getRsvpLimits()
+    public Map<String, Integer> getRsvpLimits()
     {
         return this.rsvpLimits;
     }
@@ -659,5 +669,102 @@ public class ScheduleEntry
             this.rsvpMembers.put(type, members);
         }
         return this;
+    }
+
+    @Override
+    public String toString()
+    {
+        DateTimeFormatter dtf;
+        if(Main.getScheduleManager().getClockFormat(this.getScheduleID()).equals("24"))
+        {
+            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
+        }
+        else
+        {
+            dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mma [z]");
+        }
+
+        String body = "" +
+                "Title:  \"" + this.getTitle() + "\"\n" +
+                "Start:  " + this.getStart().format(dtf) + "\n" +
+                "End:    " + this.getEnd().format(dtf) + "\n" +
+                "Repeat: " + MessageGenerator.getRepeatString(this.getRepeat(), true) + " (" + this.getRepeat() + ")" + "\n";
+
+        // title url
+        if(this.getTitleUrl()!=null)
+        {
+            body += "Url: \"" + this.getTitleUrl() + "\"\n";
+        }
+
+        // quiet settings
+        if(this.isQuietRemind() | this.isQuietEnd() | this.isQuietStart())
+        {
+            body += "Quiet: ";
+            if(this.isQuietStart())
+            {
+                body += "start";
+                if(this.isQuietEnd() & this.isQuietRemind())
+                {
+                    body += ", ";
+                }
+                else if(this.isQuietEnd() | this.isQuietRemind())
+                {
+                    body += " and ";
+                }
+            }
+            if(this.isQuietEnd())
+            {
+                body += "end";
+                if(this.isQuietRemind())
+                {
+                    body += " and ";
+                }
+            }
+            if(this.isQuietRemind())
+            {
+                body += "reminders";
+            }
+            body += " disabled\n";
+        }
+
+        // expire
+        if(this.getExpire() != null)
+        {
+            body += "Expire: \"" + this.getExpire().toLocalDate() + "\"\n";
+        }
+
+        // image
+        if(this.getImageUrl() != null)
+        {
+            body += "Image: \"" + this.getImageUrl() + "\"\n";
+        }
+
+        // thumbnail
+        if(this.getThumbnailUrl() != null)
+        {
+            body += "Thumbnail: \"" + this.getThumbnailUrl() + "\"\n";
+        }
+
+        // comments
+        if(!this.getComments().isEmpty())
+        {
+            body += "// Comments\n";
+        }
+        for(int i=1; i<this.getComments().size()+1; i++)
+        {
+            body += "[" + i + "] \"" + this.getComments().get(i-1) + "\"\n";
+        }
+
+        // rsvp limits
+        if(Main.getScheduleManager().isRSVPEnabled(this.getChannelId()))
+        {
+            body += "// RSVP Limits\n";
+            for(String key : this.getRsvpLimits().keySet())
+            {
+                body += key + " - " + this.getRsvpLimits().get(key) + "\n";
+            }
+        }
+
+        return body;
     }
 }

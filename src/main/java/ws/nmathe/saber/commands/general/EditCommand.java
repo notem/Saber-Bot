@@ -32,7 +32,7 @@ public class EditCommand implements Command
     {
         String head = prefix + this.name();
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> <option> <arg>```\n" +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> [<option> <arg(s)>]```\n" +
                 "The edit command will allow you to change an event's settings." +
                 "\n\n" +
                 "``<option>`` is to contain which attribute of the event you wish to edit. ``<arg>`` should be the" +
@@ -41,8 +41,9 @@ public class EditCommand implements Command
                 "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment``, ``date``, " +
                 "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``" +
                 " and ``max``.\n\n" +
-                "Most of the options listed above accept the same arguments as the ``create`` command." +
-                "\nReference the ``help`` information for the ``create`` command for more information." +
+                "Most of the options listed above accept the same arguments as the ``create`` command.\n" +
+                "Reference the ``help`` information for the ``create`` command for more information.\n" +
+                "Similar to the ``create`` command, any number of [<option> <arg(s)>] pairs can be appended to the command." +
                 "\n\n" +
                 "The comment option requires one additional argument immediately after the 'comment' argument.\n" +
                 "This argument identifies what comment operation to do. The operations are ``add``, ``remove``, and ``swap``." +
@@ -91,297 +92,315 @@ public class EditCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
-
         int index = 0;
 
         if( args.length < 1 )
+        {
             return "That's not enough arguments! Use ``" + head + " <ID> [<option> <arg>]``";
+        }
 
         // check first arg
         if( !VerifyUtilities.verifyHex(args[index]) )
+        {
             return "``" + args[index] + "`` is not a valid entry ID!";
+        }
 
         Integer Id = Integer.decode( "0x" + args[index] );
         ScheduleEntry entry = Main.getEntryManager().getEntryFromGuild( Id, event.getGuild().getId() );
-
         if(entry == null)
+        {
             return "I could not find an entry with that ID!";
-
+        }
         if(Main.getScheduleManager().isLocked(entry.getScheduleID()))
+        {
             return "Schedule is locked for sorting/syncing. Please try again after sort/sync finishes.";
+        }
 
-        if(args.length == 1)
-            return "";
+        // if only one argument, command is valid
+        if(args.length == 1) return "";
 
         index++; // 1
 
         // check later args
-        switch( args[index++].toLowerCase() ) // 2
+        while(index < args.length)
         {
-            case "c":
-            case "comment":
-            case "comments":
-                if(args.length <= index+1)
-                    return "That's not enough arguments for *comment*! Use ``"+ head +" [id] comment [add|remove] \"comment\"``";
-
-                switch (args[index++]) // 3
-                {
-                    case "a":
-                    case "add":
-                        break;
-                    case "r":
-                    case "remove":
-                        if((!args[index].isEmpty() && Character.isDigit(args[index].charAt(0)))
-                                && !VerifyUtilities.verifyInteger(args[index]))
-                        {
-                            return "I cannot use **" + args[index] + "** to remove a comment!";
-                        }
-                        if(VerifyUtilities.verifyInteger(args[index]))
-                        {
-                            Integer it = Integer.parseInt(args[index]);
-                            if(it > entry.getComments().size())
+            switch(args[index++].toLowerCase())
+            {
+                case "c":
+                case "comment":
+                case "comments":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not enough arguments for *comment*!\n" +
+                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [add|remove] \"comment\"``";
+                    }
+                    switch (args[index++])
+                    {
+                        case "a":
+                        case "add":
+                            index++;
+                            break;
+                        case "r":
+                        case "remove":
+                            if((!args[index].isEmpty() && Character.isDigit(args[index].charAt(0)))
+                                    && !VerifyUtilities.verifyInteger(args[index]))
                             {
-                                return "The event doesn't have a comment number " + it + "!";
+                                return "I cannot use **" + args[index] + "** to remove a comment!";
                             }
-                            if(it < 1)
+                            if(VerifyUtilities.verifyInteger(args[index]))
                             {
-                                return "The comment number must be above 0!";
+                                Integer it = Integer.parseInt(args[index]);
+                                if(it > entry.getComments().size())
+                                {
+                                    return "The event doesn't have a comment number " + it + "!";
+                                }
+                                if(it < 1)
+                                {
+                                    return "The comment number must be above 0!";
+                                }
                             }
-                        }
-                        break;
-                    case "s":
-                    case "swap":
-                        if(args.length != 5)
-                        {
-                            return "That's not enough arguments for *comment swap*!" +
-                                    "\nUse ``"+ head +" [id] comment swap [number] [number]``";
-                        }
-                        if(!VerifyUtilities.verifyInteger(args[index]))
-                        {
-                            return "Argument **" + args[index] + "** is not a number!";
-                        }
-                        if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
-                        {
-                            return "Comment **#" + args[index] + "** does not exist!";
-                        }
-                        index++; // 4
-                        if(!VerifyUtilities.verifyInteger(args[index]))
-                        {
-                            return "Argument **" + args[index] + "** is not a number!";
-                        }
-                        if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
-                        {
-                            return "Comment **#" + args[index] + "** does not exist!";
-                        }
-                        break;
-                    default:
-                        return "The only valid options for ``comment`` are **add**, **remove**, or **swap**!";
-                }
-                break;
+                            index++;
+                            break;
+                        case "s":
+                        case "swap":
+                            if(args.length-index < 2)
+                            {
+                                return "That's not enough arguments for *comment swap*!" +
+                                        "\nUse ``"+ head +" [id] comment swap [number] [number]``";
+                            }
+                            if(!VerifyUtilities.verifyInteger(args[index]))
+                            {
+                                return "Argument **" + args[index] + "** is not a number!";
+                            }
+                            if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
+                            {
+                                return "Comment **#" + args[index] + "** does not exist!";
+                            }
+                            index++;
+                            if(!VerifyUtilities.verifyInteger(args[index]))
+                            {
+                                return "Argument **" + args[index] + "** is not a number!";
+                            }
+                            if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
+                            {
+                                return "Comment **#" + args[index] + "** does not exist!";
+                            }
+                            index += 2;
+                            break;
+                        default:
+                            return "The only valid options for ``comment`` are **add**, **remove**, or **swap**!";
+                    }
+                    break;
 
-            case "s":
-            case "starts":
-            case "start":
-                if(args.length != 3)
-                {
-                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``" + head + " "+args[index-2]+" "+args[index-1]+" [start time]``";
-                }
-                if(!VerifyUtilities.verifyTime(args[index]))
-                {
-                    return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
-                }
-                if(entry.hasStarted())
-                {
-                    return "You cannot modify the start time after the event has already started.";
-                }
-                break;
+                case "s":
+                case "starts":
+                case "start":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                                "Use ``" + head + " "+args[index-2]+" "+args[index-1]+" [start time]``";
+                    }
+                    if(!VerifyUtilities.verifyTime(args[index]))
+                    {
+                        return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
+                    }
+                    if(entry.hasStarted())
+                    {
+                        return "You cannot modify the start time after the event has already started.";
+                    }
+                    index++;
+                    break;
 
-            case "e":
-            case "ends":
-            case "end":
-                if(args.length != 3)
-                {
-                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``" + head + " "+args[index-2]+" "+args[index-1]+" [end time]``";
-                }
-                if( !VerifyUtilities.verifyTime( args[index] ) )
-                {
-                    return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
-                }
-                break;
+                case "e":
+                case "ends":
+                case "end":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                                "Use ``" + head + " "+args[0]+" "+args[index-1]+" [end time]``";
+                    }
+                    if( !VerifyUtilities.verifyTime( args[index] ) )
+                    {
+                        return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
+                    }
+                    index++;
+                    break;
 
-            case "t":
-            case "title":
-                if(args.length != 3)
-                {
-                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [\"title\"]``";
-                }
-                if( args[index].length() > 255 )
-                {
-                    return "Your title can be at most 255 characters!";
-                }
-                break;
+                case "t":
+                case "title":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [\"title\"]``";
+                    }
+                    if( args[index].length() > 255 )
+                    {
+                        return "Your title can be at most 255 characters!";
+                    }
+                    index++;
+                    break;
 
-            case "d":
-            case "date":
-            case "sd":
-            case "start-date":
-            case "ed":
-            case "end-date":
-                if(args.length != 3)
-                {
-                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [date]``";
-                }
-                if(!VerifyUtilities.verifyDate(args[index]))
-                {
-                    return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
-                }
+                case "d":
+                case "date":
+                case "sd":
+                case "start-date":
+                case "ed":
+                case "end-date":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [date]``";
+                    }
+                    if(!VerifyUtilities.verifyDate(args[index]))
+                    {
+                        return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                    }
 
-                ZoneId zone = Main.getScheduleManager().getTimeZone(entry.getScheduleID());
-                ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.now(zone), zone);
-                if(time.isBefore(ZonedDateTime.now()))
-                {
-                    return "That date is in the past!";
-                }
+                    ZoneId zone = Main.getScheduleManager().getTimeZone(entry.getScheduleID());
+                    ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.now(zone), zone);
+                    if(time.isBefore(ZonedDateTime.now()))
+                    {
+                        return "That date is in the past!";
+                    }
 
-                if(entry.hasStarted())
-                {
-                    return "You cannot modify the date of events which have already started!";
-                }
-                break;
+                    if(entry.hasStarted())
+                    {
+                        return "You cannot modify the date of events which have already started!";
+                    }
+                    index++;
+                    break;
 
-            case "r":
-            case "repeats":
-            case "repeat":
-                if(args.length != 3)
-                {
+                case "r":
+                case "repeats":
+                case "repeat":
+                    if(args.length-index < 1)
+                    {
 
-                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [repeat]``";
-                }
-                break;
+                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [repeat]``";
+                    }
+                    index++;
+                    break;
 
-            case "i":
-            case "interval":
-                if(args.length != 3)
-                {
-                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [number]``";
-                }
-                if(!VerifyUtilities.verifyInteger(args[index]))
-                {
-                    return "**" + args[index] + "** is not a number!";
-                }
-                if(Integer.parseInt(args[index]) < 1)
-                {
-                    return "Your repeat interval can't be negative!";
-                }
-                break;
+                case "i":
+                case "interval":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [number]``";
+                    }
+                    if(!VerifyUtilities.verifyInteger(args[index]))
+                    {
+                        return "**" + args[index] + "** is not a number!";
+                    }
+                    if(Integer.parseInt(args[index]) < 1)
+                    {
+                        return "Your repeat interval can't be negative!";
+                    }
+                    index++;
+                    break;
 
-            case "u":
-            case "url":
-                if(args.length != 3)
-                {
-                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [url]``";
-                }
-                if (!VerifyUtilities.verifyUrl(args[index]))
-                {
-                    return "**" + args[index] + "** doesn't look like a url to me!" +
-                            "\nRemember to include the ``http://`` portion of the url!";
-                }
-                break;
+                case "u":
+                case "url":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [url]``";
+                    }
+                    if (!VerifyUtilities.verifyUrl(args[index]))
+                    {
+                        return "**" + args[index] + "** doesn't look like a url to me!" +
+                                "\nRemember to include the ``http://`` portion of the url!";
+                    }
+                    index++;
+                    break;
 
-            case "qs":
-            case "quiet-start":
-            case "qe":
-            case "quiet-end":
-            case "qr":
-            case "quiet-remind":
-            case "quiet-all":
-            case "qa":
-                if (args.length > 2)
-                {
-                    return "That's too many arguments for **"+args[index-1]+"**!" +
-                            " Use ``" + head +" "+ args[index-2] +" "+ args[index-1] + "``!";
-                }
-                break;
+                case "qs":
+                case "quiet-start":
+                case "qe":
+                case "quiet-end":
+                case "qr":
+                case "quiet-remind":
+                case "quiet-all":
+                case "qa":
+                    break;
 
-            case "max":
-            case "m":
-                return "The ``max`` option has been made obsolete. Please use the ``limit`` option in it's place.";
+                case "max":
+                case "m":
+                    return "The ``max`` option has been made obsolete. Please use the ``limit`` option in it's place.";
 
-            case "ex":
-            case "expire":
-                if(args.length != 3)
-                {
-                    return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [date]``";
-                }
-                switch(args[index])
-                {
-                    case "none":
-                    case "never":
-                    case "null":
-                        return "";
+                case "ex":
+                case "expire":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [date]``";
+                    }
+                    switch(args[index])
+                    {
+                        case "none":
+                        case "never":
+                        case "null":
+                            return "";
 
-                    default:
-                        if(!VerifyUtilities.verifyDate( args[index] ))
-                        {
-                            return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
-                        }
-                        if(ParsingUtilities.parseDateStr(args[index]).isBefore(LocalDate.now()))
-                        {
-                            return "That date is in the past!";
-                        }
-                        return "";
-                }
+                        default:
+                            if(!VerifyUtilities.verifyDate( args[index] ))
+                            {
+                                return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                            }
+                            if(ParsingUtilities.parseDateStr(args[index]).isBefore(LocalDate.now()))
+                            {
+                                return "That date is in the past!";
+                            }
+                    }
+                    index++;
+                    break;
 
-            case "im":
-            case "image":
-            case "th":
-            case "thumbnail":
-                if(args.length != 3)
-                {
-                    return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
-                            "Use ``"+head+" "+args[index-2]+" "+args[index-1]+" [url]``";
-                }
-                switch(args[index])
-                {
-                    case "off":
-                    case "null":
-                        break;
+                case "im":
+                case "image":
+                case "th":
+                case "thumbnail":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
+                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [url]``";
+                    }
+                    switch(args[index])
+                    {
+                        case "off":
+                        case "null":
+                            break;
 
-                    default:
-                        if (!VerifyUtilities.verifyUrl(args[index]))
-                            return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
-                }
-                break;
+                        default:
+                            if (!VerifyUtilities.verifyUrl(args[index]))
+                                return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
+                    }
+                    index++;
+                    break;
 
-            case "limit":
-            case "l":
-                if(args.length != 4)
-                {
-                    return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
-                            "Use ``"+ head + " "+args[index-2]+" "+args[index-1]+" [group] [limit]`` where ``[group]`` " +
-                            "is the name of the rsvp group you wish to limit and ``[limit]`` maximum number of participants to allow.";
-                }
-                if(!Main.getScheduleManager().getRSVPOptions(entry.getChannelId()).containsValue(args[index]))
-                {
-                    return "*" + args[index] + "* is not an rsvp group for that event's schedule!";
-                }
-                index++;
-                if(!args[index].equalsIgnoreCase("off") && !VerifyUtilities.verifyInteger(args[index]))
-                {
-                    return "*" + args[index] + "* is not a number!\nTo disable the rsvp group's limit use \"off\".";
-                }
-                break;
+                case "limit":
+                case "l":
+                    if(args.length-index < 2)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
+                                "Use ``"+ head + " "+args[0]+" "+args[index-1]+" [group] [limit]`` where ``[group]`` " +
+                                "is the name of the rsvp group you wish to limit and ``[limit]`` maximum number of participants to allow.";
+                    }
+                    if(!Main.getScheduleManager().getRSVPOptions(entry.getChannelId()).containsValue(args[index]))
+                    {
+                        return "*" + args[index] + "* is not an rsvp group for that event's schedule!";
+                    }
+                    index++;
+                    if(!args[index].equalsIgnoreCase("off") && !VerifyUtilities.verifyInteger(args[index]))
+                    {
+                        return "*" + args[index] + "* is not a number!\nTo disable the rsvp group's limit use \"off\".";
+                    }
+                    index++;
+                    break;
 
-            default:
-                return "**" + args[index-1] + "** is not an option I know of! Please use the ``help`` command to see available options!";
+                default:
+                    return "**" + args[index-1] + "** is not an option I know of! Please use the ``help`` command to see available options!";
+            }
         }
 
         return ""; // return valid
@@ -408,212 +427,232 @@ public class EditCommand implements Command
             {
                 index++;    // 1
 
-                switch( args[index++] )     // 2
+                while(index < args.length)
                 {
-                    case "c":
-                    case "comment":
-                        ArrayList<String> comments = se.getComments();
-                        switch( args[index++] )   // 3
-                        {
-                            case "a":
-                            case "add" :
-                                comments.add( args[index] );
-                                se.setComments(comments);
-                                break;
-                            case "r":
-                            case "remove" :
-                                if(VerifyUtilities.verifyInteger(args[index]))
-                                {
-                                    comments.remove( Integer.parseInt(args[index])-1 );
-                                }
-                                else
-                                {
-                                    comments.remove(args[index]);
-                                }
-                                se.setComments(comments);
-                                break;
-                            case "s":
-                            case "swap":
-                                String a = comments.get(Integer.parseInt(args[index])-1);
-                                String b = comments.get(Integer.parseInt(args[index+1])-1);
-                                comments.set(Integer.parseInt(args[index])-1, b);
-                                comments.set(Integer.parseInt(args[index+1])-1, a);
-                                se.setComments(comments);
-                                break;
-                        }
-                        break;
+                    switch( args[index++] )
+                    {
+                        case "c":
+                        case "comment":
+                            ArrayList<String> comments = se.getComments();
+                            switch( args[index++] )
+                            {
+                                case "a":
+                                case "add" :
+                                    comments.add( args[index] );
+                                    se.setComments(comments);
+                                    index++;
+                                    break;
+                                case "r":
+                                case "remove" :
+                                    if(VerifyUtilities.verifyInteger(args[index]))
+                                    {
+                                        comments.remove(Integer.parseInt(args[index])-1);
+                                    }
+                                    else
+                                    {
+                                        comments.remove(args[index]);
+                                    }
+                                    se.setComments(comments);
+                                    index++;
+                                    break;
+                                case "s":
+                                case "swap":
+                                    String a = comments.get(Integer.parseInt(args[index])-1);
+                                    String b = comments.get(Integer.parseInt(args[index+1])-1);
+                                    comments.set(Integer.parseInt(args[index])-1, b);
+                                    comments.set(Integer.parseInt(args[index+1])-1, a);
 
-                    case "s":
-                    case "starts":
-                    case "start":
-                        ZonedDateTime newStart = ParsingUtilities.parseTime(se.getStart(), args[index]);
-                        se.setStart(newStart);
+                                    se.setComments(comments);
+                                    index += 2;
+                                    break;
+                            }
+                            break;
 
-                        if(ZonedDateTime.now().isAfter(se.getStart())) //add a day if the time has already passed
-                        {
-                            se.setStart(se.getStart().plusDays(1));
-                        }
-                        if(se.getStart().isAfter(se.getEnd()))        //add a day to end if end is after start
-                        {
-                            se.setEnd(se.getEnd().plusDays(1));
-                        }
-                        break;
+                        case "s":
+                        case "starts":
+                        case "start":
+                            ZonedDateTime newStart = ParsingUtilities.parseTime(se.getStart(), args[index]);
+                            se.setStart(newStart);
 
-                    case "e":
-                    case "ends":
-                    case "end":
-                        ZonedDateTime newEnd = ParsingUtilities.parseTime(se.getEnd(), args[index]);
-                        se.setEnd(newEnd);
+                            if(ZonedDateTime.now().isAfter(se.getStart())) //add a day if the time has already passed
+                            {
+                                se.setStart(se.getStart().plusDays(1));
+                            }
+                            if(se.getStart().isAfter(se.getEnd()))        //add a day to end if end is after start
+                            {
+                                se.setEnd(se.getEnd().plusDays(1));
+                            }
+                            index++;
+                            break;
 
-                        if(ZonedDateTime.now().isAfter(se.getEnd()))
-                        { // add a day if the time has already passed
-                            se.setEnd(se.getEnd().plusDays(1));
-                        }
-                        if(se.getStart().isAfter(se.getEnd()))
-                        { // add a day to end if end is after start
-                            se.setEnd(se.getEnd().plusDays(1));
-                        }
-                        break;
+                        case "e":
+                        case "ends":
+                        case "end":
+                            ZonedDateTime newEnd = ParsingUtilities.parseTime(se.getEnd(), args[index]);
+                            se.setEnd(newEnd);
 
-                    case "t":
-                    case "title":
-                        se.setTitle(args[index]);
-                        break;
+                            if(ZonedDateTime.now().isAfter(se.getEnd()))
+                            { // add a day if the time has already passed
+                                se.setEnd(se.getEnd().plusDays(1));
+                            }
+                            if(se.getStart().isAfter(se.getEnd()))
+                            { // add a day to end if end is after start
+                                se.setEnd(se.getEnd().plusDays(1));
+                            }
+                            index++;
+                            break;
 
-                    case "d":
-                    case "date":
-                        LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                        case "t":
+                        case "title":
+                            se.setTitle(args[index]);
+                            index++;
+                            break;
 
-                        se.setStart(se.getStart()
-                                .withMonth(date.getMonthValue())
-                                .withDayOfMonth(date.getDayOfMonth()));
-                        se.setEnd(se.getEnd()
-                                .withMonth(date.getMonthValue())
-                                .withDayOfMonth(date.getDayOfMonth()));
-                        break;
+                        case "d":
+                        case "date":
+                            LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                    case "sd":
-                    case "start date":
-                    case "start-date":
-                        LocalDate sdate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                            se.setStart(se.getStart()
+                                    .withMonth(date.getMonthValue())
+                                    .withDayOfMonth(date.getDayOfMonth()));
+                            se.setEnd(se.getEnd()
+                                    .withMonth(date.getMonthValue())
+                                    .withDayOfMonth(date.getDayOfMonth()));
+                            index++;
+                            break;
 
-                        se.setStart(se.getStart()
-                                .withMonth(sdate.getMonthValue())
-                                .withDayOfMonth(sdate.getDayOfMonth()));
+                        case "sd":
+                        case "start date":
+                        case "start-date":
+                            LocalDate sdate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                        if(se.getEnd().isBefore(se.getStart()))
-                        {
-                            se.setEnd(se.getStart());
-                        }
-                        break;
+                            se.setStart(se.getStart()
+                                    .withMonth(sdate.getMonthValue())
+                                    .withDayOfMonth(sdate.getDayOfMonth()));
 
-                    case "ed":
-                    case "end date":
-                    case "end-date":
-                        LocalDate edate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                            if(se.getEnd().isBefore(se.getStart()))
+                            {
+                                se.setEnd(se.getStart());
+                            }
+                            index++;
+                            break;
 
-                        se.setEnd(se.getEnd()
-                                .withMonth(edate.getMonthValue())
-                                .withDayOfMonth(edate.getDayOfMonth()));
+                        case "ed":
+                        case "end date":
+                        case "end-date":
+                            LocalDate edate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
 
-                        if(se.getEnd().isBefore(se.getStart()))
-                        {
-                            se.setStart(se.getEnd());
-                        }
-                        break;
+                            se.setEnd(se.getEnd()
+                                    .withMonth(edate.getMonthValue())
+                                    .withDayOfMonth(edate.getDayOfMonth()));
 
-                    case "r":
-                    case "repeats":
-                    case "repeat":
-                        se.setRepeat(ParsingUtilities.parseWeeklyRepeat(args[index].toLowerCase()));
-                        break;
+                            if(se.getEnd().isBefore(se.getStart()))
+                            {
+                                se.setStart(se.getEnd());
+                            }
+                            index++;
+                            break;
 
-                    case "i":
-                    case "interval":
-                        se.setRepeat(0b10000000 | Integer.parseInt(args[index]));
-                        break;
+                        case "r":
+                        case "repeats":
+                        case "repeat":
+                            se.setRepeat(ParsingUtilities.parseWeeklyRepeat(args[index].toLowerCase()));
+                            index++;
+                            break;
 
-                    case "u":
-                    case "url":
-                        se.setTitleUrl(args[index]);
-                        break;
+                        case "i":
+                        case "interval":
+                            se.setRepeat(0b10000000 | Integer.parseInt(args[index]));
+                            index++;
+                            break;
 
-                    case "qs":
-                    case "quiet-start":
-                        se.setQuietStart(!se.isQuietStart());
-                        break;
+                        case "u":
+                        case "url":
+                            se.setTitleUrl(args[index]);
+                            index++;
+                            break;
 
-                    case "qe":
-                    case "quiet-end":
-                        se.setQuietEnd(!se.isQuietEnd());
-                        break;
+                        case "qs":
+                        case "quiet-start":
+                            se.setQuietStart(!se.isQuietStart());
+                            break;
 
-                    case "qr":
-                    case "quiet-remind":
-                        se.setQuietRemind(!se.isQuietRemind());
-                        break;
+                        case "qe":
+                        case "quiet-end":
+                            se.setQuietEnd(!se.isQuietEnd());
+                            break;
 
-                    case "qa":
-                    case "quiet-all":
-                        if(se.isQuietRemind() && se.isQuietEnd() && se.isQuietStart())
-                        {
-                            se.setQuietRemind(false).setQuietEnd(false).setQuietStart(false);
-                        }
-                        else
-                        {
-                            se.setQuietRemind(true).setQuietEnd(true).setQuietStart(true);
-                        }
-                        break;
+                        case "qr":
+                        case "quiet-remind":
+                            se.setQuietRemind(!se.isQuietRemind());
+                            break;
 
-                    case "ex":
-                    case "expire":
-                        switch(args[index])
-                        {
-                            case "off":
-                            case "none":
-                            case "never":
-                            case "null":
-                                se.setExpire(null);
-                                break;
-                            default:
-                                se.setExpire(ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]),
-                                        LocalTime.MIN, se.getStart().getZone()));
-                                break;
-                        }
-                        break;
+                        case "qa":
+                        case "quiet-all":
+                            if(se.isQuietRemind() && se.isQuietEnd() && se.isQuietStart())
+                            {
+                                se.setQuietRemind(false).setQuietEnd(false).setQuietStart(false);
+                            }
+                            else
+                            {
+                                se.setQuietRemind(true).setQuietEnd(true).setQuietStart(true);
+                            }
+                            break;
 
-                    case "im":
-                    case "image":
-                        switch(args[index])
-                        {
-                            case "null":
-                            case "off":
-                                se.setImageUrl(null);
-                                break;
-                            default:
-                                se.setImageUrl(args[index]);
-                                break;
-                        }
-                        break;
+                        case "ex":
+                        case "expire":
+                            switch(args[index])
+                            {
+                                case "off":
+                                case "none":
+                                case "never":
+                                case "null":
+                                    se.setExpire(null);
+                                    break;
+                                default:
+                                    se.setExpire(ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]),
+                                            LocalTime.MIN, se.getStart().getZone()));
+                                    break;
+                            }
+                            index++;
+                            break;
 
-                    case "th":
-                    case "thumbnail":
-                        switch(args[index])
-                        {
-                            case "null":
-                            case "off":
-                                se.setThumbnailUrl(null);
-                                break;
-                            default:
-                                se.setThumbnailUrl(args[index]);
-                                break;
-                        }
-                        break;
+                        case "im":
+                        case "image":
+                            switch(args[index])
+                            {
+                                case "null":
+                                case "off":
+                                    se.setImageUrl(null);
+                                    break;
+                                default:
+                                    se.setImageUrl(args[index]);
+                                    break;
+                            }
+                            index++;
+                            break;
 
-                    case "limit":
-                    case "l":
-                        se.setRsvpLimit(args[index], Integer.parseInt(args[index+1]));
-                        break;
+                        case "th":
+                        case "thumbnail":
+                            switch(args[index])
+                            {
+                                case "null":
+                                case "off":
+                                    se.setThumbnailUrl(null);
+                                    break;
+                                default:
+                                    se.setThumbnailUrl(args[index]);
+                                    break;
+                            }
+                            index++;
+                            break;
+
+                        case "limit":
+                        case "l":
+                            se.setRsvpLimit(args[index], Integer.parseInt(args[index+1]));
+                            index += 2;
+                            break;
+                    }
                 }
 
                 Main.getEntryManager().updateEntry(se, true);
@@ -622,69 +661,8 @@ public class EditCommand implements Command
             //
             // send the event summary to the command channel
             //
-            DateTimeFormatter dtf;
-            if(Main.getScheduleManager().getClockFormat(se.getScheduleID()).equals("24"))
-            {
-                dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
-            }
-            else
-            {
-                dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mma [z]");
-            }
-
-            String body = "Updated event :id: **"+ Integer.toHexString(entryId) +"** on <#" + se.getScheduleID() + ">\n```js\n" +
-                    "Title:  \"" + se.getTitle() + "\"\n" +
-                    "Start:  " + se.getStart().format(dtf) + "\n" +
-                    "End:    " + se.getEnd().format(dtf) + "\n" +
-                    "Repeat: " + MessageGenerator.getRepeatString(se.getRepeat(), true) + " (" + se.getRepeat() + ")" + "\n";
-
-            if(se.getTitleUrl()!=null)
-            {
-                body += "Url: \"" + se.getTitleUrl() + "\"\n";
-            }
-
-            if(se.isQuietRemind() | se.isQuietEnd() | se.isQuietStart())
-            {
-                body += "Quiet: ";
-                if(se.isQuietStart())
-                {
-                    body += "start";
-                    if(se.isQuietEnd() & se.isQuietRemind())
-                    {
-                        body += ", ";
-                    }
-                    else if(se.isQuietEnd() | se.isQuietRemind())
-                    {
-                        body += " and ";
-                    }
-                }
-                if(se.isQuietEnd())
-                {
-                    body += "end";
-                    if(se.isQuietRemind())
-                        body += " and ";
-                }
-                if(se.isQuietRemind())
-                {
-                    body += "reminders";
-                }
-                body += " disabled\n";
-            }
-
-            if(se.getExpire() != null) body += "Expire: \"" + se.getExpire().toLocalDate() + "\"\n";
-
-            if(se.getImageUrl() != null) body += "Image: \"" + se.getImageUrl() + "\"\n";
-
-            if(se.getThumbnailUrl() != null) body += "Thumbnail: \"" + se.getThumbnailUrl() + "\"\n";
-
-            if(!se.getComments().isEmpty()) body += "// Comments\n";
-
-            for(int i=1; i<se.getComments().size()+1; i++)
-            {
-                body += "[" + i + "] \"" + se.getComments().get(i-1) + "\"\n";
-            }
-            body += "```";
-
+            String body = "Updated event :id: **"+ Integer.toHexString(se.getId()) +"** on <#" + se.getScheduleID() + ">\n" +
+                    "```js\n" + se.toString() + "\n```";
             MessageUtilities.sendMsg(body, event.getChannel(), null);
         }
         catch(Exception e)

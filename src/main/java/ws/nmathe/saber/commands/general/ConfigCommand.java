@@ -8,12 +8,12 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.core.schedule.EntryManager;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
-
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -750,37 +750,14 @@ public class ConfigCommand implements Command
                                                 .getMessageById(document.getString("messageId")).complete()
                                                 .clearReactions().queue((message) ->
                                         {
+                                            Map<String, String> map = Main.getScheduleManager()
+                                                    .getRSVPOptions(document.getString("channelId"));
+
                                             // add reaction options
                                             event.getGuild()
                                                     .getTextChannelById(document.getString("channelId"))
                                                     .getMessageById(document.getString("messageId"))
-                                                    .queue(msg ->
-                                                    {
-                                                        Map<String, String> map = Main.getScheduleManager()
-                                                                .getRSVPOptions(document.getString("channelId"));
-
-                                                        for(String emoji : map.keySet())
-                                                        {
-                                                            if(EmojiManager.isEmoji(emoji))
-                                                            {
-                                                                msg.addReaction(emoji).queue();
-                                                            }
-                                                            else
-                                                            {
-                                                                Emote emote;
-                                                                for(JDA shard : Main.getShardManager().getShards())
-                                                                {
-                                                                    emote = shard.getEmoteById(emoji);
-                                                                    if(emote != null)
-                                                                    {
-                                                                        msg.addReaction(emote).queue();
-                                                                        break;
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    });
-
+                                                    .queue(msg -> EntryManager.addRSVPReactions(map, msg));
                                         });
 
                                         Main.getEntryManager().reloadEntry(document.getInteger("_id"));
@@ -799,36 +776,14 @@ public class ConfigCommand implements Command
                                         .find(eq("channelId", scheduleChan.getId()))
                                         .forEach((Consumer<? super Document>) document ->
                                         {
+                                            Map<String, String> map = Main.getScheduleManager()
+                                                    .getRSVPOptions(document.getString("channelId"));
+
                                             // add reaction options
                                              event.getGuild()
                                                     .getTextChannelById(document.getString("channelId"))
                                                     .getMessageById(document.getString("messageId"))
-                                                    .queue(msg ->
-                                                    {
-                                                        Map<String, String> map = Main.getScheduleManager()
-                                                                .getRSVPOptions(document.getString("channelId"));
-
-                                                        for(String emoji : map.keySet())
-                                                        {
-                                                            if(EmojiManager.isEmoji(emoji))
-                                                            {
-                                                                msg.addReaction(emoji).queue();
-                                                            }
-                                                            else
-                                                            {
-                                                                Emote emote;
-                                                                for(JDA shard : Main.getShardManager().getShards())
-                                                                {
-                                                                    emote = shard.getEmoteById(emoji);
-                                                                    if(emote != null)
-                                                                    {
-                                                                        msg.addReaction(emote).queue();
-                                                                        break;
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    });
+                                                    .queue(msg -> EntryManager.addRSVPReactions(map, msg));
 
                                             Main.getEntryManager().reloadEntry(document.getInteger("_id"));
                                         });
@@ -1060,7 +1015,7 @@ public class ConfigCommand implements Command
                             if(emote != null) break;
                         }
                         String displayName = emote.getName();
-                        content += " " + options.get(key) + " - :" + displayName + ":";
+                        content += " " + options.get(key) + " - :" + displayName + ":\n";
                     }
                 }
 

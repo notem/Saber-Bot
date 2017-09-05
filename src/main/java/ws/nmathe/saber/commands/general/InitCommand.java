@@ -60,18 +60,26 @@ public class InitCommand implements Command
 
         if(!event.getGuild().getMember(event.getJDA().getSelfUser())
                 .getPermissions().contains(Permission.MANAGE_CHANNEL))
+        {
             return "I need the Manage Channels permission to create a new schedule!";
+        }
 
         if(Main.getScheduleManager().isLimitReached(event.getGuild().getId()))
+        {
             return "You have reached the limit for schedules! Please remove one schedule channel before trying again.";
+        }
 
         if(args.length > 1)
+        {
             return "That's too many arguments! Use ``" + head + " [<name>]``";
+        }
 
         if(args.length == 1)
         {
             if(args[0].length()>100 || args[0].length()<2)
+            {
                 return "Schedule name must be between 2 and 100 characters long!";
+            }
 
             String chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
             MessageChannel publicChannel = event.getGuild().getPublicChannel();

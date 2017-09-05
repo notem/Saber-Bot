@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.google;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
@@ -11,6 +12,7 @@ import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.core.schedule.EntryManager;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
@@ -137,6 +139,7 @@ public class CalendarConverter
             channel.sendTyping().queue();   // send 'is typing' while the sync is in progress
 
             // change the zone to match the calendar
+            // only if the zone has not been manually set for that schedule
             ZoneId zone = ZoneId.of( events.getTimeZone() );
             Boolean syncZone = Main.getDBDriver().getScheduleCollection().find(eq("_id", channel.getId()))
                     .first().getBoolean("timezone_sync", false);
@@ -290,7 +293,10 @@ public class CalendarConverter
                                     eq("channelId", channel.getId()),
                                     eq("googleId", googleId))).first();
 
+                    // should the event be flagged as already started?
                     boolean hasStarted = start.isBefore(ZonedDateTime.now());
+
+                    // update an existing event
                     if(doc != null && (new ScheduleEntry(doc)).getMessageObject() != null)
                     {
                         ScheduleEntry se = (new ScheduleEntry(doc))
@@ -309,7 +315,7 @@ public class CalendarConverter
 
                         Main.getEntryManager().updateEntry(se, false);
                     }
-                    else
+                    else // create a new event
                     {
                         ScheduleEntry se = (new ScheduleEntry(channel, title, start, end))
                                 .setRepeat(repeat)
@@ -348,18 +354,10 @@ public class CalendarConverter
                     });
 
             // set channel topic
-            boolean hasPerms = channel.getGuild().getMember(jda.getSelfUser())
-                    .hasPermission(channel, Permission.MANAGE_CHANNEL);
+            boolean hasPerms = channel.getGuild().getMember(jda.getSelfUser()).hasPermission(channel, Permission.MANAGE_CHANNEL);
             if(hasPerms)
             {
-                try
-                {
-                    channel.getManagerUpdatable().getTopicField().setValue(calLink).update().queue();
-                }
-                catch(Exception e)
-                {
-                    Logging.exception(this.getClass(), e);
-                }
+                channel.getManagerUpdatable().getTopicField().setValue(calLink).update().queue();
             }
 
         }
@@ -373,16 +371,6 @@ public class CalendarConverter
         }
 
         // auto-sort
-        int sortType = Main.getScheduleManager().getAutoSort(channel.getId());
-        if(!(sortType == 0))
-        {
-            try // sleep for 2s before auto-sorting
-            { Thread.sleep(2000); }
-            catch (InterruptedException e)
-            { Logging.warn(this.getClass(), e.getMessage()); }
-
-            if(sortType == 1) Main.getScheduleManager().sortSchedule(channel.getId(), false);
-            if(sortType == 2) Main.getScheduleManager().sortSchedule(channel.getId(), true);
-        }
+        EntryManager.autoSort(true, channel.getId());
     }
 }

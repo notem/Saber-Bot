@@ -6,6 +6,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
+import ws.nmathe.saber.utils.VerifyUtilities;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
@@ -50,7 +51,6 @@ public class SyncCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
-
         if( args.length < 1 )
         {
             return "That's not enough arguments! Use ``" + head + " <channel> [<calendar address>]``";
@@ -65,10 +65,13 @@ public class SyncCommand implements Command
         {
             return "Channel " + args[0] + " is not on my list of schedule channels for your guild.";
         }
-
         if(Main.getScheduleManager().isLocked(cId))
         {
             return "Schedule is locked while sorting or syncing. Please try again after I finish.";
+        }
+        if(!Main.getCalendarConverter().checkValidAddress(args[1]))
+        {
+            return "Calendar address **" + args[1] + "** is not valid!";
         }
         return "";
     }
@@ -83,7 +86,9 @@ public class SyncCommand implements Command
 
             String address;
             if( args.length == 1 )
+            {
                 address = Main.getScheduleManager().getAddress(cId);
+            }
             else
             {
                 address = args[1];
