@@ -320,10 +320,14 @@ public class ConfigCommand implements Command
                             if(!EmojiManager.isEmoji(args[index+1]))
                             {
                                 String emoteId = args[index+1].replaceAll("[^\\d]", "");
-                                Emote emote;
+                                Emote emote = null;
                                 try
                                 {
-                                    emote = event.getJDA().getEmoteById(emoteId);
+                                    for(JDA jda : Main.getShardManager().getShards())
+                                    {
+                                        emote = jda.getEmoteById(emoteId);
+                                        if(emote != null) break;
+                                    }
                                 }
                                 catch(Exception e)
                                 {
@@ -763,8 +767,16 @@ public class ConfigCommand implements Command
                                                         }
                                                         else
                                                         {
-                                                            Emote emote = event.getJDA().getEmoteById(emoji);
-                                                            msg.addReaction(emote).queue();
+                                                            Emote emote;
+                                                            for(JDA shard : Main.getShardManager().getShards())
+                                                            {
+                                                                emote = shard.getEmoteById(emoji);
+                                                                if(emote != null)
+                                                                {
+                                                                    msg.addReaction(emote).queue();
+                                                                    break;
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 });
@@ -802,8 +814,16 @@ public class ConfigCommand implements Command
                                                             }
                                                             else
                                                             {
-                                                                Emote emote = event.getJDA().getEmoteById(emoji);
-                                                                msg.addReaction(emote).queue();
+                                                                Emote emote;
+                                                                for(JDA shard : Main.getShardManager().getShards())
+                                                                {
+                                                                    emote = shard.getEmoteById(emoji);
+                                                                    if(emote != null)
+                                                                    {
+                                                                        msg.addReaction(emote).queue();
+                                                                        break;
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     });

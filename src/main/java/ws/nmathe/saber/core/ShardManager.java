@@ -204,7 +204,14 @@ public class ShardManager
      */
     public Collection<JDA> getShards()
     {
-        return this.jdaShards.values();
+        if(this.isSharding())
+        {
+            return this.jdaShards.values();
+        }
+        else
+        {
+            return Collections.singletonList(this.jda);
+        }
     }
 
 

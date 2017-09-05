@@ -118,8 +118,16 @@ public class EntryManager
                     }
                     else
                     {
-                        Emote emote = msg.getJDA().getEmoteById(emoji);
-                        msg.addReaction(emote).queue();
+                        Emote emote;
+                        for(JDA shard : Main.getShardManager().getShards())
+                        {
+                            emote = shard.getEmoteById(emoji);
+                            if(emote != null)
+                            {
+                                msg.addReaction(emote).queue();
+                                break;
+                            }
+                        }
                     }
                 }
             }
