@@ -514,10 +514,12 @@ public class EditCommand implements Command
 
                             se.setStart(se.getStart()
                                     .withMonth(date.getMonthValue())
-                                    .withDayOfMonth(date.getDayOfMonth()));
+                                    .withDayOfMonth(date.getDayOfMonth())
+                                    .withYear(date.getYear()));
                             se.setEnd(se.getEnd()
                                     .withMonth(date.getMonthValue())
-                                    .withDayOfMonth(date.getDayOfMonth()));
+                                    .withDayOfMonth(date.getDayOfMonth())
+                                    .withYear(date.getYear()));
                             index++;
                             break;
 
@@ -528,7 +530,8 @@ public class EditCommand implements Command
 
                             se.setStart(se.getStart()
                                     .withMonth(sdate.getMonthValue())
-                                    .withDayOfMonth(sdate.getDayOfMonth()));
+                                    .withDayOfMonth(sdate.getDayOfMonth())
+                                    .withYear(sdate.getYear()));
 
                             if(se.getEnd().isBefore(se.getStart()))
                             {
@@ -544,7 +547,8 @@ public class EditCommand implements Command
 
                             se.setEnd(se.getEnd()
                                     .withMonth(edate.getMonthValue())
-                                    .withDayOfMonth(edate.getDayOfMonth()));
+                                    .withDayOfMonth(edate.getDayOfMonth())
+                                    .withYear(edate.getYear()));
 
                             if(se.getEnd().isBefore(se.getStart()))
                             {

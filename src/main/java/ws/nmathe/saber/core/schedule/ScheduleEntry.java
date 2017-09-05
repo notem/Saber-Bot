@@ -756,7 +756,7 @@ public class ScheduleEntry
         }
 
         // rsvp limits
-        if(Main.getScheduleManager().isRSVPEnabled(this.getChannelId()))
+        if(Main.getScheduleManager().isRSVPEnabled(this.getChannelId()) && !this.getRsvpLimits().isEmpty())
         {
             body += "// RSVP Limits\n";
             for(String key : this.getRsvpLimits().keySet())

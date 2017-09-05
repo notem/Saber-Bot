@@ -1,6 +1,5 @@
 package ws.nmathe.saber.core.google;
 
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
@@ -8,7 +7,6 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
