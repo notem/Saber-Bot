@@ -70,9 +70,12 @@ public class CalendarConverter
         try
         {
             Events events = service.events().list(address)
-                    .setMaxResults(1)
+                    .setTimeMin(new DateTime(ZonedDateTime.now().format(rfc3339Formatter)))
+                    .setTimeMax(new DateTime(ZonedDateTime.now().plusDays(7).format(rfc3339Formatter)))
+                    .setOrderBy("startTime")
+                    .setSingleEvents(true)
+                    .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
                     .execute();
-            events.getTimeZone();
 
             Event ev = events.getItems().get(0);
             ev.getId();

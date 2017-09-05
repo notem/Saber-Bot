@@ -7,6 +7,7 @@ import net.dv8tion.jda.core.entities.Role;
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import net.dv8tion.jda.core.entities.Message;
+import ws.nmathe.saber.utils.VerifyUtilities;
 
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
@@ -30,7 +31,8 @@ public class MessageGenerator
     {
         JDA jda = Main.getShardManager().getJDA(se.getGuildId());
 
-        String titleUrl = se.getTitleUrl() != null ? se.getTitleUrl() : "https://nmathe.ws/bots/saber";
+        String titleUrl = (se.getTitleUrl() != null && VerifyUtilities.verifyUrl(se.getTitleUrl())) ?
+                se.getTitleUrl() : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
         String footerStr = "ID: " + Integer.toHexString(se.getId());
 
@@ -126,11 +128,11 @@ public class MessageGenerator
                 .setAuthor(se.getTitle(), titleUrl, titleImage)
                 .setFooter(footerStr, null);
 
-        if(se.getImageUrl() != null)
+        if(se.getImageUrl() != null && VerifyUtilities.verifyUrl(se.getImageUrl()))
         {
             builder.setImage(se.getImageUrl());
         }
-        if(se.getThumbnailUrl() != null)
+        if(se.getThumbnailUrl() != null && VerifyUtilities.verifyUrl(se.getThumbnailUrl()))
         {
             builder.setThumbnail(se.getThumbnailUrl());
         }
