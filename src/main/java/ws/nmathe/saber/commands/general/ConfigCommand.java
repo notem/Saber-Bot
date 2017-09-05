@@ -748,38 +748,40 @@ public class ConfigCommand implements Command
                                         // clear reactions
                                         event.getGuild().getTextChannelById(document.getString("channelId"))
                                                 .getMessageById(document.getString("messageId")).complete()
-                                                .clearReactions().queue();
-
-                                        // add reaction options
-                                        event.getGuild()
-                                                .getTextChannelById(document.getString("channelId"))
-                                                .getMessageById(document.getString("messageId"))
-                                                .queue(msg ->
-                                                {
-                                                    Map<String, String> map = Main.getScheduleManager()
-                                                            .getRSVPOptions(document.getString("channelId"));
-
-                                                    for(String emoji : map.keySet())
+                                                .clearReactions().queue((message) ->
+                                        {
+                                            // add reaction options
+                                            event.getGuild()
+                                                    .getTextChannelById(document.getString("channelId"))
+                                                    .getMessageById(document.getString("messageId"))
+                                                    .queue(msg ->
                                                     {
-                                                        if(EmojiManager.isEmoji(emoji))
+                                                        Map<String, String> map = Main.getScheduleManager()
+                                                                .getRSVPOptions(document.getString("channelId"));
+
+                                                        for(String emoji : map.keySet())
                                                         {
-                                                            msg.addReaction(emoji).queue();
-                                                        }
-                                                        else
-                                                        {
-                                                            Emote emote;
-                                                            for(JDA shard : Main.getShardManager().getShards())
+                                                            if(EmojiManager.isEmoji(emoji))
                                                             {
-                                                                emote = shard.getEmoteById(emoji);
-                                                                if(emote != null)
+                                                                msg.addReaction(emoji).queue();
+                                                            }
+                                                            else
+                                                            {
+                                                                Emote emote;
+                                                                for(JDA shard : Main.getShardManager().getShards())
                                                                 {
-                                                                    msg.addReaction(emote).queue();
-                                                                    break;
+                                                                    emote = shard.getEmoteById(emoji);
+                                                                    if(emote != null)
+                                                                    {
+                                                                        msg.addReaction(emote).queue();
+                                                                        break;
+                                                                    }
                                                                 }
                                                             }
                                                         }
-                                                    }
-                                                });
+                                                    });
+
+                                        });
 
                                         Main.getEntryManager().reloadEntry(document.getInteger("_id"));
                                     });
@@ -1051,7 +1053,13 @@ public class ConfigCommand implements Command
                     }
                     else
                     {
-                        String displayName = jda.getEmoteById(key).getName();
+                        Emote emote = null;
+                        for(JDA shard : Main.getShardManager().getShards())
+                        {
+                            emote = shard.getEmoteById(key);
+                            if(emote != null) break;
+                        }
+                        String displayName = emote.getName();
                         content += " " + options.get(key) + " - :" + displayName + ":";
                     }
                 }
