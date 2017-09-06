@@ -133,6 +133,7 @@ public class ListCommand implements Command
 
                 case "t":
                 case "type":
+                    if(filterValue.equalsIgnoreCase("no-input")) break;
                     Map<String, String> options = Main.getScheduleManager().getRSVPOptions(entry.getChannelId());
                     if(!options.values().contains(filterValue))
                     {
