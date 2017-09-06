@@ -20,6 +20,7 @@ import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -298,11 +299,14 @@ public class EventListener extends ListenerAdapter
                     .find(eq("messageId", event.getMessageId())).first();
 
             if(doc == null) return;
-
             ScheduleEntry se = new ScheduleEntry(doc);
-            MessageReaction.ReactionEmote emote = event.getReactionEmote();
 
+            // if past the deadline, don't add handle new RSVPs
+            if(se.getDeadline()!=null && se.getDeadline().isBefore(ZonedDateTime.now())) return;
+
+            MessageReaction.ReactionEmote emote = event.getReactionEmote();
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
+
             boolean emoteIsRSVP = false;
             String emoteKey = "";
             // does options contain the emote's name?

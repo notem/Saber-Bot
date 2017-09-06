@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.ISnowflake;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -219,23 +220,10 @@ public class ListCommand implements Command
                             content = "*continued. . .* \n";
                         }
                         Member member = event.getGuild().getMemberById(id);
-                        if(this.checkMember(member, userFilters, roleFilters))
-                        {
-                            if(mobileFlag)
-                            {
-                                content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
-                            }
-                            else if(IdFlag)
-                            {
-                                content += " \\<@" + id + ">\n";
-                            }
-                            else
-                            {
-                                content += " <@" + id + ">\n";
-                            }
-                        }
+                        content += this.getNameDisplay(mobileFlag, IdFlag, member);
                     }
                 }
+                content += "\n";
             }
 
             if(!filterByType || typeFilters.contains("no-input"))
@@ -263,30 +251,19 @@ public class ListCommand implements Command
                         ).build(), event.getChannel(), null);
                         content = "*continued. . .* \n";
                     }
-                    if(mobileFlag)
-                    {
-                        content += event.getGuild().getMemberById(id).getEffectiveName() + "\n";
-                    }
-                    else if(IdFlag)
-                    {
-                        content += " \\<@" + id + ">\n";
-                    }
-                    else
-                    {
-                        content += " <@" + id + ">\n";
-                    }
+                    Member member = event.getGuild().getMemberById(id);
+                    content += this.getNameDisplay(mobileFlag, IdFlag, member);
                 }
             }
 
             // build and send the embedded message object
             String titleUrl = se.getTitleUrl()==null ? "https://nnmathe.ws/saber": se.getTitleUrl();
             String title = se.getTitle()+" ["+Integer.toHexString(entryId)+"]";
-            MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
-                    (new EmbedBuilder())
-                            .setDescription(content)
-                            .setTitle(title, titleUrl)
-                            .build()
-            ).build(), event.getChannel(), null);
+            Message message = (new MessageBuilder()).setEmbed(
+                    (new EmbedBuilder()).setDescription(content).setTitle(title, titleUrl).build()
+                    ).build();
+
+            MessageUtilities.sendMsg(message, event.getChannel(), null, (error) -> Logging.exception(ListCommand.class, error));
         }
         catch(Exception e)
         {
@@ -294,6 +271,13 @@ public class ListCommand implements Command
         }
     }
 
+    /**
+     * Determines if a user should be display based on the set filters
+     * @param member (Member) User to evaluate
+     * @param userFilters (List) list of user IDs to filter by
+     * @param roleFilters (List) list of role IDs to filter by
+     * @return (boolean) should the user be included in the list?
+     */
     private boolean checkMember(Member member, List<String> userFilters, List<String> roleFilters)
     {
         if(member!=null)
@@ -320,5 +304,31 @@ public class ListCommand implements Command
             return !skip;
         }
         return false;
+    }
+
+
+    /**
+     * produces the display style of the users who have rsvped for an event
+     * @param mobileFlag (boolean) use mobile style?
+     * @param IdFlag (boolean) use ID style?
+     * @param member (Member) user to display
+     * @return (String) display name of the user
+     */
+    private String getNameDisplay(boolean mobileFlag, boolean IdFlag, Member member)
+    {
+        String display;
+        if(mobileFlag)
+        {
+            display = member.getEffectiveName() + "\n";
+        }
+        else if(IdFlag)
+        {
+            display = " \\<@" + member.getUser().getId() + ">\n";
+        }
+        else
+        {
+            display = " <@" + member.getUser().getId() + ">\n";
+        }
+        return display;
     }
 }

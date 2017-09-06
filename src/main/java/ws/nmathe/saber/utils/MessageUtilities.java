@@ -60,6 +60,21 @@ public class MessageUtilities
         }
     }
 
+    /// customizable error handling (used by list command temporarily)
+    public static void sendMsg(Message message, MessageChannel chan, Consumer<Message> action, Consumer<Throwable> error )
+    {
+        if(message.getContent().isEmpty() && message.getEmbeds().isEmpty()) return;
+
+        try
+        {
+            chan.sendMessage(message).queue(action, error);
+        }
+        catch(Exception e)
+        {
+            Logging.warn(MessageUtilities.class, e.getMessage());
+        }
+    }
+
     /// blocking version
     public static Message sendMsg(Message message, MessageChannel chan)
     {

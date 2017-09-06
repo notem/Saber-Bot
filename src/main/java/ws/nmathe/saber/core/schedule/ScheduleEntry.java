@@ -41,6 +41,7 @@ public class ScheduleEntry
     // rsvp
     private Map<String, List<String>> rsvpMembers;
     private Map<String, Integer> rsvpLimits;
+    private ZonedDateTime rsvpDeadline;
 
     // urls
     private String titleUrl;
@@ -82,6 +83,7 @@ public class ScheduleEntry
         // rsvp
         this.rsvpMembers = new LinkedHashMap<>();
         this.rsvpLimits = new LinkedHashMap<>();
+        this.rsvpDeadline = null;
 
         // toggles
         this.quietStart = false;
@@ -126,6 +128,7 @@ public class ScheduleEntry
         // rsvp
         this.rsvpMembers = (Map) (entryDocument.get("rsvp_members")==null ? new LinkedHashMap<>() : entryDocument.get("rsvp_members"));
         this.rsvpLimits = (Map) (entryDocument.get("rsvp_limits")==null ? new LinkedHashMap<>() : entryDocument.get("rsvp_limits"));
+        this.rsvpDeadline = entryDocument.get("deadline")==null ? null : ZonedDateTime.ofInstant(entryDocument.getDate("deadline").toInstant(), zone);
 
         // urls
         this.titleUrl = entryDocument.getString("url");
@@ -507,6 +510,11 @@ public class ScheduleEntry
         return this.chanId;
     }
 
+    public ZonedDateTime getDeadline()
+    {
+        return this.rsvpDeadline;
+    }
+
     /**
      * Attempts to retrieve the discord Message, if the message does not exist
      * (or the bot can for any other reason cannot retrieve it) the method returns null
@@ -671,6 +679,12 @@ public class ScheduleEntry
         return this;
     }
 
+    public ScheduleEntry setRsvpDeadline(ZonedDateTime deadline)
+    {
+        this.rsvpDeadline = deadline;
+        return this;
+    }
+
     @Override
     public String toString()
     {
@@ -745,6 +759,23 @@ public class ScheduleEntry
             body += "Thumbnail: \"" + this.getThumbnailUrl() + "\"\n";
         }
 
+        // rsvp limits
+        if(Main.getScheduleManager().isRSVPEnabled(this.getChannelId()))
+        {
+            if(this.getDeadline() != null)
+            {
+                body += "Deadline: " + this.getDeadline().format(dtf) + "\n";
+            }
+            if(!this.getRsvpLimits().isEmpty())
+            {
+                body += "// Limits\n";
+                for(String key : this.getRsvpLimits().keySet())
+                {
+                    body += key + " - " + this.getRsvpLimits().get(key) + "\n";
+                }
+            }
+        }
+
         // comments
         if(!this.getComments().isEmpty())
         {
@@ -753,16 +784,6 @@ public class ScheduleEntry
         for(int i=1; i<this.getComments().size()+1; i++)
         {
             body += "[" + i + "] \"" + this.getComments().get(i-1) + "\"\n";
-        }
-
-        // rsvp limits
-        if(Main.getScheduleManager().isRSVPEnabled(this.getChannelId()) && !this.getRsvpLimits().isEmpty())
-        {
-            body += "// RSVP Limits\n";
-            for(String key : this.getRsvpLimits().keySet())
-            {
-                body += key + " - " + this.getRsvpLimits().get(key) + "\n";
-            }
         }
 
         return body;

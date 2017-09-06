@@ -47,15 +47,21 @@ public class SortCommand implements Command
         int index = 0;
 
         if (args.length != 2 && args.length != 1)
+        {
             return "That's not enough arguments! Use ``" + head + " <channel> [<order>]``";
+        }
 
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
+        {
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
                     "Use the ``" + prefix + "init`` command to create a new schedule!";
+        }
 
         if(Main.getScheduleManager().isLocked(cId))
+        {
             return "Schedule is locked while sorting or syncing. Please try again after I finish.";
+        }
 
         if(args.length == 2)
         {

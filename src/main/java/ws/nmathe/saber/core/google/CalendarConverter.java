@@ -182,9 +182,13 @@ public class CalendarConverter
 
                 // get event title
                 if( event.getSummary() == null )
+                {
                     title = "(No title)";
+                }
                 else
+                {
                     title = event.getSummary();
+                }
 
                 // process event description into event comments or other settings
                 String imageUrl = null;
@@ -205,17 +209,26 @@ public class CalendarConverter
                         }
                         else if(comment.trim().toLowerCase().startsWith("limit:"))
                         {
-                            String[] str = comment.trim().split("limit:")[1].trim().split("-");
+                            String[] str = comment.trim().split("limit:")[1].trim().split("[^\\S\n\r]+");
 
-                            if(str.length == 2)
+                            if(str.length >= 2)
                             {
-                                String type = str[0];
-                                Integer limit = -1;
-                                if(VerifyUtilities.verifyInteger(str[1]))
+                                // rebuild the rsvp group name
+                                String name = "";
+                                for(int i=0; i<str.length-1; i++)
                                 {
-                                    limit = Integer.parseInt(str[1]);
+                                    name += str[i];
+                                    if(i != str.length-2) name += " ";
                                 }
-                                rsvpLimits.put(type, limit);
+
+                                // parse the limit
+                                Integer limit = -1;
+                                if(VerifyUtilities.verifyInteger(str[str.length-1]))
+                                {
+                                    limit = Integer.parseInt(str[str.length-1]);
+                                }
+
+                                rsvpLimits.put(name, limit);
                             }
 
                         }

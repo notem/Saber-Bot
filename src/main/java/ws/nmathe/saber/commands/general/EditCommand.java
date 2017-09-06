@@ -39,8 +39,8 @@ public class EditCommand implements Command
                 " new configuration." +
                 "\n\n```diff\n+ Options ```\n" +
                 "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment``, ``date``, " +
-                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``" +
-                " and ``max``.\n\n" +
+                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``, ``deadline``," +
+                " and ``limit``.\n\n" +
                 "Most of the options listed above accept the same arguments as the ``create`` command.\n" +
                 "Reference the ``help`` information for the ``create`` command for more information.\n" +
                 "Similar to the ``create`` command, any number of [<option> <arg(s)>] pairs can be appended to the command." +
@@ -373,7 +373,9 @@ public class EditCommand implements Command
 
                         default:
                             if (!VerifyUtilities.verifyUrl(args[index]))
+                            {
                                 return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
+                            }
                     }
                     index++;
                     break;
@@ -394,6 +396,21 @@ public class EditCommand implements Command
                     if(!args[index].equalsIgnoreCase("off") && !VerifyUtilities.verifyInteger(args[index]))
                     {
                         return "*" + args[index] + "* is not a number!\nTo disable the rsvp group's limit use \"off\".";
+                    }
+                    index++;
+                    break;
+
+                case "deadline":
+                case "dl":
+                    if(args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
+                                "Use ``"+ head +" "+ args[0] +" "+ args[index-1]+" [deadline]`` where ``[deadline]`` is " +
+                                "the last day to RSVP for the event in a yyyy/mm/dd format.";
+                    }
+                    if(!VerifyUtilities.verifyDate(args[index]))
+                    {
+                        return "*" + args[index] + "* does not look like a date! Be sure to use the format yyyy/mm/dd!";
                     }
                     index++;
                     break;
@@ -655,6 +672,13 @@ public class EditCommand implements Command
                         case "l":
                             se.setRsvpLimit(args[index], Integer.parseInt(args[index+1]));
                             index += 2;
+                            break;
+
+                        case "deadline":
+                        case "dl":
+                            ZoneId zone = Main.getScheduleManager().getTimeZone(se.getChannelId());
+                            se.setRsvpDeadline(ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.MAX, zone));
+                            index++;
                             break;
                     }
                 }

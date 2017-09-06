@@ -78,14 +78,17 @@ public class EntryManager
         se.setReminders(reminders);
 
         // process expiration date
-        Date expire;
-        if (se.getExpire() == null)
-        {
-            expire = null;
-        }
-        else
+        Date expire = null;
+        if (se.getExpire() != null)
         {
             expire = Date.from(se.getExpire().toInstant());
+        }
+
+        // process deadline
+        Date deadline = null;
+        if (se.getDeadline() != null)
+        {
+            deadline = Date.from(se.getDeadline().toInstant());
         }
 
         // is rsvp enabled on the channel set empty rsvp lists
@@ -104,6 +107,8 @@ public class EntryManager
 
         // send message to schedule
         TextChannel channel = jda.getTextChannelById(channelId);
+        Date finalExpire = expire;
+        Date finalDeadline = deadline;
         MessageUtilities.sendMsg(message, channel, msg ->
         {
             // add reaction options if rsvp is enabled
@@ -133,7 +138,8 @@ public class EntryManager
                             .append("end_disabled", false)
                             .append("reminders_disabled", false)
                             .append("rsvp_max", -1)
-                            .append("expire", expire)
+                            .append("expire", finalExpire)
+                            .append("deadline", finalDeadline)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
@@ -157,9 +163,6 @@ public class EntryManager
         Message origMessage = se.getMessageObject();
         if(origMessage == null) return;
 
-        ZonedDateTime start = se.getStart();
-        ZonedDateTime expireDate = se.getExpire();
-
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getDefaultReminders(se.getChannelId()))
@@ -172,20 +175,25 @@ public class EntryManager
         se.setReminders(reminders);
 
         // process expiration date
-        Date expire;
-        if (expireDate == null)
+        Date expire = null;
+        if (se.getExpire() != null)
         {
-            expire = null;
+            expire = Date.from(se.getExpire().toInstant());
         }
-        else
+
+        // process deadline
+        Date deadline = null;
+        if (se.getDeadline() != null)
         {
-            expire = Date.from(expireDate.toInstant());
+            deadline = Date.from(se.getDeadline().toInstant());
         }
 
         // generate event display message
         Message message = MessageGenerator.generate(se);
 
         // update message display
+        Date finalExpire = expire;
+        Date finalDeadline = deadline;
         MessageUtilities.editMsg(message, origMessage, msg ->
         {
             String guildId = msg.getGuild().getId();
@@ -195,7 +203,7 @@ public class EntryManager
             Document entryDocument =
                     new Document("_id", se.getId())
                             .append("title", se.getTitle())
-                            .append("start", Date.from(start.toInstant()))
+                            .append("start", Date.from(se.getStart().toInstant()))
                             .append("end", Date.from(se.getEnd().toInstant()))
                             .append("comments", se.getComments())
                             .append("repeat", se.getRepeat())
@@ -210,9 +218,10 @@ public class EntryManager
                             .append("start_disabled", se.isQuietStart())
                             .append("end_disabled", se.isQuietEnd())
                             .append("reminders_disabled", se.isQuietRemind())
-                            .append("expire", expire)
+                            .append("expire", finalExpire)
                             .append("image", se.getImageUrl())
                             .append("thumbnail", se.getThumbnailUrl())
+                            .append("deadline", finalDeadline)
                             .append("guildId", guildId);
 
             Main.getDBDriver().getEventCollection().replaceOne(eq("_id", se.getId()), entryDocument);

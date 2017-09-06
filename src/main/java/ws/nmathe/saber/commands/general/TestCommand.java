@@ -50,19 +50,27 @@ public class TestCommand implements Command
         int index = 0;
 
         if( args.length < 1 )
+        {
             return "That's not enough arguments! Use ``" + head + " <ID>``";
+        }
         if( args.length > 1 )
+        {
             return "That's too many arguments! Use ``" + head + " <ID>``";
+        }
 
-        // check first arg
+        // check for a valid entry ID
         if( !VerifyUtilities.verifyHex(args[index]) )
+        {
             return "``" + args[index] + "`` is not a valid entry ID!";
+        }
 
         Integer Id = Integer.decode( "0x" + args[index] );
         ScheduleEntry entry = Main.getEntryManager().getEntryFromGuild( Id, event.getGuild().getId() );
 
         if(entry == null)
+        {
             return "I could not find an entry with that ID!";
+        }
 
         return ""; // return valid
     }

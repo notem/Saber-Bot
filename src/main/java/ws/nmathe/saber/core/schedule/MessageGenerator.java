@@ -183,7 +183,13 @@ public class MessageGenerator
         // if rsvp is enabled, show the number of rsvp
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
-            String rsvpLine = "- RSVP: ";
+            String rsvpLine = "";
+            if(se.getDeadline()!=null)
+            {
+                rsvpLine += "- RSVP closes " + se.getDeadline().format(DateTimeFormatter.ISO_LOCAL_DATE) + ":\n";
+            }
+
+            rsvpLine += "- ";
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
             for(String key : options.keySet()) // I iterate over the keys rather than the values to keep a order consistent with reactions
             {
