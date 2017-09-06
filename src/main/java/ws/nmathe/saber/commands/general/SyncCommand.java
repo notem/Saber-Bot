@@ -82,7 +82,7 @@ public class SyncCommand implements Command
         }
         if(!Main.getCalendarConverter().checkValidAddress(address))
         {
-            return "Calendar address **" + args[1] + "** is not valid!";
+            return "Calendar address **" + address + "** is not valid!";
         }
         return "";
     }
