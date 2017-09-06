@@ -70,9 +70,17 @@ public class SyncCommand implements Command
             return "Schedule is locked while sorting or syncing. Please try again after I finish.";
         }
 
-        if(args.length == 1) return "";
 
-        if(!Main.getCalendarConverter().checkValidAddress(args[1]))
+        String address;
+        if(args.length == 2)
+        {
+            address = args[1];
+        }
+        else
+        {
+            address = Main.getScheduleManager().getAddress(cId);
+        }
+        if(!Main.getCalendarConverter().checkValidAddress(address))
         {
             return "Calendar address **" + args[1] + "** is not valid!";
         }
