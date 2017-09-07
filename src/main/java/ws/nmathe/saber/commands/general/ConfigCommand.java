@@ -214,13 +214,13 @@ public class ConfigCommand implements Command
                                 "Use ``" + cmd + " [#channel] sync <new config>``, " +
                                 "where ``<new config>`` is a google calendar address or **\"off\"**";
                     }
-                    if( args[index].equals("off") )
+                    if(args[index].equalsIgnoreCase("off"))
                     {
                         return "";
                     }
-                    if( !Main.getCalendarConverter().checkValidAddress(args[index]) )
+                    if(!Main.getCalendarConverter().checkValidAddress(args[index]))
                     {
-                        return "I cannot sync to **" + args[index] + "**! Provide a valid google calendar url or **off**.";
+                        return "I cannot sync to **" + args[index] + "**!";
                     }
                     break;
 

@@ -183,13 +183,7 @@ public class MessageGenerator
         // if rsvp is enabled, show the number of rsvp
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
-            String rsvpLine = "";
-            if(se.getDeadline()!=null)
-            {
-                rsvpLine += "- RSVP closes " + se.getDeadline().format(DateTimeFormatter.ISO_LOCAL_DATE) + ":\n";
-            }
-
-            rsvpLine += "- ";
+            String rsvpLine = "- ";
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
             for(String key : options.keySet()) // I iterate over the keys rather than the values to keep a order consistent with reactions
             {
@@ -197,6 +191,12 @@ public class MessageGenerator
                 rsvpLine += "<" + type + " " + se.getRsvpMembersOfType(type).size() +
                         (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
             }
+
+            if(se.getDeadline()!=null)
+            {
+                rsvpLine += "\n- RSVP closes on " + se.getDeadline().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".";
+            }
+
 
             msg += "```Markdown\n\n" + zoneLine + rsvpLine + "```";
         }

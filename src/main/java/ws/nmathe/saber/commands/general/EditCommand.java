@@ -132,16 +132,26 @@ public class EditCommand implements Command
                     if(args.length-index < 1)
                     {
                         return "That's not enough arguments for *comment*!\n" +
-                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [add|remove] \"comment\"``";
+                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [add|remove|swap] <arg(s)>``";
                     }
                     switch (args[index++])
                     {
                         case "a":
                         case "add":
+                            if(args.length-index < 1)
+                            {
+                                return "That's not enough arguments for *comment add*!\n" +
+                                        "Use ``"+head+" "+args[0]+" "+args[index-1]+" "+args[index]+" \"your comment\"``";
+                            }
                             index++;
                             break;
                         case "r":
                         case "remove":
+                            if(args.length-index < 1)
+                            {
+                                return "That's not enough arguments for *comment remove*!\n" +
+                                        "Use ``"+head+" "+args[0]+" "+args[index-1]+" "+args[index]+" [number]``";
+                            }
                             if((!args[index].isEmpty() && Character.isDigit(args[index].charAt(0)))
                                     && !VerifyUtilities.verifyInteger(args[index]))
                             {

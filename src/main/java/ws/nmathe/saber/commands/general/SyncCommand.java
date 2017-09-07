@@ -51,17 +51,17 @@ public class SyncCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
-        if( args.length < 1 )
+        if(args.length < 1)
         {
             return "That's not enough arguments! Use ``" + head + " <channel> [<calendar address>]``";
         }
-        if( args.length > 2)
+        if(args.length > 2)
         {
             return "That's too many arguments! Use ``" + head + " <channel> [<calendar address>]``";
         }
 
         String cId = args[0].replace("<#","").replace(">","");
-        if( !Main.getScheduleManager().isASchedule(cId))
+        if(!Main.getScheduleManager().isASchedule(cId))
         {
             return "Channel " + args[0] + " is not on my list of schedule channels for your guild.";
         }
@@ -79,6 +79,10 @@ public class SyncCommand implements Command
         else
         {
             address = Main.getScheduleManager().getAddress(cId);
+            if(address.isEmpty())
+            {
+                return "Your channel, " + args[0] + ", is not setup with a Google Calendar address to sync with!";
+            }
         }
         if(!Main.getCalendarConverter().checkValidAddress(address))
         {

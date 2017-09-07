@@ -69,7 +69,7 @@ public class CalendarConverter
     {
         try
         {
-            Events events = service.events().list(address)
+            service.events().list(address)
                     .setTimeMin(new DateTime(ZonedDateTime.now().format(rfc3339Formatter)))
                     .setTimeMax(new DateTime(ZonedDateTime.now().plusDays(7).format(rfc3339Formatter)))
                     .setOrderBy("startTime")
@@ -77,14 +77,11 @@ public class CalendarConverter
                     .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
                     .execute();
 
-            Event ev = events.getItems().get(0);
-            ev.getId();
-            ev.getDescription();
-
             return true;
         }
         catch( Exception e )
         {
+            Logging.warn(this.getClass(), e.getMessage());
             return false;
         }
 
@@ -181,7 +178,7 @@ public class CalendarConverter
                 }
 
                 // get event title
-                if( event.getSummary() == null )
+                if(event.getSummary() == null)
                 {
                     title = "(No title)";
                 }
@@ -193,23 +190,24 @@ public class CalendarConverter
                 // process event description into event comments or other settings
                 String imageUrl = null;
                 String thumbnailUrl = null;
+                ZonedDateTime rsvpDeadline = null;
                 if( event.getDescription() != null )
                 {
                     for( String comment : event.getDescription().split("\n") )
                     {
                         if(comment.trim().toLowerCase().startsWith("image:"))
                         {
-                            imageUrl = comment.trim().split("image:")[1].trim();
+                            imageUrl = comment.trim().toLowerCase().replace("image:","").trim();
                             if(!VerifyUtilities.verifyUrl(imageUrl)) imageUrl = null;
                         }
                         else if(comment.trim().toLowerCase().startsWith("thumbnail:"))
                         {
-                            thumbnailUrl = comment.trim().split("thumbnail:")[1].trim();
+                            thumbnailUrl = comment.trim().toLowerCase().replace("thumbnail:","").trim();
                             if(!VerifyUtilities.verifyUrl(thumbnailUrl)) imageUrl = null;
                         }
                         else if(comment.trim().toLowerCase().startsWith("limit:"))
                         {
-                            String[] str = comment.trim().split("limit:")[1].trim().split("[^\\S\n\r]+");
+                            String[] str = comment.trim().toLowerCase().replace("limit:","").trim().split("[^\\S\n\r]+");
 
                             if(str.length >= 2)
                             {
@@ -232,7 +230,15 @@ public class CalendarConverter
                             }
 
                         }
-                        else if( !comment.trim().isEmpty() )
+                        else if(comment.trim().toLowerCase().startsWith("deadline:"))
+                        {
+                            String tmp = comment.trim().toLowerCase().replace("deadline:","").trim();
+                            if(VerifyUtilities.verifyDate(tmp))
+                            {
+                                rsvpDeadline = ZonedDateTime.of(ParsingUtilities.parseDateStr(tmp), LocalTime.MAX, zone);
+                            }
+                        }
+                        else if(!comment.trim().isEmpty())
                         {
                             comments.add( comment );
                         }
@@ -242,26 +248,26 @@ public class CalendarConverter
                 // handle event repeat/recurrence
                 List<String> recurrence = event.getRecurrence();
                 String recurrenceId = event.getRecurringEventId();
-                if( recurrenceId != null )
+                if(recurrenceId != null)
                 {
                     try
                     {
                         recurrence = service.events().get(address, recurrenceId).execute().getRecurrence();
                     }
-                    catch( IOException e )
+                    catch(IOException e)
                     {
                         recurrence = null;
                     }
                 }
-                if( recurrence != null )
+                if(recurrence != null)
                 {
-                    for( String rule : recurrence )
+                    for(String rule : recurrence)
                     {
-                        if( rule.startsWith("RRULE") && rule.contains("FREQ" ) )
+                        if(rule.startsWith("RRULE") && rule.contains("FREQ" ))
                         {
                             // parse out the frequency of recurrence
                             String tmp = rule.split("FREQ=")[1].split(";")[0];
-                            if( tmp.equals("DAILY" ) )
+                            if(tmp.equals("DAILY" ))
                             {
                                 if(rule.contains("INTERVAL"))
                                 {
@@ -273,14 +279,14 @@ public class CalendarConverter
                                     repeat = 0b1111111;
                                 }
                             }
-                            else if( tmp.equals("WEEKLY") && rule.contains("BYDAY") )
+                            else if(tmp.equals("WEEKLY") && rule.contains("BYDAY"))
                             {
                                 tmp = rule.split("BYDAY=")[1].split(";")[0];
                                 repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
                             }
 
                             // parse out the end date of recurrence
-                            if( rule.contains("UNTIL=") )
+                            if(rule.contains("UNTIL="))
                             {
                                 tmp = rule.split("UNTIL=")[1].split(";")[0];
                                 int year = Integer.parseInt(tmp.substring(0, 4));
@@ -322,7 +328,8 @@ public class CalendarConverter
                                 .setStarted(hasStarted)
                                 .setThumbnailUrl(thumbnailUrl)
                                 .setRsvpLimits(rsvpLimits)
-                                .setComments(comments);
+                                .setComments(comments)
+                                .setRsvpDeadline(rsvpDeadline);
 
                         Main.getEntryManager().updateEntry(se, false);
                     }
@@ -337,7 +344,8 @@ public class CalendarConverter
                                 .setThumbnailUrl(thumbnailUrl)
                                 .setStarted(hasStarted)
                                 .setRsvpLimits(rsvpLimits)
-                                .setComments(comments);
+                                .setComments(comments)
+                                .setRsvpDeadline(rsvpDeadline);
 
                         Main.getEntryManager().newEntry(se, false);
                     }
@@ -357,8 +365,7 @@ public class CalendarConverter
                     {
                         ScheduleEntry entry = Main.getEntryManager().getEntry((Integer) document.get("_id"));
                         Message msg = entry.getMessageObject();
-                        if( msg==null )
-                            return;
+                        if( msg==null ) return;
 
                         Main.getEntryManager().removeEntry((Integer) document.get("_id"));
                         MessageUtilities.deleteMsg(msg, null);
