@@ -134,14 +134,14 @@ public class EditCommand implements Command
                         return "That's not enough arguments for *comment*!\n" +
                                 "Use ``"+head+" "+args[0]+" "+args[index-1]+" [add|remove|swap] <arg(s)>``";
                     }
-                    switch (args[index++])
+                    switch (args[index++].toLowerCase())
                     {
                         case "a":
                         case "add":
                             if(args.length-index < 1)
                             {
                                 return "That's not enough arguments for *comment add*!\n" +
-                                        "Use ``"+head+" "+args[0]+" "+args[index-1]+" "+args[index]+" \"your comment\"``";
+                                        "Use ``"+head+" "+args[0]+" "+args[index-2]+" "+args[index-1]+" \"your comment\"``";
                             }
                             index++;
                             break;
@@ -150,7 +150,7 @@ public class EditCommand implements Command
                             if(args.length-index < 1)
                             {
                                 return "That's not enough arguments for *comment remove*!\n" +
-                                        "Use ``"+head+" "+args[0]+" "+args[index-1]+" "+args[index]+" [number]``";
+                                        "Use ``"+head+" "+args[0]+" "+args[index-2]+" "+args[index-1]+" [number]``";
                             }
                             if((!args[index].isEmpty() && Character.isDigit(args[index].charAt(0)))
                                     && !VerifyUtilities.verifyInteger(args[index]))
@@ -176,7 +176,7 @@ public class EditCommand implements Command
                             if(args.length-index < 2)
                             {
                                 return "That's not enough arguments for *comment swap*!" +
-                                        "\nUse ``"+ head +" [id] comment swap [number] [number]``";
+                                        "\nUse ``"+ head +" "+args[0]+" "+args[index-2]+" "+args[index-1]+" [number] [number]``";
                             }
                             if(!VerifyUtilities.verifyInteger(args[index]))
                             {

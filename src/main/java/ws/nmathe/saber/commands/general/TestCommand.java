@@ -25,21 +25,22 @@ public class TestCommand implements Command
     {
         String head = prefix + this.name();
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID>```\n" +
-                "The test command will send an test announcement for the event to **#"
-                + Main.getBotSettingsManager().getControlChan() + "**.\n The announcement message for an event is " +
-                "controlled by the schedule to which the event belongs to, and can be changed using the ``config``" +
-                " command.";
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> [<type>]```\n" +
+                "The test command will send an test announcement for the event to the channel in which the command was used.\n" +
+                "The announcement message for an event is controlled by the schedule to which the event belongs to, and " +
+                "can be changed using the ``config`` command.\n\n" +
+                "An optional ``<type>`` argument can be supplied.\n" +
+                "The ``<type>`` argument is used to determine which announcement type to test.\n" +
+                "Valid options are: **start**, **end**, and **remind**.";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " 7fffffff``";
+                "``" + head + " 7ffff``\n" +
+                "``" + head + " 09aa8 end``";
 
         String USAGE_BRIEF = "``" + head + "`` - test an event's announcement message";
 
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        if( brief ) return USAGE_BRIEF;
+        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
     }
 
     @Override
@@ -49,27 +50,49 @@ public class TestCommand implements Command
 
         int index = 0;
 
-        if( args.length < 1 )
+        // length checks
+        if(args.length < 1)
         {
             return "That's not enough arguments! Use ``" + head + " <ID>``";
         }
-        if( args.length > 1 )
+        if(args.length > 2)
         {
-            return "That's too many arguments! Use ``" + head + " <ID>``";
+            return "That's too many arguments! Use ``" + head + " <ID> [<type>]``";
         }
 
         // check for a valid entry ID
-        if( !VerifyUtilities.verifyHex(args[index]) )
+        if(!VerifyUtilities.verifyHex(args[index]))
         {
             return "``" + args[index] + "`` is not a valid entry ID!";
         }
 
+        // check to see if event with the provided ID exists for the guild
         Integer Id = Integer.decode( "0x" + args[index] );
         ScheduleEntry entry = Main.getEntryManager().getEntryFromGuild( Id, event.getGuild().getId() );
-
         if(entry == null)
         {
             return "I could not find an entry with that ID!";
+        }
+
+        index++; // next argument is optional
+
+        if(args.length == 2)
+        {
+            switch(args[index])
+            {
+                case "start":
+                case "end":
+                case "remind":
+                case "reminder":
+                case "e":
+                case "r":
+                case "s":
+                    break;
+
+                default:
+                    return "*"+args[index]+"* is not an announcement type!\n" +
+                            "Please use either ``start``, ``end``, or ``remind`` for this argument!";
+            }
         }
 
         return ""; // return valid
@@ -82,13 +105,31 @@ public class TestCommand implements Command
         {
             int index = 0;
 
+            // get entry object
             Integer entryId = Integer.decode( "0x" + args[index] );
             ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
-
+            // verify the entry's message exists
             Message msg = entry.getMessageObject();
-            if( msg==null ) return;
+            if(msg == null) return;
 
-            String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getMessageObject().getChannel().getId());
+            index++;
+
+            String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getChannelId());
+            if(args.length == 2)
+            {
+                switch(args[index])
+                {
+                    case "e":
+                    case "end":
+                        format = Main.getScheduleManager().getEndAnnounceFormat(entry.getChannelId());
+                        break;
+                    case "r":
+                    case "remind":
+                        format = Main.getScheduleManager().getReminderFormat(entry.getChannelId());
+                        break;
+                }
+            }
+
             String remindMsg = ParsingUtilities.parseMsgFormat(format, entry);
             MessageUtilities.sendMsg(remindMsg, event.getChannel(), null);
         }

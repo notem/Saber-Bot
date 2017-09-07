@@ -43,26 +43,33 @@ public class SortCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
-
         int index = 0;
 
-        if (args.length != 2 && args.length != 1)
+        // check arg lengths
+        if(args.length > 2)
         {
-            return "That's not enough arguments! Use ``" + head + " <channel> [<order>]``";
+            return "That's too many arguments!\n" +
+                    "Use ``" + head + " <channel> [<order>]``";
+        }
+        if(args.length < 1)
+        {
+            return "That's not enough arguments!\n" +
+                    "Use ``" + head + " <channel> [<order>]``";
         }
 
+        // check channel
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
         {
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
                     "Use the ``" + prefix + "init`` command to create a new schedule!";
         }
-
         if(Main.getScheduleManager().isLocked(cId))
         {
             return "Schedule is locked while sorting or syncing. Please try again after I finish.";
         }
 
+        // check for optional arguments
         if(args.length == 2)
         {
             switch(args[1])

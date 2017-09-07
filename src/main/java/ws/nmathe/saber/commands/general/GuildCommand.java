@@ -112,15 +112,19 @@ public class GuildCommand implements Command
                 case "c":
                 case "control":
                     if(args.length < 2)
+                    {
                         return "That's not enough arguments!\n" +
                                 "The correct usage is ``" + head + " control [#channel]`` where ``[#channel]`` " +
                                 "is the channel to use as the bot control channel.";
+                    }
                     String chanId = args[1].replace("<#", "").replace(">", "");
                     try
                     {
                         Channel chan = event.getGuild().getTextChannelById(chanId);
                         if(chan == null)
+                        {
                             return "I could not find the channel **" + args[1] + "** on your guild server!";
+                        }
                     }
                     catch(NumberFormatException e)
                     {

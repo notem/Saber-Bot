@@ -51,15 +51,19 @@ public class SyncCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
+        // check arg length
         if(args.length < 1)
         {
-            return "That's not enough arguments! Use ``" + head + " <channel> [<calendar address>]``";
+            return "That's not enough arguments!\n" +
+                    "Use ``" + head + " <channel> [<calendar address>]``";
         }
         if(args.length > 2)
         {
-            return "That's too many arguments! Use ``" + head + " <channel> [<calendar address>]``";
+            return "That's too many arguments!\n" +
+                    "Use ``" + head + " <channel> [<calendar address>]``";
         }
 
+        // validate the supplied channel
         String cId = args[0].replace("<#","").replace(">","");
         if(!Main.getScheduleManager().isASchedule(cId))
         {
@@ -71,6 +75,7 @@ public class SyncCommand implements Command
         }
 
 
+        // validate the calendar address
         String address;
         if(args.length == 2)
         {
