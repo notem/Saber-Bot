@@ -68,7 +68,7 @@ public class GuildCommand implements Command
                     }
                     if(!Main.getCommandHandler().getCommandNames().contains(args[1].toLowerCase()))
                     {
-                        return "**" + args[1] + "** is not a valid command name! Make sure to not include the prefix!";
+                        return "**" + args[1] + "** is not a valid command name! Be sure to not include the prefix!";
                     }
                     if(guildSettings.getRestrictedCommands().contains(args[1]))
                     {
@@ -87,7 +87,7 @@ public class GuildCommand implements Command
                     }
                     if(!Main.getCommandHandler().getCommandNames().contains(args[1].toLowerCase()))
                     {
-                        return "**" + args[1] + "** is not a valid command name! Make sure to not include the prefix!";
+                        return "**" + args[1] + "** is not a valid command name! Be sure to not include the prefix!";
                     }
                     if(guildSettings.getUnrestrictedCommands().contains(args[1]))
                     {

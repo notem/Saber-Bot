@@ -16,10 +16,7 @@ import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -147,7 +144,7 @@ public class ConfigCommand implements Command
                     if (args.length < 3)
                     {
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [#chan] chan <new config>``, " +
+                                "Use ``" + cmd + " [#channel] chan <new config>``, " +
                                 "where ``<new config>`` is a discord channel to which announcement messages should be sent.\n";
                     }
                     break;
@@ -246,26 +243,52 @@ public class ConfigCommand implements Command
                     if (args.length < 3)
                     {
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [chan] remind <new config>``, " +
-                                "where ``<new config>`` are the times before an event that reminder messages should be sent.\n" +
-                                "For example, using *\"10, 20, 30 min\"* as the parameter would configure events on this " +
-                                "schedule to send reminder messages 10, 20, and 30 minutes before the even begins.\n" +
-                                "To disable reminders completely, use *\"off\".";
-
-                    }
-                    if(args[index].toLowerCase().equals("off"))
-                    {
-                        return "";
+                                "Use ``" + cmd + " " + args[0] + " reminder [add|remove] [reminder]``, " +
+                                "where ``[reminder]`` is the number of minutes before the event starts " +
+                                "that the reminder should be sent.";
                     }
 
-                    List<Integer> list = ParsingUtilities.parseReminderStr(args[index]);
-                    if (list.size() <= 0)
+                    Set<Integer> list = new LinkedHashSet<>();
+                    list.addAll(Main.getScheduleManager().getReminders(cId));
+                    switch(args[index])
                     {
-                        return "I could not parse out any times!";
+                        case "off":
+                            return "";
+
+                        case "add":
+                            if (args.length < 4)
+                            {
+                                return "That's not enough arguments!\n" +
+                                        "Use ``" + cmd + " " + args[0] + " reminder "+args[index]+" [reminder]``, " +
+                                        "where ``[reminder]`` is the number of minutes before the event starts " +
+                                        "that the reminder should be sent.";
+                            }
+                            index++;
+                            list.addAll(ParsingUtilities.parseReminderStr(args[index]));
+                            if (list.size() <= 0) return "I could not parse out any times!";
+                            break;
+
+                        case "remove":
+                            if (args.length < 4)
+                            {
+                                return "That's not enough arguments!\n" +
+                                        "Use ``" + cmd + " " + args[0] + " reminder "+args[index]+" [reminder]``, " +
+                                        "where ``[reminder]`` is the number of minutes before the event starts " +
+                                        "that the reminder should be sent.";
+                            }
+                            index++;
+                            list.removeAll(ParsingUtilities.parseReminderStr(args[index]));
+                            break;
+
+                        default:
+                            list = ParsingUtilities.parseReminderStr(args[index]);
+                            if (list.size() <= 0) return "I could not parse out any times!";
+                            break;
                     }
-                    if (list.size() > 10)
+
+                    if (list.size() > 20)
                     {
-                        return "More than 10 reminders are not allowed!";
+                        return "More than 20 reminders are not allowed!";
                     }
                     for(Integer i : list)
                     {
@@ -613,12 +636,33 @@ public class ConfigCommand implements Command
 
                     case "r":
                     case "remind":
-                        List<Integer> rem;
-                        if(args[index].toLowerCase().equals("off"))
-                            rem = new ArrayList<>();
-                        else
-                            rem = ParsingUtilities.parseReminderStr(args[index]);
+                    case "reminder":
+                    case "reminders":
+                        Set<Integer> list = new LinkedHashSet<>();
+                        list.addAll(Main.getScheduleManager().getReminders(cId));
+                        switch(args[index])
+                        {
+                            case "off":
+                                list = new LinkedHashSet<>();
+                                break;
 
+                            case "add":
+                                index++;
+                                list.addAll(ParsingUtilities.parseReminderStr(args[index]));
+                                break;
+
+                            case "remove":
+                                index++;
+                                list.removeAll(ParsingUtilities.parseReminderStr(args[index]));
+                                break;
+
+                            default:
+                                list = ParsingUtilities.parseReminderStr(args[index]);
+                                break;
+                        }
+
+                        // convert set to a list
+                        List<Integer> rem = new ArrayList<>(list);
                         Main.getScheduleManager().setDefaultReminders(cId, rem);
 
                         // for every entry on channel, update
@@ -914,7 +958,7 @@ public class ConfigCommand implements Command
 
                 if(type == 1) break;
             case 2:
-                List<Integer> reminders = Main.getScheduleManager().getDefaultReminders(cId);
+                List<Integer> reminders = Main.getScheduleManager().getReminders(cId);
                 String reminderStr = "";
                 if(reminders.isEmpty())
                 {

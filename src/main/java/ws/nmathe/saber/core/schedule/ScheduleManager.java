@@ -553,7 +553,7 @@ public class ScheduleManager
     }
 
     @SuppressWarnings("unchecked")
-    public List<Integer> getDefaultReminders(String cId)
+    public List<Integer> getReminders(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         if( settings == null )

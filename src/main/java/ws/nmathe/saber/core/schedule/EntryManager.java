@@ -10,7 +10,6 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -68,7 +67,7 @@ public class EntryManager
 
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
-        for(Integer til : Main.getScheduleManager().getDefaultReminders(se.getChannelId()))
+        for(Integer til : Main.getScheduleManager().getReminders(se.getChannelId()))
         {
             if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > til)
             {
@@ -165,7 +164,7 @@ public class EntryManager
 
         // generate event reminders from schedule settings
         List<Date> reminders = new ArrayList<>();
-        for(Integer til : Main.getScheduleManager().getDefaultReminders(se.getChannelId()))
+        for(Integer til : Main.getScheduleManager().getReminders(se.getChannelId()))
         {
             if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > til)
             {

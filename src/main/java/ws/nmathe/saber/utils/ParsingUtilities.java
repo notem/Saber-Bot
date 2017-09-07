@@ -10,10 +10,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -235,18 +232,40 @@ public class ParsingUtilities
      * Parses user supplied input for information indicating the reminder intervals to use for a schedule's
      * reminder settings
      * @param arg (String) user input
-     * @return (List<Integer>) a list of integers representing the time (in minutes) before an event starts
+     * @return (Set<Integer>) a linked set of integers representing the time (in minutes) before an event starts
      */
-    public static List<Integer> parseReminderStr(String arg)
+    public static Set<Integer> parseReminderStr(String arg)
     {
-        List<Integer> list = new ArrayList<>();
-        Matcher matcher = Pattern.compile("\\d+").matcher(arg);
-        while (matcher.find())
+        Set<Integer> list = new LinkedHashSet<>();
+        Matcher matcher = Pattern.compile("\\d+[^\\d]").matcher(arg);
+        while(matcher.find())
         {
             String group = matcher.group();
-            if(VerifyUtilities.verifyInteger(group))
+
+            Character ch = group.charAt(group.length()-1);
+            if(Character.isDigit(ch))
             {
-                list.add(Integer.parseInt(group));
+                if(VerifyUtilities.verifyInteger(group))
+                {
+                    list.add(Integer.parseInt(group));
+                }
+            }
+            else if(VerifyUtilities.verifyInteger(group.substring(0, group.length()-1)))
+            {
+                Integer units = Integer.parseInt(group.substring(0, group.length()-1));
+                switch(ch)
+                {
+                    case 'h':
+                        list.add(units*60);
+                        break;
+                    case 'd':
+                        list.add(units*60*24);
+                        break;
+                    case 'm':
+                    default:
+                        list.add(units);
+                        break;
+                }
             }
         }
         return list;
