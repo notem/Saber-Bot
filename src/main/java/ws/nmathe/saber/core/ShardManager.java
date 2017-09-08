@@ -1,6 +1,7 @@
 package ws.nmathe.saber.core;
 
 import com.google.common.collect.Iterables;
+import com.neovisionaries.ws.client.WebSocketFactory;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
@@ -10,9 +11,13 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.requests.SessionReconnectQueue;
 import net.dv8tion.jda.core.utils.MiscUtil;
+import okhttp3.Cache;
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -31,6 +36,7 @@ public class ShardManager
     private Integer primaryPoolSize = 15;   // used by the jda responsible for handling DMs
     private Integer secondaryPoolSize = 6;  // used by all other shards
 
+    private JDABuilder builder;
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     /**
@@ -47,27 +53,61 @@ public class ShardManager
 
         try // build the bot
         {
+            // custom OkHttpClient builder
+            OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
+            httpBuilder.connectionPool(new ConnectionPool())
+                    .connectTimeout(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)
+                    .readTimeout(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)
+                    .writeTimeout(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)
+                    .retryOnConnectionFailure(true);
+
+            // custom web socket factory
+            WebSocketFactory webSocketFactory = new WebSocketFactory().setConnectionTimeout(Integer.MAX_VALUE);
+
+            // basic skeleton of a jda shard
+            this.builder = new JDABuilder(AccountType.BOT)
+                    .setToken(Main.getBotSettingsManager().getToken())
+                    .setStatus(OnlineStatus.ONLINE)
+                    .addEventListener(new EventListener())
+                    .setHttpClientBuilder(httpBuilder)
+                    .setWebsocketFactory(webSocketFactory)
+                    .setAutoReconnect(true);
+
             // handle sharding
             if(shardTotal > 0)
             {
                 this.jdaShards = new ConcurrentHashMap<>();
-
                 Logging.info(this.getClass(), "Starting shard " + shards.get(0) + ". . .");
 
+                // add the reconnection queue
+                builder.setReconnectQueue(new SessionReconnectQueue());
+
                 // build the first shard synchronously with Main
-                JDA jda = new JDABuilder(AccountType.BOT)
-                        .setToken(Main.getBotSettingsManager().getToken())
-                        .setStatus(OnlineStatus.ONLINE)
-                        .setCorePoolSize(primaryPoolSize)
-                        .addEventListener(new EventListener())
-                        .setAutoReconnect(true)
-                        .useSharding(shards.get(0), shardTotal)
-                        .buildBlocking();
+                // to block the initialization process until one shard is active
+                if(shards.contains(0))
+                {
+                    // build shard id 0
+                    JDA jda = this.builder
+                            .setCorePoolSize(primaryPoolSize)
+                            .useSharding(0, shardTotal)
+                            .buildBlocking();
 
-                this.jdaShards.put(shards.get(0), jda);
-                shards.remove(0);
+                    this.jdaShards.put(0, jda);
+                    shards.remove((Object) 0);
+                }
+                else
+                {
+                    // build whatever the first shard id in the list is
+                    JDA jda = this.builder
+                            .setCorePoolSize(primaryPoolSize)
+                            .useSharding(shards.get(0), shardTotal)
+                            .buildBlocking();
 
-                // build remaining shards synchronously (for clean startup) but concurrently with Main
+                    this.jdaShards.put(shards.get(0), jda);
+                    shards.remove(shards.get(0));
+                }
+
+                // build remaining shards serially with one-another, but parallel with Main
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() ->
                 {
@@ -81,14 +121,9 @@ public class ShardManager
 
                             Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
 
-                            JDA shard = new JDABuilder(AccountType.BOT)
-                                    .setToken(Main.getBotSettingsManager().getToken())
-                                    .setStatus(OnlineStatus.ONLINE)
+                            JDA shard = this.builder
                                     .setCorePoolSize(secondaryPoolSize)
-                                    .addEventListener(new EventListener())
-                                    .setAutoReconnect(true)
                                     .useSharding(shardId, shardTotal)
-                                    .setReconnectQueue(new SessionReconnectQueue())
                                     .buildBlocking();
 
                             this.jdaShards.put(shardId, shard);
@@ -112,9 +147,7 @@ public class ShardManager
             {
                 Logging.info(this.getClass(), "Starting bot without sharding. . .");
 
-                this.jda = new JDABuilder(AccountType.BOT)
-                        .setToken(Main.getBotSettingsManager().getToken())
-                        .setStatus(OnlineStatus.ONLINE)
+                this.jda = this.builder
                         .setCorePoolSize(primaryPoolSize)
                         .buildBlocking();
 
@@ -257,17 +290,17 @@ public class ShardManager
             this.jdaShards.remove(shardId);
 
             Logging.info(this.getClass(), "Starting shard-" + shardId + ". . .");
-            JDA shard = new JDABuilder(AccountType.BOT)
-                    .setToken(Main.getBotSettingsManager().getToken())
-                    .setStatus(OnlineStatus.ONLINE)
-                    .setCorePoolSize(secondaryPoolSize)
-                    .addEventListener(new EventListener())
-                    .setAutoReconnect(true)
-                    .useSharding(shardId, this.shardTotal)
-                    .setReconnectQueue(new SessionReconnectQueue())
-                    .buildAsync();
+            JDABuilder shardBuilder;
+            if(shardId == 0)
+            {
+                 shardBuilder = this.builder.setCorePoolSize(primaryPoolSize).useSharding(shardId, shardTotal);
+            }
+            else
+            {
+                shardBuilder = this.builder.setCorePoolSize(secondaryPoolSize).useSharding(shardId, shardTotal);
+            }
 
-            this.jdaShards.put(shardId, shard);
+            this.jdaShards.put(shardId, shardBuilder.buildAsync());
         }
         catch(RateLimitedException e)
         {
@@ -350,13 +383,7 @@ public class ShardManager
                                 jda.shutdown();
 
                                 Logging.info(this.getClass(), "Restarting primary jda. . .");
-                                jda = new JDABuilder(AccountType.BOT)
-                                        .setToken(Main.getBotSettingsManager().getToken())
-                                        .setStatus(OnlineStatus.ONLINE)
-                                        .setCorePoolSize(primaryPoolSize)
-                                        .addEventListener(new EventListener())
-                                        .setAutoReconnect(true)
-                                        .buildAsync();
+                                jda = builder.setCorePoolSize(primaryPoolSize).buildAsync();
                             }
                         }
                         catch(RateLimitedException e)

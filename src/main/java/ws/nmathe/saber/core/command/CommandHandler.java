@@ -26,11 +26,13 @@ public class CommandHandler
     private final RateLimiter rateLimiter = new RateLimiter();
     private final HashMap<String, Command> commands;         // maps Command to invoke string
     private final HashMap<String, Command> adminCommands;    // ^^ but for admin commands
+    private boolean initialized;
 
     public CommandHandler()
     {
         commands = new HashMap<>();
         adminCommands = new HashMap<>();
+        initialized = false;
     }
 
     /**
@@ -57,6 +59,8 @@ public class CommandHandler
         adminCommands.put((new ReloadSettingsCommand()).name(), new ReloadSettingsCommand());
         adminCommands.put((new ClearLocksCommand()).name(), new ClearLocksCommand());
         adminCommands.put((new ShardsCommand()).name(), new ShardsCommand());
+
+        initialized = true;
     }
 
     /**
@@ -68,6 +72,14 @@ public class CommandHandler
      */
     public void handleCommand(MessageReceivedEvent event, Integer type, String prefix)
     {
+        // if the command handler has not yet been initialized, send a special error
+        if(!initialized)
+        {
+            String msg = "I have not yet finished booting up! Please try again in a moment.";
+            MessageUtilities.sendMsg(msg, event.getTextChannel(), null);
+        }
+
+        // otherwise handle the received command
         CommandParser.CommandContainer cc = commandParser.parse(event, prefix);
         if( type == 0 )
         {

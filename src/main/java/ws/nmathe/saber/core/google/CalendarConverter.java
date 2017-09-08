@@ -81,7 +81,6 @@ public class CalendarConverter
         }
         catch( Exception e )
         {
-            Logging.warn(this.getClass(), e.getMessage());
             return false;
         }
 
@@ -95,6 +94,7 @@ public class CalendarConverter
      */
     public void syncCalendar(String address, TextChannel channel)
     {
+        if(channel == null || address == null) return;
         if(!Main.getScheduleManager().isASchedule(channel.getId()))
         {   // safety check to insure syncCalendar is being applied to a valid channel
             return;
