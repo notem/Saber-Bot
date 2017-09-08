@@ -118,6 +118,11 @@ public class CreateCommand implements Command
         {
             return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
         }
+        if(Main.getScheduleManager().getClockFormat(cId).equals("12") &&
+                !(args[index].toLowerCase().endsWith("pm") || args[index].toLowerCase().endsWith("am")))
+        {
+            return "You forgot the period indicator (AM/PM)!";
+        }
 
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
         ZonedDateTime startTime = ParsingUtilities.parseTime(ZonedDateTime.now(zone), args[index]);
@@ -130,6 +135,11 @@ public class CreateCommand implements Command
         // if <end> fails verification, assume <end> has been omitted
         if( VerifyUtilities.verifyTime( args[index] ) )
         {
+            if(Main.getScheduleManager().getClockFormat(cId).equals("12") &&
+                    !(args[index].toLowerCase().endsWith("pm") || args[index].toLowerCase().endsWith("am")))
+            {
+                return "You forgot the period indicator (AM/PM)!";
+            }
             index++;
         }
 

@@ -214,6 +214,11 @@ public class EditCommand implements Command
                     {
                         return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                     }
+                    if(Main.getScheduleManager().getClockFormat(entry.getChannelId()).equals("12") &&
+                            !(args[index].toLowerCase().endsWith("pm") || args[index].toLowerCase().endsWith("am")))
+                    {
+                        return "You forgot the period indicator (AM/PM)!";
+                    }
                     if(entry.hasStarted())
                     {
                         return "You cannot modify the start time after the event has already started.";
@@ -232,6 +237,11 @@ public class EditCommand implements Command
                     if( !VerifyUtilities.verifyTime( args[index] ) )
                     {
                         return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
+                    }
+                    if(Main.getScheduleManager().getClockFormat(entry.getChannelId()).equals("12") &&
+                            !(args[index].toLowerCase().endsWith("pm") || args[index].toLowerCase().endsWith("am")))
+                    {
+                        return "You forgot the period indicator (AM/PM)!";
                     }
                     index++;
                     break;
