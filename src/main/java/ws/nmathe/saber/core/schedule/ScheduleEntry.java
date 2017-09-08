@@ -281,8 +281,7 @@ public class ScheduleEntry
     private void repeat()
     {
         Message msg = this.getMessageObject();
-        if( msg==null )
-            return;
+        if( msg==null ) return;
 
         if( this.entryRepeat != 0 ) // find next repeat date and edit the message
         {
@@ -298,6 +297,7 @@ public class ScheduleEntry
             this.entryStart = newStart;
             this.entryEnd = newEnd;
             this.setStarted(false);
+            this.rsvpMembers = new HashMap<>();
 
             Main.getEntryManager().updateEntry(this, true);
         }
