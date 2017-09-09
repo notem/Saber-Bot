@@ -114,7 +114,7 @@ public class ListCommand implements Command
                 continue;
             }
 
-            String[] filter = args[index].toLowerCase().split(":");
+            String[] filter = args[index].split(":");
             if(filter.length != 2)
             {
                 return "Invalid filter ``" + args[index] + "``!\nFilters must be of the form \"r: @role\" or \"u: @user\"";
