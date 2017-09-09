@@ -146,7 +146,6 @@ public class CalendarConverter
             HashSet<String> uniqueEvents = new HashSet<>(); // a set of all unique (not child of a recurring event) events
 
             // convert every entry and add it to the scheduleManager
-            Map<String, Integer> rsvpLimits = new HashMap<>();
             for(Event event : events.getItems())
             {
                 channel.sendTyping().queue();   // continue to send 'is typing'
@@ -191,6 +190,7 @@ public class CalendarConverter
                 String imageUrl = null;
                 String thumbnailUrl = null;
                 ZonedDateTime rsvpDeadline = null;
+                Map<String, Integer> rsvpLimits = new HashMap<>();
                 if( event.getDescription() != null )
                 {
                     for( String comment : event.getDescription().split("\n") )
