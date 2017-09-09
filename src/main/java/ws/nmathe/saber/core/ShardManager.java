@@ -28,8 +28,8 @@ import java.util.function.Consumer;
 public class ShardManager
 {
     private Integer shardTotal = null;
-    private ConcurrentMap<Integer, JDA> jdaShards = null;     // used only when sharded
-    private JDA jda = null;                         // used only when unsharded
+    private ConcurrentMap<Integer, JDA> jdaShards = null;  // used only when sharded
+    private JDA jda = null;                                // used only when unsharded
 
     private Iterator<String> games;
 

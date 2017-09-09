@@ -198,7 +198,7 @@ public class CalendarConverter
                         // image
                         if(comment.trim().toLowerCase().startsWith("image:"))
                         {
-                            String[] tmp = comment.trim().split(":",1); // split to limit:
+                            String[] tmp = comment.trim().split(":",2); // split to limit:
                             if(tmp.length > 1)
                             {
                                 imageUrl = tmp[1].trim();
@@ -208,7 +208,7 @@ public class CalendarConverter
                         // thumbnail
                         else if(comment.trim().toLowerCase().startsWith("thumbnail:"))
                         {
-                            String[] tmp = comment.trim().split(":",1); // split to limit:
+                            String[] tmp = comment.trim().split(":",2); // split to limit:
                             if(tmp.length > 1)
                             {
                                 thumbnailUrl = tmp[1].trim();
@@ -218,7 +218,7 @@ public class CalendarConverter
                         // limit
                         else if(comment.trim().toLowerCase().startsWith("limit:"))
                         {
-                            String[] tmp = comment.trim().split(":",1); // split to limit:
+                            String[] tmp = comment.trim().split(":",2); // split to limit:
                             if(tmp.length > 1)
                             {
                                 String[] str = tmp[1].trim().split("[^\\S\n\r]+"); // split into white space separate segments
