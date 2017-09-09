@@ -76,7 +76,15 @@ public class CommandHandler
         if(!initialized)
         {
             String msg = "I have not yet finished booting up! Please try again in a moment.";
-            MessageUtilities.sendMsg(msg, event.getTextChannel(), null);
+            if(event.isFromType(ChannelType.PRIVATE))
+            {
+                MessageUtilities.sendPrivateMsg(msg, event.getAuthor(), null);
+            }
+            else
+            {
+                MessageUtilities.sendMsg(msg, event.getTextChannel(), null);
+            }
+            return;
         }
 
         // otherwise handle the received command

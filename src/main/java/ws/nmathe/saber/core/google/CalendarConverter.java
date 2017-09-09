@@ -195,41 +195,56 @@ public class CalendarConverter
                 {
                     for( String comment : event.getDescription().split("\n") )
                     {
+                        // image
                         if(comment.trim().toLowerCase().startsWith("image:"))
                         {
-                            imageUrl = comment.trim().toLowerCase().replace("image:","").trim();
-                            if(!VerifyUtilities.verifyUrl(imageUrl)) imageUrl = null;
+                            String[] tmp = comment.trim().split(":",1); // split to limit:
+                            if(tmp.length > 1)
+                            {
+                                imageUrl = tmp[1].trim();
+                                if (!VerifyUtilities.verifyUrl(imageUrl)) imageUrl = null;
+                            }
                         }
+                        // thumbnail
                         else if(comment.trim().toLowerCase().startsWith("thumbnail:"))
                         {
-                            thumbnailUrl = comment.trim().toLowerCase().replace("thumbnail:","").trim();
-                            if(!VerifyUtilities.verifyUrl(thumbnailUrl)) imageUrl = null;
+                            String[] tmp = comment.trim().split(":",1); // split to limit:
+                            if(tmp.length > 1)
+                            {
+                                thumbnailUrl = tmp[1].trim();
+                                if(!VerifyUtilities.verifyUrl(thumbnailUrl)) imageUrl = null;
+                            }
                         }
+                        // limit
                         else if(comment.trim().toLowerCase().startsWith("limit:"))
                         {
-                            String[] str = comment.trim().toLowerCase().replace("limit:","").trim().split("[^\\S\n\r]+");
-
-                            if(str.length >= 2)
+                            String[] tmp = comment.trim().split(":",1); // split to limit:
+                            if(tmp.length > 1)
                             {
-                                // rebuild the rsvp group name
-                                String name = "";
-                                for(int i=0; i<str.length-1; i++)
+                                String[] str = tmp[1].trim().split("[^\\S\n\r]+"); // split into white space separate segments
+                                if(str.length >= 2)
                                 {
-                                    name += str[i];
-                                    if(i != str.length-2) name += " ";
-                                }
+                                    // rebuild the rsvp group name
+                                    String name = "";
+                                    for(int i=0; i<str.length-1; i++)
+                                    {
+                                        name += str[i];
+                                        if(i != str.length-2) name += " ";
+                                    }
 
-                                // parse the limit
-                                Integer limit = -1;
-                                if(VerifyUtilities.verifyInteger(str[str.length-1]))
-                                {
-                                    limit = Integer.parseInt(str[str.length-1]);
-                                }
+                                    // parse the limit
+                                    Integer limit = -1;
+                                    if(VerifyUtilities.verifyInteger(str[str.length-1]))
+                                    {
+                                        limit = Integer.parseInt(str[str.length-1]);
+                                    }
 
-                                rsvpLimits.put(name, limit);
+                                    rsvpLimits.put(name, limit);
+                                }
                             }
 
                         }
+                        // deadline
                         else if(comment.trim().toLowerCase().startsWith("deadline:"))
                         {
                             String tmp = comment.trim().toLowerCase().replace("deadline:","").trim();
