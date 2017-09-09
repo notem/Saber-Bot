@@ -18,6 +18,7 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;

@@ -250,9 +250,9 @@ public class ParsingUtilities
                     list.add(Integer.parseInt(group));
                 }
             }
-            else if(VerifyUtilities.verifyInteger(group.substring(0, group.length()-1)))
+            else if(VerifyUtilities.verifyInteger(group.substring(0, group.length())))
             {
-                Integer units = Integer.parseInt(group.substring(0, group.length()-1));
+                Integer units = Integer.parseInt(group.substring(0, group.length()));
                 switch(ch)
                 {
                     case 'h':
