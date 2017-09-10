@@ -346,7 +346,7 @@ public class EventListener extends ListenerAdapter
                 event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
             }
         }
-        catch( PermissionException ignored) { }
+        catch(PermissionException ignored) { }
         catch(Exception e)
         {
             Logging.exception(this.getClass(), e);

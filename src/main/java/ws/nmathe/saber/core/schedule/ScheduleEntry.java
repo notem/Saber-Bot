@@ -435,11 +435,6 @@ public class ScheduleEntry
         return this.googleId;
     }
 
-    public String getScheduleID()
-    {
-        return this.chanId;
-    }
-
     public Integer getRsvpLimit(String type)
     {
         Integer limit = this.rsvpLimits.get(type);
@@ -689,7 +684,7 @@ public class ScheduleEntry
     public String toString()
     {
         DateTimeFormatter dtf;
-        if(Main.getScheduleManager().getClockFormat(this.getScheduleID()).equals("24"))
+        if(Main.getScheduleManager().getClockFormat(this.getChannelId()).equals("24"))
         {
             dtf = DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm [z]");
         }

@@ -15,6 +15,7 @@ import okhttp3.Cache;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.Logging;
 
 import java.time.temporal.ChronoUnit;
@@ -135,6 +136,7 @@ public class ShardManager
                         Main.getEntryManager().init();
                         Main.getCommandHandler().init();
 
+                        HttpUtilities.updateStats();
                         executor.shutdown();
                     }
                     catch(Exception e)
@@ -159,6 +161,7 @@ public class ShardManager
 
                 Main.getEntryManager().init();
                 Main.getCommandHandler().init();
+                HttpUtilities.updateStats();
             }
         }
         catch( Exception e )

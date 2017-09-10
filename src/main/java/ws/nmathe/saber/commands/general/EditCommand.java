@@ -111,7 +111,7 @@ public class EditCommand implements Command
         {
             return "I could not find an entry with that ID!";
         }
-        if(Main.getScheduleManager().isLocked(entry.getScheduleID()))
+        if(Main.getScheduleManager().isLocked(entry.getChannelId()))
         {
             return "Schedule is locked for sorting/syncing. Please try again after sort/sync finishes.";
         }
@@ -122,6 +122,7 @@ public class EditCommand implements Command
         index++; // 1
 
         // check later args
+        ZoneId zone = Main.getScheduleManager().getTimeZone(entry.getChannelId());
         while(index < args.length)
         {
             switch(args[index++].toLowerCase())
@@ -214,10 +215,17 @@ public class EditCommand implements Command
                     {
                         return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                     }
+                    /*
                     if(Main.getScheduleManager().getClockFormat(entry.getChannelId()).equals("12") &&
                             !(args[index].toLowerCase().endsWith("pm") || args[index].toLowerCase().endsWith("am")))
                     {
                         return "You forgot the period indicator (AM/PM)!";
+                    }
+                    */
+                    if(ParsingUtilities.parseTime(ZonedDateTime.now(zone), args[index]).isBefore(ZonedDateTime.now()))
+                    {
+                        return "Today's time is already past *" + args[index] + "*!\n" +
+                                "Please use a different time, or change the date for the event!";
                     }
                     if(entry.hasStarted())
                     {
@@ -238,10 +246,17 @@ public class EditCommand implements Command
                     {
                         return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
                     }
+                    /*
                     if(Main.getScheduleManager().getClockFormat(entry.getChannelId()).equals("12") &&
                             !(args[index].toLowerCase().endsWith("pm") || args[index].toLowerCase().endsWith("am")))
                     {
                         return "You forgot the period indicator (AM/PM)!";
+                    }
+                    */
+                    if(ParsingUtilities.parseTime(ZonedDateTime.now(zone), args[index]).isBefore(ZonedDateTime.now()))
+                    {
+                        return "Today's time is already past *" + args[index] + "*!\n" +
+                                "Please use a different time, or change the date for the event!";
                     }
                     index++;
                     break;
@@ -276,7 +291,6 @@ public class EditCommand implements Command
                         return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
                     }
 
-                    ZoneId zone = Main.getScheduleManager().getTimeZone(entry.getScheduleID());
                     ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.now(zone), zone);
                     if(time.isBefore(ZonedDateTime.now()))
                     {
@@ -709,7 +723,7 @@ public class EditCommand implements Command
             //
             // send the event summary to the command channel
             //
-            String body = "Updated event :id: **"+ Integer.toHexString(se.getId()) +"** on <#" + se.getScheduleID() + ">\n" +
+            String body = "Updated event :id: **"+ Integer.toHexString(se.getId()) +"** on <#" + se.getChannelId() + ">\n" +
                     "```js\n" + se.toString() + "\n```";
             MessageUtilities.sendMsg(body, event.getChannel(), null);
         }
