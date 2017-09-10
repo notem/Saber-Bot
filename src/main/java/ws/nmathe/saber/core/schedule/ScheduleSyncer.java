@@ -65,7 +65,7 @@ class ScheduleSyncer implements Runnable
                     // attempt to sync schedule
                     if(Main.getCalendarConverter().checkValidAddress(document.getString("sync_address")))
                     {
-                        Main.getCalendarConverter().syncCalendar(
+                        Main.getCalendarConverter().importCalendar(
                                 document.getString("sync_address"),
                                 jda.getTextChannelById(document.getString("_id")));
 

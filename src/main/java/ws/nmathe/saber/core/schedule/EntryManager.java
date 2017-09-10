@@ -376,6 +376,20 @@ public class EntryManager
         return entries.into(new ArrayList<ScheduleEntry>());
     }
 
+
+    /**
+     *
+     * @param channelId
+     * @return
+     */
+    public Collection<ScheduleEntry> getEntriesFromChannel(String channelId)
+    {
+        MongoIterable<ScheduleEntry> entries = Main.getDBDriver().getEventCollection()
+                .find(eq("channelId", channelId)).map(ScheduleEntry::new);
+
+        return entries.into(new ArrayList<ScheduleEntry>());
+    }
+
     /**
      * has a guild reached it's maximum event limit?
      * @param gId (String) guild ID

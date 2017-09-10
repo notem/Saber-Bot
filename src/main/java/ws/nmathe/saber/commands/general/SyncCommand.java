@@ -6,7 +6,6 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
-import ws.nmathe.saber.utils.VerifyUtilities;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
@@ -51,23 +50,25 @@ public class SyncCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
+        int index = 0;
+
         // check arg length
         if(args.length < 1)
         {
             return "That's not enough arguments!\n" +
                     "Use ``" + head + " <channel> [<calendar address>]``";
         }
-        if(args.length > 2)
+        if(args.length > 3)
         {
             return "That's too many arguments!\n" +
-                    "Use ``" + head + " <channel> [<calendar address>]``";
+                    "Use ``" + head + " <channel> [<import|export> <calendar_address>]``";
         }
 
         // validate the supplied channel
         String cId = args[0].replace("<#","").replace(">","");
         if(!Main.getScheduleManager().isASchedule(cId))
         {
-            return "Channel " + args[0] + " is not on my list of schedule channels for your guild.";
+            return "Channel " + args[index] + " is not on my list of schedule channels for your guild.";
         }
         if(Main.getScheduleManager().isLocked(cId))
         {
@@ -79,14 +80,30 @@ public class SyncCommand implements Command
         String address;
         if(args.length == 2)
         {
-            address = args[1];
+            index++;
+            address = args[index];
+        }
+        else if(args.length == 3)
+        {
+            index++;
+            switch(args[index].toLowerCase())
+            {
+                case "import":
+                case "export":
+                    break;
+
+                default:
+                    return "bad"; //TODO
+            }
+            index++;
+            address = args[index];
         }
         else
         {
             address = Main.getScheduleManager().getAddress(cId);
             if(address.isEmpty())
             {
-                return "Your channel, " + args[0] + ", is not setup with a Google Calendar address to sync with!";
+                return "Your channel, " + args[index] + ", is not setup with a Google Calendar address to sync with!";
             }
         }
         if(!Main.getCalendarConverter().checkValidAddress(address))
@@ -101,9 +118,13 @@ public class SyncCommand implements Command
     {
         try
         {
-            String cId = args[0].replace("<#","").replace(">","");
+            int index = 0;
+            String cId = args[index].replace("<#","").replace(">","");
             TextChannel channel = event.getGuild().getTextChannelById(cId);
 
+            index++;
+
+            boolean importFlag = true;
             String address;
             if( args.length == 1 )
             {
@@ -111,17 +132,39 @@ public class SyncCommand implements Command
             }
             else
             {
-                address = args[1];
+                if(args[index].equalsIgnoreCase("export"))
+                {
+                    importFlag = false;
+                    index++;
+                }
+                else if(args[index].equalsIgnoreCase("import"))
+                {
+                    index++;
+                }
 
-                // enable auto-sync'ing timezone
-                Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("timezone_sync", true));
+                address = args[index];
+
+                if(importFlag)
+                {
+                    // enable auto-sync'ing timezone
+                    Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("timezone_sync", true));
+                }
             }
 
-            Main.getCalendarConverter().syncCalendar(address, channel);
-            Main.getScheduleManager().setAddress(cId,address);
+            if(importFlag)
+            {
+                Main.getCalendarConverter().importCalendar(address, channel);
+                Main.getScheduleManager().setAddress(cId,address);
 
-            String content = "I have finished syncing <#" + cId + ">!";
-            MessageUtilities.sendMsg(content, event.getChannel(), null);
+                String content = "I have finished syncing <#" + cId + ">!";
+                MessageUtilities.sendMsg(content, event.getChannel(), null);
+            }
+            else
+            {
+                Main.getCalendarConverter().exportCalendar(address, channel);
+                String content = "I have finished exporting <#" + cId + ">!";
+                MessageUtilities.sendMsg(content, event.getChannel(), null);
+            }
         }
         catch(Exception e)
         {
