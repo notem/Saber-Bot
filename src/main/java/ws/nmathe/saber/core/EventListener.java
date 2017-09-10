@@ -21,6 +21,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -243,37 +244,25 @@ public class EventListener extends ListenerAdapter
         String memberId = event.getMember().getUser().getId();
 
         // remove user from any events they have rsvp'ed to
-        Main.getDBDriver().getEventCollection()
-                .find(or(eq("rsvp_yes", memberId ),
-                        eq("rsvp_no", memberId),
-                        eq("rsvp_undecided", memberId))
-                ).forEach((Consumer<? super Document>) document ->
+        Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromGuild(event.getGuild().getId());
+        for(ScheduleEntry se : entries)
+        {
+            boolean updateFlag = false;
+            // check each rsvp group on the entry
+            for(String key : se.getRsvpMembers().keySet())
+            {
+                if(se.getRsvpMembersOfType(key).contains(memberId))
                 {
-                    List<String> rsvpYes = (List<String>) document.get("rsvp_yes");
-                    List<String> rsvpNo = (List<String>) document.get("rsvp_no");
-                    List<String> rsvpUndecided = (List<String>) document.get("rsvp_undecided");
-                    Integer entryId = document.getInteger("_id");
-
-                    // remove user from yes list
-                    if(rsvpYes.contains(memberId))
-                    {
-                        rsvpYes.remove(memberId);
-                        Main.getDBDriver().getEventCollection()
-                                .updateOne(eq("_id", entryId), set("rsvp_yes", rsvpYes));
-                    }   // remove user from no list
-                    if(rsvpNo.contains(memberId))
-                    {
-                        rsvpNo.remove(memberId);
-                        Main.getDBDriver().getEventCollection()
-                                .updateOne(eq("_id", entryId), set("rsvp_no", rsvpNo));
-                    }   // remove user from undecided list
-                    if(rsvpUndecided.contains(memberId))
-                    {
-                        rsvpUndecided.remove(memberId);
-                        Main.getDBDriver().getEventCollection()
-                                .updateOne(eq("_id", entryId), set("rsvp_undecided", rsvpUndecided));
-                    }
-                });
+                    // remove the user and flag the entry for updating
+                    se.getRsvpMembersOfType(key).remove(memberId);
+                    updateFlag = true;
+                }
+            }
+            if(updateFlag)
+            {
+                Main.getEntryManager().updateEntry(se, false);
+            }
+        }
     }
 
     @Override

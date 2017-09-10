@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import com.mongodb.client.MongoIterable;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Emote;
@@ -360,6 +361,19 @@ public class EntryManager
         {
             return null;
         }
+    }
+
+    /**
+     *
+     * @param guildId
+     * @return
+     */
+    public Collection<ScheduleEntry> getEntriesFromGuild(String guildId)
+    {
+        MongoIterable<ScheduleEntry> entries = Main.getDBDriver().getEventCollection()
+                .find(eq("guildId", guildId)).map(ScheduleEntry::new);
+
+        return entries.into(new ArrayList<ScheduleEntry>());
     }
 
     /**

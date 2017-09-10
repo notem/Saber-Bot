@@ -161,6 +161,9 @@ public class ListCommand implements Command
             Integer entryId = Integer.decode("0x" + args[index++]);
             ScheduleEntry se = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
 
+            String titleUrl = se.getTitleUrl()==null ? "https://nnmathe.ws/saber": se.getTitleUrl();
+            String title = se.getTitle()+" ["+Integer.toHexString(entryId)+"]";
+
             String content = "";
 
             List<String> userFilters = new ArrayList<>();
@@ -214,15 +217,27 @@ public class ListCommand implements Command
                     List<String> members = se.getRsvpMembersOfType(type);
                     for(String id : members)
                     {
-                        if(content.length() > 1900)
+                        if(content.length() > 1900) // if the message is nearing maximum length.
                         {
-                            MessageUtilities.sendMsg(content, event.getChannel(), null);
+                            // build and send the embedded message object
+                            Message message = (new MessageBuilder()).setEmbed(
+                                    (new EmbedBuilder()).setDescription(content).setTitle(title, titleUrl).build()
+                            ).build();
+                            MessageUtilities.sendMsg(message, event.getChannel(), null);
+
+                            // clear the content sting
                             content = "*continued. . .* \n";
                         }
+
                         Member member = event.getGuild().getMemberById(id);
-                        if(member != null)
+                        if(member != null) // if the user is still a member of the guild, add to the list
                         {
                             content += this.getNameDisplay(mobileFlag, IdFlag, member);
+                        }
+                        else // otherwise, remove the member from the event and update
+                        {
+                            se.getRsvpMembersOfType(type).remove(id);
+                            Main.getEntryManager().updateEntry(se, false);
                         }
                     }
                 }
@@ -231,45 +246,44 @@ public class ListCommand implements Command
 
             if(!filterByType || typeFilters.contains("no-input"))
             {
-                List<String> undecided = event.getGuild().getMembers().stream()
+                // generate a list of all members of the guild who pass the filter and map to their ID
+                List<String> noInput = event.getGuild().getMembers().stream()
                         .filter(member -> checkMember(member, userFilters, roleFilters))
                         .map(member -> member.getUser().getId()).collect(Collectors.toList());
 
                 for(String type : options.values())
                 {
-                    undecided.removeAll(se.getRsvpMembersOfType(type));
+                    noInput.removeAll(se.getRsvpMembersOfType(type));
                 }
 
                 content += "**\nNo input\n======================\n**";
-                if(!filterByType & undecided.size() > 10)
+                if(!filterByType & noInput.size() > 10)
                 {
-                    content += " Too many users to show: " + undecided.size() + " users with no rsvp\n";
+                    content += " Too many users to show: " + noInput.size() + " users with no rsvp\n";
                 }
-                else for(String id : undecided)
+                else for(String id : noInput)
                 {
                     if(content.length() > 1900)
                     {
-                        MessageUtilities.sendMsg((new MessageBuilder()).setEmbed(
-                                (new EmbedBuilder()).setDescription(content).build()
-                        ).build(), event.getChannel(), null);
+                        // build and send the embedded message object
+                        Message message = (new MessageBuilder()).setEmbed(
+                                (new EmbedBuilder()).setDescription(content).setTitle(title, titleUrl).build()
+                        ).build();
+                        MessageUtilities.sendMsg(message, event.getChannel(), null);
+
+                        // clear the content sting
                         content = "*continued. . .* \n";
                     }
                     Member member = event.getGuild().getMemberById(id);
-                    if(member != null)
-                    {
-                        content += this.getNameDisplay(mobileFlag, IdFlag, member);
-                    }
+                    content += this.getNameDisplay(mobileFlag, IdFlag, member);
                 }
             }
 
             // build and send the embedded message object
-            String titleUrl = se.getTitleUrl()==null ? "https://nnmathe.ws/saber": se.getTitleUrl();
-            String title = se.getTitle()+" ["+Integer.toHexString(entryId)+"]";
             Message message = (new MessageBuilder()).setEmbed(
                     (new EmbedBuilder()).setDescription(content).setTitle(title, titleUrl).build()
                     ).build();
-
-            MessageUtilities.sendMsg(message, event.getChannel(), null, (error) -> Logging.exception(ListCommand.class, error));
+            MessageUtilities.sendMsg(message, event.getChannel(), null);
         }
         catch(Exception e)
         {
