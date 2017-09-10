@@ -220,7 +220,10 @@ public class ListCommand implements Command
                             content = "*continued. . .* \n";
                         }
                         Member member = event.getGuild().getMemberById(id);
-                        content += this.getNameDisplay(mobileFlag, IdFlag, member);
+                        if(member != null)
+                        {
+                            content += this.getNameDisplay(mobileFlag, IdFlag, member);
+                        }
                     }
                 }
                 content += "\n";
@@ -252,7 +255,10 @@ public class ListCommand implements Command
                         content = "*continued. . .* \n";
                     }
                     Member member = event.getGuild().getMemberById(id);
-                    content += this.getNameDisplay(mobileFlag, IdFlag, member);
+                    if(member != null)
+                    {
+                        content += this.getNameDisplay(mobileFlag, IdFlag, member);
+                    }
                 }
             }
 
