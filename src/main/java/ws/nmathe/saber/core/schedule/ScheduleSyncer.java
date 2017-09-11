@@ -65,11 +65,10 @@ class ScheduleSyncer implements Runnable
                     // attempt to sync schedule
                     if(Main.getCalendarConverter().checkValidAddress(document.getString("sync_address")))
                     {
-                        Main.getCalendarConverter().syncCalendar(
-                                document.getString("sync_address"),
-                                jda.getTextChannelById(document.getString("_id")));
-
                         TextChannel channel = jda.getTextChannelById(document.getString("_id"));
+                        if(channel == null) return;
+
+                        Main.getCalendarConverter().syncCalendar(document.getString("sync_address"), channel);
                         Logging.info(this.getClass(), "Synchronized schedule #" + channel.getName() + " [" +
                                 document.getString("_id") + "] on '" + channel.getGuild().getName() + "' [" +
                                 channel.getGuild().getId() + "]");

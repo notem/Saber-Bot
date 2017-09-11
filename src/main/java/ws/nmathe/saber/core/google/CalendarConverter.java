@@ -212,7 +212,7 @@ public class CalendarConverter
                             if(tmp.length > 1)
                             {
                                 thumbnailUrl = tmp[1].trim();
-                                if(!VerifyUtilities.verifyUrl(thumbnailUrl)) imageUrl = null;
+                                if(!VerifyUtilities.verifyUrl(thumbnailUrl)) thumbnailUrl = null;
                             }
                         }
                         // limit

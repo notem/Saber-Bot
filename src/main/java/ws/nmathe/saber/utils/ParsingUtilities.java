@@ -237,10 +237,11 @@ public class ParsingUtilities
     public static Set<Integer> parseReminderStr(String arg)
     {
         Set<Integer> list = new LinkedHashSet<>();
-        Matcher matcher = Pattern.compile("\\d+[^\\d]").matcher(arg);
+        Matcher matcher = Pattern.compile("\\d+[^\\d]?").matcher(arg);
         while(matcher.find())
         {
             String group = matcher.group();
+            Logging.info(ParsingUtilities.class, group);
 
             Character ch = group.charAt(group.length()-1);
             if(Character.isDigit(ch))
@@ -250,9 +251,9 @@ public class ParsingUtilities
                     list.add(Integer.parseInt(group));
                 }
             }
-            else if(VerifyUtilities.verifyInteger(group.substring(0, group.length())))
+            else if(VerifyUtilities.verifyInteger(group.substring(0, group.length()-1)))
             {
-                Integer units = Integer.parseInt(group.substring(0, group.length()));
+                Integer units = Integer.parseInt(group.substring(0, group.length()-1));
                 switch(ch)
                 {
                     case 'h':
