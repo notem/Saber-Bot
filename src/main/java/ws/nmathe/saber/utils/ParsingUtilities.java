@@ -42,7 +42,6 @@ public class ParsingUtilities
         {
             if(userInput.matches(".+([aApP][mM])"))
             {
-                Logging.info(VerifyUtilities.class, "?");
                 time = LocalTime.parse(userInput.toUpperCase(), DateTimeFormatter.ofPattern("h:mma"));
             }
             else
@@ -54,7 +53,6 @@ public class ParsingUtilities
         {
             if(userInput.matches(".+([aApP][mM])"))
             {
-                Logging.info(VerifyUtilities.class, "!");
                 time = LocalTime.parse(userInput.toUpperCase(), DateTimeFormatter.ofPattern("ha"));
             }
             else
