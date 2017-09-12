@@ -128,7 +128,7 @@ public class CreateCommand implements Command
         */
 
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
-        ZonedDateTime startTime = ParsingUtilities.parseTime(ZonedDateTime.now(zone), args[index]);
+        ZonedDateTime startTime = ZonedDateTime.of(LocalDate.now().plusDays(1), ParsingUtilities.parseTime(args[index]), zone);
 
         // if minimum args, then ok
         if (args.length == 3) return "";
@@ -138,13 +138,6 @@ public class CreateCommand implements Command
         // if <end> fails verification, assume <end> has been omitted
         if( VerifyUtilities.verifyTime( args[index] ) )
         {
-            /*
-            if(Main.getScheduleManager().getClockFormat(cId).equals("12") &&
-                    !(args[index].toLowerCase().endsWith("pm") || args[index].toLowerCase().endsWith("am")))
-            {
-                return "You forgot the period indicator (AM/PM)!";
-            }
-            */
             index++;
         }
 
@@ -305,12 +298,12 @@ public class CreateCommand implements Command
                 else if(!startFlag)
                 {
                     startFlag = true;
-                    startTime = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
+                    startTime = ParsingUtilities.parseTime(arg.trim().toUpperCase());
                 }
                 else if(!endFlag && VerifyUtilities.verifyTime(arg))
                 {
                     endFlag = true;
-                    endTime = ParsingUtilities.parseTime(ZonedDateTime.now(), arg).toLocalTime();
+                    endTime = ParsingUtilities.parseTime(arg.trim().toUpperCase());
                 }
                 else
                 {

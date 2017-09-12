@@ -57,13 +57,13 @@ public class ShardManager
             // custom OkHttpClient builder
             OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
             httpBuilder.connectionPool(new ConnectionPool())
-                    .connectTimeout(600000, TimeUnit.MILLISECONDS)
-                    .readTimeout(600000, TimeUnit.MILLISECONDS)
-                    .writeTimeout(600000, TimeUnit.MILLISECONDS)
+                    .connectTimeout(300000, TimeUnit.MILLISECONDS)
+                    .readTimeout(300000, TimeUnit.MILLISECONDS)
+                    .writeTimeout(300000, TimeUnit.MILLISECONDS)
                     .retryOnConnectionFailure(true);
 
             // custom web socket factory
-            WebSocketFactory webSocketFactory = new WebSocketFactory().setConnectionTimeout(600000);
+            WebSocketFactory webSocketFactory = new WebSocketFactory().setConnectionTimeout(300000);
 
             // basic skeleton of a jda shard
             this.builder = new JDABuilder(AccountType.BOT)

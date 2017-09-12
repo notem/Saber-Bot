@@ -3,52 +3,58 @@ package ws.nmathe.saber.utils;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * static methods used to verify user input for the verify() method of commands
  */
 public class VerifyUtilities
 {
-    public static boolean verifyTime(String arg)
+    public static boolean verifyTime(String userInput)
     {
-        if( arg.toUpperCase().endsWith("AM") || arg.toUpperCase().endsWith("PM") )
-        {
-            String[] start = arg.substring(0,arg.length()-2).split(":");
-            if (start.length != 2)
-                return false;
-            if (start[0].length() > 2)
-                return false;
-            if( !verifyInteger( start[0] ) )
-                return false;
-            if (Integer.parseInt(start[0]) > 12 || Integer.parseInt(start[0]) == 0)
-                return false;
-            if (start[1].length() > 2)
-                return false;
-            if( !verifyInteger( start[1] ) )
-                return false;
-            if (Integer.parseInt(start[1]) > 59)
-                return false;
+        Matcher matcher = Pattern.compile("\\d+").matcher(userInput);
 
-        }
-        else
+        // relative time
+        if(userInput.matches("\\d+[mM][iI][nN]$"))
         {
-            String[] start = arg.split(":");
-            if (start.length != 2)
-                return false;
-            if (start[0].length() > 2)
-                return false;
-            if( !verifyInteger( start[0] ) )
-                return false;
-            if (Integer.parseInt(start[0]) > 24)
-                return false;
-            if (start[1].length() > 2)
-                return false;
-            if( !verifyInteger( start[1] ) )
-                return false;
-            if (Integer.parseInt(start[1]) > 59)
-                return false;
-            if (Integer.parseInt(start[0]) == 24 && Integer.parseInt(start[1]) != 0)
-                return false;
+            return true;
+        }
+        else if(userInput.matches("\\d(\\d)?(:\\d\\d)?([aApP][mM])"))// absolute time with period indicator
+        {
+            if(userInput.contains(":"))
+            {
+                if(!matcher.find()) return false;
+                if(Integer.parseInt(matcher.group()) > 12) return false;
+                if(!matcher.find()) return false;
+                if(Integer.parseInt(matcher.group()) > 59) return false;
+            }
+            else
+            {
+                if(!matcher.find()) return false;
+                if(Integer.parseInt(matcher.group()) > 12) return false;
+            }
+        }
+        else if(userInput.matches("\\d(\\d)?(:\\d\\d)?")) // absolute time with no period indicator
+        {
+            if(userInput.contains(":"))
+            {
+                if(userInput.equalsIgnoreCase("24:00")) return true;
+
+                if(!matcher.find()) return false;
+                if(Integer.parseInt(matcher.group()) > 23) return false;
+                if(!matcher.find()) return false;
+                if(Integer.parseInt(matcher.group()) > 59) return false;
+            }
+            else
+            {
+                if(!matcher.find()) return false;
+                if(Integer.parseInt(matcher.group()) > 23) return false;
+            }
+        }
+        else // fails to match either absolute or relative times
+        {
+            return false;
         }
         return true;
     }
@@ -118,7 +124,7 @@ public class VerifyUtilities
     {
         try
         {
-            (new URL(arg)).getContent();
+            (new URL(arg)).openConnection().connect();
         }
         catch(Exception e)
         {
