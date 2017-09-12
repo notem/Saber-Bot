@@ -124,7 +124,7 @@ public class VerifyUtilities
     {
         try
         {
-            (new URL(arg)).getContent();
+            (new URL(arg)).openConnection().connect();
         }
         catch(Exception e)
         {
