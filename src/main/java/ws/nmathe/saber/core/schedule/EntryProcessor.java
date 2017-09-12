@@ -1,12 +1,14 @@
 package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.Message;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -179,8 +181,16 @@ class EntryProcessor implements Runnable
                 {
                     Logging.info(this.getClass(), "Processing entries at level 2. . .");
 
+                    // purge expiring events
+                    query = lte("expire", new Date());
+
+                    //delete message objects
+                    Main.getDBDriver().getEventCollection().find(query).forEach((Consumer<? super Document>) document ->
+                    {
+                        MessageUtilities.deleteMsg((new ScheduleEntry(document)).getMessageObject(), null);
+                    });
+
                     // bulk delete entries from the database
-                    query = lte("expire", Date.from(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).toInstant()));
                     Main.getDBDriver().getEventCollection().deleteMany(query);
 
                     // adjust timers

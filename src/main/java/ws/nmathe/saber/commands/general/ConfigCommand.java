@@ -621,10 +621,10 @@ public class ConfigCommand implements Command
 
                     case "t":
                     case "time":
-                        ZonedDateTime syncTime = ParsingUtilities.parseTime(
-                                ZonedDateTime.now(Main.getScheduleManager().getTimeZone(cId)),
-                                args[index]
-                        );
+                        ZonedDateTime syncTime = ZonedDateTime.of(
+                                LocalDate.now(),
+                                ParsingUtilities.parseTime(args[index]),
+                                Main.getScheduleManager().getTimeZone(cId));
 
                         // don't allow times set in the past
                         if(syncTime.isBefore(ZonedDateTime.now()))

@@ -21,33 +21,48 @@ public class ParsingUtilities
 {
     /**
      * parses a local time string inputted by a user into a ZonedDateTime object
-     * @param t a dummy ZonedDateTime with the desired zone and date set
-     * @param localtime the local time
+     * @param userInput the local time
      * @return new ZonedDateTime with the new time
      */
-    public static ZonedDateTime parseTime(ZonedDateTime t, String localtime)
+    public static LocalTime parseTime(String userInput)
     {
         LocalTime time;
 
-        if( localtime.equals("24:00") )       // if the user inputs 24:00, convert internally to 0:00
+        // relative time
+        if(userInput.matches(".+[mM][iI][nN]$"))
+        {
+            time = LocalTime.now().plusMinutes(Long.parseLong(userInput.replaceAll("[^\\d]", "")));
+        }
+        // absolute time
+        else if(userInput.equals("24:00") || userInput.equals("24")) // 24:00 is not really a valid time
         {
             time = LocalTime.MAX;
         }
-        else
+        else if(userInput.contains(":")) // 1:00pm or 13:00
         {
-            if( localtime.toUpperCase().endsWith("AM") || localtime.toUpperCase().endsWith("PM") )
+            if(userInput.matches(".+([aApP][mM])"))
             {
-                time = LocalTime.parse(localtime.toUpperCase(), DateTimeFormatter.ofPattern("h:mma"));
+                Logging.info(VerifyUtilities.class, "?");
+                time = LocalTime.parse(userInput.toUpperCase(), DateTimeFormatter.ofPattern("h:mma"));
             }
             else
             {
-                time = LocalTime.parse(localtime.toUpperCase(), DateTimeFormatter.ofPattern("H:mm"));
+                time = LocalTime.parse(userInput, DateTimeFormatter.ofPattern("H:mm"));
             }
         }
-
-        t = t.withHour(time.getHour());
-        t = t.withMinute(time.getMinute());
-        return t;
+        else // 1pm or 13
+        {
+            if(userInput.matches(".+([aApP][mM])"))
+            {
+                Logging.info(VerifyUtilities.class, "!");
+                time = LocalTime.parse(userInput.toUpperCase(), DateTimeFormatter.ofPattern("ha"));
+            }
+            else
+            {
+                time = LocalTime.parse(userInput, DateTimeFormatter.ofPattern("H"));
+            }
+        }
+        return time;
     }
 
     /**
