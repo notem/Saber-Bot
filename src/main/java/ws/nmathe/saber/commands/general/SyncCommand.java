@@ -1,11 +1,16 @@
 package ws.nmathe.saber.commands.general;
 
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.services.calendar.Calendar;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
+
+import java.io.IOException;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
@@ -75,9 +80,26 @@ public class SyncCommand implements Command
             return "Schedule is locked while sorting or syncing. Please try again after I finish.";
         }
 
+        // get user Google credentials (if they exist)
+        Credential credential;
+        Calendar service;
+        try
+        {
+            credential = GoogleAuth.authorize(event.getAuthor().getId());
+            if(credential == null)
+            {
+                credential = GoogleAuth.authorize();
+            }
+            service = GoogleAuth.getCalendarService(credential);
+        }
+        catch (IOException e)
+        {
+            return "I failed to connect to Google API Services!";
+        }
 
         // validate the calendar address
         String address;
+
         if(args.length == 2)
         {
             index++;
@@ -106,7 +128,7 @@ public class SyncCommand implements Command
                 return "Your channel, " + args[index] + ", is not setup with a Google Calendar address to sync with!";
             }
         }
-        if(!Main.getCalendarConverter().checkValidAddress(address))
+        if(!Main.getCalendarConverter().checkValidAddress(address, service))
         {
             return "Calendar address **" + address + "** is not valid!";
         }
@@ -118,6 +140,27 @@ public class SyncCommand implements Command
     {
         try
         {
+            // get user Google credentials (if they exist)
+            Credential credential;
+            Calendar service;
+            try
+            {
+                credential = GoogleAuth.authorize(event.getAuthor().getId());
+                if(credential == null)
+                {
+                    credential = GoogleAuth.authorize();
+                }
+                else
+                {
+                    Logging.info(this.getClass(), "?");
+                }
+                service = GoogleAuth.getCalendarService(credential);
+            }
+            catch (IOException e)
+            {
+                return;
+            }
+
             int index = 0;
             String cId = args[index].replace("<#","").replace(">","");
             TextChannel channel = event.getGuild().getTextChannelById(cId);
@@ -148,12 +191,13 @@ public class SyncCommand implements Command
                 {
                     // enable auto-sync'ing timezone
                     Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("timezone_sync", true));
+                    Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("sync_user", event.getAuthor().getId()));
                 }
             }
 
             if(importFlag)
             {
-                Main.getCalendarConverter().importCalendar(address, channel);
+                Main.getCalendarConverter().importCalendar(address, channel, service);
                 Main.getScheduleManager().setAddress(cId,address);
 
                 String content = "I have finished syncing <#" + cId + ">!";
@@ -161,7 +205,7 @@ public class SyncCommand implements Command
             }
             else
             {
-                Main.getCalendarConverter().exportCalendar(address, channel);
+                Main.getCalendarConverter().exportCalendar(address, channel, service);
                 String content = "I have finished exporting <#" + cId + ">!";
                 MessageUtilities.sendMsg(content, event.getChannel(), null);
             }

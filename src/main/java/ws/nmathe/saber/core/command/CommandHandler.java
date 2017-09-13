@@ -52,6 +52,7 @@ public class CommandHandler
         commands.put((new SortCommand()).name(), new SortCommand());
         commands.put((new ListCommand()).name(), new ListCommand());
         commands.put((new GuildCommand()).name(), new GuildCommand());
+        commands.put((new OAuthCommand()).name(), new OAuthCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put((new GlobalMsgCommand()).name(), new GlobalMsgCommand());

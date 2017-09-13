@@ -634,6 +634,22 @@ public class ScheduleManager
         return len;
     }
 
+    public String getSyncUser(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if(settings == null)
+        {
+            return null;
+        }
+
+        String user = settings.getString("sync_user");
+        if(user == null)
+        {
+            return null;
+        }
+        return user;
+    }
+
     public int getAutoSort(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();

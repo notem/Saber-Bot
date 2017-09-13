@@ -76,12 +76,15 @@ public class EventListener extends ListenerAdapter
         }
 
         // process private commands
+        String prefix = Main.getBotSettingsManager().getCommandPrefix();
         if (event.isFromType(ChannelType.PRIVATE))
         {
+            String a = "("+prefix+")?help(.+)?$";
+            String b = "("+prefix+")?oauth(.+)?$";
             // help and setup general commands
-            if (content.contains("help"))
+            if (content.matches(a) || content.matches(b))
             {
-                Main.getCommandHandler().handleCommand(event, 0, Main.getBotSettingsManager().getCommandPrefix());
+                Main.getCommandHandler().handleCommand(event, 0, prefix);
                 return;
             }
             return;
@@ -117,7 +120,7 @@ public class EventListener extends ListenerAdapter
 
         // command processing
         GuildSettingsManager.GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-        String prefix = content.startsWith("<@"+event.getJDA().getSelfUser().getId()+"> ") ?
+        prefix = content.startsWith("<@"+event.getJDA().getSelfUser().getId()+"> ") ?
                 "<@"+event.getJDA().getSelfUser().getId()+"> " : guildSettings.getPrefix();
         if(content.startsWith(prefix))
         {

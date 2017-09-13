@@ -1,6 +1,7 @@
 package ws.nmathe.saber.core.google;
 
 import com.google.api.client.util.DateTime;
+import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.*;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
@@ -15,7 +16,6 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.VerifyUtilities;
-
 import java.io.IOException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -32,19 +32,19 @@ import static com.mongodb.client.model.Filters.*;
  */
 public class CalendarConverter
 {
-    /** Calendar service instance */
-    private com.google.api.services.calendar.Calendar service;
-
-    private static DateTimeFormatter rfc3339Formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+    /** DateTimeFormatter that is RFC3339 compliant  */
+    private static DateTimeFormatter RFC3339_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     public void init()
     {
-        // Build a new authorized API client service.
-        // Note: Do not confuse this class with the
-        //   com.google.api.services.calendar.model.Calendar class.
         try
         {
-            service = GoogleAuth.getCalendarService();
+            // Build a new authorized API client service.
+            // Note: Do not confuse this class with the
+            //   com.google.api.services.calendar.model.Calendar class.
+            /** if this fails, do not enable schedule synchronization **/
+            Calendar service = GoogleAuth.getCalendarService(GoogleAuth.authorize());
+
             Main.getCommandHandler().putSync(); // enable the sync command
             Main.getScheduleManager().initScheduleSync(); // start the schedule sync timer
         }
@@ -64,13 +64,13 @@ public class CalendarConverter
      * @param address (String) google calendar address
      * @return (boolean) true if valid
      */
-    public boolean checkValidAddress( String address )
+    public boolean checkValidAddress(String address, Calendar service)
     {
         try
         {
             service.events().list(address)
-                    .setTimeMin(new DateTime(ZonedDateTime.now().format(rfc3339Formatter)))
-                    .setTimeMax(new DateTime(ZonedDateTime.now().plusDays(7).format(rfc3339Formatter)))
+                    .setTimeMin(new DateTime(ZonedDateTime.now().format(RFC3339_FORMATTER)))
+                    .setTimeMax(new DateTime(ZonedDateTime.now().plusDays(7).format(RFC3339_FORMATTER)))
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
                     .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
@@ -91,7 +91,7 @@ public class CalendarConverter
      * @param address
      * @param channel
      */
-    public void exportCalendar(String address, TextChannel channel)
+    public void exportCalendar(String address, TextChannel channel, Calendar service)
     {
         if(channel == null || address == null) return;
         if(!Main.getScheduleManager().isASchedule(channel.getId()))
@@ -155,7 +155,7 @@ public class CalendarConverter
      * @param address (String) valid address of calendar
      * @param channel (MessageChannel) channel to sync with
      */
-    public void importCalendar(String address, TextChannel channel)
+    public void importCalendar(String address, TextChannel channel, Calendar service)
     {
         if(channel == null || address == null) return;
         if(!Main.getScheduleManager().isASchedule(channel.getId()))
@@ -174,8 +174,8 @@ public class CalendarConverter
             ZonedDateTime max = min.plusDays(Main.getScheduleManager().getSyncLength(channel.getId()));
 
             events = service.events().list(address)
-                    .setTimeMin(new DateTime(min.format(rfc3339Formatter)))
-                    .setTimeMax(new DateTime(max.format(rfc3339Formatter)))
+                    .setTimeMin(new DateTime(min.format(RFC3339_FORMATTER)))
+                    .setTimeMax(new DateTime(max.format(RFC3339_FORMATTER)))
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
                     .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
@@ -232,9 +232,9 @@ public class CalendarConverter
                 }
                 else
                 { // parse start and end times for normal events
-                    start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                    start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), RFC3339_FORMATTER)
                             .withZoneSameInstant(zone);
-                    end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                    end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), RFC3339_FORMATTER)
                             .withZoneSameInstant(zone);
                 }
 
