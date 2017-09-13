@@ -18,7 +18,6 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
@@ -485,6 +484,10 @@ public class ConfigCommand implements Command
                                 msgFormat = Main.getBotSettingsManager().getAnnounceFormat();
                                 break;
 
+                            case "off":
+                                msgFormat = "";
+                                break;
+
                             default:
                                 msgFormat = args[index];
                                 break;
@@ -524,6 +527,10 @@ public class ConfigCommand implements Command
                             case "default":
                             case "null":
                                 endFormat = null;
+                                break;
+
+                            case "off":
+                                endFormat = "";
                                 break;
 
                             default:
@@ -701,6 +708,10 @@ public class ConfigCommand implements Command
                             case "default":
                             case "null":
                                 remindFormat = null;
+                                break;
+
+                            case "off":
+                                remindFormat = "";
                                 break;
 
                             default:
@@ -941,15 +952,18 @@ public class ConfigCommand implements Command
         {
             default:
             case 1:
+                String form1 = Main.getScheduleManager().getStartAnnounceFormat(cId);
+                String form2 = Main.getScheduleManager().getEndAnnounceFormat(cId);
                 content += "```js\n" +
                         "// Event Announcement Settings" +
-                        "\n[msg]      " + "\"" +
-                        Main.getScheduleManager().getStartAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`") + "\"" +
+                        "\n[msg]      " + (form1.isEmpty()?"off":
+                        "\"" + form1.replace("```","`\uFEFF`\uFEFF`") + "\"") +
                         "\n[chan]     " +
                         "\"" + Main.getScheduleManager().getStartAnnounceChan(cId) + "\"" +
                         "\n[end-msg]  " +
                         (Main.getScheduleManager().isEndFormatOverridden(cId) ?
-                                "\"" + Main.getScheduleManager().getEndAnnounceFormat(cId).replace("```","`\uFEFF`\uFEFF`")  + "\"":
+                                (form2.isEmpty()?"off":
+                                "\"" + form2.replace("```","`\uFEFF`\uFEFF`")  + "\""):
                                 "(using [msg])") +
                         "\n[end-chan] " +
                         (Main.getScheduleManager().isEndChannelOverridden(cId) ?
@@ -959,6 +973,7 @@ public class ConfigCommand implements Command
 
                 if(type == 1) break;
             case 2:
+                String form3 = Main.getScheduleManager().getReminderFormat(cId);
                 List<Integer> reminders = Main.getScheduleManager().getReminders(cId);
                 String reminderStr = "";
                 if(reminders.isEmpty())
@@ -981,8 +996,8 @@ public class ConfigCommand implements Command
                         "\n[remind]      " +
                         "\"" + reminderStr + "\"" +
                         "\n[remind-msg]  " +
-                        (Main.getScheduleManager().isRemindFormatOverridden(cId) ?
-                                "\"" + Main.getScheduleManager().getReminderFormat(cId).replace("```","`\uFEFF`\uFEFF`")  + "\"":
+                        (Main.getScheduleManager().isRemindFormatOverridden(cId) ? (form3.isEmpty()?"off":
+                                "\"" + form3.replace("```","`\uFEFF`\uFEFF`")  + "\""):
                                 "(using [msg])") +
 
                         "\n[remind-chan] " +
