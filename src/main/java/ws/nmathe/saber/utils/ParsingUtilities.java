@@ -204,38 +204,40 @@ public class ParsingUtilities
 
     /**
      * Parses out the intended event repeat information from user input
-     * @param str (String) the user input
+     * @param input (String) the user input
      * @return (int) an integer representing the repeat information (stored in binary)
      */
-    public static int parseWeeklyRepeat(String str)
+    public static int parseRepeat(String input)
     {
-        str = str.toLowerCase();
+        input = input.toLowerCase().trim();
         int bits = 0;
-        if( str.toLowerCase().equals("daily") )
+        if(input.toLowerCase().equals("daily"))
         {
             bits = 0b1111111;
         }
-        else if( str.equals("off") || str.startsWith("no") )
+        else if(input.toLowerCase().equals("yearly"))
+        {
+            bits = 0b100000000;
+        }
+        else if(input.equals("off") || input.startsWith("no"))
         {
             bits = 0;
         }
         else
         {
-            // TODO better parsing
-            if( str.contains("su") )
-                bits |= 1;
-            if( str.contains("mo") )
-                bits |= 1<<1;
-            if( str.contains("tu") )
-                bits |= 1<<2;
-            if( str.contains("we") )
-                bits |= 1<<3;
-            if( str.contains("th") )
-                bits |= 1<<4;
-            if( str.contains("fr") )
-                bits |= 1<<5;
-            if( str.contains("sa") )
-                bits |= 1<<6;
+            //String regex = "^((su(n(day)?)?)?(mo(n(day)?)?)?(tu(e(sday)?)?)?(we(d(nesday)?)?)?(th(u(rsday)?)?)?(fr(i(day)?)?)?(sa(t(urday)?)?)?)";
+            String regex = "[,;:. ]([ ]+)?";
+            String[] s = input.split(regex);
+            for(String string : s)
+            {
+                if(string.matches("su(n(day)?)?")) bits |= 1;
+                if(string.matches("mo(n(day)?)?")) bits |= 1<<1;
+                if(string.matches("tu(e(sday)?)?")) bits |= 1<<2;
+                if(string.matches("we(d(nesday)?)?")) bits |= 1<<3;
+                if(string.matches("th(u(rsday)?)?")) bits |= 1<<4;
+                if(string.matches("fr(i(day)?)?")) bits |= 1<<5;
+                if(string.matches("sa(t(urday)?)?")) bits |= 1<<6;
+            }
         }
         return bits;
     }
@@ -247,7 +249,7 @@ public class ParsingUtilities
      * @param arg (String) user input
      * @return (Set<Integer>) a linked set of integers representing the time (in minutes) before an event starts
      */
-    public static Set<Integer> parseReminderStr(String arg)
+    public static Set<Integer> parseReminder(String arg)
     {
         Set<Integer> list = new LinkedHashSet<>();
         Matcher matcher = Pattern.compile("\\d+[^\\d]?").matcher(arg);
@@ -291,7 +293,7 @@ public class ParsingUtilities
      * @param arg (String)
      * @return
      */
-    public static LocalDate parseDateStr(String arg)
+    public static LocalDate parseDate(String arg)
     {
         switch (arg)
         {

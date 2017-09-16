@@ -286,7 +286,7 @@ public class ConfigCommand implements Command
                                         "that the reminder should be sent.";
                             }
                             index++;
-                            list.addAll(ParsingUtilities.parseReminderStr(args[index]));
+                            list.addAll(ParsingUtilities.parseReminder(args[index]));
                             if (list.size() <= 0) return "I could not parse out any times!";
                             break;
 
@@ -299,11 +299,11 @@ public class ConfigCommand implements Command
                                         "that the reminder should be sent.";
                             }
                             index++;
-                            list.removeAll(ParsingUtilities.parseReminderStr(args[index]));
+                            list.removeAll(ParsingUtilities.parseReminder(args[index]));
                             break;
 
                         default:
-                            list = ParsingUtilities.parseReminderStr(args[index]);
+                            list = ParsingUtilities.parseReminder(args[index]);
                             if (list.size() <= 0) return "I could not parse out any times!";
                             break;
                     }
@@ -695,16 +695,16 @@ public class ConfigCommand implements Command
 
                             case "add":
                                 index++;
-                                list.addAll(ParsingUtilities.parseReminderStr(args[index]));
+                                list.addAll(ParsingUtilities.parseReminder(args[index]));
                                 break;
 
                             case "remove":
                                 index++;
-                                list.removeAll(ParsingUtilities.parseReminderStr(args[index]));
+                                list.removeAll(ParsingUtilities.parseReminder(args[index]));
                                 break;
 
                             default:
-                                list = ParsingUtilities.parseReminderStr(args[index]);
+                                list = ParsingUtilities.parseReminder(args[index]);
                                 break;
                         }
 

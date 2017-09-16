@@ -31,7 +31,7 @@ public class SyncCommand implements Command
     {
         String head = prefix + this.name();
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel> [<calendar address>]```\n" +
+        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel> [import|export] [<calendar address>]```\n" +
                 "The sync command will replace all events in the specified channel" +
                 "with events imported from a public google calendar.\n" +
                 "The command imports the next 7 days of events into the channel;" +
@@ -45,6 +45,8 @@ public class SyncCommand implements Command
 
         String EXAMPLES = "```diff\n- Examples```\n" +
                 "``" + head + " #new_schedule g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com``" +
+                "\n``" + head + " #calendar import g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com``" +
+                "\n``" + head + " #calendar export 0a0jbiclczoiaai@group.calendar.google.com``" +
                 "\n``" + head + " #new_schedule``";
 
         if( brief ) return USAGE_BRIEF;
@@ -149,10 +151,6 @@ public class SyncCommand implements Command
                 if(credential == null)
                 {
                     credential = GoogleAuth.authorize();
-                }
-                else
-                {
-                    Logging.info(this.getClass(), "?");
                 }
                 service = GoogleAuth.getCalendarService(credential);
             }

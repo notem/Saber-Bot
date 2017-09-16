@@ -3,7 +3,6 @@ package ws.nmathe.saber.commands.general;
 import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
-import ws.nmathe.saber.core.schedule.MessageGenerator;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.utils.Logging;
@@ -14,7 +13,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
@@ -291,7 +289,7 @@ public class EditCommand implements Command
                         return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
                     }
 
-                    ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.now(zone), zone);
+                    ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDate(args[index]), LocalTime.now(zone), zone);
                     if(time.isBefore(ZonedDateTime.now()))
                     {
                         return "That date is in the past!";
@@ -382,7 +380,7 @@ public class EditCommand implements Command
                             {
                                 return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
                             }
-                            if(ParsingUtilities.parseDateStr(args[index]).isBefore(LocalDate.now()))
+                            if(ParsingUtilities.parseDate(args[index]).isBefore(LocalDate.now()))
                             {
                                 return "That date is in the past!";
                             }
@@ -563,7 +561,7 @@ public class EditCommand implements Command
 
                         case "d":
                         case "date":
-                            LocalDate date = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                            LocalDate date = ParsingUtilities.parseDate(args[index].toLowerCase());
 
                             se.setStart(se.getStart()
                                     .withMonth(date.getMonthValue())
@@ -579,7 +577,7 @@ public class EditCommand implements Command
                         case "sd":
                         case "start date":
                         case "start-date":
-                            LocalDate sdate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                            LocalDate sdate = ParsingUtilities.parseDate(args[index].toLowerCase());
 
                             se.setStart(se.getStart()
                                     .withMonth(sdate.getMonthValue())
@@ -596,7 +594,7 @@ public class EditCommand implements Command
                         case "ed":
                         case "end date":
                         case "end-date":
-                            LocalDate edate = ParsingUtilities.parseDateStr(args[index].toLowerCase());
+                            LocalDate edate = ParsingUtilities.parseDate(args[index].toLowerCase());
 
                             se.setEnd(se.getEnd()
                                     .withMonth(edate.getMonthValue())
@@ -613,7 +611,7 @@ public class EditCommand implements Command
                         case "r":
                         case "repeats":
                         case "repeat":
-                            se.setRepeat(ParsingUtilities.parseWeeklyRepeat(args[index].toLowerCase()));
+                            se.setRepeat(ParsingUtilities.parseRepeat(args[index].toLowerCase()));
                             index++;
                             break;
 
@@ -667,7 +665,7 @@ public class EditCommand implements Command
                                     se.setExpire(null);
                                     break;
                                 default:
-                                    se.setExpire(ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]),
+                                    se.setExpire(ZonedDateTime.of(ParsingUtilities.parseDate(args[index]),
                                             LocalTime.MIN, se.getStart().getZone()));
                                     break;
                             }
@@ -713,7 +711,7 @@ public class EditCommand implements Command
                         case "deadline":
                         case "dl":
                             ZoneId zone = Main.getScheduleManager().getTimeZone(se.getChannelId());
-                            se.setRsvpDeadline(ZonedDateTime.of(ParsingUtilities.parseDateStr(args[index]), LocalTime.MAX, zone));
+                            se.setRsvpDeadline(ZonedDateTime.of(ParsingUtilities.parseDate(args[index]), LocalTime.MAX, zone));
                             index++;
                             break;
                     }

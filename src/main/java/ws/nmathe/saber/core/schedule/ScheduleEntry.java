@@ -285,18 +285,7 @@ public class ScheduleEntry
 
         if( this.entryRepeat != 0 ) // find next repeat date and edit the message
         {
-            int days = this.daysUntilNextOccurrence();
-
-            // fixes wrap-around at new years
-            ZonedDateTime newStart = this.entryStart.plusDays(days).isAfter(this.entryStart) ?
-                    this.entryStart.plusDays(days) : this.entryStart.plusDays(days).plusYears(1);
-            ZonedDateTime newEnd = this.entryEnd.plusDays(days).isAfter(this.entryEnd) ?
-                    this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
-
-            // set the new start and end
-            this.entryStart = newStart;
-            this.entryEnd = newEnd;
-            this.setStarted(false);
+            this.setNextOccurrence().setStarted(false);
             this.rsvpMembers = new HashMap<>();
 
             Main.getEntryManager().updateEntry(this, true);
@@ -322,56 +311,83 @@ public class ScheduleEntry
 
 
     /**
-     * determines how many days until the event is scheduled to repeat next from the current time
-     * and using the schedule's repeat repeat bitset (eg, 2^0 - sun, 2^1 - mon, etc.)
-     * @return days until next occurrence as an int
+     * determines how many days until the event is scheduled to repeat next using the schedule's repeat repeat bitset (eg, 2^0 - sun, 2^1 - mon, etc.)
+     * The schedule object's start and end zoneddatetimes are updated accordingly
+     * @return (ScheduleEntry) this object
      */
-    private int daysUntilNextOccurrence()
+    private ScheduleEntry setNextOccurrence()
     {
-        // if the eighth bit is flagged, the repeat is a daily interval (ie. every two days)
-        if((this.entryRepeat & 0b10000000) == 0b10000000)
+        // yearly repeat (9th bit)
+        if((this.entryRepeat & 0b100000000) == 0b100000000)
         {
-            return (0b10000000 ^ this.entryRepeat);
+            this.entryStart = entryStart.plusYears(1);
+            this.entryEnd = entryEnd.plusYears(1);
+            return this;
         }
+        // determine the number of days until the next scheduled occurrence
+        // and update the start and end by adding the appropriate number of days
+        else
+        {
+            int days;
 
-        // convert to current day of week to binary representation
-        int dayOfWeek = entryStart.getDayOfWeek().getValue();
-        int dayAsBitSet;
-        if( dayOfWeek == 7 ) //sunday
-        {
-            dayAsBitSet = 1;
-        }
-        else                //monday - saturday
-        {
-            dayAsBitSet = 1<<dayOfWeek;
-        }
-
-        // if repeats on same weekday next week
-        if( (dayAsBitSet | this.entryRepeat) == dayAsBitSet )
-        {
-            return 7;
-        }
-
-        // if the eighth bit is off, the event repeats on fixed days of the week (ie. on tuesday and wednesday)
-        int daysTil = 0;
-        for( int i = 1; i < 7; i++)
-        {
-            if( dayAsBitSet == 0b1000000 )      //if bitset is SATURDAY, then
+            // repeat on daily interval (8th bit)
+            if((this.entryRepeat & 0b10000000) == 0b10000000)
             {
-                dayAsBitSet = 0b0000001;        //set bitset to SUNDAY
+                days = this.entryRepeat ^ 0b10000000;
             }
-            else
+            else // repeat on weekday schedule
             {
-                dayAsBitSet <<= 1;     // else, set to the next day
+                // convert to current day of week to binary representation
+                int dayOfWeek = entryStart.getDayOfWeek().getValue();
+                int dayAsBitSet;
+                if( dayOfWeek == 7 ) //sunday
+                {
+                    dayAsBitSet = 1;
+                }
+                else                //monday - saturday
+                {
+                    dayAsBitSet = 1<<dayOfWeek;
+                }
+
+                // if repeats on same weekday next week
+                if( (dayAsBitSet | this.entryRepeat) == dayAsBitSet )
+                {
+                    days = 7;
+                }
+                else
+                {
+                    // if the eighth bit is off, the event repeats on fixed days of the week (ie. on tuesday and wednesday)
+                    int daysTil = 0;
+                    for( int i = 1; i < 7; i++)
+                    {
+                        if( dayAsBitSet == 0b1000000 )      //if bitset is SATURDAY, then
+                        {
+                            dayAsBitSet = 0b0000001;        //set bitset to SUNDAY
+                        }
+                        else
+                        {
+                            dayAsBitSet <<= 1;     // else, set to the next day
+                        }
+
+                        if( (dayAsBitSet & this.entryRepeat) == dayAsBitSet )
+                        {
+                            daysTil = i;
+                            break;
+                        }
+                    }
+                    days = daysTil; // if this is zero, eRepeat was zero
+                }
             }
 
-            if( (dayAsBitSet & this.entryRepeat) == dayAsBitSet )
-            {
-                daysTil = i;
-                break;
-            }
+            // update the entry's start and end
+            // check to insure that the year is incremented when the addition caused wrapping
+            this.entryStart = this.entryStart.plusDays(days).isAfter(this.entryStart) ?
+                    this.entryStart.plusDays(days) : this.entryStart.plusDays(days).plusYears(1);
+            this.entryEnd = this.entryEnd.plusDays(days).isAfter(this.entryEnd) ?
+                    this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
+
+            return this;
         }
-        return daysTil; // if this is zero, eRepeat was zero
     }
 
     /*

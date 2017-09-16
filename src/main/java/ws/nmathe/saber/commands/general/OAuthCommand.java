@@ -37,7 +37,6 @@ public class OAuthCommand implements Command
                 "To link that authorization token with your Discord user ID, add the authorization token as the first argument to this command.\n" +
                 "Only one Google Account may be authorized per discord user, providing another authorization token with this command will overwrite the old token.";
 
-
         String USAGE_BRIEF = "``" + head + "`` - authorize access to Google Calendar";
 
         String EXAMPLES = "```diff\n- Examples```\n" +
@@ -78,7 +77,7 @@ public class OAuthCommand implements Command
             {
                 message = "There is no Google account associated with your Discord User ID.\n" +
                         "Authorize with following link to receive an authorization token.\n" +
-                        "You can then use that token with this command to link your Google account.\n" + googleAuth;
+                        "You can then use that token with the ``"+this.name()+"`` command to link your Google account.\n" + googleAuth;
             }
             else
             {
@@ -113,7 +112,7 @@ public class OAuthCommand implements Command
                     else
                     {
                         message = "I've been successfully authorized by your Google Account!\n" +
-                                "Google authentication is linked to your Discord ID.";
+                                "Your Google authentication token has been linked to your Discord ID.";
                     }
                 }
                 catch(TokenResponseException e)
