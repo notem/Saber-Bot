@@ -81,8 +81,7 @@ public class OAuthCommand implements Command
             }
             else
             {
-                message = "Your Discord User ID is currently associated with the access token:\n*" +
-                        credential.getAccessToken() + "*\n\n" +
+                message = "Your Discord User ID is currently associated with a Google Account access token." +
                         "You can authorize access to a different account's calendars by obtaining a different access token from the following link.\n" +
                         "However, only one Google Account at a time may be linked with your Discord User ID.\n" + googleAuth;
             }

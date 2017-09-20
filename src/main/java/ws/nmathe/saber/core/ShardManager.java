@@ -329,19 +329,26 @@ public class ShardManager
             {
                 Consumer<JDA> task = (shard)->
                 {
-                    shard.getPresence().setGame(Game.of(games.next(), "https://nmathe.ws/bots/saber"));
+                    String name = games.next();
+                    if(name.contains("%"))
+                    {
+                        if(name.contains("%%")) name = name.replaceAll("%%", "%");
+                        if(name.contains("%shardId")) name = name.replaceAll("%%", shard.getShardInfo().getShardId() + "");
+                        if(name.contains("%shardTotal")) name = name.replaceAll("%%", shard.getShardInfo().getShardTotal() + "");
+                    }
+                    shard.getPresence().setGame(Game.of(name, "https://nmathe.ws/bots/saber"));
                 };
 
                 if(isSharding())
                 {
                     for(JDA shard : getShards())
                     {
-                        task.accept(shard);
+                        if(JDA.Status.valueOf("CONNECTED") == shard.getStatus()) task.accept(shard);
                     }
                 }
                 else
                 {
-                    task.accept(getJDA());
+                    if(JDA.Status.valueOf("CONNECTED") == getJDA().getStatus()) task.accept(getJDA());
                 }
 
             }
