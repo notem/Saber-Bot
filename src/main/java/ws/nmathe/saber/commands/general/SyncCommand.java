@@ -117,7 +117,7 @@ public class SyncCommand implements Command
                     break;
 
                 default:
-                    return "bad"; //TODO
+                    return "*"+args[index]+"* is invalid! Please use either *import* or *export*!";
             }
             index++;
             address = args[index];
