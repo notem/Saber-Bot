@@ -10,7 +10,6 @@ import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
-
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.core.settings.GuildSettingsManager;
 import ws.nmathe.saber.utils.*;
@@ -19,17 +18,13 @@ import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
-
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.or;
-import static com.mongodb.client.model.Updates.set;
 
 /**
  * Executes actions for all events received by the JDA shards
@@ -76,12 +71,15 @@ public class EventListener extends ListenerAdapter
         }
 
         // process private commands
+        String prefix = Main.getBotSettingsManager().getCommandPrefix();
         if (event.isFromType(ChannelType.PRIVATE))
         {
+            String a = "("+prefix+")?help(.+)?$";
+            String b = "("+prefix+")?oauth(.+)?$";
             // help and setup general commands
-            if (content.contains("help"))
+            if (content.matches(a) || content.matches(b))
             {
-                Main.getCommandHandler().handleCommand(event, 0, Main.getBotSettingsManager().getCommandPrefix());
+                Main.getCommandHandler().handleCommand(event, 0, prefix);
                 return;
             }
             return;
@@ -117,7 +115,7 @@ public class EventListener extends ListenerAdapter
 
         // command processing
         GuildSettingsManager.GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-        String prefix = content.startsWith("<@"+event.getJDA().getSelfUser().getId()+"> ") ?
+        prefix = content.startsWith("<@"+event.getJDA().getSelfUser().getId()+"> ") ?
                 "<@"+event.getJDA().getSelfUser().getId()+"> " : guildSettings.getPrefix();
         if(content.startsWith(prefix))
         {

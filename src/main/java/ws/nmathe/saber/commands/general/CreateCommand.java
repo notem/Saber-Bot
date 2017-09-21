@@ -159,7 +159,7 @@ public class CreateCommand implements Command
                     {
                         return "I could not understand **" + arg + "** as a date! Please use the format yyyy/MM/dd.";
                     }
-                    ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(arg), LocalTime.now(zone), zone);
+                    ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDate(arg), LocalTime.now(zone), zone);
                     if(time.isBefore(ZonedDateTime.now()))
                     {
                         return "That date is in the past!";
@@ -194,7 +194,7 @@ public class CreateCommand implements Command
                             {
                                 return "I could not understand **" + arg + "** as a date! Please use the format M/d.";
                             }
-                            ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDateStr(arg), LocalTime.now(zone), zone);
+                            ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDate(arg), LocalTime.now(zone), zone);
                             if(time.isBefore(ZonedDateTime.now()))
                             {
                                 return "That date is in the past!";
@@ -313,23 +313,23 @@ public class CreateCommand implements Command
                     }
                     if (repeatFlag)
                     {
-                        repeat = ParsingUtilities.parseWeeklyRepeat(arg.toLowerCase());
+                        repeat = ParsingUtilities.parseRepeat(arg.toLowerCase());
                         repeatFlag = false;
                     }
                     else if (dateFlag)
                     {
-                        startDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                        startDate = ParsingUtilities.parseDate(arg.toLowerCase());
                         endDate = startDate;
                         dateFlag = false;
                     }
                     else if (startDateFlag)
                     {
-                        startDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                        startDate = ParsingUtilities.parseDate(arg.toLowerCase());
                         startDateFlag = false;
                     }
                     else if (endDateFlag)
                     {
-                        endDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                        endDate = ParsingUtilities.parseDate(arg.toLowerCase());
                         endDateFlag = false;
                     }
                     else if (urlFlag)
@@ -353,7 +353,7 @@ public class CreateCommand implements Command
                                 break;
 
                             default:
-                                expireDate = ParsingUtilities.parseDateStr(arg.toLowerCase());
+                                expireDate = ParsingUtilities.parseDate(arg.toLowerCase());
                                 break;
                         }
                     }

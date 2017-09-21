@@ -1,19 +1,24 @@
 package ws.nmathe.saber.commands.general;
 
+import com.google.api.client.auth.oauth2.Credential;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Emote;
+import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.core.schedule.EntryManager;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
+
+import java.io.IOException;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -116,6 +121,23 @@ public class ConfigCommand implements Command
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
         }
 
+        // get user Google credentials (if they exist)
+        Credential credential;
+        com.google.api.services.calendar.Calendar service;
+        try
+        {
+            credential = GoogleAuth.authorize(event.getAuthor().getId());
+            if(credential == null)
+            {
+                credential = GoogleAuth.authorize();
+            }
+            service = GoogleAuth.getCalendarService(credential);
+        }
+        catch (IOException e)
+        {
+            return "I failed to connect to Google API Services!";
+        }
+
         index++;
 
         if (args.length > 1)
@@ -215,7 +237,7 @@ public class ConfigCommand implements Command
                     {
                         return "";
                     }
-                    if(!Main.getCalendarConverter().checkValidAddress(args[index]))
+                    if(!Main.getCalendarConverter().checkValidAddress(args[index], service))
                     {
                         return "I cannot sync to **" + args[index] + "**!";
                     }
@@ -264,7 +286,7 @@ public class ConfigCommand implements Command
                                         "that the reminder should be sent.";
                             }
                             index++;
-                            list.addAll(ParsingUtilities.parseReminderStr(args[index]));
+                            list.addAll(ParsingUtilities.parseReminder(args[index]));
                             if (list.size() <= 0) return "I could not parse out any times!";
                             break;
 
@@ -277,11 +299,11 @@ public class ConfigCommand implements Command
                                         "that the reminder should be sent.";
                             }
                             index++;
-                            list.removeAll(ParsingUtilities.parseReminderStr(args[index]));
+                            list.removeAll(ParsingUtilities.parseReminder(args[index]));
                             break;
 
                         default:
-                            list = ParsingUtilities.parseReminderStr(args[index]);
+                            list = ParsingUtilities.parseReminder(args[index]);
                             if (list.size() <= 0) return "I could not parse out any times!";
                             break;
                     }
@@ -463,6 +485,23 @@ public class ConfigCommand implements Command
     {
         try
         {
+            // get user Google credentials (if they exist)
+            Credential credential;
+            com.google.api.services.calendar.Calendar service;
+            try
+            {
+                credential = GoogleAuth.authorize(event.getAuthor().getId());
+                if(credential == null)
+                {
+                    credential = GoogleAuth.authorize();
+                }
+                service = GoogleAuth.getCalendarService(credential);
+            }
+            catch (IOException e)
+            {
+                return;
+            }
+
             int index = 0;
             String cId = args[index].replace("<#","").replace(">","");
             TextChannel scheduleChan = event.getGuild()
@@ -618,7 +657,7 @@ public class ConfigCommand implements Command
 
                     case "s":
                     case "sync":
-                        if( Main.getCalendarConverter().checkValidAddress(args[index]) )
+                        if( Main.getCalendarConverter().checkValidAddress(args[index], service) )
                             Main.getScheduleManager().setAddress(scheduleChan.getId(), args[index]);
                         else
                             Main.getScheduleManager().setAddress(scheduleChan.getId(), "off");
@@ -656,16 +695,16 @@ public class ConfigCommand implements Command
 
                             case "add":
                                 index++;
-                                list.addAll(ParsingUtilities.parseReminderStr(args[index]));
+                                list.addAll(ParsingUtilities.parseReminder(args[index]));
                                 break;
 
                             case "remove":
                                 index++;
-                                list.removeAll(ParsingUtilities.parseReminderStr(args[index]));
+                                list.removeAll(ParsingUtilities.parseReminder(args[index]));
                                 break;
 
                             default:
-                                list = ParsingUtilities.parseReminderStr(args[index]);
+                                list = ParsingUtilities.parseReminder(args[index]);
                                 break;
                         }
 
@@ -956,13 +995,13 @@ public class ConfigCommand implements Command
                 String form2 = Main.getScheduleManager().getEndAnnounceFormat(cId);
                 content += "```js\n" +
                         "// Event Announcement Settings" +
-                        "\n[msg]      " + (form1.isEmpty()?"off":
+                        "\n[msg]      " + (form1.isEmpty()?"(off)":
                         "\"" + form1.replace("```","`\uFEFF`\uFEFF`") + "\"") +
                         "\n[chan]     " +
                         "\"" + Main.getScheduleManager().getStartAnnounceChan(cId) + "\"" +
                         "\n[end-msg]  " +
                         (Main.getScheduleManager().isEndFormatOverridden(cId) ?
-                                (form2.isEmpty()?"off":
+                                (form2.isEmpty()?"(off)":
                                 "\"" + form2.replace("```","`\uFEFF`\uFEFF`")  + "\""):
                                 "(using [msg])") +
                         "\n[end-chan] " +
@@ -996,7 +1035,7 @@ public class ConfigCommand implements Command
                         "\n[remind]      " +
                         "\"" + reminderStr + "\"" +
                         "\n[remind-msg]  " +
-                        (Main.getScheduleManager().isRemindFormatOverridden(cId) ? (form3.isEmpty()?"off":
+                        (Main.getScheduleManager().isRemindFormatOverridden(cId) ? (form3.isEmpty()?"(off)":
                                 "\"" + form3.replace("```","`\uFEFF`\uFEFF`")  + "\""):
                                 "(using [msg])") +
 
@@ -1041,10 +1080,17 @@ public class ConfigCommand implements Command
                 OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
                         .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
 
+                User user = null;
+                if(Main.getScheduleManager().getSyncUser(cId)!=null)
+                {
+                    user = jda.getUserById(Main.getScheduleManager().getSyncUser(cId));
+                }
+
                 content += "```js\n" +
                         "// Schedule Sync Settings" +
                         "\n[sync]   " +
                         "\"" + Main.getScheduleManager().getAddress(cId) + "\"" +
+                            (user!=null?" (authorized by "+user.getName()+")":"") +
                         "\n[time]   " +
                         "\"" + sync_time_display + "\"" +
                         "\n[length] " +

@@ -131,6 +131,7 @@ public class BotSettingsManager
         String rsvp_no;
         String rsvp_clear;
         String google_service_key;
+        String google_oauth_secret;
         int log_level;
         List<Integer> shards;
         int shard_total;
@@ -140,6 +141,7 @@ public class BotSettingsManager
             discord_token = "BOT_TOKEN";
             web_token = "ABAL_TOKEN";
             google_service_key = "./saber-g-id.json";
+            google_oauth_secret = "./oath2-secret";
             mongodb = "mongodb://localhost:27017";
             log_level = 4;
 
@@ -273,6 +275,10 @@ public class BotSettingsManager
         return settings.google_service_key;
     }
 
+    public String getGoogleOAuthSecret()
+    {
+        return settings.google_oauth_secret;
+    }
     public int getLogLevel()
     {
         return settings.log_level;

@@ -1,8 +1,8 @@
 package ws.nmathe.saber.core.google;
 
 import com.google.api.client.util.DateTime;
-import com.google.api.services.calendar.model.Event;
-import com.google.api.services.calendar.model.Events;
+import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.model.*;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
@@ -16,7 +16,6 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.VerifyUtilities;
-
 import java.io.IOException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -33,19 +32,19 @@ import static com.mongodb.client.model.Filters.*;
  */
 public class CalendarConverter
 {
-    /** Calendar service instance */
-    private com.google.api.services.calendar.Calendar service;
-
-    private static DateTimeFormatter rfc3339Formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+    /** DateTimeFormatter that is RFC3339 compliant  */
+    private static DateTimeFormatter RFC3339_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     public void init()
     {
-        // Build a new authorized API client service.
-        // Note: Do not confuse this class with the
-        //   com.google.api.services.calendar.model.Calendar class.
         try
         {
-            service = GoogleAuth.getCalendarService();
+            // Build a new authorized API client service.
+            // Note: Do not confuse this class with the
+            //   com.google.api.services.calendar.model.Calendar class.
+            /** if this fails, do not enable schedule synchronization **/
+            Calendar service = GoogleAuth.getCalendarService(GoogleAuth.authorize());
+
             Main.getCommandHandler().putSync(); // enable the sync command
             Main.getScheduleManager().initScheduleSync(); // start the schedule sync timer
         }
@@ -59,19 +58,20 @@ public class CalendarConverter
         }
     }
 
+
     /**
      * verifies that an address url is a valid Calendar address Saber can
      * sync with
      * @param address (String) google calendar address
      * @return (boolean) true if valid
      */
-    public boolean checkValidAddress( String address )
+    public boolean checkValidAddress(String address, Calendar service)
     {
         try
         {
             service.events().list(address)
-                    .setTimeMin(new DateTime(ZonedDateTime.now().format(rfc3339Formatter)))
-                    .setTimeMax(new DateTime(ZonedDateTime.now().plusDays(7).format(rfc3339Formatter)))
+                    .setTimeMin(new DateTime(ZonedDateTime.now().format(RFC3339_FORMATTER)))
+                    .setTimeMax(new DateTime(ZonedDateTime.now().plusDays(7).format(RFC3339_FORMATTER)))
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
                     .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
@@ -86,17 +86,87 @@ public class CalendarConverter
 
     }
 
+
+    /**
+     * exports a discord schedule to a google calendar Calendar
+     * @param address
+     * @param channel
+     * @param service
+     */
+    public void exportCalendar(String address, TextChannel channel, Calendar service)
+    {
+        if(channel == null || address == null) return;
+        if(!Main.getScheduleManager().isASchedule(channel.getId()))
+        {   // safety check to insure importCalendar is being applied to a valid channel
+            return;
+        }
+
+        Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromChannel(channel.getId());
+        entries.forEach(se->
+        {
+            // compose the event's description
+            String description = String.join("\n", se.getComments());
+            description += "\n";
+            if(se.getImageUrl() != null) description += "\nimage: " + se.getImageUrl();
+            if(se.getThumbnailUrl() != null) description += "\nthumbnail: " + se.getThumbnailUrl();
+            if(se.getDeadline() != null) description += "\ndeadline: " + se.getDeadline().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            for(String key : se.getRsvpLimits().keySet())
+            {
+                description += "\nlimit: " + key + " " + se.getRsvpLimit(key);
+            }
+
+            // setup the event's start and end times
+            ZoneId zone = Main.getScheduleManager().getTimeZone(channel.getId());
+            EventDateTime start = new EventDateTime()
+                    .setDateTime(new DateTime(Date.from(se.getStart().toInstant())))
+                    .setTimeZone(zone.getId());
+            EventDateTime end = new EventDateTime()
+                    .setDateTime(new DateTime(Date.from(se.getEnd().toInstant())))
+                    .setTimeZone(zone.getId());
+
+            // create the event
+            Event event = new Event();
+            event.setDescription(description)
+                    .setSummary(se.getTitle())
+                    .setRecurrence(toRFC5545(se.getRepeat(), se.getExpire()))
+                    .setStart(start)
+                    .setEnd(end);
+
+            try // interface with google calendar api
+            {
+                boolean differentCalendars = false;
+                if(Main.getScheduleManager().getAddress(channel.getId()).equalsIgnoreCase(address)) differentCalendars = true;
+                if(se.getGoogleId() != null && differentCalendars)
+                {
+                    event.setId(se.getGoogleId());
+                    service.events().update(address, se.getGoogleId(), event).execute();
+                }
+                else
+                {
+                    Event e = service.events().insert(address, event).execute();
+                    Main.getEntryManager().updateEntry(se.setGoogleId(e.getId()), false);
+                }
+            }
+            catch( Exception e )
+            {
+                Logging.exception(this.getClass(), e);
+                return;
+            }
+        });
+    }
+
+
     /**
      * Purges a schedule from entries and adds events (after conversion)
      * from the next 7 day span of a Google Calendar
      * @param address (String) valid address of calendar
      * @param channel (MessageChannel) channel to sync with
      */
-    public void syncCalendar(String address, TextChannel channel)
+    public void importCalendar(String address, TextChannel channel, Calendar service)
     {
         if(channel == null || address == null) return;
         if(!Main.getScheduleManager().isASchedule(channel.getId()))
-        {   // safety check to insure syncCalendar is being applied to a valid channel
+        {   // safety check to insure importCalendar is being applied to a valid channel
             return;
         }
 
@@ -111,8 +181,8 @@ public class CalendarConverter
             ZonedDateTime max = min.plusDays(Main.getScheduleManager().getSyncLength(channel.getId()));
 
             events = service.events().list(address)
-                    .setTimeMin(new DateTime(min.format(rfc3339Formatter)))
-                    .setTimeMax(new DateTime(max.format(rfc3339Formatter)))
+                    .setTimeMin(new DateTime(min.format(RFC3339_FORMATTER)))
+                    .setTimeMax(new DateTime(max.format(RFC3339_FORMATTER)))
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
                     .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
@@ -130,7 +200,6 @@ public class CalendarConverter
         {
             // lock the schedule for syncing
             Main.getScheduleManager().lock(channel.getId());
-
             channel.sendTyping().queue();   // send 'is typing' while the sync is in progress
 
             // change the zone to match the calendar
@@ -170,9 +239,9 @@ public class CalendarConverter
                 }
                 else
                 { // parse start and end times for normal events
-                    start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                    start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), RFC3339_FORMATTER)
                             .withZoneSameInstant(zone);
-                    end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), rfc3339Formatter)
+                    end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), RFC3339_FORMATTER)
                             .withZoneSameInstant(zone);
                 }
 
@@ -250,7 +319,7 @@ public class CalendarConverter
                             String tmp = comment.trim().toLowerCase().replace("deadline:","").trim();
                             if(VerifyUtilities.verifyDate(tmp))
                             {
-                                rsvpDeadline = ZonedDateTime.of(ParsingUtilities.parseDateStr(tmp), LocalTime.MAX, zone);
+                                rsvpDeadline = ZonedDateTime.of(ParsingUtilities.parseDate(tmp), LocalTime.MAX, zone);
                             }
                         }
                         else if(!comment.trim().isEmpty())
@@ -297,7 +366,7 @@ public class CalendarConverter
                             else if(tmp.equals("WEEKLY") && rule.contains("BYDAY"))
                             {
                                 tmp = rule.split("BYDAY=")[1].split(";")[0];
-                                repeat = ParsingUtilities.parseWeeklyRepeat(tmp);
+                                repeat = ParsingUtilities.parseRepeat(tmp);
                             }
 
                             // parse out the end date of recurrence
@@ -405,5 +474,56 @@ public class CalendarConverter
 
         // auto-sort
         EntryManager.autoSort(true, channel.getId());
+    }
+
+
+    /**
+     * generates a valid list of event recurrence rules
+     * as specified by RFC5545
+     * @param repeat the repeat settings of the event
+     * @param expire the expire date for the event
+     * @return
+     */
+    private static List<String> toRFC5545(Integer repeat, ZonedDateTime expire)
+    {
+        List<String> recurrence = new ArrayList<>();
+        if(repeat == 0 || repeat > 0b11111111)
+        {
+            return recurrence;
+        }
+
+        String rule = "RRULE:";
+        if((repeat&0b10000000) == 0b10000000) // interval
+        {
+            rule += "FREQ=DAILY;";
+            int tmp = repeat & 0b01111111;    // take the first 7 bits
+            rule += "INTERVAL=" + tmp + ";";
+        }
+        else // weekly
+        {
+            if(repeat == 0b1111111) // every day
+            {
+                rule += "FREQ=DAILY;";
+            }
+            else
+            {
+                rule += "FREQ=WEEKLY;BYDAY=";
+                List<String> tmp = new ArrayList<>();
+                if((repeat&0b0000001) == 0b0000001) tmp.add("SU");
+                if((repeat&0b0000010) == 0b0000010) tmp.add("MO");
+                if((repeat&0b0000100) == 0b0000100) tmp.add("TU");
+                if((repeat&0b0001000) == 0b0001000) tmp.add("WE");
+                if((repeat&0b0010000) == 0b0010000) tmp.add("TH");
+                if((repeat&0b0100000) == 0b0100000) tmp.add("FR");
+                if((repeat&0b1000000) == 0b1000000) tmp.add("SA");
+                rule += String.join(",",tmp) + ";";
+            }
+        }
+        if(expire != null)
+        {
+            rule += "UNTIL=" + String.format("%04d%02d%02d", expire.getYear(), expire.getMonthValue(), expire.getDayOfMonth()) +"T000000Z;";
+        }
+        recurrence.add(rule);
+        return recurrence;
     }
 }

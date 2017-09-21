@@ -313,6 +313,12 @@ public class MessageGenerator
             if( bitset == 0b1111111 || bitset == 0b10000001)
                 return "every day";
 
+            // yearly repeat
+            if((bitset & 0b100000000) == 0b100000000)
+            {
+                return "every year";
+            }
+
             // repeat on interval
             if((bitset & 0b10000000) == 0b10000000 )
             {
@@ -330,6 +336,12 @@ public class MessageGenerator
                 return "does not repeat";
             if( bitset == 0b1111111 )
                 return "repeats daily";
+
+            // yearly repeat
+            if((bitset & 0b100000000) == 0b100000000)
+            {
+                return "repeats yearly";
+            }
 
             // repeat on interval
             if((bitset & 0b10000000) == 0b10000000 )

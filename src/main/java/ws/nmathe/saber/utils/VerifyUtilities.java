@@ -8,9 +8,17 @@ import java.util.regex.Pattern;
 
 /**
  * static methods used to verify user input for the verify() method of commands
+ * more often than not methods here have partner methods in ParsingUtilities
+ * (ie. verifyTime() should be used to OK input for the parseTime())
  */
 public class VerifyUtilities
 {
+
+    /**
+     * verify that user input is valid for use by ParsingUtilities.parseTime()
+     * @param userInput
+     * @return
+     */
     public static boolean verifyTime(String userInput)
     {
         Matcher matcher = Pattern.compile("\\d+").matcher(userInput);
@@ -59,6 +67,12 @@ public class VerifyUtilities
         return true;
     }
 
+
+    /**
+     *
+     * @param arg
+     * @return
+     */
     public static boolean verifyDate( String arg )
     {
         if(arg.toLowerCase().equals("tomorrow") || arg.toLowerCase().equals("today"))
@@ -91,6 +105,12 @@ public class VerifyUtilities
         }
     }
 
+
+    /**
+     *
+     * @param arg
+     * @return
+     */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static boolean verifyHex(String arg)
     {
@@ -106,6 +126,12 @@ public class VerifyUtilities
         return true;
     }
 
+
+    /**
+     *
+     * @param arg
+     * @return
+     */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static boolean verifyInteger(String arg)
     {
@@ -120,6 +146,12 @@ public class VerifyUtilities
         return true;
     }
 
+
+    /**
+     *
+     * @param arg
+     * @return
+     */
     public static boolean verifyUrl(String arg)
     {
         try
@@ -133,6 +165,12 @@ public class VerifyUtilities
         return true;
     }
 
+
+    /**
+     *
+     * @param arg
+     * @return
+     */
     public static boolean verifyZone(String arg)
     {
         for(String validZone : ZoneId.getAvailableZoneIds())

@@ -1,10 +1,13 @@
 package ws.nmathe.saber.core.schedule;
 
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.services.calendar.Calendar;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.utils.Logging;
 
 import java.time.ZonedDateTime;
@@ -37,7 +40,7 @@ class ScheduleSyncer implements Runnable
 
         Main.getDBDriver().getScheduleCollection()
                 .find(query)
-                .projection(fields(include("_id", "sync_time", "sync_address", "guildId")))
+                .projection(fields(include("_id", "sync_time", "sync_address","sync_user", "guildId")))
                 .forEach((Consumer<? super Document>) document ->
         {
             executor.execute(() ->
@@ -62,13 +65,19 @@ class ScheduleSyncer implements Runnable
                     Main.getDBDriver().getScheduleCollection()
                             .updateOne(eq("_id", scheduleId), set("sync_time", syncTime));
 
+                    //
+                    String address = document.getString("sync_address");
+                    Credential credential = document.get("sync_user")!=null ?
+                            GoogleAuth.authorize(document.getString("sync_user")) : GoogleAuth.authorize();
+                    Calendar service = GoogleAuth.getCalendarService(credential);
+
                     // attempt to sync schedule
-                    if(Main.getCalendarConverter().checkValidAddress(document.getString("sync_address")))
+                    if(Main.getCalendarConverter().checkValidAddress(address, service))
                     {
                         TextChannel channel = jda.getTextChannelById(document.getString("_id"));
                         if(channel == null) return;
 
-                        Main.getCalendarConverter().syncCalendar(document.getString("sync_address"), channel);
+                        Main.getCalendarConverter().importCalendar(address, channel, service);
                         Logging.info(this.getClass(), "Synchronized schedule #" + channel.getName() + " [" +
                                 document.getString("_id") + "] on '" + channel.getGuild().getName() + "' [" +
                                 channel.getGuild().getId() + "]");
