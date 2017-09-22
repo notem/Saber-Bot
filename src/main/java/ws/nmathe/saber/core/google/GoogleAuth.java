@@ -13,6 +13,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.CalendarScopes;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.utils.Logging;
 
 import java.io.*;
 import java.util.Arrays;
@@ -110,19 +111,32 @@ public class GoogleAuth
      * @param userId (String) user ID of the associated credentials
      * @return
      */
-    public static Credential authorize(String userId) throws IOException
+    public static Credential authorize(String userId)
     {
-        // Load client secrets.
-        InputStream in = new FileInputStream(Main.getBotSettingsManager().getGoogleOAuthSecret());
-        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+        // get the file stream
+        InputStream in;
+        try
+        { in = new FileInputStream(Main.getBotSettingsManager().getGoogleOAuthSecret()); }
+        catch (FileNotFoundException e)
+        { return null; }
 
-        // Build flow and trigger user authorization request.
-        GoogleAuthorizationCodeFlow flow = (new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES))
-                .setDataStoreFactory(DATA_STORE_FACTORY)
-                .setAccessType("offline")
-                .build();
+        try
+        {
+            // Load client secrets.
+            GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
-        return flow.loadCredential(userId);
+            // Build flow and trigger user authorization request.
+            GoogleAuthorizationCodeFlow flow = (new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES))
+                    .setDataStoreFactory(DATA_STORE_FACTORY)
+                    .setAccessType("offline")
+                    .build();
+            return flow.loadCredential(userId);
+        }
+        catch (IOException e)
+        {
+            Logging.exception(GoogleAuth.class, e);
+        }
+        return null;
     }
 
 
@@ -166,13 +180,30 @@ public class GoogleAuth
         flow.getCredentialDataStore().delete(userID);
     }
 
+    public static Credential getCredential(String userID)
+    {
+        try
+        {
+            Credential credential = GoogleAuth.authorize(userID);
+            if(credential == null)
+            {
+                credential = GoogleAuth.authorize();
+            }
+            return credential;
+        }
+        catch (IOException e)
+        {
+            return null;
+        }
+    }
+
 
     /**
      * Build and return an authorized Calendar client service.
      * @return an authorized Calendar client service
      * @throws IOException
      */
-    public static com.google.api.services.calendar.Calendar getCalendarService(Credential credential) throws IOException
+    public static com.google.api.services.calendar.Calendar getCalendarService(Credential credential)
     {
         return new com.google.api.services.calendar.Calendar
                 .Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)

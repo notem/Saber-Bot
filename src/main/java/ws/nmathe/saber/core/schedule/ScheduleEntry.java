@@ -16,6 +16,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.set;
+
 /**
  * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
  * start and end functions are to be triggered upon the scheduled starting time and ending time.
@@ -180,11 +183,14 @@ public class ScheduleEntry
         if(msg == null) return;         // if msg object is bad
         if(this.quietRemind) return;    // if the event's reminders are silenced
 
-        if(this.entryStart.isAfter(ZonedDateTime.now()))  // don't send reminders after an event has started
+        // don't send reminders after an event has started
+        if(this.entryStart.isAfter(ZonedDateTime.now()))
         {
+            // parse message and get the target channels
             String remindMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
             List<TextChannel> channels = msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getReminderChan(this.chanId), true);
 
+            // send reminder
             for( TextChannel chan : channels )
             {
                 MessageUtilities.sendMsg(remindMsg, chan, message -> this.checkDelay(Instant.now(), "reminder"));
@@ -192,6 +198,15 @@ public class ScheduleEntry
 
             Logging.info(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
         }
+
+        // remove expired reminders
+        reminders.removeIf(date -> date.before(new Date()));
+
+        // update document
+        Main.getDBDriver().getEventCollection()
+                .updateOne(
+                        eq("_id", this.entryId),
+                        set("reminders", reminders));
     }
 
     /**
@@ -225,8 +240,6 @@ public class ScheduleEntry
             }
         }
 
-        this.hasStarted = true;
-
         // if the entry's start time is the same as it's end
         // skip to end
         if(this.entryStart.isEqual(this.entryEnd))
@@ -236,6 +249,8 @@ public class ScheduleEntry
         else
         {
             this.reloadDisplay();
+            this.hasStarted = true;
+            Main.getDBDriver().getEventCollection().updateOne(eq("_id", this.entryId), set("hasStarted", true));
         }
     }
 

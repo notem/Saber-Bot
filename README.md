@@ -1,19 +1,19 @@
 
 # Saber-Bot
 
-## A calendar / schedule managing discord bot written in Java 8
+## A schedule managing discord bot written in Java 8
 
 ### Features
 + Display events on dedicated schedule channels.
 + Send announcements when event begins / ends.
 + Send reminders before an event begins.
 + Configure timezone per schedule.
-+ Sync schedules to Google Calendars
++ Import/Export to Google Calendars
 + RSVP for events
 
 ### Dependencies
 
-+ [JDA](https://github.com/DV8FromTheWorld/JDA) - 3.2.0_244
++ [JDA](https://github.com/DV8FromTheWorld/JDA) - 3.2.0_273
 + [Unirest](https://github.com/Mashape/unirest-java) - 1.4.9
 + [MongoDB](http://mongodb.github.io/mongo-java-driver/3.4/) - mongodb-driver 3.4.2
 + [Google Libraries]()
@@ -33,4 +33,4 @@ If you're looking for user documentation, the bots invite link, or a list of com
 
 ## User Docs
 
-Some user documentation is hosted on [my website](https://nmathe.ws/bots/saber).  Alternatively, the docs are [also viewable through my website's github repository](https://github.com/notem/nmathe.ws-content/blob/master/bots/saber/index.md), whose webpage formatting is likely nicer and far more reliable than my website.
+Comprehensive documentation is available on [my website](https://nmathe.ws/bots/saber).  Alternatively, the docs can also be found [on my website's github repository](https://github.com/notem/nmathe.ws-content/blob/master/bots/saber/index.md) should my website become unavailable.

@@ -1,24 +1,20 @@
 package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Message;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
-import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Updates.set;
 
 /**
  * Used by the Main scheduler timer, a new thread is executed every minute/5minutes/1hour/1day.
@@ -29,13 +25,20 @@ import static com.mongodb.client.model.Updates.set;
 class EntryProcessor implements Runnable
 {
     // thread pool for level 0 processing
-    private static ExecutorService primaryExecutor = Executors.newCachedThreadPool();   // handles fine check tasks
-    private static ExecutorService secondaryExecutor = Executors.newCachedThreadPool(); // handles the coarse check tasks
+    private static ExecutorService executor = Executors.newCachedThreadPool();   // handles fine check tasks
 
-    private int level;
-    EntryProcessor(int level)
+    private enum queue { END_QUEUE, START_QUEUE, REMIND_QUEUE }
+
+    private EntryManager.type type;
+    private Queue<Integer> endQueue;
+    private Queue<Integer> startQueue;
+    private Queue<Integer> remindQueue;
+    EntryProcessor(EntryManager.type type, Queue<Integer> endQueue, Queue<Integer> startQueue, Queue<Integer> remindQueue)
     {
-        this.level = level;
+        this.type = type;
+        this.endQueue = endQueue;
+        this.startQueue = startQueue;
+        this.remindQueue = remindQueue;
     }
 
     @SuppressWarnings("unchecked")
@@ -43,121 +46,51 @@ class EntryProcessor implements Runnable
     {
         try
         {
-            if( level == 0 )    // minute check
+            if(type == EntryManager.type.FILL)    // fill the queues
             {
-                Logging.info(this.getClass(), "Started processing entries at level 0. . .");
+                Logging.info(this.getClass(), "Processing entries: Filling queues. . .");
 
                 // process entries which are ending
                 Bson query = and(eq("hasStarted",true), lte("end", new Date()));
-
-                Main.getDBDriver().getEventCollection().find(query)
-                        .forEach((Consumer<? super Document>) document ->
-                        {
-                            // identify which shard is responsible for the schedule
-                            String guildId = document.getString("guildId");
-                            JDA jda = Main.getShardManager().getJDA(guildId);
-
-                            // if the shard is not connected, do process the event
-                            if(jda == null) return;
-                            if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
-
-                            primaryExecutor.execute(() ->
-                            {
-                                // convert to scheduleEntry object and start
-                                try
-                                {
-                                    (new ScheduleEntry(document)).end();
-                                }
-                                catch(Exception e)
-                                {
-                                    Logging.exception(this.getClass(), e);
-                                }
-                            });
-                        });
+                processAndQueueEvents(queue.END_QUEUE, query);
 
                 // process entries which are starting
                 query = and(eq("hasStarted",false), lte("start", new Date()));
-                Main.getDBDriver().getEventCollection().find(query)
-                        .forEach((Consumer<? super Document>) document ->
-                        {
-                            // identify which shard is responsible for the schedule
-                            String guildId = document.getString("guildId");
-                            JDA jda = Main.getShardManager().getJDA(guildId);
-
-                            // if the shard is not connected, do process the event
-                            if(jda == null) return;
-                            if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
-
-                            primaryExecutor.execute(() ->
-                            {
-                                try
-                                {    // convert to a POJO and start
-                                    (new ScheduleEntry(document)).start();
-
-                                    // if the entry isn't the special exception, update the db entry as started
-                                    if(!document.getDate("start").equals(document.getDate("end")))
-                                    {
-                                        Main.getDBDriver().getEventCollection()
-                                                .updateOne(eq("_id", document.get("_id")), set("hasStarted", true));
-                                    }
-                                }
-                                catch(Exception e)
-                                {
-                                    Logging.exception(this.getClass(), e);
-                                }
-                            });
-                        });
+                processAndQueueEvents(queue.START_QUEUE, query);
 
                 // process entries with reminders
                 query = and(eq("hasStarted",false), lte("reminders", new Date()));
+                processAndQueueEvents(queue.REMIND_QUEUE, query);
+            }
+            else if(type == EntryManager.type.EMPTY) // process and empty the queues
+            {
+                Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
 
-                Main.getDBDriver().getEventCollection().find(query)
-                        .forEach((Consumer<? super Document>) document ->
-                        {
-                            // identify which shard is responsible for the schedule
-                            String guildId = document.getString("guildId");
-                            JDA jda = Main.getShardManager().getJDA(guildId);
+                // process the queues serially
+                executor.execute(()->
+                {
+                    while(endQueue.peek() != null)
+                    {
+                        Main.getEntryManager().getEntry(endQueue.poll()).end();
+                    }
+                    while(startQueue.peek() != null)
+                    {
+                        Main.getEntryManager().getEntry(startQueue.poll()).start();
+                    }
+                    while(remindQueue.peek() != null)
+                    {
+                        Main.getEntryManager().getEntry(remindQueue.poll()).remind();
+                    }
+                });
 
-                            // if the shard is not connected, do process the event
-                            if(jda == null) return;
-                            if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
-
-                            primaryExecutor.execute(() ->
-                            {
-                                try
-                                {
-                                    // convert to POJO and send a remind
-                                    (new ScheduleEntry(document)).remind();
-
-                                    // remove expired reminders
-                                    List<Date> reminders = (List<Date>) document.get("reminders");
-                                    reminders.removeIf(date -> date.before(new Date()));
-
-                                    // update document
-                                    Main.getDBDriver().getEventCollection()
-                                            .updateOne(
-                                                    eq("_id", document.get("_id")),
-                                                    set("reminders", reminders));
-
-                                    (new ScheduleEntry(document)).reloadDisplay();
-                                }
-                                catch(Exception e)
-                                {
-                                    Logging.exception(this.getClass(), e);
-                                }
-                            });
-                        });
-
-                Logging.info(this.getClass(), "Finished processing entries at level 0. . .");
             }
             else
             {
                 Bson query = new Document(); // should an invalid level ever be passed in, all entries will be reloaded!
 
-                if(level == 1)   // few minute check
+                Logging.info(this.getClass(), "Processing entries: updating timers. . .");
+                if(type == EntryManager.type.UPDATE1)
                 {
-                    Logging.info(this.getClass(), "Processing entries at level 1. . .");
-
                     // adjust timers for entries starting/ending within the next hour
                     query = or(
                             and(
@@ -177,10 +110,8 @@ class EntryProcessor implements Runnable
                     );
 
                 }
-                else if(level == 2)
+                if(type == EntryManager.type.UPDATE2)
                 {
-                    Logging.info(this.getClass(), "Processing entries at level 2. . .");
-
                     // purge expiring events
                     query = lte("expire", new Date());
 
@@ -208,10 +139,8 @@ class EntryProcessor implements Runnable
                                     )));
 
                 }
-                else if(level == 3)
+                if(type == EntryManager.type.UPDATE3)
                 {
-                    Logging.info(this.getClass(), "Processing entries at level 3. . .");
-
                     // adjust timers for entries that aren't starting/ending within the next day
                     query = or(
                             and(
@@ -235,7 +164,7 @@ class EntryProcessor implements Runnable
                             if(jda == null) return;
                             if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
-                            secondaryExecutor.execute(() ->
+                            executor.execute(() ->
                             {
                                 try
                                 {   // convert to scheduleEntry object and start
@@ -255,5 +184,58 @@ class EntryProcessor implements Runnable
         {
             Logging.exception(this.getClass(), e);
         }
+    }
+
+    /**
+     *
+     * @param queueIdentifier
+     * @param query
+     */
+    private void processAndQueueEvents(queue queueIdentifier, Bson query)
+    {
+        Main.getDBDriver().getEventCollection().find(query)
+                .forEach((Consumer<? super Document>) document ->
+                {
+                    // identify which shard is responsible for the schedule
+                    String guildId = document.getString("guildId");
+                    JDA jda = Main.getShardManager().getJDA(guildId);
+
+                    // if the shard is not connected, do process the event
+                    if(jda == null) return;
+                    if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+
+                    try
+                    {
+                        ScheduleEntry se = (new ScheduleEntry(document));
+                        switch(queueIdentifier)
+                        {
+                            case END_QUEUE:
+                                if(!endQueue.contains(se.getId()))
+                                {
+                                    endQueue.add(se.getId());
+                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the end queue");
+                                }
+                                break;
+                            case REMIND_QUEUE:
+                                if(!remindQueue.contains(se.getId()))
+                                {
+                                    remindQueue.add(se.getId());
+                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the remind queue");
+                                }
+                                break;
+                            case START_QUEUE:
+                                if(!startQueue.contains(se.getId()))
+                                {
+                                    startQueue.add(se.getId());
+                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the start queue");
+                                }
+                                break;
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        Logging.exception(this.getClass(), e);
+                    }
+                });
     }
 }

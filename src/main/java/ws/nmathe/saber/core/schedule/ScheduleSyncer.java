@@ -65,7 +65,7 @@ class ScheduleSyncer implements Runnable
                     Main.getDBDriver().getScheduleCollection()
                             .updateOne(eq("_id", scheduleId), set("sync_time", syncTime));
 
-                    //
+                    // get the sync address and google credentials, then create the calendar service
                     String address = document.getString("sync_address");
                     Credential credential = document.get("sync_user")!=null ?
                             GoogleAuth.authorize(document.getString("sync_user")) : GoogleAuth.authorize();

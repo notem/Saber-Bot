@@ -136,7 +136,6 @@ public class ShardManager
                         Main.getEntryManager().init();
                         Main.getCommandHandler().init();
 
-                        HttpUtilities.updateStats();
                         executor.shutdown();
                     }
                     catch(Exception e)
@@ -329,6 +328,8 @@ public class ShardManager
             {
                 Consumer<JDA> task = (shard)->
                 {
+                    if(!games.hasNext()) return;
+
                     String name = games.next();
                     if(name.contains("%"))
                     {

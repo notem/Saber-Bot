@@ -7,9 +7,11 @@ import net.dv8tion.jda.core.entities.Role;
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import net.dv8tion.jda.core.entities.Message;
+import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
 import java.awt.*;
+import java.nio.ByteBuffer;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
@@ -34,7 +36,7 @@ public class MessageGenerator
         String titleUrl = (se.getTitleUrl() != null && VerifyUtilities.verifyUrl(se.getTitleUrl())) ?
                 se.getTitleUrl() : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
-        String footerStr = "ID: " + Integer.toHexString(se.getId());
+        String footerStr = "ID: " + ParsingUtilities.intToBase64(se.getId());
 
         if(se.isQuietEnd() || se.isQuietStart() || se.isQuietRemind())
         {

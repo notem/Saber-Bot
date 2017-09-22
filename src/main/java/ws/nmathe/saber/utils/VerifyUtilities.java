@@ -1,8 +1,10 @@
 package ws.nmathe.saber.utils;
 
+import java.math.BigInteger;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -112,11 +114,11 @@ public class VerifyUtilities
      * @return
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static boolean verifyHex(String arg)
+    public static boolean verifyBase64(String arg)
     {
         try
         {
-            Integer.decode("0x"+arg);
+            Base64.getDecoder().decode(arg);
         }
         catch(Exception e)
         {

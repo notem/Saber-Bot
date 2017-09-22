@@ -61,13 +61,13 @@ public class TestCommand implements Command
         }
 
         // check for a valid entry ID
-        if(!VerifyUtilities.verifyHex(args[index]))
+        if(!VerifyUtilities.verifyBase64(args[index]))
         {
             return "``" + args[index] + "`` is not a valid entry ID!";
         }
 
         // check to see if event with the provided ID exists for the guild
-        Integer Id = Integer.decode( "0x" + args[index] );
+        Integer Id = ParsingUtilities.base64ToInt(args[index]);
         ScheduleEntry entry = Main.getEntryManager().getEntryFromGuild( Id, event.getGuild().getId() );
         if(entry == null)
         {
@@ -106,7 +106,7 @@ public class TestCommand implements Command
             int index = 0;
 
             // get entry object
-            Integer entryId = Integer.decode( "0x" + args[index] );
+            Integer entryId = ParsingUtilities.base64ToInt(args[index]);
             ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
             // verify the entry's message exists
             Message msg = entry.getMessageObject();

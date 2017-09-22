@@ -83,21 +83,10 @@ public class SyncCommand implements Command
         }
 
         // get user Google credentials (if they exist)
-        Credential credential;
-        Calendar service;
-        try
-        {
-            credential = GoogleAuth.authorize(event.getAuthor().getId());
-            if(credential == null)
-            {
-                credential = GoogleAuth.authorize();
-            }
-            service = GoogleAuth.getCalendarService(credential);
-        }
-        catch (IOException e)
-        {
-            return "I failed to connect to Google API Services!";
-        }
+        Credential credential = GoogleAuth.getCredential(event.getAuthor().getId());
+        if(credential == null) return "I failed to connect to Google API Services!";
+        Calendar service = GoogleAuth.getCalendarService(credential);
+        if(service == null) return "I failed to connect to Google API Services!";
 
         // validate the calendar address
         String address;
@@ -143,21 +132,8 @@ public class SyncCommand implements Command
         try
         {
             // get user Google credentials (if they exist)
-            Credential credential;
-            Calendar service;
-            try
-            {
-                credential = GoogleAuth.authorize(event.getAuthor().getId());
-                if(credential == null)
-                {
-                    credential = GoogleAuth.authorize();
-                }
-                service = GoogleAuth.getCalendarService(credential);
-            }
-            catch (IOException e)
-            {
-                return;
-            }
+            Credential credential = GoogleAuth.getCredential(event.getAuthor().getId());
+            Calendar service = GoogleAuth.getCalendarService(credential);
 
             int index = 0;
             String cId = args[index].replace("<#","").replace(">","");

@@ -4,6 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -339,5 +341,25 @@ public class ParsingUtilities
             }
         }
         return ZoneId.of(Main.getBotSettingsManager().getTimeZone());
+    }
+
+    /**
+     *
+     * @param userInput
+     * @return
+     */
+    public static int base64ToInt(String userInput)
+    {
+        return ByteBuffer.wrap(Base64.getDecoder().decode(userInput)).asIntBuffer().get();
+    }
+
+    /**
+     *
+     * @param input
+     * @return
+     */
+    public static String intToBase64(int input)
+    {
+        return java.util.Base64.getEncoder().encodeToString(ByteBuffer.allocate(4).putInt(input).array()).replaceAll("==$", "");
     }
 }

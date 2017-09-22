@@ -11,6 +11,7 @@ import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
+import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
 import java.util.*;
@@ -69,9 +70,9 @@ public class ListCommand implements Command
         int index = 0;
 
         ScheduleEntry entry;
-        if (VerifyUtilities.verifyHex(args[index]))
+        if (VerifyUtilities.verifyBase64(args[index]))
         {
-            Integer entryId = Integer.decode("0x" + args[index]);
+            Integer entryId = ParsingUtilities.base64ToInt(args[index]);
             entry = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
             if (entry == null)
             {
@@ -158,7 +159,7 @@ public class ListCommand implements Command
         try
         {
             int index = 0;
-            Integer entryId = Integer.decode("0x" + args[index++]);
+            Integer entryId = ParsingUtilities.base64ToInt(args[index]);
             ScheduleEntry se = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
 
             String titleUrl = se.getTitleUrl()==null ? "https://nnmathe.ws/saber": se.getTitleUrl();

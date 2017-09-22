@@ -6,6 +6,7 @@ import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
+import java.nio.ByteBuffer;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -467,7 +468,7 @@ public class CreateCommand implements Command
             Integer entryId = Main.getEntryManager().newEntry(se, true);
 
             // send the event summary to the command channel
-            String body = "New event created :id: **"+ Integer.toHexString(entryId) +"** on <#" + cId + ">\n" +
+            String body = "New event created :id: **"+ ParsingUtilities.intToBase64(entryId) +"** on <#" + cId + ">\n" +
                     "```js\n" + se.toString() + "\n```";
             MessageUtilities.sendMsg(body, event.getChannel(), null);
         }

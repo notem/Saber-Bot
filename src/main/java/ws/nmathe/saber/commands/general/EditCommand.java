@@ -9,6 +9,8 @@ import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
+
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -98,12 +100,12 @@ public class EditCommand implements Command
         }
 
         // check first arg
-        if( !VerifyUtilities.verifyHex(args[index]) )
+        if( !VerifyUtilities.verifyBase64(args[index]) )
         {
             return "``" + args[index] + "`` is not a valid entry ID!";
         }
 
-        Integer Id = Integer.decode( "0x" + args[index] );
+        Integer Id = ParsingUtilities.base64ToInt(args[index]);
         ScheduleEntry entry = Main.getEntryManager().getEntryFromGuild( Id, event.getGuild().getId() );
         if(entry == null)
         {
@@ -462,7 +464,7 @@ public class EditCommand implements Command
         {
             int index = 0;
 
-            Integer entryId = Integer.decode( "0x" + args[index] );
+            Integer entryId = ParsingUtilities.base64ToInt(args[index]);
             ScheduleEntry se = Main.getEntryManager().getEntry( entryId );
 
             Message msg = se.getMessageObject();
@@ -723,7 +725,7 @@ public class EditCommand implements Command
             //
             // send the event summary to the command channel
             //
-            String body = "Updated event :id: **"+ Integer.toHexString(se.getId()) +"** on <#" + se.getChannelId() + ">\n" +
+            String body = "Updated event :id: **"+ ParsingUtilities.intToBase64(se.getId()) +"** on <#" + se.getChannelId() + ">\n" +
                     "```js\n" + se.toString() + "\n```";
             MessageUtilities.sendMsg(body, event.getChannel(), null);
         }
