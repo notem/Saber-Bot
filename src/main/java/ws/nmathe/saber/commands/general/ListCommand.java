@@ -159,11 +159,11 @@ public class ListCommand implements Command
         try
         {
             int index = 0;
-            Integer entryId = ParsingUtilities.base64ToInt(args[index]);
+            Integer entryId = ParsingUtilities.base64ToInt(args[index++]);
             ScheduleEntry se = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
 
             String titleUrl = se.getTitleUrl()==null ? "https://nnmathe.ws/saber": se.getTitleUrl();
-            String title = se.getTitle()+" ["+Integer.toHexString(entryId)+"]";
+            String title = se.getTitle()+" ["+ParsingUtilities.intToBase64(entryId)+"]";
 
             String content = "";
 
@@ -171,6 +171,7 @@ public class ListCommand implements Command
             List<String> roleFilters = new ArrayList<>();
             boolean filterByType = false;
             Set<String> typeFilters = new HashSet<>();
+
 
             boolean mobileFlag = false;
             boolean IdFlag = false;

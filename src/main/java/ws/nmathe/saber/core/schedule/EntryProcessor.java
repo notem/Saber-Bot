@@ -61,27 +61,26 @@ class EntryProcessor implements Runnable
                 // process entries with reminders
                 query = and(eq("hasStarted",false), lte("reminders", new Date()));
                 processAndQueueEvents(queue.REMIND_QUEUE, query);
+
+                Logging.info(this.getClass(), "Finished filling queues.");
             }
             else if(type == EntryManager.type.EMPTY) // process and empty the queues
             {
                 Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
 
                 // process the queues serially
-                executor.execute(()->
+                while(endQueue.peek() != null)
                 {
-                    while(endQueue.peek() != null)
-                    {
-                        Main.getEntryManager().getEntry(endQueue.poll()).end();
-                    }
-                    while(startQueue.peek() != null)
-                    {
-                        Main.getEntryManager().getEntry(startQueue.poll()).start();
-                    }
-                    while(remindQueue.peek() != null)
-                    {
-                        Main.getEntryManager().getEntry(remindQueue.poll()).remind();
-                    }
-                });
+                    Main.getEntryManager().getEntry(endQueue.poll()).end();
+                }
+                while(startQueue.peek() != null)
+                {
+                    Main.getEntryManager().getEntry(startQueue.poll()).start();
+                }
+                while(remindQueue.peek() != null)
+                {
+                    Main.getEntryManager().getEntry(remindQueue.poll()).remind();
+                }
 
             }
             else
