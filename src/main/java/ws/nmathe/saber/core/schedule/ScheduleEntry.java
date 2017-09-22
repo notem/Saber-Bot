@@ -179,7 +179,6 @@ public class ScheduleEntry
     public void remind()
     {
         Message msg = this.getMessageObject();
-
         if(msg == null) return;         // if msg object is bad
         if(this.quietRemind) return;    // if the event's reminders are silenced
 

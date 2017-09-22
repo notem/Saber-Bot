@@ -11,7 +11,6 @@ import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
 import java.awt.*;
-import java.nio.ByteBuffer;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
@@ -449,9 +448,9 @@ public class MessageGenerator
             {
                 int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
                 if( minutesTil <= 1)
-                    timer += "in a minute.)";
+                    timer += "in a minute)";
                 else
-                    timer += "in " + minutesTil + " minutes.)";
+                    timer += "within " + minutesTil + " minutes)";
                 //timer += "within the hour.)";
             }
             else if( timeTilStart < 24 * 60 * 60 )
@@ -460,16 +459,16 @@ public class MessageGenerator
                 if( hoursTil <= 1)
                     timer += "within the hour.)";
                 else
-                    timer += "in " + hoursTil + " hours.)";
+                    timer += "within " + hoursTil + " hours)";
             }
             else
             {
                 int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS),
                         start.truncatedTo(ChronoUnit.DAYS));
                 if( daysTil <= 1)
-                    timer += "tomorrow.)";
+                    timer += "tomorrow)";
                 else
-                    timer += "in " + daysTil + " days.)";
+                    timer += "within " + daysTil + " days)";
             }
         }
         else // if the event has started
@@ -481,7 +480,7 @@ public class MessageGenerator
                 if( minutesTil <= 1)
                     timer += "in a minute.)";
                 else
-                    timer += "in " + minutesTil + " minutes.)";
+                    timer += "within " + minutesTil + " minutes)";
                 //timer += "within one hour.)";
             }
 
@@ -489,9 +488,9 @@ public class MessageGenerator
             {
                 int hoursTil = (int)Math.ceil((double)timeTilEnd/(60*60));
                 if( hoursTil <= 1)
-                    timer += "within one hour.)";
+                    timer += "within one hour)";
                 else
-                    timer += "in " + hoursTil + " hours.)";
+                    timer += "within " + hoursTil + " hours)";
             }
             else
             {
@@ -499,7 +498,7 @@ public class MessageGenerator
                 if( daysTil <= 1)
                     timer += "tomorrow.)";
                 else
-                    timer += "in " + daysTil + " days.)";
+                    timer += "within " + daysTil + " days)";
             }
         }
         return timer;

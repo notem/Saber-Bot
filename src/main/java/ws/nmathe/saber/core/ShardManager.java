@@ -38,7 +38,7 @@ public class ShardManager
     private Integer secondaryPoolSize = 6;  // used by all other shards
 
     private JDABuilder builder;
-    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * Populates the shard manager with initialized JDA shards (if sharding)
@@ -152,7 +152,6 @@ public class ShardManager
                         .setCorePoolSize(primaryPoolSize)
                         .buildBlocking();
 
-                this.jda.addEventListener(new EventListener());
                 this.jda.setAutoReconnect(true);
 
                 this.startGamesTimer();

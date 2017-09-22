@@ -165,6 +165,12 @@ public class GoogleAuth
                 .toString();
     }
 
+
+    /**
+     * removes stored authorization token for a user
+     * @param userID discord ID of user
+     * @throws IOException
+     */
     public static void unauthorize(String userID) throws IOException
     {
         // Load client secrets.
@@ -180,6 +186,13 @@ public class GoogleAuth
         flow.getCredentialDataStore().delete(userID);
     }
 
+
+    /**
+     * retrieves credentials for a user if they exist,
+     * if the user does not have credentials, use the default service account credentials
+     * @param userID discord ID of user
+     * @return credentials or null if IO error
+     */
     public static Credential getCredential(String userID)
     {
         try

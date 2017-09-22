@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.*;
@@ -24,8 +25,12 @@ import static com.mongodb.client.model.Filters.*;
  */
 class EntryProcessor implements Runnable
 {
-    // thread pool for level 0 processing
-    private static ExecutorService executor = Executors.newCachedThreadPool();   // handles fine check tasks
+    // thread pool used to reload displays of events
+    private static ExecutorService executor = Executors.newCachedThreadPool();
+
+    // future and executor used exclusively when emptying the queue
+    private static Future future = null;
+    private static ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
 
     private enum queue { END_QUEUE, START_QUEUE, REMIND_QUEUE }
 
@@ -68,20 +73,26 @@ class EntryProcessor implements Runnable
             {
                 Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
 
-                // process the queues serially
-                while(endQueue.peek() != null)
+                // execute new thread to empty queues
+                // the future/executor system is used to insure that event.getMessage() issues
+                // will not indefinitely hang up processing while maintaining serial execution of events
+                if(future!=null && !future.isDone()) future.cancel(true); // cancel old thread
+                future = singleExecutor.submit(() ->
                 {
-                    Main.getEntryManager().getEntry(endQueue.poll()).end();
-                }
-                while(startQueue.peek() != null)
-                {
-                    Main.getEntryManager().getEntry(startQueue.poll()).start();
-                }
-                while(remindQueue.peek() != null)
-                {
-                    Main.getEntryManager().getEntry(remindQueue.poll()).remind();
-                }
-
+                    while(endQueue.peek() != null)
+                    {
+                        Main.getEntryManager().getEntry(endQueue.poll()).end();
+                    }
+                    while(startQueue.peek() != null)
+                    {
+                        Main.getEntryManager().getEntry(startQueue.poll()).start();
+                    }
+                    while(remindQueue.peek() != null)
+                    {
+                        Main.getEntryManager().getEntry(remindQueue.poll()).remind();
+                    }
+                });
+                Logging.info(this.getClass(), "Finished emptying queues.");
             }
             else
             {
@@ -186,7 +197,7 @@ class EntryProcessor implements Runnable
     }
 
     /**
-     *
+     * fills a queue given a proper query, helper function to run()
      * @param queueIdentifier
      * @param query
      */
