@@ -187,15 +187,19 @@ public class ScheduleEntry
         {
             // parse message and get the target channels
             String remindMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
-            List<TextChannel> channels = msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getReminderChan(this.chanId), true);
-
-            // send reminder
-            for( TextChannel chan : channels )
+            String name = Main.getScheduleManager().getReminderChan(this.chanId);
+            if(name!=null)
             {
-                MessageUtilities.sendMsg(remindMsg, chan, message -> this.checkDelay(Instant.now(), "reminder"));
-            }
+                List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
 
-            Logging.info(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
+                // send reminder
+                for( TextChannel chan : channels )
+                {
+                    MessageUtilities.sendMsg(remindMsg, chan, message -> this.checkDelay(Instant.now(), "reminder"));
+                }
+
+                Logging.info(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
+            }
         }
 
         // remove expired reminders
@@ -222,16 +226,20 @@ public class ScheduleEntry
             if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
                 String startMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
-                List<TextChannel> channels = msg.getGuild().getTextChannelsByName(Main.getScheduleManager().getStartAnnounceChan(this.chanId), true);
-
-                for( TextChannel chan : channels )
+                String name = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
+                if(name!=null)
                 {
-                    MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant(), "start"));
-                }
+                    List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
 
-                Logging.info(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
-                        this.getStart().withZoneSameInstant(ZoneId.systemDefault())
-                                .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+                    for( TextChannel chan : channels )
+                    {
+                        MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant(), "start"));
+                    }
+
+                    Logging.info(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
+                            this.getStart().withZoneSameInstant(ZoneId.systemDefault())
+                                    .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+                }
             }
             else
             {
@@ -268,16 +276,20 @@ public class ScheduleEntry
             {
                 // send the end announcement
                 String endMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
-                List<TextChannel> channels = eMsg.getGuild().getTextChannelsByName(Main.getScheduleManager().getEndAnnounceChan(this.chanId), true);
-
-                for( TextChannel chan : channels)
+                String name = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
+                if(name != null)
                 {
-                    MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant(), "end"));
-                }
+                    List<TextChannel> channels = eMsg.getGuild().getTextChannelsByName(name, true);
 
-                Logging.info(this.getClass(), "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
-                        this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
-                                .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+                    for( TextChannel chan : channels)
+                    {
+                        MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant(), "end"));
+                    }
+
+                    Logging.info(this.getClass(), "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
+                            this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
+                                    .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+                }
             }
         }
         else
