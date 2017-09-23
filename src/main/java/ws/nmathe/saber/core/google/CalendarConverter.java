@@ -63,6 +63,7 @@ public class CalendarConverter
      * verifies that an address url is a valid Calendar address Saber can
      * sync with
      * @param address (String) google calendar address
+     * @param service connected calendar service with user credentials
      * @return (boolean) true if valid
      */
     public boolean checkValidAddress(String address, Calendar service)
@@ -89,9 +90,9 @@ public class CalendarConverter
 
     /**
      * exports a discord schedule to a google calendar Calendar
-     * @param address
-     * @param channel
-     * @param service
+     * @param address (String) valid address of calendar
+     * @param channel (MessageChannel) channel to sync with
+     * @param service connected calendar service with user credentials
      */
     public void exportCalendar(String address, TextChannel channel, Calendar service)
     {
@@ -161,6 +162,7 @@ public class CalendarConverter
      * from the next 7 day span of a Google Calendar
      * @param address (String) valid address of calendar
      * @param channel (MessageChannel) channel to sync with
+     * @param service connected calendar service with user credentials
      */
     public void importCalendar(String address, TextChannel channel, Calendar service)
     {
@@ -438,6 +440,7 @@ public class CalendarConverter
                 }
             }
 
+            /*
             // purge channel of all entries on schedule that aren't in uniqueEvents
             Bson query = and(
                             eq("channelId", channel.getId()),
@@ -454,6 +457,7 @@ public class CalendarConverter
                         Main.getEntryManager().removeEntry((Integer) document.get("_id"));
                         MessageUtilities.deleteMsg(msg, null);
                     });
+            */
 
             // set channel topic
             boolean hasPerms = channel.getGuild().getMember(jda.getSelfUser()).hasPermission(channel, Permission.MANAGE_CHANNEL);
