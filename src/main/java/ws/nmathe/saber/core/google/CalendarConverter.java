@@ -440,7 +440,6 @@ public class CalendarConverter
                 }
             }
 
-            /*
             // purge channel of all entries on schedule that aren't in uniqueEvents
             Bson query = and(
                             eq("channelId", channel.getId()),
@@ -457,7 +456,6 @@ public class CalendarConverter
                         Main.getEntryManager().removeEntry((Integer) document.get("_id"));
                         MessageUtilities.deleteMsg(msg, null);
                     });
-            */
 
             // set channel topic
             boolean hasPerms = channel.getGuild().getMember(jda.getSelfUser()).hasPermission(channel, Permission.MANAGE_CHANNEL);
