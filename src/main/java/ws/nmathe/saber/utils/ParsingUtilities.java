@@ -258,8 +258,6 @@ public class ParsingUtilities
         while(matcher.find())
         {
             String group = matcher.group();
-            Logging.info(ParsingUtilities.class, group);
-
             Character ch = group.charAt(group.length()-1);
             if(Character.isDigit(ch))
             {
