@@ -71,14 +71,14 @@ class EntryProcessor implements Runnable
             }
             else if(type == EntryManager.type.EMPTY) // process and empty the queues
             {
-                Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
-
                 // execute new thread to empty queues
                 // the future/executor system is used to insure that event.getMessage() issues
                 // will not indefinitely hang up processing while maintaining serial execution of events
                 if(future!=null && !future.isDone()) future.cancel(true); // cancel old thread
                 future = singleExecutor.submit(() ->
                 {
+                    Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
+
                     while(endQueue.peek() != null)
                     {
                         Main.getEntryManager().getEntry(endQueue.poll()).end();
@@ -91,8 +91,9 @@ class EntryProcessor implements Runnable
                     {
                         Main.getEntryManager().getEntry(remindQueue.poll()).remind();
                     }
+
+                    Logging.info(this.getClass(), "Finished emptying queues.");
                 });
-                Logging.info(this.getClass(), "Finished emptying queues.");
             }
             else
             {

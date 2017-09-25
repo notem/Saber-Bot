@@ -174,7 +174,7 @@ public class ParsingUtilities
                         break;
 
                     case 'i':
-                        announceMsg += Integer.toHexString(entry.getId());
+                        announceMsg += ParsingUtilities.intToBase64(entry.getId());
                         break;
 
                     case '%' :
