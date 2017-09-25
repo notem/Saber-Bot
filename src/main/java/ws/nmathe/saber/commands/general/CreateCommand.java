@@ -2,6 +2,7 @@ package ws.nmathe.saber.commands.general;
 
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -25,60 +26,62 @@ public class CreateCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
-        String head = prefix + this.name();
+        String cmd = prefix + this.name();
+        String usage = "``"+cmd+"`` - add an event to a schedule";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.CORE);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel> <title> <start> [<end> <extra>]```\n" +
-                "The create command will add a new entry to a schedule.\n" +
-                "Entries MUST be initialized with a title, and a start time." +
-                "\n\n" +
-                "The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
-                "optional am/pm appended on the end.\n" +
-                "Optionally, events can be configured with comments, repeat settings, and a start/end dates." +
+        String cat1 = "- Usage\n"+cmd+ " <channel> <title> <start> [<end> <extra>]";
+        String cont1 = "The create command will add a new entry to a schedule.\n" +
+                        "Entries MUST be initialized with a title, and a start time." +
+                        "\n\n" +
+                        "The end time (<end>) may be omitted. Start and end times should be of form h:mm with " +
+                        "optional am/pm appended on the end.\n" +
+                        "Optionally, events can be configured with comments, repeat settings, and a start/end dates.";
+        info.addUsageCategory(cat1, cont1);
 
-                "\n\n```diff\n+ Repeat on weekdays or interval ```\n" +
-                "Repeat settings can be configured by adding ``repeat <daily|\"Su,Mo,Tu,We,Th,Fr,Sa\">`` to ``<extra>``" +
-                " to cause the event to repeat on the given days.\n Default behavior is no repeat.\n An event can instead " +
-                "be configured to repeat on a daily interval by adding ``interval <number>`` to ``<extra>``" +
+        String cat2 = "+ Repeat on weekdays or interval";
+        String cont2 = "Repeat settings can be configured by adding ``repeat <daily|\"Su,Mo,Tu,We,Th,Fr,Sa\">`` to ``<extra>``" +
+                        " to cause the event to repeat on the given days.\n Default behavior is no repeat.\n An event can instead " +
+                        "be configured to repeat on a daily interval by adding ``interval <number>`` to ``<extra>``";
 
-                "\n\n```diff\n+ Start and end date ```\n" +
-                "Adding ``date <yyyy/MM/dd>`` to ``<extra>`` will set the event's start and end date.\n For more granular " +
-                "control you can instead use ``start-date <yyyy/MM/dd>`` and ``end-date <yyyy/MM/dd>`` in place of ``date``." +
-                "\n\n" +
-                "The date must be formatted like year/month/day, however year and month can be omitted " +
-                "('month/day' and 'day' are valid).\nThe omitted values will be inherited from the current date." +
-                "\n\n" +
-                "Dates which are in a non-number format (such as '10 May') are not acceptable.\n" +
-                "Default behavior is to use the next day as the event's date." +
-                "\n\nAs a shortcut, appending ``today`` to the command will act like the ``date M/d`` option where " +
-                "the date is set to the current day." +
+        info.addUsageCategory(cat2, cont2);
 
-                "splithere" + // the help command will parse this token and start a new message
+        String cat3 = "+ Start and end date";
+        String cont3 = "Adding ``date <yyyy/MM/dd>`` to ``<extra>`` will set the event's start and end date.\n For more granular " +
+                        "control you can instead use ``start-date <yyyy/MM/dd>`` and ``end-date <yyyy/MM/dd>`` in place of ``date``." +
+                        "\n\n" +
+                        "The date must be formatted like year/month/day, however year and month can be omitted " +
+                        "('month/day' and 'day' are valid).\nThe omitted values will be inherited from the current date." +
+                        "\n\n" +
+                        "Dates which are in a non-number format (such as '10 May') are not acceptable.\n" +
+                        "Default behavior is to use the next day as the event's date." +
+                        "\n\nAs a shortcut, appending ``today`` to the command will act like the ``date M/d`` option where " +
+                        "the date is set to the current day.";
+        info.addUsageCategory(cat3, cont3);
 
-                "\n\n```diff\n+ Event description ```\n" +
-                "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``.\n" +
-                "Up to 10 of comments may be added in ``<extra>``.\n" +
-                "If your title, comment, or channel includes any space characters, the phrase must be enclosed in " +
-                "quotations (see examples)." +
+        String cat4 = "+ Event description";
+        String cont4 = "Comments may be added by adding ``\"YOUR COMMENT\"`` at the end of ``<extra>``.\n" +
+                        "Up to 10 of comments may be added in ``<extra>``.\n" +
+                        "If your title, comment, or channel includes any space characters, the phrase must be enclosed in " +
+                        "quotations (see examples).";
+        info.addUsageCategory(cat4, cont4);
 
-                "\n\n```diff\n+ Event expiration ```\n" +
-                "In some instances of a repeating event, it may be desirable to set a date for when that event will stop recurring.\n" +
-                "This can be accomplished using the ``expire`` argument.\n" +
-                "Add ``expire <yyyy/MM/dd>`` to a create command to create an event with an expiration date (see examples).";
+        String cat5 = "+ Event expiration";
+        String cont5 = "In some instances of a repeating event, it may be desirable to set a date for when that event will stop recurring.\n" +
+                        "This can be accomplished using the ``expire`` argument.\n" +
+                        "Add ``expire <yyyy/MM/dd>`` to a create command to create an event with an expiration date (see examples).";
+        info.addUsageCategory(cat5, cont5);
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " #event_schedule \"Party in the Guild Hall\" 19:00 2:00``" +
-                "\n``" + head + " #guild_reminders \"Sign up for Raids\" 4:00pm interval 2``" +
-                "\n``" + head + " #raid_schedule \"Weekly Raid Event\" 7:00pm 12:00pm repeat \"Fri, Sun\" \"Healers and " +
-                "tanks always in demand.\" \"PM our raid captain with your role and level if attending.\"``" +
-                "\n``" + head + " #competition \"Capture the Flag\" 10:00am start-date 10/20 end-date 10/23``" +
-                "\n``" + head + " #shows \"Pokemon\" 5:29pm 6:00pm date 3/30 repeat \"Sat\" expire 5/30``";
+        info.addUsageExample(cmd+" #event_schedule \"Party in the Guild Hall\" 19:00 2:00");
+        info.addUsageExample(cmd+" #guild_reminders \"Sign up for Raids\" 4:00pm interval 2");
+        info.addUsageExample(cmd+" #raid_schedule \"Weekly Raid Event\" 7:00pm 12:00pm repeat \"Fri, Sun\" \"Healers and " +
+                "tanks always in demand.\" \"PM our raid captain with your role and level if attending.\"");
+        info.addUsageExample(cmd+" #competition \"Capture the Flag\" 10:00am start-date 10/20 end-date 10/23");
+        info.addUsageExample(cmd+" #shows \"Pokemon\" 5:29pm 6:00pm date 3/30 repeat \"Sat\" expire 5/30");
 
-        String USAGE_BRIEF = "``" + head + "`` - add an event to a schedule";
-
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
     @Override
     public String verify(String prefix, String[] args, MessageReceivedEvent event)

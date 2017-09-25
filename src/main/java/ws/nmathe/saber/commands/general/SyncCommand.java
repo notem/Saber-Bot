@@ -6,6 +6,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -27,12 +28,14 @@ public class SyncCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
+        String usage = "``" + head + "`` - sync a schedule to a google calendar";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.GOOGLE);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel> [import|export] [<calendar address>]```\n" +
-                "The sync command will replace all events in the specified channel" +
+        String cat1 = "- Usage\n" + head + " <channel> [import|export] [<calendar address>]";
+        String cont1 = "The sync command will replace all events in the specified channel" +
                 "with events imported from a public google calendar.\n" +
                 "The command imports the next 7 days of events into the channel;" +
                 " the channel will then automatically re-sync once every day.\n\n" +
@@ -40,17 +43,14 @@ public class SyncCommand implements Command
                 "the address saved in the channel settings will be used.\n\n" +
                 "For more information concerning Google Calendar setup, reference the " +
                 "online docs at https://nmathe.ws/bots/saber";
+        info.addUsageCategory(cat1, cont1);
 
-        String USAGE_BRIEF = "``" + head + "`` - sync a schedule to a google calendar";
+        info.addUsageExample(head+" #new_schedule g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com");
+        info.addUsageExample(head+" #calendar import g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com");
+        info.addUsageExample(head+" #calendar export 0a0jbiclczoiaai@group.calendar.google.com");
+        info.addUsageExample(head+" #new_schedule");
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " #new_schedule g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com``" +
-                "\n``" + head + " #calendar import g.rit.edu_g4elai703tm3p4iimp10g8heig@group.calendar.google.com``" +
-                "\n``" + head + " #calendar export 0a0jbiclczoiaai@group.calendar.google.com``" +
-                "\n``" + head + " #new_schedule``";
-
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
 
     @Override

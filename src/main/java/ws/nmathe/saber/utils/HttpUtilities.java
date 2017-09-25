@@ -14,6 +14,9 @@ public class HttpUtilities
 {
     private static LocalDateTime lastUpdate = LocalDateTime.MIN;
 
+    /**
+     * Updates bot metrics for any connected metric tracking services
+     */
     public static void updateStats()
     {
         String auth = Main.getBotSettingsManager().getWebToken();
@@ -23,6 +26,11 @@ public class HttpUtilities
         }
     }
 
+    /**
+     * updates bot metrics for bots.discord.pw tracking
+     * @param i the guild count
+     * @param auth the abal authentication token for the bot
+     */
     private static void updateStats_abal(int i, String auth)
     {
         if (lastUpdate.until(LocalDateTime.now(), ChronoUnit.SECONDS) > 60)

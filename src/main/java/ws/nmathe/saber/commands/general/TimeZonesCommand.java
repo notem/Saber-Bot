@@ -1,6 +1,7 @@
 package ws.nmathe.saber.commands.general;
 
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -9,6 +10,7 @@ import java.time.ZoneId;
 import java.util.Set;
 
 /**
+ * used for generating the list of valid timezone strings
  */
 public class TimeZonesCommand implements Command
 {
@@ -19,22 +21,21 @@ public class TimeZonesCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
+        String usage = "``" + head + "`` - show available timezones";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.MISC);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <filter>```\n" +
-                "The zones command will provide a list of valid timezone strings for schedule configuration." +
+        String cat1 = "- Usage\n" + head + " <filter>";
+        String cont1 = "The zones command will provide a list of valid timezone strings for schedule configuration." +
                 "\nA search filter argument is required (eg. ``us``).";
+        info.addUsageCategory(cat1, cont1);
 
-        String USAGE_BRIEF = "``" + head + "`` - show available timezones";
+        info.addUsageExample(head+" america");
+        info.addUsageExample(head+" tokyo");
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " america``" +
-                "\n``" + head + " tokyo``";
-
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
 
     @Override

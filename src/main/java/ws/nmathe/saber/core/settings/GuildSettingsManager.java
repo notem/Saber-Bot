@@ -9,9 +9,15 @@ import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
 
 /**
+ * manager for guild setting options
  */
 public class GuildSettingsManager
 {
+    /**
+     * retrieves the guild settings object for a guild
+     * @param guildId ID of guild
+     * @return GuildSettings object (never null)
+     */
     public GuildSettings getGuildSettings(String guildId)
     {
         Document guildDoc = Main.getDBDriver().getGuildCollection().find(eq("_id", guildId)).first();
@@ -19,7 +25,7 @@ public class GuildSettingsManager
         if(guildDoc == null) // create a new guild document and add to db
         {
             // unrestricted commands are commands that may be used outside of the command channel
-            ArrayList<String> unrestrictedCommands = new ArrayList<>(Arrays.asList("list", "help")); // defaults
+            ArrayList<String> unrestrictedCommands = new ArrayList<>(Arrays.asList("list", "info")); // defaults
 
             // initialize with defaults
             guildDoc = new Document()
@@ -34,6 +40,7 @@ public class GuildSettingsManager
     }
 
     /**
+     * object for getting and setting guild options
      */
     @SuppressWarnings("unchecked")
     public static class GuildSettings

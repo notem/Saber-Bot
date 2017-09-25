@@ -10,6 +10,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.core.schedule.EntryManager;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -39,63 +40,65 @@ public class ConfigCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String cmd = prefix + this.name();
+        String usage = "``" + cmd + "`` - configure a schedule's settings";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.CORE);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + cmd + " <channel> [<option> <new config>]```\n" +
-                "The config command can be used to both view and " +
-                "change schedule settings. To view a schedule's current settings, supply only the ``<channel>`` argument.\n" +
-                "The full list of setting options can be found when using the command with no <option> or <new config> parameters." +
-                "\n\n" +
-                "To modify any settings, use the term inside the brackets as the parameter of <option> and supply the " +
-                "new setting configuration as the final <new config> parameter.\n" +
-                "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config ``sync`` and ``remind`` options." +
-                "\n\n" +
-                "```diff\n+ Event Reminders```\n" +
-                "Events can be configured to send reminder announcements at configured thresholds before an event begins.\n" +
-                "To configure the times at which events on the schedule should send reminders, use the 'remind' with an " +
-                "argument containing the relative times to remind delimited by spaces (see examples).\n" +
-                "Reminder messages are defined by a configured format, see below." +
-                "splithere" +
-                "```diff\n+ Custom announcements and reminders```\n" +
-                "When an event begins or ends an announcement message is sent to the configured channel.\n" +
-                "The message that is sent is determined from the message format the schedule is configured to use." +
-                "\n\n" +
-                "When creating a custom announcement message format the " +
-                "'%' acts as a delimiter for entry parameters such as the title or a comment.\n" +
-                "**%t** will cause the entry title to be inserted\n**%c[1-9]** will cause the nth comment to be inserted\n**%a** will insert" +
-                " 'begins' or 'ends'\n**%%** will insert %." +
-                "\n\n" +
-                "If you wish to create a multi-line message like the default message format, new lines can be entered using" +
-                " SHIFT+Enter.\n" +
-                "However, be sure to encapsulate the entire string (new lines included) in quotations." +
-                "\n\n" +
-                "To reset a custom message or channel to the default pass **reset** as the command parameter." +
-                "splithere" +
-                "```diff\n+ Event RSVP```\n" +
-                "Schedules can be configured to allow users to RSVP to events on the schedule.\n" +
+        String cat1 = "- Usage\n" + cmd + " <channel> [<option> <new config>]";
+        String cont1 = "The config command can be used to both view and " +
+                        "change schedule settings. To view a schedule's current settings, supply only the ``<channel>`` argument.\n" +
+                        "The full list of setting options can be found when using the command with no <option> or <new config> parameters." +
+                        "\n\n" +
+                        "To modify any settings, use the term inside the brackets as the parameter of <option> and supply the " +
+                        "new setting configuration as the final <new config> parameter.\n" +
+                        "To turn off calendar sync or event reminders, pass **off** as a command parameter when setting the config ``sync`` and ``remind`` options.";
+        info.addUsageCategory(cat1, cont1);
+
+        String cat2 = "+ Event Reminders";
+        String cont2 = "Events can be configured to send reminder announcements at configured thresholds before an event begins.\n" +
+                        "To configure the times at which events on the schedule should send reminders, use the 'remind' with an " +
+                        "argument containing the relative times to remind delimited by spaces (see examples).\n" +
+                        "Reminder messages are defined by a configured format, see below.";
+        info.addUsageCategory(cat2, cont2);
+
+        String cat3 = "+ Custom announcements and reminders";
+        String cont3 = "When an event begins or ends an announcement message is sent to the configured channel.\n" +
+                        "The message that is sent is determined from the message format the schedule is configured to use." +
+                        "\n\n" +
+                        "When creating a custom announcement message format the " +
+                        "'%' acts as a delimiter for entry parameters such as the title or a comment.\n" +
+                        "**%t** will cause the entry title to be inserted\n**%c[1-9]** will cause the nth comment to be inserted\n**%a** will insert" +
+                        " 'begins' or 'ends'\n**%%** will insert %." +
+                        "\n\n" +
+                        "If you wish to create a multi-line message like the default message format, new lines can be entered using" +
+                        " SHIFT+Enter.\n" +
+                        "However, be sure to encapsulate the entire string (new lines included) in quotations." +
+                        "\n\n" +
+                        "To reset a custom message or channel to the default pass **reset** as the command parameter.";
+        info.addUsageCategory(cat3, cont3);
+
+        String cat4 = "+ Event RSVP";
+        String cont4 = "Schedules can be configured to allow users to RSVP to events on the schedule.\n" +
                 "To enable RSVP for the schedule, use the ``rsvp`` option and provide the argument **on** (see Examples for details)\n" +
                 "\nCustom rsvp options can be configured by using ``rsvp add`` and ``rsvp remove``.\n" +
                 "When adding a new rsvp group two arguments are necessary: the first argument denotes the name for the rsvp group," +
                 "the second argument is the emoticon to use as the message reaction button.\n" +
                 "Custom discord emoticons are allowed.\n" +
                 "\nWhen removing an rsvp group, simply provide the group's name as an argument.";
+        info.addUsageCategory(cat4, cont4);
 
-        String USAGE_BRIEF = "``" + cmd + "`` - configure a schedule's settings";
+        info.addUsageExample(cmd + " #guild_events");
+        info.addUsageExample(cmd + " #guild_events msg \"@here The event %t %a. %c1\"");
+        info.addUsageExample(cmd + " #guild_events remind \"10, 20, 30 min\"");
+        info.addUsageExample(cmd + " #events_channel chan \"general\"");
+        info.addUsageExample(cmd + " #events_channel remind-msg \"reset\"");
+        info.addUsageExample(cmd + " #schedule rsvp on");
+        info.addUsageExample(cmd + " #schedule rsvp add DPS :crossed_swords:");
+        info.addUsageExample(cmd + " #schedule rsvp remove Undecided");
 
-        String EXAMPLES = "```diff\n- Examples```" +
-                "\n``" + cmd + " #guild_events``" +
-                "\n``" + cmd + " #guild_events msg \"@here The event %t %a. %c1\"``" +
-                "\n``" + cmd + " #guild_events remind \"10, 20, 30 min\"``" +
-                "\n``" + cmd + " #events_channel chan \"general\"``" +
-                "\n``" + cmd + " #events_channel remind-msg \"reset\"``" +
-                "\n``" + cmd + " #schedule rsvp on``" +
-                "\n``" + cmd + " #schedule rsvp add DPS :crossed_swords:``" +
-                "\n``" + cmd + " #schedule rsvp remove Undecided``";
-
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
 
     @Override
@@ -156,7 +159,7 @@ public class ConfigCommand implements Command
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] msg <new config>]``, " +
                                 "where ``<new config>`` is the message format string to use when create announcement and remind messages.\n" +
-                                "Reference the ``help`` command information for ``config`` to learn more about custom announcement messages.";
+                                "Reference the ``info`` command information for ``config`` to learn more about custom announcement messages.";
                     }
                     break;
 
@@ -179,8 +182,8 @@ public class ConfigCommand implements Command
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] end-msg <new config>``, " +
                                 "where ``<new config>`` is the message format string to use when create event end messages.\n" +
-                                "This overrides the ``[msg]`` setting for events which are ending.\n" +
-                                "Reference the ``help`` command information for ``config`` to learn more about custom announcement messages.";
+                                "This overrides the ``[message]`` setting for events which are ending.\n" +
+                                "Reference the ``info`` command information for ``config`` to learn more about custom announcement messages.";
                     }
                     break;
 
@@ -191,7 +194,7 @@ public class ConfigCommand implements Command
                         return "That's not enough arguments!\n" +
                                 "Use ``" + cmd + " [#channel] end-chan <new config>``, " +
                                 "where <new config> is a discord channel to which event end messages should be sent.\n" +
-                                "This overrides the ``[chan]`` setting for events which are ending.";
+                                "This overrides the ``[channel]`` setting for events which are ending.";
                     }
                     break;
 
@@ -326,7 +329,7 @@ public class ConfigCommand implements Command
                                 "Use ``" + cmd + " [chan] remind-msg <new config>``, " +
                                 "where ``<new config>`` is the message format string to use when sending remind messages.\n" +
                                 "This setting will override the ``[msg]`` option for reminders.\n" +
-                                "Reference the ``help`` command information for ``config`` to learn more about custom announcement messages.";
+                                "Reference the ``info`` command information for ``config`` to learn more about custom announcement messages.";
                     }
                     break;
 
@@ -515,6 +518,7 @@ public class ConfigCommand implements Command
                 {
                     case "m":
                     case "msg":
+                    case "message":
                         String msgFormat;
                         switch(args[index].toLowerCase())
                         {
@@ -537,6 +541,7 @@ public class ConfigCommand implements Command
 
                     case "ch":
                     case "chan":
+                    case "channel":
                         String chanName;
                         String chanId = args[index].replace("<#","").replace(">","");
                         try
@@ -995,19 +1000,19 @@ public class ConfigCommand implements Command
                 String form2 = Main.getScheduleManager().getEndAnnounceFormat(cId);
                 content += "```js\n" +
                         "// Event Announcement Settings" +
-                        "\n[msg]      " + (form1.isEmpty()?"(off)":
+                        "\n[message]  " + (form1.isEmpty()?"(off)":
                         "\"" + form1.replace("```","`\uFEFF`\uFEFF`") + "\"") +
-                        "\n[chan]     " +
+                        "\n[channel]  " +
                         "\"" + Main.getScheduleManager().getStartAnnounceChan(cId) + "\"" +
                         "\n[end-msg]  " +
                         (Main.getScheduleManager().isEndFormatOverridden(cId) ?
                                 (form2.isEmpty()?"(off)":
                                 "\"" + form2.replace("```","`\uFEFF`\uFEFF`")  + "\""):
-                                "(using [msg])") +
+                                "(using [message])") +
                         "\n[end-chan] " +
                         (Main.getScheduleManager().isEndChannelOverridden(cId) ?
                                 "\"" + Main.getScheduleManager().getEndAnnounceChan(cId) + "\"" :
-                                "(using [chan])") +
+                                "(using [channel])") +
                         "```";
 
                 if(type == 1) break;

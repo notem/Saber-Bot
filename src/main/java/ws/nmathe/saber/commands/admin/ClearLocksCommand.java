@@ -3,9 +3,11 @@ package ws.nmathe.saber.commands.admin;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 /**
+ * clears the schedule locks
  */
 public class ClearLocksCommand implements Command
 {
@@ -16,7 +18,7 @@ public class ClearLocksCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         return null;
     }

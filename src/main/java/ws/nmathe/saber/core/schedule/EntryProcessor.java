@@ -199,8 +199,8 @@ class EntryProcessor implements Runnable
 
     /**
      * fills a queue given a proper query, helper function to run()
-     * @param queueIdentifier
-     * @param query
+     * @param queueIdentifier which queue to queue the event for
+     * @param query the database query to use
      */
     private void processAndQueueEvents(queue queueIdentifier, Bson query)
     {

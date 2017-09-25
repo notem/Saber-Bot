@@ -3,10 +3,12 @@ package ws.nmathe.saber.commands.general;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 /**
+ * rearranges the events on a schedule
  */
 public class SortCommand implements Command
 {
@@ -17,26 +19,26 @@ public class SortCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
+        String usage = "``" + head + "`` - reorder the schedule by start time";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.MISC);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <channel> [<order>]```\n" +
-                "The sort command will re-sort the entries in a schedule." +
+        String cat1 = "- Usage\n" + head + " <channel> [<order>]";
+        String cont1 = "The sort command will re-sort the entries in a schedule." +
                 "\nEntries can be reordered in either ascending or descending order by adding 'asc' or 'desc' to the command.\n" +
                 "If the order is omitted from the command, the schedule will be sorted in ascending order." +
                 "\n\n" +
                 "The schedule cannot be modified while in the process of sorting.\n" +
                 "If for some reason your schedule is not unlocked after 10 minutes, visit the support server!\n" +
                 "For performance reasons, schedules with more than 15 entries will not be sorted.";
+        info.addUsageCategory(cat1, cont1);
 
-        String USAGE_BRIEF = "``" + head + "`` - reorder the schedule by start time";
+        info.addUsageExample(head + " #schedule");
+        info.addUsageExample(head + " #schedule desc");
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " #schedule``\n";
-
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
 
     @Override

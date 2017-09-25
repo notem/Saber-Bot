@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -18,6 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * retrieves the list of RSVP'ed members to an event
  */
 public class ListCommand implements Command
 {
@@ -28,12 +30,14 @@ public class ListCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
+        String usage = "``" + head + "`` - show an event's rsvp list";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.MISC);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> [mode] [filters]```\n" +
-                "The list command will show all users who have rsvp'ed yes.\n" +
+        String cat1 = "- Usage\n" + head + " <ID> [mode] [filters]";
+        String cont1 = "The list command will show all users who have rsvp'ed yes.\n" +
                 "The command takes a single argument which should be the ID of the event you wish query.\n" +
                 "\nThe schedule holding the event must have 'rsvp' turned on in the configuration settings.\n" +
                 "RSVP can be enabled on a channel using the config command as followed, ``" +
@@ -45,16 +49,13 @@ public class ListCommand implements Command
                 "The list command has two optional 'modes' of display. \n" +
                 "If the term 'mobile' is added as an argument to the command, non-mentionable usernames will be displayed.\n" +
                 "If the term 'id' is added as an argument, usernames will be displayed as they escaped mentionable ID tags.";
+        info.addUsageCategory(cat1, cont1);
 
-        String USAGE_BRIEF = "``" + head + "`` - show an event's rsvp list";
+        info.addUsageExample(head + " 01JAO3");
+        info.addUsageExample(head + " 01JAO3 \"u: @notem\"");
+        info.addUsageExample(head + " 01JAO3 mobile \"t: yes\" \"t: no\"");
 
-        String USAGE_EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " 080194c``\n" +
-                "``" + head + " 01d9aff \"u: @notem\"\n" +
-                "``" + head + " 0a9dda2 mobile \"t: yes\" \"t: no\" \"t: undecided\"";
-
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + USAGE_EXAMPLES;
+        return info;
     }
 
     @Override

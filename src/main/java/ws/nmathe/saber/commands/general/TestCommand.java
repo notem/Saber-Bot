@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -11,6 +12,7 @@ import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
 /**
+ * used to test an event's announcement format
  */
 public class TestCommand implements Command
 {
@@ -21,26 +23,26 @@ public class TestCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
+        String usage = "``" + head + "`` - test an event's announcement message";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.MISC);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> [<type>]```\n" +
-                "The test command will send an test announcement for the event to the channel in which the command was used.\n" +
-                "The announcement message for an event is controlled by the schedule to which the event belongs to, and " +
-                "can be changed using the ``config`` command.\n\n" +
-                "An optional ``<type>`` argument can be supplied.\n" +
-                "The ``<type>`` argument is used to determine which announcement type to test.\n" +
-                "Valid options are: **start**, **end**, and **remind**.";
+        String cat1 = "- Usage\n" + head + " <ID> [<type>]";
+        String cont1 = "The test command will send an test announcement for the event to the channel in which the command was used.\n" +
+                        "The announcement message for an event is controlled by the schedule to which the event belongs to, and " +
+                        "can be changed using the ``config`` command.\n\n" +
+                        "An optional ``<type>`` argument can be supplied.\n" +
+                        "The ``<type>`` argument is used to determine which announcement type to test.\n" +
+                        "Valid options are: **start**, **end**, and **remind**.";
+        info.addUsageCategory(cat1, cont1);
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " 7ffff``\n" +
-                "``" + head + " 09aa8 end``";
+        info.addUsageExample(head + "J09DlA");
+        info.addUsageExample(head + "J09DlA end");
+        info.addUsageExample(head + "J09DlA remind");
 
-        String USAGE_BRIEF = "``" + head + "`` - test an event's announcement message";
-
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
 
     @Override

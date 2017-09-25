@@ -76,7 +76,7 @@ public class EventListener extends ListenerAdapter
         {
             String a = "("+prefix+")?help(.+)?$";
             String b = "("+prefix+")?oauth(.+)?$";
-            // help and setup general commands
+            // info and setup general commands
             if (content.matches(a) || content.matches(b))
             {
                 Main.getCommandHandler().handleCommand(event, 0, prefix);

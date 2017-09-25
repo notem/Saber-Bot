@@ -3,6 +3,7 @@ package ws.nmathe.saber.commands.admin;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -11,6 +12,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import java.util.Collection;
 
 /**
+ * messages all connected guilds
  */
 public class GlobalMsgCommand implements Command
 {
@@ -22,7 +24,7 @@ public class GlobalMsgCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         return null;
     }

@@ -219,14 +219,11 @@ public class CommandHandler
         return commands.keySet();
     }
 
-    public Command getCommand( String invoke )
+    public Command getCommand(String invoke)
     {
         // check if command exists, if so return it
-        if( commands.containsKey(invoke) )
-            return commands.get(invoke);
-
-        else    // otherwise return null
-            return null;
+        // otherwise return null
+        return commands.getOrDefault(invoke, null);
     }
 
     public void putSync() {

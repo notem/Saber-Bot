@@ -5,6 +5,7 @@ import com.google.api.client.auth.oauth2.TokenResponseException;
 import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -12,6 +13,7 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import java.io.IOException;
 
 /**
+ * used to set the google authorization token for a user
  */
 public class OAuthCommand implements Command
 {
@@ -22,12 +24,14 @@ public class OAuthCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
+        String usage = "``" + head + "`` - authorize access to Google Calendar";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.GOOGLE);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " [<token>]```\n" +
-                "This command is used to authorizes access to the private Google Calendar calendars and events associated with a Google User account.\n\n" +
+        String cat1 = "- Usage\n" + head + " [<token>]";
+        String cont1 = "This command is used to authorizes access to the private Google Calendar calendars and events associated with a Google User account.\n\n" +
                 "Authorizing access will allow me to both access (read) your private events" +
                 " and calendars and modify those events and calendars.\n" +
                 "This will allow you to export events created on discord to a Google Calendar.\n" +
@@ -36,14 +40,11 @@ public class OAuthCommand implements Command
                 "Authorizing through the provided link will provide you with an authorization token.\n\n" +
                 "To link that authorization token with your Discord user ID, add the authorization token as the first argument to this command.\n" +
                 "Only one Google Account may be authorized per discord user, providing another authorization token with this command will overwrite the old token.";
+        info.addUsageCategory(cat1, cont1);
 
-        String USAGE_BRIEF = "``" + head + "`` - authorize access to Google Calendar";
+        info.addUsageExample(head + " 4/6KcRgz5XUrkfDD8WPMQx7G6RFosmkfF4dcDooKx6t98");
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " 4/6KcRgz5XUrkfDD8WPMQx7G6RFosmkfF4dcDooKx6t98``\n";
-
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
 
     @Override
@@ -81,7 +82,7 @@ public class OAuthCommand implements Command
             }
             else
             {
-                message = "Your Discord User ID is currently associated with a Google Account access token." +
+                message = "Your Discord User ID is currently associated with a Google Account access token.\n" +
                         "You can authorize access to a different account's calendars by obtaining a different access token from the following link.\n" +
                         "However, only one Google Account at a time may be linked with your Discord User ID.\n" + googleAuth;
             }

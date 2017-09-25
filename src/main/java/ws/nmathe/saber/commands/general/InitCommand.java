@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
@@ -17,6 +18,9 @@ import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
+/**
+ * Creates a new schedule for events
+ */
 public class InitCommand implements Command
 {
     @Override
@@ -26,12 +30,14 @@ public class InitCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
+        String usage = "``" + head + "`` - initialize a new schedule";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.CORE);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " [<channel>|<name>]```\n" +
-                "With this bot, all events must be placed on a schedule." +
+        String cat1 = "- Usage\n" + head + " [<channel>|<name>]";
+        String cont1 = "With this bot, all events must be placed on a schedule." +
                 "\nSchedules are discord channels which are used to store and display the details of an event." +
                 "\n\n" +
                 "This command is used to either create a new schedule or to convert an existing channel to a schedule.\n" +
@@ -41,16 +47,13 @@ public class InitCommand implements Command
                 "The single argument the command takes is optional." +
                 "\nThe argument should either be an existing #channel, or the name of the schedule you wish to create." +
                 "\nIf omitted, a new schedule named 'new_schedule' will be created.";
+        info.addUsageCategory(cat1, cont1);
 
-        String EXAMPLES = "```diff\n- Examples```" +
-                "\n``" + head + "``" +
-                "\n``" + head + " \"Guild Events\"``" +
-                "\n``" + head + " #events``";
+        info.addUsageExample(head);
+        info.addUsageExample(head+"\"Guild Events\"");
+        info.addUsageExample(head+" #events");
 
-        String USAGE_BRIEF = "``" + head + "`` - initialize a new schedule";
-
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
 
     @Override

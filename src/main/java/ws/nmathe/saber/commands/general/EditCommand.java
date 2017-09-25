@@ -3,6 +3,7 @@ package ws.nmathe.saber.commands.general;
 import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.utils.Logging;
@@ -18,6 +19,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
 /**
+ * used to edit currently active events
  */
 public class EditCommand implements Command
 {
@@ -28,12 +30,14 @@ public class EditCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
+        String usage = "``" + head + "`` - modify an event";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.CORE);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID> [<option> <arg(s)>]```\n" +
-                "The edit command will allow you to change an event's settings." +
+        String cat1 = "- Usage\n" + head + " <ID> [<option> <arg(s)>]";
+        String cont1 = "The edit command will allow you to change an event's settings." +
                 "\n\n" +
                 "``<option>`` is to contain which attribute of the event you wish to edit. ``<arg>`` should be the" +
                 " new configuration." +
@@ -42,50 +46,47 @@ public class EditCommand implements Command
                 "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``, ``deadline``," +
                 " and ``limit``.\n\n" +
                 "Most of the options listed above accept the same arguments as the ``create`` command.\n" +
-                "Reference the ``help`` information for the ``create`` command for more information.\n" +
+                "Reference the ``info`` information for the ``create`` command for more information.\n" +
                 "Similar to the ``create`` command, any number of [<option> <arg(s)>] pairs can be appended to the command." +
                 "\n\n" +
                 "The comment option requires one additional argument immediately after the 'comment' argument.\n" +
                 "This argument identifies what comment operation to do. The operations are ``add``, ``remove``, and ``swap``." +
-                "\nSee the examples for their usage." +
-                "\n\n" +
-                "```diff\n+ Announcement Silencing```\n" +
-                "Announcements for individual events can be toggled on-off using any of these three options: " +
+                "\nSee the examples for their usage.";
+        info.addUsageCategory(cat1, cont1);
+
+        String cat2 = "+ Announcement Silencing";
+        String cont2 = "Announcements for individual events can be toggled on-off using any of these three options: " +
                 "``quiet-start``, ``quiet-end``, ``quiet-remind``\n" +
-                "No additional arguments need to be provided when using one of the ``quiet-`` options." +
-                "splithere" +
-                "```diff\n+ RSVP Limits```\n" +
-                "If the schedule that the event is placed on is rsvp enabled (which may be turned on using the ``config`` command)" +
+                "No additional arguments need to be provided when using one of the ``quiet-`` options.";
+        info.addUsageCategory(cat2, cont2);
+
+        String cat3 = "+ RSVP Limits";
+        String cont3 = "If the schedule that the event is placed on is rsvp enabled (which may be turned on using the ``config`` command)" +
                 " a limit to the number of users who may rsvp as a particular group can be set using the ``limit`` option.\n" +
                 "The ``limit`` option requires two additional arguments: the first of which should be the name of the rsvp group to " +
                 "limit and the second argument should the be number of max individuals allowed to rsvp for that group.\n" +
-                "Use \"off\" as the argument to remove a previously set limit." +
-                "\n\n" +
-                "```diff\n+ Image and Thumbnail```\n" +
-                "The thumbnail and image of the event's discord embed can be set through the 'thumbnail' and 'image' options.\n" +
+                "Use \"off\" as the argument to remove a previously set limit.";
+        info.addUsageCategory(cat3, cont3);
+
+        String cat4 = "+ Image and Thumbnail";
+        String cont4 = "The thumbnail and image of the event's discord embed can be set through the 'thumbnail' and 'image' options.\n" +
                 "Provide a full url direct link to the image as the argument.\n" +
                 "The thumbnail of the event should appear as a small image to the right of the event's description.\n" +
                 "The image of the event should appear as a full-size image below the main content.";
+        info.addUsageCategory(cat4, cont4);
 
-        String EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " 3fa0dd0 comment add \"Attendance is mandatory\"``" +
-                "\n``" + head + " 80c0sd09 comment remove 3``" +
-                "\n``" + head + " 09adff3 comment swap 1 2``" +
-                "\n``" + head + " 0abf2991 start 21:15``" +
-                "\n``" + head + " 49afaf2 end 2:15pm``" +
-                "\n``" + head + " 409fa22 start-date 10/9``" +
-                "\n``" + head + " a00af9a repeat \"Sun, Tue, Fri\"``" +
-                "\n``" + head + " 0912af9 quiet-start``" +
-                "\n``" + head + " a901992 expire 2019/1/1``" +
-                "\n``" + head + " 90aff9a limit Yes 15``" +
-                "";
+        info.addUsageExample(head + "9aA4/K comment add \"Attendance is mandatory\"");
+        info.addUsageExample(head + "9aA4/K comment remove 3");
+        info.addUsageExample(head + "9aA4/K comment swap 1 2");
+        info.addUsageExample(head + "AJ@29l start 21:15");
+        info.addUsageExample(head + "AJ@29l end 2:15pm");
+        info.addUsageExample(head + "AJ@29l start-date 10/9");
+        info.addUsageExample(head + "AJ@29l repeat \"Sun, Tue, Fri\"");
+        info.addUsageExample(head + "AJ@29l quiet-start");
+        info.addUsageExample(head + "AJ@29l expire 2019/1/1");
+        info.addUsageExample(head + "AJ@29l limit Yes 15");
 
-        String USAGE_BRIEF = "``" + head + "`` - modify an event";
-
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
 
     @Override
@@ -450,7 +451,7 @@ public class EditCommand implements Command
                     break;
 
                 default:
-                    return "**" + args[index-1] + "** is not an option I know of! Please use the ``help`` command to see available options!";
+                    return "**" + args[index-1] + "** is not an option I know of! Please use the ``info`` command to see available options!";
             }
         }
 

@@ -5,11 +5,13 @@ import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.util.function.Consumer;
 
 /**
+ * retrieves the status of bot shards for the admin
  */
 public class ShardsCommand implements Command
 {
@@ -20,7 +22,7 @@ public class ShardsCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         return null;
     }

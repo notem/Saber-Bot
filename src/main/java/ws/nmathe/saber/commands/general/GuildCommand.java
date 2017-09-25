@@ -5,12 +5,14 @@ import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.settings.GuildSettingsManager.GuildSettings;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import java.util.ArrayList;
 
 /**
+ * used for viewing and setting guild settings
  */
 public class GuildCommand implements Command
 {
@@ -21,29 +23,30 @@ public class GuildCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
+        String usage = "``" + head + "`` - adjust guild-wide settings";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.CORE);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <option> <new config>```\n" +
-                "The guild command may be used to modify guild-wide settings such as your guild's command prefix and control channel.\n" +
-                "Issuing the guild command without arguments will output the current settings for your discord server.\n\n" +
-                "Options for <option> are: ``restrict``, ``unrestrict``, ``prefix``, and ``control``.\n" +
-                "\n```diff\n+ (Un)Restricted Commands```\n" +
-                "Commands may be configured as either 'restricted' or 'unrestricted' using the ``restrict`` and ``unrestrict`` command options.\n\n" +
-                "A restricted command can only be used in the designated control channel.\n" +
-                "Unrestricted commands may be used in any channel the bot is allowed to view, and by anyone who can post in those channels.";
+        String cat1 = "- Usage\n" + head + " <option> <new config>";
+        String cont1 = "The guild command may be used to modify guild-wide settings such as your guild's command prefix and control channel.\n" +
+                        "Issuing the guild command without arguments will output the current settings for your discord server.\n\n" +
+                        "Options for <option> are: ``restrict``, ``unrestrict``, ``prefix``, and ``control``.";
+        info.addUsageCategory(cat1, cont1);
 
-        String USAGE_BRIEF = "``" + head + "`` - adjust guild-wide settings";
+        String cat2 = "+ (Un)Restricted Commands";
+        String cont2 = "Commands may be configured as either 'restricted' or 'unrestricted' using the ``restrict`` and ``unrestrict`` command options.\n\n" +
+                        "A restricted command can only be used in the designated control channel.\n" +
+                        "Unrestricted commands may be used in any channel the bot is allowed to view, and by anyone who can post in those channels.";
+        info.addUsageCategory(cat2, cont2);
 
-        String EXAMPLES = "```diff\n- Examples```" +
-                "\n``" + head + " control #bot_management``" +
-                "\n``" + head + " unrestrict help``" +
-                "\n``" + head + " restrict create``" +
-                "\n``" + head + " prefix $``";
+        info.addUsageExample(head+" control #bot_management");
+        info.addUsageExample(head+" unrestrict info");
+        info.addUsageExample(head+" restrict create");
+        info.addUsageExample(head+" prefix $");
 
-        if( brief ) return USAGE_BRIEF;
-        else return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + EXAMPLES;
+        return info;
     }
 
     @Override

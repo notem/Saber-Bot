@@ -3,6 +3,7 @@ package ws.nmathe.saber.commands.general;
 import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
+import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -11,6 +12,7 @@ import ws.nmathe.saber.utils.VerifyUtilities;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 /**
+ * used to remove events and schedules
  */
 public class DeleteCommand implements Command
 {
@@ -21,29 +23,26 @@ public class DeleteCommand implements Command
     }
 
     @Override
-    public String help(String prefix, boolean brief)
+    public CommandInfo info(String prefix)
     {
-        String head = prefix + this.name();
+        String cmd = prefix + this.name();
+        String usage = "``" +cmd+ "`` - remove schedules or events ";
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.CORE);
 
-        String USAGE_EXTENDED = "```diff\n- Usage\n" + head + " <ID|channel|'all'>```\n" +
-                "The delete command can be used to delete schedules or events.\n" +
-                "The command's single argument may be an entry's ID, a schedule's channel, or ``all``." +
-                "\nIf ``all`` is used all schedules will be deleted, use with caution.\n\n" +
-                "The delete command is not required to remove messages or channels." +
-                "\nManually deleting the event's message on the schedule channel" +
-                " or deleting the entire schedule channel through discord suffices.";
+        String cat1 = "- Usage\n"+cmd+" <ID|channel|'all'>";
+        String cont1 = "The delete command can be used to delete schedules or events.\n" +
+                        "The command's single argument may be an entry's ID, a schedule's channel, or ``all``." +
+                        "\nIf ``all`` is used all schedules will be deleted, use with caution.\n\n" +
+                        "The delete command is not required to remove messages or channels." +
+                        "\nManually deleting the event's message on the schedule channel" +
+                        " or deleting the entire schedule channel through discord suffices.";
+        info.addUsageCategory(cat1, cont1);
 
-        String USAGE_BRIEF = "``" + head + "`` - remove schedules or events ";
+        info.addUsageExample(cmd+" AOja9B");
+        info.addUsageExample(cmd+" all");
+        info.addUsageExample(cmd+" #events");
 
-        String USAGE_EXAMPLES = "```diff\n- Examples```\n" +
-                "``" + head + " 084c``" +
-                "\n``" + head + " all``" +
-                "\n``" + head + " #events``";
-
-        if( brief )
-            return USAGE_BRIEF;
-        else
-            return USAGE_BRIEF + "\n\n" + USAGE_EXTENDED + "\n\n" + USAGE_EXAMPLES;
+        return info;
     }
 
     @Override

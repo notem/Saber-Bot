@@ -16,13 +16,11 @@ public interface Command
     String name();
 
     /**
-     * the function which retrieves the help text for the command
+     * the function which retrieves the info text for the command
      * @param prefix the initial substring of characters denoting the string is a command
-     * @param brief true - return the brief help text, false - return the full help text
-     * @return String, the description and operation of the command
+     * @return CommandInfo holding relevant command information
      */
-    String help(String prefix, boolean brief);
-
+    CommandInfo info(String prefix);
 
     /**
      * used to verify that the argument string for the invoking argument
@@ -33,7 +31,6 @@ public interface Command
      * @return true if arguments are properly formed, false otherwise
      */
     String verify(String prefix, String[] args, MessageReceivedEvent event);
-
 
     /**
      * what the bot does when the command is called by the user
