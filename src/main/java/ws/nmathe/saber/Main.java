@@ -28,7 +28,7 @@ public class Main
     /**
      * initialize the bot
      */
-    public static void main()
+    public static void main(String[] args)
     {
         if( botSettingsManager.hasSettings() )
         {
