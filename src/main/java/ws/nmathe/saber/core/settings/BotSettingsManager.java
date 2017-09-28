@@ -20,6 +20,10 @@ public class BotSettingsManager
     private static final String FILENAME = "saber.toml";
     private BotSettings settings;
 
+    /**
+     * attempts to read the settings file,
+     * on failure, generate a new default file
+     */
     public BotSettingsManager()
     {
         InputStream input = null;
@@ -49,6 +53,9 @@ public class BotSettingsManager
         }
     }
 
+    /**
+     * write out to file a new toml file with default settings
+     */
     private void generateFile()
     {
         OutputStream output = null;
@@ -81,6 +88,9 @@ public class BotSettingsManager
         }
     }
 
+    /**
+     * reload settings from toml file
+     */
     public void reloadSettings()
     {
         InputStream input = null;
@@ -109,6 +119,9 @@ public class BotSettingsManager
         }
     }
 
+    /**
+     * Class to store bot settings information
+     */
     private class BotSettings
     {
         String discord_token;
@@ -279,6 +292,7 @@ public class BotSettingsManager
     {
         return settings.google_oauth_secret;
     }
+
     public int getLogLevel()
     {
         return settings.log_level;

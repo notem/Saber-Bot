@@ -570,7 +570,6 @@ public class ScheduleEntry
         }
         catch( Exception e )
         {
-            // Main.getEntryManager().removeEntry(this.getId());
             msg = null;
         }
         return msg;

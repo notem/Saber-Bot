@@ -86,7 +86,6 @@ public class SyncCommand implements Command
         Credential credential = GoogleAuth.getCredential(event.getAuthor().getId());
         if(credential == null) return "I failed to connect to Google API Services!";
         Calendar service = GoogleAuth.getCalendarService(credential);
-        if(service == null) return "I failed to connect to Google API Services!";
 
         // validate the calendar address
         String address;

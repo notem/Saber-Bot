@@ -8,10 +8,11 @@ import ws.nmathe.saber.core.schedule.EntryManager;
 import ws.nmathe.saber.core.settings.BotSettingsManager;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import ws.nmathe.saber.core.settings.GuildSettingsManager;
-import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.Logging;
 
 /**
+ * Load point for the bot application
+ * Used to connect the various important elements together
  */
 public class Main
 {
@@ -24,7 +25,10 @@ public class Main
     private static GuildSettingsManager guildSettingsManager = new GuildSettingsManager();
     private static Driver mongoDriver = new Driver();
 
-    public static void main(String[] args)
+    /**
+     * initialize the bot
+     */
+    public static void main()
     {
         if( botSettingsManager.hasSettings() )
         {
@@ -39,6 +43,10 @@ public class Main
         // create the shard manager
         shardManager = new ShardManager(botSettingsManager.getShards(), botSettingsManager.getShardTotal());
     }
+
+    /*
+     *
+     */
 
     public static ShardManager getShardManager()
     {

@@ -385,9 +385,9 @@ public class EntryManager
     }
 
     /**
-     *
-     * @param guildId
-     * @return
+     * Retrieves all entries associated with a guild
+     * @param guildId snowflake ID of guild
+     * @return all active entries
      */
     public Collection<ScheduleEntry> getEntriesFromGuild(String guildId)
     {
@@ -399,9 +399,9 @@ public class EntryManager
 
 
     /**
-     *
-     * @param channelId
-     * @return
+     * Retrieves all entries on a channel
+     * @param channelId snowflake ID of channel
+     * @return all active entries
      */
     public Collection<ScheduleEntry> getEntriesFromChannel(String channelId)
     {

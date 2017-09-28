@@ -17,8 +17,8 @@ public class VerifyUtilities
 
     /**
      * verify that user input is valid for use by ParsingUtilities.parseTime()
-     * @param userInput
-     * @return
+     * @param userInput the user provided time string
+     * @return true if valid
      */
     public static boolean verifyTime(String userInput)
     {
@@ -70,9 +70,9 @@ public class VerifyUtilities
 
 
     /**
-     *
-     * @param arg
-     * @return
+     * verify that a date string is properly formed
+     * @param arg user-supplied date string
+     * @return true if valid
      */
     public static boolean verifyDate( String arg )
     {
@@ -108,9 +108,9 @@ public class VerifyUtilities
 
 
     /**
-     *
-     * @param arg
-     * @return
+     * verify that a base64 string is valid
+     * @param arg user-supplied base64 encoded string
+     * @return true if valid
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static boolean verifyBase64(String arg)
@@ -129,9 +129,9 @@ public class VerifyUtilities
 
 
     /**
-     *
-     * @param arg
-     * @return
+     * verify that a string may be parsed into an integer
+     * @param arg user-supplied integer
+     * @return true if valid
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static boolean verifyInteger(String arg)
@@ -149,9 +149,9 @@ public class VerifyUtilities
 
 
     /**
-     *
-     * @param arg
-     * @return
+     * verify that an url is valid and is reachable
+     * @param arg user-supplied url
+     * @return true if valid
      */
     public static boolean verifyUrl(String arg)
     {
@@ -168,9 +168,9 @@ public class VerifyUtilities
 
 
     /**
-     *
-     * @param arg
-     * @return
+     * Verify that a provided Zone string is valid
+     * @param arg Zone string
+     * @return true if valid
      */
     public static boolean verifyZone(String arg)
     {

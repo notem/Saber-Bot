@@ -11,14 +11,14 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.requests.SessionReconnectQueue;
 import net.dv8tion.jda.core.utils.MiscUtil;
-import okhttp3.Cache;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.Logging;
 
-import java.time.temporal.ChronoUnit;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -29,8 +29,9 @@ import java.util.function.Consumer;
 public class ShardManager
 {
     private Integer shardTotal = null;
-    private ConcurrentMap<Integer, JDA> jdaShards = null;  // used only when sharded
-    private JDA jda = null;                                // used only when unsharded
+    private ConcurrentMap<Integer, JDA> jdaShards = null;        // used only when sharded
+    private JDA jda = null;                                      // used only when unsharded
+    private Map<Integer, Instant> expireTimes = new HashMap<>(); // mapping of shards to the next time they should be restarted
 
     private Iterator<String> games;
 
@@ -94,6 +95,7 @@ public class ShardManager
                             .buildBlocking();
 
                     this.jdaShards.put(0, jda);
+                    this.expireTimes.put(0, ZonedDateTime.now().plusDays(1).toInstant());
                     shards.remove((Object) 0);
                 }
                 else
@@ -105,6 +107,7 @@ public class ShardManager
                             .buildBlocking();
 
                     this.jdaShards.put(shards.get(0), jda);
+                    this.expireTimes.put(shards.get(0), ZonedDateTime.now().plusDays(1).toInstant());
                     shards.remove(shards.get(0));
                 }
 
@@ -128,6 +131,7 @@ public class ShardManager
                                     .buildBlocking();
 
                             this.jdaShards.put(shardId, shard);
+                            this.expireTimes.put(shardId, ZonedDateTime.now().plusDays(1).toInstant());
                         }
 
                         this.startGamesTimer();
@@ -153,6 +157,7 @@ public class ShardManager
                         .buildBlocking();
 
                 this.jda.setAutoReconnect(true);
+                this.expireTimes.put(0, Instant.now());
 
                 this.startGamesTimer();
                 this.startRestartTimer();
@@ -302,6 +307,7 @@ public class ShardManager
             }
 
             this.jdaShards.put(shardId, shardBuilder.buildAsync());
+            this.expireTimes.replace(shardId, ZonedDateTime.now().plusDays(1).toInstant());
         }
         catch(RateLimitedException e)
         {
@@ -375,9 +381,10 @@ public class ShardManager
                         Logging.info(ShardManager.class, "Checking shards for automatic restart. . .");
                         for(JDA shard : getShards())
                         {
-                            if(shard.getResponseTotal() > responseThreshold)
+                            Integer shardId = shard.getShardInfo().getShardId();
+                            if(shard.getResponseTotal() > responseThreshold || expireTimes.get(shardId).isAfter(Instant.now()))
                             {
-                                restartShard(shard.getShardInfo().getShardId());
+                                restartShard(shardId);
                             }
                         }
                     }
@@ -386,14 +393,14 @@ public class ShardManager
                         Logging.info(ShardManager.class, "Checking primary jda for automatic restart. . .");
                         try
                         {
-                            if(jda.getResponseTotal() > responseThreshold)
+                            if(jda.getResponseTotal() > responseThreshold || expireTimes.get(0).isAfter(Instant.now()))
                             {
-
                                 Logging.info(ShardManager.class, "Shutting down primary jda. . .");
                                 jda.shutdown();
 
                                 Logging.info(this.getClass(), "Restarting primary jda. . .");
                                 jda = builder.setCorePoolSize(primaryPoolSize).buildAsync();
+                                expireTimes.replace(0, ZonedDateTime.now().plusDays(1).toInstant());
                             }
                         }
                         catch(RateLimitedException e)

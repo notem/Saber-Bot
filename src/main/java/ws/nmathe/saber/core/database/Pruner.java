@@ -16,6 +16,7 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 
 /**
+ * Removes entries of guilds, schedules, and events that are unreachable
  */
 public class Pruner implements Runnable
 {
