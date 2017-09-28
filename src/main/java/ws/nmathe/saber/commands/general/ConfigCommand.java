@@ -519,7 +519,7 @@ public class ConfigCommand implements Command
                     case "m":
                     case "msg":
                     case "message":
-                        String msgFormat = formatHelper(args[index].toLowerCase());
+                        String msgFormat = formatHelper(args[index]);
                         Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), msgFormat);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                         break;
@@ -529,7 +529,6 @@ public class ConfigCommand implements Command
                     case "channel":
                         String chanName;
                         chanName = chanHelper(args[index], event);
-
                         Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                         break;
@@ -538,7 +537,7 @@ public class ConfigCommand implements Command
                     case "em":
                     case "end-msg":
                         String endFormat;
-                        endFormat = formatHelper(args[index].toLowerCase());
+                        endFormat = formatHelper(args[index]);
                         Main.getScheduleManager().setEndAnnounceFormat(scheduleChan.getId(), endFormat);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                         break;
@@ -692,7 +691,7 @@ public class ConfigCommand implements Command
                     case "rm":
                     case "remind-msg":
                         String remindFormat;
-                        remindFormat = formatHelper(args[index].toLowerCase());
+                        remindFormat = formatHelper(args[index]);
                         Main.getScheduleManager().setReminderFormat(scheduleChan.getId(), remindFormat);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
                         break;
@@ -1082,8 +1081,11 @@ public class ConfigCommand implements Command
                             emote = shard.getEmoteById(key);
                             if(emote != null) break;
                         }
-                        String displayName = emote.getName();
-                        content += " " + options.get(key) + " - :" + displayName + ":\n";
+                        if(emote!=null)
+                        {
+                            String displayName = emote.getName();
+                            content += " " + options.get(key) + " - :" + displayName + ":\n";
+                        }
                     }
                 }
 
