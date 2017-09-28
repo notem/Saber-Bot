@@ -188,7 +188,7 @@ public class GuildCommand implements Command
             // send settings message
             JDA.ShardInfo shardInfo = event.getJDA().getShardInfo();
             String body = "```js\n" +
-                    "// Shard-" + shardInfo.getShardId() + " of " + shardInfo.getShardTotal() + "\n" +
+                    (shardInfo!=null?("// Shard-" + shardInfo.getShardId() + " of " + shardInfo.getShardTotal() + "\n"):"") +
                     "// Guild Settings\n" +
                     "[prefix]  \"" + guildSettings.getPrefix() + "\"\n";
 
