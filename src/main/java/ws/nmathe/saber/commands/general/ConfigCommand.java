@@ -157,7 +157,7 @@ public class ConfigCommand implements Command
                     if (args.length < 3)
                     {
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [#channel] msg <new config>]``, " +
+                                "Use ``" + cmd + " [#channel] message <new config>]``, " +
                                 "where ``<new config>`` is the message format string to use when create announcement and remind messages.\n" +
                                 "Reference the ``info`` command information for ``config`` to learn more about custom announcement messages.";
                     }
@@ -169,7 +169,7 @@ public class ConfigCommand implements Command
                     if (args.length < 3)
                     {
                         return "That's not enough arguments!\n" +
-                                "Use ``" + cmd + " [#channel] chan <new config>``, " +
+                                "Use ``" + cmd + " [#channel] channel <new config>``, " +
                                 "where ``<new config>`` is a discord channel to which announcement messages should be sent.\n";
                     }
                     break;
@@ -474,8 +474,8 @@ public class ConfigCommand implements Command
 
                 default:
                 {
-                    return "Argument **" + args[index-1] + "** is not a configurable setting! Options are **msg**, " +
-                            "**chan**, **zone**, **clock**, **sync**, **time**, and **remind**.";
+                    return "Argument **" + args[index-1] + "** is not a configurable setting! Options are **message**, " +
+                            "**channel**, **zone**, **clock**, **sync**, **time**, and **remind**.";
                 }
             }
         }
@@ -519,22 +519,7 @@ public class ConfigCommand implements Command
                     case "m":
                     case "msg":
                     case "message":
-                        String msgFormat;
-                        switch(args[index].toLowerCase())
-                        {
-                            case "reset":
-                            case "default":
-                                msgFormat = Main.getBotSettingsManager().getAnnounceFormat();
-                                break;
-
-                            case "off":
-                                msgFormat = "";
-                                break;
-
-                            default:
-                                msgFormat = args[index];
-                                break;
-                        }
+                        String msgFormat = formatHelper(args[index].toLowerCase());
                         Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), msgFormat);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                         break;
@@ -543,19 +528,7 @@ public class ConfigCommand implements Command
                     case "chan":
                     case "channel":
                         String chanName;
-                        String chanId = args[index].replace("<#","").replace(">","");
-                        try
-                        {
-                            TextChannel tmp = event.getGuild().getTextChannelById(chanId);
-                            if(tmp!=null)
-                                chanName = tmp.getName();
-                            else
-                                chanName = args[index];
-                        }
-                        catch(Exception e)
-                        {
-                            chanName = args[index];
-                        }
+                        chanName = chanHelper(args[index], event);
 
                         Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
@@ -565,22 +538,7 @@ public class ConfigCommand implements Command
                     case "em":
                     case "end-msg":
                         String endFormat;
-                        switch(args[index].toLowerCase())
-                        {
-                            case "reset":
-                            case "default":
-                            case "null":
-                                endFormat = null;
-                                break;
-
-                            case "off":
-                                endFormat = "";
-                                break;
-
-                            default:
-                                endFormat = args[index];
-                                break;
-                        }
+                        endFormat = formatHelper(args[index].toLowerCase());
                         Main.getScheduleManager().setEndAnnounceFormat(scheduleChan.getId(), endFormat);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                         break;
@@ -597,19 +555,7 @@ public class ConfigCommand implements Command
                                 break;
 
                             default:
-                                String endChanId = args[index].replace("<#","").replace(">","");
-                                try
-                                {
-                                    TextChannel tmp = event.getGuild().getTextChannelById(endChanId);
-                                    if(tmp!=null)
-                                        endChanName = tmp.getName();
-                                    else
-                                        endChanName = args[index];
-                                }
-                                catch(Exception e)
-                                {
-                                    endChanName = args[index];
-                                }
+                                endChanName = chanHelper(args[index], event);
                         }
                         Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanName);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
@@ -746,53 +692,27 @@ public class ConfigCommand implements Command
                     case "rm":
                     case "remind-msg":
                         String remindFormat;
-                        switch(args[index].toLowerCase())
-                        {
-                            case "reset":
-                            case "default":
-                            case "null":
-                                remindFormat = null;
-                                break;
-
-                            case "off":
-                                remindFormat = "";
-                                break;
-
-                            default:
-                                remindFormat = args[index];
-                                break;
-                        }
+                        remindFormat = formatHelper(args[index].toLowerCase());
                         Main.getScheduleManager().setReminderFormat(scheduleChan.getId(), remindFormat);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
                         break;
 
                     case "rc":
                     case "remind-chan":
+                        String remindChanName;
                         switch(args[index].toLowerCase())
                         {
                             case "reset":
                             case "default":
                             case "null":
-                                chanName = null;
+                                remindChanName = null;
                                 break;
 
                             default:
-                                chanId = args[index].replace("<#","").replace(">","");
-                                try
-                                {
-                                    TextChannel tmp2 = event.getGuild().getTextChannelById(chanId);
-                                    if(tmp2!=null)
-                                        chanName = tmp2.getName();
-                                    else
-                                        chanName = args[index];
-                                }
-                                catch(Exception e)
-                                {
-                                    chanName = args[index];
-                                }
+                                remindChanName = chanHelper(args[index], event);
                                 break;
                         }
-                        Main.getScheduleManager().setReminderChan(scheduleChan.getId(), chanName);
+                        Main.getScheduleManager().setReminderChan(scheduleChan.getId(), remindChanName);
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
                         break;
 
@@ -974,6 +894,43 @@ public class ConfigCommand implements Command
         }
     }
 
+    /**
+     * used to reduce code repetition
+     */
+    private String formatHelper(String arg)
+    {
+        switch(arg.toLowerCase())
+        {
+            case "reset":
+            case "default":
+            case "null":
+                return null;
+
+            case "off":
+                return "";
+
+            default:
+                return arg;
+        }
+    }
+
+    /**
+     * used to reduce code repetition
+     */
+    private String chanHelper(String arg, MessageReceivedEvent event)
+    {
+        try
+        {
+            String chanId = arg.replace("<#","").replace(">","");
+            TextChannel tmp2 = event.getGuild().getTextChannelById(chanId);
+            if(tmp2!=null) return tmp2.getName();
+            else return arg;
+        }
+        catch(Exception e)
+        {
+            return arg;
+        }
+    }
 
     /**
      * Generates the schedule config message to display to the user

@@ -42,7 +42,7 @@ public class CalendarConverter
             // Build a new authorized API client service.
             // Note: Do not confuse this class with the
             //   com.google.api.services.calendar.model.Calendar class.
-            /** if this fails, do not enable schedule synchronization **/
+            // if this fails, do not enable schedule synchronization
             Calendar service = GoogleAuth.getCalendarService(GoogleAuth.authorize());
 
             Main.getCommandHandler().putSync(); // enable the sync command

@@ -75,16 +75,16 @@ public class EditCommand implements Command
                 "The image of the event should appear as a full-size image below the main content.";
         info.addUsageCategory(cat4, cont4);
 
-        info.addUsageExample(head + "9aA4/K comment add \"Attendance is mandatory\"");
-        info.addUsageExample(head + "9aA4/K comment remove 3");
-        info.addUsageExample(head + "9aA4/K comment swap 1 2");
-        info.addUsageExample(head + "AJ@29l start 21:15");
-        info.addUsageExample(head + "AJ@29l end 2:15pm");
-        info.addUsageExample(head + "AJ@29l start-date 10/9");
-        info.addUsageExample(head + "AJ@29l repeat \"Sun, Tue, Fri\"");
-        info.addUsageExample(head + "AJ@29l quiet-start");
-        info.addUsageExample(head + "AJ@29l expire 2019/1/1");
-        info.addUsageExample(head + "AJ@29l limit Yes 15");
+        info.addUsageExample(head + " 9aA4/K comment add \"Attendance is mandatory\"");
+        info.addUsageExample(head + " 9aA4/K comment remove 3");
+        info.addUsageExample(head + " 9aA4/K comment swap 1 2");
+        info.addUsageExample(head + " AJ@29l start 21:15");
+        info.addUsageExample(head + " AJ@29l end 2:15pm");
+        info.addUsageExample(head + " AJ@29l start-date 10/9");
+        info.addUsageExample(head + " AJ@29l repeat \"Sun, Tue, Fri\"");
+        info.addUsageExample(head + " AJ@29l quiet-start");
+        info.addUsageExample(head + " AJ@29l expire 2019/1/1");
+        info.addUsageExample(head + " AJ@29l limit Yes 15");
 
         return info;
     }
