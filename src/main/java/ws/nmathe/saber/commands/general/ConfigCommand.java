@@ -1007,6 +1007,12 @@ public class ConfigCommand implements Command
 
                 if(type == 1) break;
             case 2:
+                if(content.length() > 1900)
+                {
+                    content += "```";
+                    return content;
+                }
+
                 String form3 = Main.getScheduleManager().getReminderFormat(cId);
                 List<Integer> reminders = Main.getScheduleManager().getReminders(cId);
                 String reminderStr = "";
@@ -1042,6 +1048,12 @@ public class ConfigCommand implements Command
 
                 if(type == 2) break;
             case 3:
+                if(content.length() > 1900)
+                {
+                    content += "```";
+                    return content;
+                }
+
                 int sortType = Main.getScheduleManager().getAutoSort(cId);
                 String sort = "";
                 switch(sortType)
@@ -1071,6 +1083,12 @@ public class ConfigCommand implements Command
 
                 if(type == 3) break;
             case 4:
+                if(content.length() > 1900)
+                {
+                    content += "```";
+                    return content;
+                }
+
                 Date syncTime = Main.getScheduleManager().getSyncTime(cId);
                 OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
                         .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
@@ -1094,6 +1112,12 @@ public class ConfigCommand implements Command
 
                 if(type == 4) break;
             case 5:
+                if(content.length() > 1900)
+                {
+                    content += "```";
+                    return content;
+                }
+
                 String clear = Main.getScheduleManager().getRSVPClear(cId);
                 content += "```js\n" +
                         "// RSVP Settings" +
