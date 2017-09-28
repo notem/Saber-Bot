@@ -2,10 +2,13 @@ package ws.nmathe.saber.core.command;
 
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.apache.commons.lang3.StringUtils;
-import ws.nmathe.saber.utils.Logging;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 /**
  * used to create a CommandContainer object which contains the parsed tokens of the user input
@@ -28,59 +31,22 @@ class CommandParser
         /// trim off the prefix
         String trimmed = StringUtils.replaceOnce(raw,prefix, "").trim();
 
-        // split at white spaces (non newlines)
-        String[] split = trimmed.split("[^\\S\n\r]+");
-
-        // separate out first arg
-        String invoke = split[0];
-
-        // divide out the remaining args from the first arg
-        split = Arrays.copyOfRange(split, 1, split.length);
-
-        // process the remaining elements into arguments in a temporary ArrayList
-        ArrayList<String> list = new ArrayList<>();
-        String tmp = "";            // temporary buffer used when encountering a "txt ... txt" arg
-        boolean quotesFlag = true;  //
-        for( String str : split )
+        // split at white spaces (non newlines) or quotation captures
+        Matcher matcher = Pattern.compile("\"[\\S\\s]*?\"|[^ \"]+").matcher(trimmed);
+        List<String> list = new ArrayList<>();
+        while(matcher.find())
         {
-            if( quotesFlag )
-            {
-                if (str.startsWith("\""))
-                {
-                    tmp += str;
-                    quotesFlag = false;
-
-                    if(str.endsWith("\""))
-                    {
-                        list.add( tmp.replace("\"","") );
-                        tmp = "";
-                        quotesFlag = true;
-                    }
-                }
-                else
-                {
-                    list.add( str.replace("\"","") );
-                }
-            }
-            else
-            {
-                if( str.endsWith("\"") )
-                {
-                    tmp += " " + str;
-                    list.add(tmp.replace("\"", ""));
-
-                    tmp = "";
-                    quotesFlag = true;
-                }
-                else
-                {
-                    tmp += " " + str;
-                }
-            }
+            String group = matcher.group();
+            if(!group.isEmpty()) list.add(group.replace("\"",""));
         }
 
-        // ArrayList to primitive array
-        String[] args = list.toArray(new String[list.size()]);
+        String[] args = list.stream().toArray(String[]::new);
+
+        // separate out first arg
+        String invoke = args[0];
+
+        // divide out the remaining args from the first arg
+        args = Arrays.copyOfRange(args, 1, args.length);
 
         return new CommandContainer(prefix, invoke, args, e);
     }
