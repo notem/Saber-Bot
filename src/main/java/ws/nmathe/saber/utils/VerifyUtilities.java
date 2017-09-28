@@ -1,5 +1,10 @@
 package ws.nmathe.saber.utils;
 
+import com.vdurmont.emoji.EmojiManager;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.Emote;
+import ws.nmathe.saber.Main;
+
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -182,5 +187,31 @@ public class VerifyUtilities
             }
         }
         return false;
+    }
+
+    public static boolean verifyEmoji(String emoji)
+    {
+        if(!EmojiManager.isEmoji(emoji))
+        {
+            String emoteId = emoji.replaceAll("[^\\d]", "");
+            Emote emote = null;
+            try
+            {
+                for(JDA jda : Main.getShardManager().getShards())
+                {
+                    emote = jda.getEmoteById(emoteId);
+                    if(emote != null) break;
+                }
+            }
+            catch(Exception e)
+            {
+                return false;
+            }
+            if(emote == null)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -413,6 +413,12 @@ public class ScheduleManager
         return !(format == null);
     }
 
+    public boolean isRSVPExclusive(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
+        return settings == null || settings.getBoolean("rsvp_exclusivity", true);
+    }
+
     /*
      * Getters
      * Should never return null
@@ -685,6 +691,21 @@ public class ScheduleManager
         return map;
     }
 
+    public String getRSVPClear(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if(settings == null)
+        {
+            return "";
+        }
+        String emoji = settings.getString("rsvp_clear");
+        if(emoji == null)
+        {
+            return "";
+        }
+        return emoji;
+    }
+
     /*
      * setters
      */
@@ -771,10 +792,35 @@ public class ScheduleManager
         {
             doc.append("rsvp_options", options);
             Main.getDBDriver().getScheduleCollection().replaceOne(eq("_id", cId), doc);
-        }
-        else
+        } else
         {
             Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("rsvp_options", options));
+        }
+    }
+
+    public void setRSVPClear(String cId, String emoji)
+    {
+        Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
+        if(!doc.containsKey("rsvp_clear"))
+        {
+            doc.append("rsvp_clear", emoji);
+            Main.getDBDriver().getScheduleCollection().replaceOne(eq("_id", cId), doc);
+        } else
+        {
+            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("rsvp_clear", emoji));
+        }
+    }
+
+    public void setRSVPExclusivity(String cId, Boolean bool)
+    {
+        Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
+        if(!doc.containsKey("rsvp_exclusivity"))
+        {
+            doc.append("rsvp_exclusivity", bool);
+            Main.getDBDriver().getScheduleCollection().replaceOne(eq("_id", cId), doc);
+        } else
+        {
+            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("rsvp_exclusivity", bool));
         }
     }
 }

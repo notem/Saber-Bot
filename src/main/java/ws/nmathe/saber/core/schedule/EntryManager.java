@@ -136,7 +136,7 @@ public class EntryManager
             if( Main.getScheduleManager().isRSVPEnabled(channelId) )
             {
                 Map<String, String> map = Main.getScheduleManager().getRSVPOptions(channelId);
-                addRSVPReactions(map, msg);
+                addRSVPReactions(map, Main.getScheduleManager().getRSVPClear(channelId), msg);
             }
 
             // add new document
@@ -258,25 +258,39 @@ public class EntryManager
      * @param options (Map) mapping of rsvp emojis to rsvp names
      * @param message (Message) discord message object
      */
-    public static void addRSVPReactions(Map<String, String> options, Message message)
+    public static void addRSVPReactions(Map<String, String> options, String clearEmoji, Message message)
     {
         for(String emoji : options.keySet())
         {
-            if(EmojiManager.isEmoji(emoji))
+            addRSVPReaction(emoji, message);
+        }
+        if(!clearEmoji.isEmpty())
+        {
+            addRSVPReaction(clearEmoji, message);
+        }
+    }
+
+    /**
+     * helper to addRSVPReactions(..)
+     * @param emoji string emoticon, or emote ID
+     * @param message message object to react to
+     */
+    private static void addRSVPReaction(String emoji, Message message)
+    {
+        if(EmojiManager.isEmoji(emoji))
+        {
+            message.addReaction(emoji).queue();
+        }
+        else
+        {
+            Emote emote;
+            for(JDA shard : Main.getShardManager().getShards())
             {
-                message.addReaction(emoji).queue();
-            }
-            else
-            {
-                Emote emote;
-                for(JDA shard : Main.getShardManager().getShards())
+                emote = shard.getEmoteById(emoji);
+                if(emote != null)
                 {
-                    emote = shard.getEmoteById(emoji);
-                    if(emote != null)
-                    {
-                        message.addReaction(emote).queue();
-                        break;
-                    }
+                    message.addReaction(emote).queue();
+                    break;
                 }
             }
         }

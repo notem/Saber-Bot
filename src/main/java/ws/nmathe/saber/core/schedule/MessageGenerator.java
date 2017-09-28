@@ -237,7 +237,7 @@ public class MessageGenerator
                         (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
             }
 
-            lineTwo += rsvpLine;
+            lineTwo += "\n"+rsvpLine;
         }
         else
         {

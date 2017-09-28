@@ -1,9 +1,11 @@
 package ws.nmathe.saber.commands.general;
 
 import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.services.calendar.Calendar;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Emote;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
@@ -18,8 +20,6 @@ import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
-
-import java.io.IOException;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -86,7 +86,9 @@ public class ConfigCommand implements Command
                 "When adding a new rsvp group two arguments are necessary: the first argument denotes the name for the rsvp group," +
                 "the second argument is the emoticon to use as the message reaction button.\n" +
                 "Custom discord emoticons are allowed.\n" +
-                "\nWhen removing an rsvp group, simply provide the group's name as an argument.";
+                "\nWhen removing an rsvp group, simply provide the group's name as an argument." +
+                "\nThe emoji used to clear a user from all rsvp groups can be set using the ``clear`` option." +
+                "\nIf you would like to allow users to RSVP for multiple categories, turn exclusivity off by using the ``exclusivity`` option.";
         info.addUsageCategory(cat4, cont4);
 
         info.addUsageExample(cmd + " #guild_events");
@@ -97,6 +99,8 @@ public class ConfigCommand implements Command
         info.addUsageExample(cmd + " #schedule rsvp on");
         info.addUsageExample(cmd + " #schedule rsvp add DPS :crossed_swords:");
         info.addUsageExample(cmd + " #schedule rsvp remove Undecided");
+        info.addUsageExample(cmd + " #schedule clear :potato:");
+        info.addUsageExample(cmd + " #schedule exclusivity off");
 
         return info;
     }
@@ -122,23 +126,6 @@ public class ConfigCommand implements Command
         if(Main.getScheduleManager().isLocked(cId))
         {
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
-        }
-
-        // get user Google credentials (if they exist)
-        Credential credential;
-        com.google.api.services.calendar.Calendar service;
-        try
-        {
-            credential = GoogleAuth.authorize(event.getAuthor().getId());
-            if(credential == null)
-            {
-                credential = GoogleAuth.authorize();
-            }
-            service = GoogleAuth.getCalendarService(credential);
-        }
-        catch (IOException e)
-        {
-            return "I failed to connect to Google API Services!";
         }
 
         index++;
@@ -230,6 +217,14 @@ public class ConfigCommand implements Command
 
                 case "sy":
                 case "sync":
+                    // get user Google credentials (if they exist)
+                    Credential credential = GoogleAuth.getCredential(event.getAuthor().getId());
+                    if(credential == null)
+                    {
+                        return "I failed to connect to Google API Services!";
+                    }
+                    Calendar service = GoogleAuth.getCalendarService(credential);
+
                     if (args.length < 3)
                     {
                         return "That's not enough arguments!\n" +
@@ -272,7 +267,6 @@ public class ConfigCommand implements Command
                                 "where ``[reminder]`` is the number of minutes before the event starts " +
                                 "that the reminder should be sent.";
                     }
-
                     Set<Integer> list = new LinkedHashSet<>();
                     list.addAll(Main.getScheduleManager().getReminders(cId));
                     switch(args[index])
@@ -310,7 +304,6 @@ public class ConfigCommand implements Command
                             if (list.size() <= 0) return "I could not parse out any times!";
                             break;
                     }
-
                     if (list.size() > 20)
                     {
                         return "More than 20 reminders are not allowed!";
@@ -365,28 +358,10 @@ public class ConfigCommand implements Command
                             }
 
                             // verify input is either a valid unicode emoji or discord emoji
-                            if(!EmojiManager.isEmoji(args[index+1]))
+                            if(!VerifyUtilities.verifyEmoji(args[index+1]))
                             {
-                                String emoteId = args[index+1].replaceAll("[^\\d]", "");
-                                Emote emote = null;
-                                try
-                                {
-                                    for(JDA jda : Main.getShardManager().getShards())
-                                    {
-                                        emote = jda.getEmoteById(emoteId);
-                                        if(emote != null) break;
-                                    }
-                                }
-                                catch(Exception e)
-                                {
-                                    return "*" + args[index+1] + "* is not an emoji!\n" +
-                                            "Your emoji must be a valid unicode emoji or custom discord emoji!";
-                                }
-                                if(emote == null)
-                                {
-                                    return "*" + args[index+1] + "* is not an emoji!\n" +
-                                            "Your emoji must be a valid unicode emoji or custom discord emoji!";
-                                }
+                                return "*" + args[index+1] + "* is not an emoji!\n" +
+                                        "Your emoji must be a valid unicode emoji or custom discord emoji!";
                             }
                             if(Main.getScheduleManager().getRSVPOptions(cId).values().contains(args[index].trim()))
                             {
@@ -415,6 +390,37 @@ public class ConfigCommand implements Command
                     }
                     break;
 
+                case "clear":
+                    if(!VerifyUtilities.verifyEmoji(args[index]))
+                    {
+                        return "*" + args[index] + "* is not an emoji!\n" +
+                                "Your clear emoji must be a valid unicode emoji or custom discord emoji!";
+                    }
+                    Set<String> keys = Main.getScheduleManager().getRSVPOptions(cId).keySet();
+                    if(keys.contains(args[index].trim()) || keys.contains(args[index].replaceAll("[^\\d]","")))
+                    {
+                        return "RSVP group name *" + args[index] + "* already exists!\n" +
+                                "Please choose a different name for your rsvp clear option!";
+                    }
+                    break;
+
+                case "ex":
+                case "exclusivity":
+                    switch(args[index].toLowerCase())
+                    {
+                        case "yes":
+                        case "no":
+                        case "false":
+                        case "true":
+                        case "on":
+                        case "off":
+                            break;
+
+                        default:
+                            return "RSVP exclusivity should be either *on* or *off*!";
+                    }
+                    break;
+
                 case "st":
                 case "style":
                     if (args.length < 3)
@@ -437,7 +443,6 @@ public class ConfigCommand implements Command
                                 "calendar should be synced.\nFor example, \"7\" will sync a weeks worth events to " +
                                 "the schedule and \"30\" will have the schedule display the full month of events.";
                     }
-
                     if(!VerifyUtilities.verifyInteger(args[index]))
                     {
                         return "*" + args[index] + "*" + " is not an integer!\n This option takes a ";
@@ -458,7 +463,6 @@ public class ConfigCommand implements Command
                                 "where ``<new config>`` may be either **\"asc\"** to automatically sort the schedule in ascending order," +
                                 " **\"desc\"** for descending order, or **\"off\"** to disable auto-sorting.";
                     }
-
                     switch(args[index])
                     {
                         case "disabled":
@@ -489,21 +493,7 @@ public class ConfigCommand implements Command
         try
         {
             // get user Google credentials (if they exist)
-            Credential credential;
-            com.google.api.services.calendar.Calendar service;
-            try
-            {
-                credential = GoogleAuth.authorize(event.getAuthor().getId());
-                if(credential == null)
-                {
-                    credential = GoogleAuth.authorize();
-                }
-                service = GoogleAuth.getCalendarService(credential);
-            }
-            catch (IOException e)
-            {
-                return;
-            }
+
 
             int index = 0;
             String cId = args[index].replace("<#","").replace(">","");
@@ -607,6 +597,10 @@ public class ConfigCommand implements Command
 
                     case "s":
                     case "sync":
+                        Credential credential = GoogleAuth.getCredential(event.getAuthor().getId());
+                        if(credential == null) break;
+                        Calendar service = GoogleAuth.getCalendarService(credential);
+
                         if( Main.getCalendarConverter().checkValidAddress(args[index], service) )
                             Main.getScheduleManager().setAddress(scheduleChan.getId(), args[index]);
                         else
@@ -756,6 +750,7 @@ public class ConfigCommand implements Command
                                 break;
                         }
 
+                        String clearEmoji = Main.getScheduleManager().getRSVPClear(cId);
                         // if add or remove option was used, clear the reactions and re-add the new reactions
                         if(new_enabled == null)
                         {
@@ -776,7 +771,7 @@ public class ConfigCommand implements Command
                                             event.getGuild()
                                                     .getTextChannelById(document.getString("channelId"))
                                                     .getMessageById(document.getString("messageId"))
-                                                    .queue(msg -> EntryManager.addRSVPReactions(map, msg));
+                                                    .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg));
                                         });
 
                                         Main.getEntryManager().reloadEntry(document.getInteger("_id"));
@@ -802,7 +797,7 @@ public class ConfigCommand implements Command
                                              event.getGuild()
                                                     .getTextChannelById(document.getString("channelId"))
                                                     .getMessageById(document.getString("messageId"))
-                                                    .queue(msg -> EntryManager.addRSVPReactions(map, msg));
+                                                    .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg));
 
                                             Main.getEntryManager().reloadEntry(document.getInteger("_id"));
                                         });
@@ -826,6 +821,45 @@ public class ConfigCommand implements Command
 
                         MessageUtilities.sendMsg(this.genMsgStr(cId, 5, event.getJDA()), event.getChannel(), null);
                         break;
+
+                    case "c":
+                    case "clear":
+                        String emoji = args[index].trim();
+                        if(emoji.equalsIgnoreCase("off"))
+                        {
+                            emoji = "";
+                        }
+                        else if(!EmojiManager.isEmoji(emoji))
+                        {
+                            emoji = emoji.replaceAll("[^\\d]","");
+                        }
+                        Main.getScheduleManager().setRSVPClear(cId, emoji);
+
+                        String finalEmoji = emoji;
+                        Map<String, String> rsvpOptions = Main.getScheduleManager().getRSVPOptions(cId);
+                        Main.getEntryManager().getEntriesFromChannel(cId).forEach(se->
+                        {
+                            Message message = se.getMessageObject();
+                            message.clearReactions().queue(ignored-> EntryManager.addRSVPReactions(rsvpOptions, finalEmoji, message));
+                        });
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 5, event.getJDA()), event.getChannel(), null);
+                        break;
+
+                    case "ex":
+                    case "exclusivity":
+                        boolean exclusive = true;
+                        switch(args[index].toLowerCase())
+                        {
+                            case "no":
+                            case "false":
+                            case "off":
+                                exclusive = false;
+                                break;
+                        }
+                        Main.getScheduleManager().setRSVPExclusivity(cId, exclusive);
+                        MessageUtilities.sendMsg(this.genMsgStr(cId, 5, event.getJDA()), event.getChannel(), null);
+                        break;
+
 
                     case "st":
                     case "style":
@@ -1060,10 +1094,14 @@ public class ConfigCommand implements Command
 
                 if(type == 4) break;
             case 5:
+                String clear = Main.getScheduleManager().getRSVPClear(cId);
                 content += "```js\n" +
                         "// RSVP Settings" +
-                        "\n[rsvp]   " +
+                        "\n[rsvp]        " +
                         "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"" +
+                        "\n[exclusivity] " +
+                        "\""+ (Main.getScheduleManager().isRSVPExclusive(cId) ? "on" : "off") + "\"" +
+                        "\n[clear]       " + (clear.isEmpty() ? "(off)" : "\""+clear+"\"")  +
                         "\n<Groups>\n";
 
                 Map<String, String> options = Main.getScheduleManager().getRSVPOptions(cId);
@@ -1093,7 +1131,6 @@ public class ConfigCommand implements Command
 
                 if(type == 5) break;
         }
-
         return content;
     }
 }

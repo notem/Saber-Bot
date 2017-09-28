@@ -293,17 +293,18 @@ public class EventListener extends ListenerAdapter
 
             MessageReaction.ReactionEmote emote = event.getReactionEmote();
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
+            String clearEmoji = Main.getScheduleManager().getRSVPClear(se.getChannelId());
 
             boolean emoteIsRSVP = false;
             String emoteKey = "";
             // does options contain the emote's name?
-            if(options.containsKey(emote.getName()))
+            if(options.containsKey(emote.getName()) || emote.getName().equals(clearEmoji))
             {
                 emoteIsRSVP = true;
                 emoteKey = emote.getName();
             }
             // does options contain the emote's ID?
-            else if(options.containsKey(emote.getId()))
+            else if(options.containsKey(emote.getId()) || emote.getId().equals(clearEmoji))
             {
                 emoteIsRSVP = true;
                 emoteKey = emote.getId();
@@ -311,26 +312,45 @@ public class EventListener extends ListenerAdapter
             // only if options contained the emote's name or ID
             if(emoteIsRSVP)
             {
-                // get the name of the rsvp group
-                String name = options.get(emoteKey);
-
-                // if the rsvp group is full, do nothing
-                if(!se.isFull(name))
+                if(emoteKey.equals(clearEmoji))
                 {
-                    // remove the user from any other rsvp lists for that event
+                    // remove the user from groups
                     for(String group : options.values())
                     {
                         List<String> members = se.getRsvpMembersOfType(group);
                         members.remove(event.getUser().getId());
                         se.setRsvpMembers(group, members);
                     }
-
-                    // add the user to the rsvp type
-                    List<String> members = se.getRsvpMembersOfType(name);
-                    members.add(event.getUser().getId());
-                    se.setRsvpMembers(name, members);
-
                     Main.getEntryManager().updateEntry(se, false); // update the entry
+                }
+                else
+                {
+                    // get the name of the rsvp group
+                    String name = options.get(emoteKey);
+
+                    // if the rsvp group is full, do nothing
+                    if(!se.isFull(name))
+                    {
+                        // remove the user from any other rsvp lists for that event if exclusivity is enabled
+                        if(Main.getScheduleManager().isRSVPExclusive(event.getChannel().getId()))
+                        {
+                            for(String group : options.values())
+                            {
+                                List<String> members = se.getRsvpMembersOfType(group);
+                                members.remove(event.getUser().getId());
+                                se.setRsvpMembers(group, members);
+                            }
+                        }
+
+                        // add the user to the rsvp type
+                        List<String> members = se.getRsvpMembersOfType(name);
+                        if(!members.contains(event.getUser().getId()))
+                        {
+                            members.add(event.getUser().getId());
+                            se.setRsvpMembers(name, members);
+                            Main.getEntryManager().updateEntry(se, false); // update the entry
+                        }
+                    }
                 }
 
                 // attempt to remove the reaction
