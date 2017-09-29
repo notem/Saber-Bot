@@ -29,7 +29,6 @@ public class ParsingUtilities
     public static LocalTime parseTime(String userInput)
     {
         LocalTime time;
-
         // relative time
         if(userInput.matches(".+[mM][iI][nN]$"))
         {
@@ -80,7 +79,6 @@ public class ParsingUtilities
             {
                 i++;
                 ch = format.charAt(i);
-
                 switch( ch )
                 {
                     case 'c' :
@@ -98,13 +96,12 @@ public class ParsingUtilities
                             }
                         }
                         break;
-
                     case 'f' :
                         for(String comment : entry.getComments())
                         {
                             announceMsg += comment + "\n";
                         }
-
+                        break;
                     case 'a' :
                         if( !entry.hasStarted() )
                         {
@@ -123,7 +120,6 @@ public class ParsingUtilities
                             announceMsg += "ends";
                         }
                         break;
-
                     case 'b' :
                         if( !entry.hasStarted() )
                         {
@@ -134,7 +130,6 @@ public class ParsingUtilities
                             announceMsg += "ends";
                         }
                         break;
-
                     case 'x' :
                         if( !entry.hasStarted() )
                         {
@@ -148,47 +143,36 @@ public class ParsingUtilities
                             }
                         }
                         break;
-
                     case 't' :
                         announceMsg += entry.getTitle();
                         break;
-
                     case 'd' :
                         announceMsg += entry.getStart().getDayOfMonth();
                         break;
-
                     case 'D' :
                         announceMsg += StringUtils.capitalize(entry.getStart().getDayOfWeek().toString());
                         break;
-
                     case 'm' :
                         announceMsg += entry.getStart().getMonthValue();
                         break;
-
                     case 'M' :
                         announceMsg += StringUtils.capitalize(entry.getStart().getMonth().toString());
                         break;
-
                     case 'y' :
                         announceMsg += entry.getStart().getYear();
                         break;
-
                     case 'i':
                         announceMsg += ParsingUtilities.intToBase64(entry.getId());
                         break;
-
                     case '%' :
                         announceMsg += '%';
                         break;
-
                     case 'u' :
                         announceMsg += entry.getTitleUrl()==null?"":entry.getTitleUrl();
                         break;
-
                     case 'v' :
                         announceMsg += entry.getImageUrl()==null?"":entry.getImageUrl();
                         break;
-
                     case 'w':
                         announceMsg += entry.getThumbnailUrl()==null?"":entry.getThumbnailUrl();
                         break;
@@ -342,9 +326,8 @@ public class ParsingUtilities
     }
 
     /**
-     *
-     * @param userInput
-     * @return
+     * @param userInput base64 string
+     * @return int representation of the base64 string
      */
     public static int base64ToInt(String userInput)
     {
@@ -352,9 +335,8 @@ public class ParsingUtilities
     }
 
     /**
-     *
-     * @param input
-     * @return
+     * @param input integer
+     * @return base64 representation of the integer
      */
     public static String intToBase64(int input)
     {

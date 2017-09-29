@@ -167,7 +167,6 @@ public class MessageUtilities
 
     /**
      * attempts to remove a message, asynchronous (non-blocking)
-     *
      * @param msg the message to delete
      * @param action a non null Consumer will do operations on the results returned
      */
