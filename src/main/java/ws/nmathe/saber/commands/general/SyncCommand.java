@@ -178,8 +178,17 @@ public class SyncCommand implements Command
             }
             else
             {
-                Main.getCalendarConverter().exportCalendar(address, channel, service);
-                String content = "I have finished exporting <#" + cId + ">!";
+                boolean success = Main.getCalendarConverter().exportCalendar(address, channel, service);
+                String content;
+                if(success)
+                {
+                    content = "I have finished exporting <#" + cId + ">!";
+                } else
+                {
+                    content = "I was unable to export <#" + cId + "> to " + address + "!\n" +
+                            "Please make sure I am authorized to edit that calendar!\n" +
+                            "You can provide me access through the ``oauth`` command.";
+                }
                 MessageUtilities.sendMsg(content, event.getChannel(), null);
             }
         }

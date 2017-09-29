@@ -93,15 +93,17 @@ public class CalendarConverter
      * @param address (String) valid address of calendar
      * @param channel (MessageChannel) channel to sync with
      * @param service connected calendar service with user credentials
+     * @return boolean indicating if the export was successful
      */
-    public void exportCalendar(String address, TextChannel channel, Calendar service)
+    public boolean exportCalendar(String address, TextChannel channel, Calendar service)
     {
-        if(channel == null || address == null) return;
+        if(channel == null || address == null) return false;
         if(!Main.getScheduleManager().isASchedule(channel.getId()))
         {   // safety check to insure importCalendar is being applied to a valid channel
-            return;
+            return false;
         }
 
+        Integer failure[] = { 0 };
         Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromChannel(channel.getId());
         entries.forEach(se->
         {
@@ -150,10 +152,11 @@ public class CalendarConverter
             }
             catch( Exception e )
             {
-                Logging.exception(this.getClass(), e);
-                return;
+                Logging.warn(this.getClass(), "Unable to export calendar:" +e.getMessage());
+                failure[0] = 1;
             }
         });
+        return failure[0]==0;
     }
 
 
@@ -171,12 +174,10 @@ public class CalendarConverter
         {   // safety check to insure importCalendar is being applied to a valid channel
             return;
         }
-
         JDA jda = Main.getShardManager().getJDA(channel.getGuild().getId());
 
         Events events;
         String calLink;
-
         try
         {
             ZonedDateTime min = ZonedDateTime.now();
@@ -251,8 +252,7 @@ public class CalendarConverter
                 if(event.getSummary() == null)
                 {
                     title = "(No title)";
-                }
-                else
+                } else
                 {
                     title = event.getSummary();
                 }
