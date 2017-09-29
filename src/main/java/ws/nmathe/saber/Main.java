@@ -8,6 +8,7 @@ import ws.nmathe.saber.core.schedule.EntryManager;
 import ws.nmathe.saber.core.settings.BotSettingsManager;
 import ws.nmathe.saber.core.schedule.ScheduleManager;
 import ws.nmathe.saber.core.settings.GuildSettingsManager;
+import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.Logging;
 
 /**
@@ -42,6 +43,7 @@ public class Main
 
         // create the shard manager
         shardManager = new ShardManager(botSettingsManager.getShards(), botSettingsManager.getShardTotal());
+        HttpUtilities.updateStats();
     }
 
     /*

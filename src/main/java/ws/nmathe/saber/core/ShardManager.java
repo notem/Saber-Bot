@@ -159,7 +159,6 @@ public class ShardManager
 
                 Main.getEntryManager().init();
                 Main.getCommandHandler().init();
-                HttpUtilities.updateStats();
             }
         }
         catch( Exception e )
