@@ -391,6 +391,12 @@ public class ConfigCommand implements Command
                     break;
 
                 case "clear":
+                    if (args.length < 3)
+                    {
+                        return "That's not enough arguments!\n" +
+                                "Use ``" + cmd + " [#chan] clear <emoji>``, " +
+                                "where ``<emoji>`` is the discord emoji to use for the rsvp clear function.\n";
+                    }
                     if(!VerifyUtilities.verifyEmoji(args[index]))
                     {
                         return "*" + args[index] + "* is not an emoji!\n" +
@@ -406,6 +412,11 @@ public class ConfigCommand implements Command
 
                 case "ex":
                 case "exclusivity":
+                    if (args.length < 3)
+                    {
+                        return "That's not enough arguments!\n" +
+                                "Use ``" + cmd + " [#chan] exclusivity <on|off>`` to configure rsvp exclusivity.";
+                    }
                     switch(args[index].toLowerCase())
                     {
                         case "yes":

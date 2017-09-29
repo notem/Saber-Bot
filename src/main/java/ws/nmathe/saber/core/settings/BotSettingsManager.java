@@ -152,7 +152,7 @@ public class BotSettingsManager
         BotSettings()
         {
             discord_token = "BOT_TOKEN";
-            web_token = "ABAL_TOKEN";
+            web_token = null;
             google_service_key = "./saber-g-id.json";
             google_oauth_secret = "./oath2-secret";
             mongodb = "mongodb://localhost:27017";
