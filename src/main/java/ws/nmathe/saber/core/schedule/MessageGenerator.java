@@ -121,7 +121,6 @@ public class MessageGenerator
             bodyContent = generateBodyFull(se);
         }
 
-
         // build the embed
         EmbedBuilder builder = new EmbedBuilder();
         builder.setDescription(bodyContent)
@@ -137,7 +136,6 @@ public class MessageGenerator
         {
             builder.setThumbnail(se.getThumbnailUrl());
         }
-
         return new MessageBuilder().setEmbed(builder.build()).build();
     }
 
@@ -165,16 +163,13 @@ public class MessageGenerator
         // insert each comment line with a gap line
         for( String comment : se.getComments() )
         {
-            // code blocks in comments must be close within the comment
+            // don't break the maximum length of messages
+            if(msg.length() > 1800) break;
+
+            // code blocks in comments must be closed
             int code = StringUtils.countMatches("```", comment);
-            if((code%2) == 1)
-            {
-                msg += comment + " ```" + "\n";
-            }
-            else
-            {
-                msg += comment + "\n\n";
-            }
+            if((code%2) == 1) msg += comment + " ```" + "\n";
+            else msg += comment + "\n\n";
         }
 
         // generate the lower code block
@@ -192,20 +187,16 @@ public class MessageGenerator
                 rsvpLine += "<" + type + " " + se.getRsvpMembersOfType(type).size() +
                         (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
             }
-
             if(se.getDeadline()!=null)
             {
                 rsvpLine += "\n- RSVP closes on " + se.getDeadline().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".";
             }
-
-
             msg += "```Markdown\n\n" + zoneLine + rsvpLine + "```";
         }
         else
         {
             msg += "```Markdown\n\n" + zoneLine + "```";
         }
-
         return msg;
     }
 
@@ -243,7 +234,6 @@ public class MessageGenerator
         {
             lineTwo += "\n";
         }
-
         return "```Markdown\n\n" + timeLine + lineTwo + "```\n";
     }
 
