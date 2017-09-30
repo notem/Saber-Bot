@@ -31,7 +31,7 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public class EventListener extends ListenerAdapter
 {
-    private final RateLimiter reactionLimiter = new RateLimiter(Main.getBotSettingsManager().getCooldownThreshold());
+    private final RateLimiter reactionLimiter = new RateLimiter(500);
 
     @Override
     public void onReady(ReadyEvent event)
