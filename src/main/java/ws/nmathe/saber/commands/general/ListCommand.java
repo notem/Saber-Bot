@@ -71,9 +71,9 @@ public class ListCommand implements Command
         int index = 0;
 
         ScheduleEntry entry;
-        if (VerifyUtilities.verifyBase64(args[index]))
+        if (VerifyUtilities.verifyEntryID(args[index]))
         {
-            Integer entryId = ParsingUtilities.base64ToInt(args[index]);
+            Integer entryId = ParsingUtilities.encodeIDToInt(args[index]);
             entry = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
             if (entry == null)
             {
@@ -160,11 +160,11 @@ public class ListCommand implements Command
         try
         {
             int index = 0;
-            Integer entryId = ParsingUtilities.base64ToInt(args[index++]);
+            Integer entryId = ParsingUtilities.encodeIDToInt(args[index++]);
             ScheduleEntry se = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
 
             String titleUrl = se.getTitleUrl()==null ? "https://nnmathe.ws/saber": se.getTitleUrl();
-            String title = se.getTitle()+" ["+ParsingUtilities.intToBase64(entryId)+"]";
+            String title = se.getTitle()+" ["+ParsingUtilities.intToEncodedID(entryId)+"]";
 
             String content = "";
 

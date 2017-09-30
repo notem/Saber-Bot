@@ -35,7 +35,7 @@ public class MessageGenerator
         String titleUrl = (se.getTitleUrl() != null && VerifyUtilities.verifyUrl(se.getTitleUrl())) ?
                 se.getTitleUrl() : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
-        String footerStr = "ID: " + ParsingUtilities.intToBase64(se.getId());
+        String footerStr = "ID: " + ParsingUtilities.intToEncodedID(se.getId());
 
         if(se.isQuietEnd() || se.isQuietStart() || se.isQuietRemind())
         {

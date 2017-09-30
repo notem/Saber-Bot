@@ -4,8 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -162,7 +160,7 @@ public class ParsingUtilities
                         announceMsg += entry.getStart().getYear();
                         break;
                     case 'i':
-                        announceMsg += ParsingUtilities.intToBase64(entry.getId());
+                        announceMsg += ParsingUtilities.intToEncodedID(entry.getId());
                         break;
                     case '%' :
                         announceMsg += '%';
@@ -326,20 +324,20 @@ public class ParsingUtilities
     }
 
     /**
-     * @param userInput base64 string
+     * @param input user-supplied encoded string (Character.RADIX_MAX)
      * @return int representation of the base64 string
      */
-    public static int base64ToInt(String userInput)
+    public static int encodeIDToInt(String input)
     {
-        return ByteBuffer.wrap(Base64.getDecoder().decode(userInput)).asIntBuffer().get();
+        return Integer.parseInt(input, Character.MAX_RADIX);
     }
 
     /**
-     * @param input integer
-     * @return base64 representation of the integer
+     * @param input integer representing an event's ID
+     * @return Character.RADIX_MAX encoded representation of the integer
      */
-    public static String intToBase64(int input)
+    public static String intToEncodedID(int input)
     {
-        return java.util.Base64.getEncoder().encodeToString(ByteBuffer.allocate(4).putInt(input).array()).replaceAll("==$", "");
+        return Integer.toString(input, Character.MAX_RADIX);
     }
 }

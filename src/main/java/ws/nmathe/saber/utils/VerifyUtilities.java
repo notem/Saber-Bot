@@ -113,16 +113,16 @@ public class VerifyUtilities
 
 
     /**
-     * verify that a base64 string is valid
-     * @param arg user-supplied base64 encoded string
+     * verify that an encoded entry ID string is valid
+     * @param arg user-supplied encoded string (Character.RADIX_MAX)
      * @return true if valid
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static boolean verifyBase64(String arg)
+    public static boolean verifyEntryID(String arg)
     {
         try
         {
-            Base64.getDecoder().decode(arg);
+            Integer.parseInt(arg, Character.MAX_RADIX);
         }
         catch(Exception e)
         {
@@ -189,6 +189,11 @@ public class VerifyUtilities
         return false;
     }
 
+    /**
+     * verify that a supplied emoji string is a valid discord emoji
+     * @param emoji emoji string (either raw emoji char or discord emoji ID)
+     * @return true if valid
+     */
     public static boolean verifyEmoji(String emoji)
     {
         if(!EmojiManager.isEmoji(emoji))

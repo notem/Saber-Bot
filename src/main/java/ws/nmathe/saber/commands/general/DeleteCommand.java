@@ -66,9 +66,9 @@ public class DeleteCommand implements Command
         }
 
         // checks to verify arg is hex and entry exists
-        if (VerifyUtilities.verifyBase64(args[0]))
+        if (VerifyUtilities.verifyEntryID(args[0]))
         {
-            Integer entryId = ParsingUtilities.base64ToInt(args[0]);
+            Integer entryId = ParsingUtilities.encodeIDToInt(args[0]);
             ScheduleEntry entry = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
             if (entry == null)
             {
@@ -98,10 +98,10 @@ public class DeleteCommand implements Command
                         .forEach(cId -> Main.getScheduleManager().deleteSchedule(cId));
                 MessageUtilities.sendMsg("All events and schedules for this guild has been cleared.", event.getChannel(), null);
             }
-            else if(VerifyUtilities.verifyBase64(args[0]))
+            else if(VerifyUtilities.verifyEntryID(args[0]))
             {
                 // delete single event
-                Integer entryId = ParsingUtilities.base64ToInt(args[0]);
+                Integer entryId = ParsingUtilities.encodeIDToInt(args[0]);
                 ScheduleEntry entry = Main.getEntryManager().getEntry(entryId);
                 Message msg = entry.getMessageObject();
                 if( msg==null )
