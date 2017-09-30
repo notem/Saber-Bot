@@ -37,7 +37,7 @@ class CommandParser
         while(matcher.find())
         {
             String group = matcher.group();
-            if(!group.isEmpty()) list.add(group.replace("\"",""));
+            if(!group.isEmpty()) list.add(group.replaceAll("[\"“”]",""));
         }
 
         String[] args = list.stream().toArray(String[]::new);
