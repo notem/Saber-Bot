@@ -298,16 +298,18 @@ public class EventListener extends ListenerAdapter
             boolean emoteIsRSVP = false;
             String emoteKey = "";
             // does options contain the emote's name?
-            if(options.containsKey(emote.getName()) || emote.getName().equals(clearEmoji))
+            String emoteName = emote.getName();
+            String emoteId = emote.getId();
+            if(emoteName!=null & (options.containsKey(emoteName) || emoteName.equals(clearEmoji)))
             {
                 emoteIsRSVP = true;
-                emoteKey = emote.getName();
+                emoteKey = emoteName;
             }
             // does options contain the emote's ID?
-            else if(options.containsKey(emote.getId()) || emote.getId().equals(clearEmoji))
+            else if(emoteId!=null & (options.containsKey(emoteId) || emoteId.equals(clearEmoji)))
             {
                 emoteIsRSVP = true;
-                emoteKey = emote.getId();
+                emoteKey = emoteId;
             }
             // only if options contained the emote's name or ID
             if(emoteIsRSVP)
