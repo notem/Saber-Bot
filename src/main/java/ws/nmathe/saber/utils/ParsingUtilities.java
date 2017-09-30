@@ -73,11 +73,12 @@ public class ParsingUtilities
         for( int i = 0; i < format.length(); i++ )
         {
             char ch = format.charAt(i);
-            if( ch == '%' && i+1 < format.length() )
+            if(ch == '%' && i+1 < format.length())
             {
                 i++;
                 ch = format.charAt(i);
-                switch( ch )
+                long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
+                switch(ch)
                 {
                     case 'c' :
                         if( i+1 < format.length() )
@@ -101,45 +102,34 @@ public class ParsingUtilities
                         }
                         break;
                     case 'a' :
-                        if( !entry.hasStarted() )
+                        if(!entry.hasStarted())
                         {
                             announceMsg += "begins";
-                            if(!entry.getReminders().isEmpty())
-                            {
-                                long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES)+1;
-                                if(minutes > 120)
-                                    announceMsg += " in " + minutes/60 + " hours";
-                                else
-                                    announceMsg += " in " + minutes + " minutes";
-                            }
+                            if(minutes > 120)
+                                announceMsg += " in " + (minutes+1)/60 + " hours";
+                            else if(minutes >= 5)
+                                announceMsg += " in " + (minutes+1) + " minutes";
                         }
                         else
                         {
                             announceMsg += "ends";
+                            if(minutes > 120)
+                                announceMsg += " in " + (minutes+1)/60 + " hours";
+                            else if(minutes >= 5)
+                                announceMsg += " in " + (minutes+1) + " minutes";
                         }
                         break;
                     case 'b' :
                         if( !entry.hasStarted() )
-                        {
                             announceMsg += "begins";
-                        }
                         else
-                        {
                             announceMsg += "ends";
-                        }
                         break;
                     case 'x' :
-                        if( !entry.hasStarted() )
-                        {
-                            if(!entry.getReminders().isEmpty())
-                            {
-                                long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES)+1;
-                                if(minutes > 120)
-                                    announceMsg += "in " + minutes/60 + " hours";
-                                else
-                                    announceMsg += "in " + minutes + " minutes";
-                            }
-                        }
+                        if(minutes > 120)
+                            announceMsg += " in " + (minutes+1)/60 + " hours";
+                        else if(minutes >= 5)
+                            announceMsg += " in " + (minutes+1) + " minutes";
                         break;
                     case 't' :
                         announceMsg += entry.getTitle();
@@ -175,7 +165,6 @@ public class ParsingUtilities
                         announceMsg += entry.getThumbnailUrl()==null?"":entry.getThumbnailUrl();
                         break;
                 }
-
             }
             else
             {
@@ -236,7 +225,7 @@ public class ParsingUtilities
     public static Set<Integer> parseReminder(String arg)
     {
         Set<Integer> list = new LinkedHashSet<>();
-        Matcher matcher = Pattern.compile("\\d+[^\\d]?").matcher(arg);
+        Matcher matcher = Pattern.compile("[-]?\\d+[^\\d]?").matcher(arg);
         while(matcher.find())
         {
             String group = matcher.group();

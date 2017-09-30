@@ -45,7 +45,7 @@ public class EditCommand implements Command
                 "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``, ``deadline``," +
                 " and ``limit``.\n\n" +
                 "Most of the options listed above accept the same arguments as the ``create`` command.\n" +
-                "Reference the ``info`` information for the ``create`` command for more information.\n" +
+                "Reference the ``help`` information for the ``create`` command for more information.\n" +
                 "Similar to the ``create`` command, any number of [<option> <arg(s)>] pairs can be appended to the command." +
                 "\n\n" +
                 "The comment option requires one additional argument immediately after the 'comment' argument.\n" +
@@ -323,13 +323,26 @@ public class EditCommand implements Command
                         return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                                 "Use ``"+head+" "+args[0]+" "+args[index-1]+" [number]``";
                     }
-                    if(!VerifyUtilities.verifyInteger(args[index]))
+                    if(!(args[index].matches("\\d+(([ ]?d(ay(s)?)?)?||([ ]?m(in(utes)?)?)||([ ]?h(our(s)?)?))")))
                     {
-                        return "**" + args[index] + "** is not a number!";
+                        return "**" + args[index] + "** is not a correct interval format!\n" +
+                                "For days, use ``\"n days\"``. For hours, use ``\"n hours\"``. For minutes, use ``\"n minutes\"``.";
                     }
-                    if(Integer.parseInt(args[index]) < 1)
+                    if(args[index].matches("\\d+([ ]?d(ay(s)?)?)?"))
                     {
-                        return "Your repeat interval can't be negative!";
+                        Integer d = Integer.parseInt(args[index].replaceAll("[^\\d]", ""));
+                        if(d < 0 || d > 9000) return "Invalid number of days!";
+                    }
+                    else if(args[index].matches("\\d+([ ]?m(in(utes)?)?)"))
+                    {
+                        Integer d = Integer.parseInt(args[index].replaceAll("[^\\d]", ""));
+                        if(d > 100000) return "That's too many minutes!";
+                        if(d < 10) return "Your minute interval must be greater than or equal to 10 minutes!";
+                    }
+                    else if(args[index].matches("\\d+([ ]?h(our(s)?)?)"))
+                    {
+                        Integer d = Integer.parseInt(args[index].replaceAll("[^\\d]", ""));
+                        if(d < 0 || d > 1000) return "That's too many hours!";
                     }
                     index++;
                     break;
@@ -450,7 +463,7 @@ public class EditCommand implements Command
                     break;
 
                 default:
-                    return "**" + args[index-1] + "** is not an option I know of! Please use the ``info`` command to see available options!";
+                    return "**" + args[index-1] + "** is not an option I know of! Please use the ``help`` command to see available options!";
             }
         }
 
@@ -619,7 +632,14 @@ public class EditCommand implements Command
 
                         case "i":
                         case "interval":
-                            se.setRepeat(0b10000000 | Integer.parseInt(args[index]));
+                            int repeat = 0;
+                            if(args[index].matches("\\d+([ ]?d(ay(s)?)?)?"))
+                                repeat = 0b10000000 | Integer.parseInt(args[index].replaceAll("[^\\d]",""));
+                            else if(args[index].matches("\\d+([ ]?m(in(utes)?)?)"))
+                                repeat = 0b100000000000 | Integer.parseInt(args[index].replaceAll("[^\\d]",""));
+                            else if(args[index].matches("\\d+([ ]?h(our(s)?)?)"))
+                                repeat = 0b100000000000 | (Integer.parseInt(args[index].replaceAll("[^\\d]",""))*60);
+                            se.setRepeat(repeat);
                             index++;
                             break;
 

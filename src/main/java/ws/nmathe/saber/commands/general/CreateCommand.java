@@ -177,10 +177,27 @@ public class CreateCommand implements Command
                 }
                 else if (intervalFlag)
                 {
-                    if (!VerifyUtilities.verifyInteger(arg))
-                        return "**" + arg + "** is not a number!";
-                    if(Integer.parseInt(arg) < 1)
-                        return "Your repeat interval can't be negative!";
+                    if(!(arg.matches("\\d+(([ ]?d(ay(s)?)?)?||([ ]?m(in(utes)?)?)||([ ]?h(our(s)?)?))")))
+                    {
+                        return "**" + arg + "** is not a correct interval format!\n" +
+                                "For days, use ``\"n days\"``. For hours, use ``\"n hours\"``. For minutes, use ``\"n minutes\"``.";
+                    }
+                    if(arg.matches("\\d+([ ]?d(ay(s)?)?)?"))
+                    {
+                        Integer d = Integer.parseInt(arg.replaceAll("[^\\d]", ""));
+                        if(d < 0 || d > 9000) return "Invalid number of days!";
+                    }
+                    else if(arg.matches("\\d+([ ]?m(in(utes)?)?)"))
+                    {
+                        Integer d = Integer.parseInt(arg.replaceAll("[^\\d]", ""));
+                        if(d > 100000) return "That's too many minutes!";
+                        if(d < 10) return "Your minute interval must be greater than or equal to 10 minutes!";
+                    }
+                    else if(arg.matches("\\d+([ ]?h(our(s)?)?)"))
+                    {
+                        Integer d = Integer.parseInt(arg.replaceAll("[^\\d]", ""));
+                        if(d < 0 || d > 1000) return "That's too many hours!";
+                    }
                     intervalFlag = false;
                 }
                 else if (expireFlag)
@@ -342,7 +359,12 @@ public class CreateCommand implements Command
                     }
                     else if (intervalFlag)
                     {
-                        repeat = 0b10000000 | Integer.parseInt(arg);
+                        if(arg.matches("\\d+([ ]?d(ay(s)?)?)?"))
+                            repeat = 0b10000000 | Integer.parseInt(arg.replaceAll("[^\\d]",""));
+                        else if(arg.matches("\\d+([ ]?m(in(utes)?)?)"))
+                            repeat = 0b100000000000 | Integer.parseInt(arg.replaceAll("[^\\d]",""));
+                        else if(arg.matches("\\d+([ ]?h(our(s)?)?)"))
+                            repeat = 0b100000000000 | (Integer.parseInt(arg.replaceAll("[^\\d]",""))*60);
                         intervalFlag = false;
                     }
                     else if (expireFlag)
@@ -354,7 +376,6 @@ public class CreateCommand implements Command
                             case "null":
                                 expireDate = null;
                                 break;
-
                             default:
                                 expireDate = ParsingUtilities.parseDate(arg.toLowerCase());
                                 break;
@@ -369,48 +390,39 @@ public class CreateCommand implements Command
                             case "repeats":
                                 repeatFlag = true;
                                 break;
-
                             case "d":
                             case "date":
                                 dateFlag = true;
                                 break;
-
                             case "ed":
                             case "end date":
                             case "end-date":
                                 endDateFlag = true;
                                 break;
-
                             case "sd":
                             case "start date":
                             case "start-date":
                                 startDateFlag = true;
                                 break;
-
                             case "u":
                                 urlFlag = true;
                                 break;
-
                             case "i":
                             case "interval":
                                 intervalFlag = true;
                                 break;
-
                             case "ex":
                             case "expire":
                                 expireFlag = true;
                                 break;
-
                             case "today":
                                 startDate = ZonedDateTime.now(zone).toLocalDate();
                                 endDate = ZonedDateTime.now(zone).toLocalDate();
                                 break;
-
                             case "tomorrow":
                                 startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
                                 endDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
                                 break;
-
                             default:
                                 comments.add(arg);
                                 break;

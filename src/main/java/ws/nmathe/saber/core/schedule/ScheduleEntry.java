@@ -154,26 +154,6 @@ public class ScheduleEntry
 
 
     /**
-     * If an event's notification was sent more than three minutes late, notify the discord user who administrates
-     * the bot application
-     * @param time (Instant) the time the message first attempted to send
-     * @param type (String) the type of notification sent
-     */
-    private void checkDelay(Instant time, String type)
-    {
-        long diff =  Instant.now().getEpochSecond() - time.plusSeconds(60*3).getEpochSecond();
-        if(diff > 0)
-        {
-            JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
-
-            User admin = jda.getUserById(Main.getBotSettingsManager().getAdminId());
-            MessageUtilities.sendPrivateMsg("Event **" + this.entryTitle + "**'s [" + this.entryId + "] " +
-                    type + " notification was sent **" + diff/60 + "** minutes late!", admin, null);
-        }
-    }
-
-
-    /**
      * handles sending reminder notifications
      */
     public void remind()
@@ -183,7 +163,7 @@ public class ScheduleEntry
         if(this.quietRemind) return;    // if the event's reminders are silenced
 
         // don't send reminders after an event has started
-        if(this.entryStart.isAfter(ZonedDateTime.now()))
+        if(this.entryEnd.isAfter(ZonedDateTime.now()))
         {
             // parse message and get the target channels
             String remindMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
@@ -191,13 +171,10 @@ public class ScheduleEntry
             if(name!=null)
             {
                 List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
-
-                // send reminder
                 for( TextChannel chan : channels )
                 {
-                    MessageUtilities.sendMsg(remindMsg, chan, message -> this.checkDelay(Instant.now(), "reminder"));
+                    MessageUtilities.sendMsg(remindMsg, chan, null);
                 }
-
                 Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
             }
         }
@@ -230,12 +207,10 @@ public class ScheduleEntry
                 if(name!=null)
                 {
                     List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
-
                     for( TextChannel chan : channels )
                     {
-                        MessageUtilities.sendMsg(startMsg, chan, message -> this.checkDelay(this.getStart().toInstant(), "start"));
+                        MessageUtilities.sendMsg(startMsg, chan, null);
                     }
-
                     Logging.event(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                             this.getStart().withZoneSameInstant(ZoneId.systemDefault())
                                     .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
@@ -280,12 +255,10 @@ public class ScheduleEntry
                 if(name != null)
                 {
                     List<TextChannel> channels = eMsg.getGuild().getTextChannelsByName(name, true);
-
                     for( TextChannel chan : channels)
                     {
-                        MessageUtilities.sendMsg(endMsg, chan, message -> this.checkDelay(this.getEnd().toInstant(), "end"));
+                        MessageUtilities.sendMsg(endMsg, chan, null);
                     }
-
                     Logging.event(this.getClass(), "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                             this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
                                     .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
@@ -313,7 +286,6 @@ public class ScheduleEntry
         {
             this.setNextOccurrence().setStarted(false);
             this.rsvpMembers = new HashMap<>();
-
             Main.getEntryManager().updateEntry(this, true);
         }
         else // otherwise remove entry and delete the message
@@ -337,12 +309,24 @@ public class ScheduleEntry
 
 
     /**
-     * determines how many days until the event is scheduled to repeat next using the schedule's repeat repeat bitset (eg, 2^0 - sun, 2^1 - mon, etc.)
+     * Bit designations:
+     * 1-7 : repeat on specific weekdays
+     * 8   : repeat on day interval
+     * 9   : repeat yearly
+     * 12  : repeat every [x] minutes
      * The schedule object's start and end zoneddatetimes are updated accordingly
      * @return (ScheduleEntry) this object
      */
     private ScheduleEntry setNextOccurrence()
     {
+        // 12th bit denotes minute repeat
+        if((this.entryRepeat & 0b100000000000) == 0b100000000000)
+        {
+            int masked = this.entryRepeat & 0b011111111111;
+            this.entryStart = entryStart.plusMinutes(masked);
+            this.entryEnd = entryEnd.plusMinutes(masked);
+            return this;
+        }
         // yearly repeat (9th bit)
         if((this.entryRepeat & 0b100000000) == 0b100000000)
         {
@@ -821,7 +805,6 @@ public class ScheduleEntry
         {
             body += "[" + i + "] \"" + this.getComments().get(i-1) + "\"\n";
         }
-
         return body;
     }
 }

@@ -32,7 +32,7 @@ class CommandParser
         String trimmed = StringUtils.replaceOnce(raw,prefix, "").trim();
 
         // split at white spaces (non newlines) or quotation captures
-        Matcher matcher = Pattern.compile("\"[\\S\\s]*?\"|[^ \"]+").matcher(trimmed);
+        Matcher matcher = Pattern.compile("[“”\"][\\S\\s]*?[“”\"]|[^ \"“”]+").matcher(trimmed);
         List<String> list = new ArrayList<>();
         while(matcher.find())
         {

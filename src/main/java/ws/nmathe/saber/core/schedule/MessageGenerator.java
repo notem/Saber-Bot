@@ -303,13 +303,27 @@ public class MessageGenerator
                 return "once";
             if( bitset == 0b1111111 || bitset == 0b10000001)
                 return "every day";
-
+            // repeat x minutes
+            if((bitset & 0b100000000000) == 0b100000000000)
+            {
+                int mask = bitset &  0b011111111111;
+                if(mask%60 == 0)
+                {
+                    if(mask == 60)
+                        return "every hour";
+                    else
+                        return "every " + mask/60 + " hours";
+                }
+                else
+                {
+                    return "every " + mask + " minutes";
+                }
+            }
             // yearly repeat
             if((bitset & 0b100000000) == 0b100000000)
             {
                 return "every year";
             }
-
             // repeat on interval
             if((bitset & 0b10000000) == 0b10000000 )
             {
@@ -317,7 +331,6 @@ public class MessageGenerator
                 String[] spellout = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
                 return "every " + (interval>spellout.length ? interval : spellout[interval-1]) + " days";
             }
-
             // repeat on fixed days
             str = "every ";
         }
@@ -327,13 +340,27 @@ public class MessageGenerator
                 return "does not repeat";
             if( bitset == 0b1111111 )
                 return "repeats daily";
-
+            // repeat x minutes
+            if((bitset & 0b100000000000) == 0b100000000000)
+            {
+                int mask = bitset &  0b011111111111;
+                if(mask%60 == 0)
+                {
+                    if(mask == 60)
+                        return "repeats hourly";
+                    else
+                        return "repeats every " + mask + " hours";
+                }
+                else
+                {
+                    return "repeats every " + mask + " minutes";
+                }
+            }
             // yearly repeat
             if((bitset & 0b100000000) == 0b100000000)
             {
                 return "repeats yearly";
             }
-
             // repeat on interval
             if((bitset & 0b10000000) == 0b10000000 )
             {
@@ -341,11 +368,11 @@ public class MessageGenerator
                 String[] spellout = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
                 return "repeats every " + (interval>spellout.length ? interval : spellout[interval-1]) + " days";
             }
-
             // repeat on fixed days
             str = "repeats weekly on ";
         }
 
+        /// only reaches here for weekly repeat
         if( (bitset & 1) == 1 )
         {
             if(bitset==0b0000001)
