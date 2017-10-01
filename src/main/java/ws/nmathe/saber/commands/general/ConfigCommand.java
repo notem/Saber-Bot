@@ -707,12 +707,12 @@ public class ConfigCommand implements Command
                             {
                                 // generate new entry reminders
                                 List<Date> reminders = new ArrayList<>();
-                                Instant start = ((Date) document.get("start")).toInstant();
+                                Instant end = ((Date) document.get("end")).toInstant();
                                 for(Integer til : rem2)
                                 {
-                                    if(Instant.now().until(start, ChronoUnit.MINUTES) > til)
+                                    if(Instant.now().until(end, ChronoUnit.MINUTES) > til)
                                     {
-                                        reminders.add(Date.from(start.minusSeconds(til*60)));
+                                        reminders.add(Date.from(end.minusSeconds(til*60)));
                                     }
                                 }
 
