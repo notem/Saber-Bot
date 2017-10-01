@@ -715,11 +715,9 @@ public class ConfigCommand implements Command
                                         reminders.add(Date.from(end.minusSeconds(til*60)));
                                     }
                                 }
-
                                 // update db
                                 Main.getDBDriver().getEventCollection()
                                         .updateOne(eq("_id", document.get("_id")), set("end_reminders", reminders));
-
                                 // reload displayed message
                                 Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
                             });
