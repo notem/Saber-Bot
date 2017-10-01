@@ -211,6 +211,7 @@ public class ListCommand implements Command
                 }
             }
 
+            Set<String> uniqueMembers = new HashSet<>();
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
             for(String type : options.values())
             {
@@ -235,6 +236,7 @@ public class ListCommand implements Command
                         Member member = event.getGuild().getMemberById(id);
                         if(member != null) // if the user is still a member of the guild, add to the list
                         {
+                            uniqueMembers.add(member.getUser().getId());
                             content += this.getNameDisplay(mobileFlag, IdFlag, member);
                         }
                         else // otherwise, remove the member from the event and update
@@ -282,9 +284,13 @@ public class ListCommand implements Command
                 }
             }
 
+            String footer = uniqueMembers.size() + " unique members appear in this search";
+
             // build and send the embedded message object
             Message message = (new MessageBuilder()).setEmbed(
-                    (new EmbedBuilder()).setDescription(content).setTitle(title, titleUrl).build()
+                    (new EmbedBuilder()).setDescription(content)
+                            .setTitle(title, titleUrl)
+                            .setFooter(footer, "").build()
                     ).build();
             MessageUtilities.sendMsg(message, event.getChannel(), null);
         }

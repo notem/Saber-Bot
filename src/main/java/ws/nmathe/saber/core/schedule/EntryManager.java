@@ -106,7 +106,7 @@ public class EntryManager
                 reminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
             }
         }
-        se.setEndReminders(reminders);
+        se.setEndReminders(endReminders);
 
         // process expiration date
         Date expire = null;
@@ -214,7 +214,7 @@ public class EntryManager
                 reminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
             }
         }
-        se.setEndReminders(reminders);
+        se.setEndReminders(endReminders);
 
         // process expiration date
         Date expire = null;

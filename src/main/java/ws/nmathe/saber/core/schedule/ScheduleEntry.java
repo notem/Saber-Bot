@@ -163,58 +163,36 @@ public class ScheduleEntry
         if(this.quietRemind) return;    // if the event's reminders are silenced
 
         // if reminders
-        if(!this.reminders.isEmpty())
+        // parse message and get the target channels
+        String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
+        String name = Main.getScheduleManager().getReminderChan(this.chanId);
+        if(name!=null)
         {
-            // don't send reminders after an event has started
-            if(this.entryEnd.isAfter(ZonedDateTime.now()))
+            List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
+            for( TextChannel chan : channels )
             {
-                // parse message and get the target channels
-                String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
-                String name = Main.getScheduleManager().getReminderChan(this.chanId);
-                if(name!=null)
-                {
-                    List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
-                    for( TextChannel chan : channels )
-                    {
-                        MessageUtilities.sendMsg(remindMsg, chan, null);
-                    }
-                    Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
-                }
+                MessageUtilities.sendMsg(remindMsg, chan, null);
             }
-
-            // remove expired reminders
-            reminders.removeIf(date -> date.before(new Date()));
-
-            // update document
-            Main.getDBDriver().getEventCollection()
-                    .updateOne(
-                            eq("_id", this.entryId),
-                            set("reminders", reminders));
+            Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
         }
-        else
-        {
-            // parse message and get the target channels
-            String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
-            String name = Main.getScheduleManager().getReminderChan(this.chanId);
-            if(name!=null)
-            {
-                List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
-                for( TextChannel chan : channels )
-                {
-                    MessageUtilities.sendMsg(remindMsg, chan, null);
-                }
-                Logging.event(this.getClass(), "Sent end-reminder for event " + this.getTitle() + " [" + this.getId() + "]");
-            }
 
-            // remove expired reminders
-            endReminders.removeIf(date -> date.before(new Date()));
+        // remove expired reminders
+        reminders.removeIf(date -> date.before(new Date()));
 
-            // update document
-            Main.getDBDriver().getEventCollection()
-                    .updateOne(
-                            eq("_id", this.entryId),
-                            set("end_reminders", endReminders));
-        }
+        // remove expired reminders
+        endReminders.removeIf(date -> date.before(new Date()));
+
+        // update document
+        Main.getDBDriver().getEventCollection()
+                .updateOne(
+                        eq("_id", this.entryId),
+                        set("reminders", reminders));
+
+        // update document
+        Main.getDBDriver().getEventCollection()
+                .updateOne(
+                        eq("_id", this.entryId),
+                        set("end_reminders", endReminders));
     }
 
     /**
