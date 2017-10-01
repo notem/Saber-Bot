@@ -706,6 +706,21 @@ public class ScheduleManager
         return emoji;
     }
 
+    public List<Integer> getEndReminders(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if(settings == null)
+        {
+            return new ArrayList<>();
+        }
+        List<Integer> reminders = (List<Integer>) settings.get("end_reminders");
+        if(reminders == null)
+        {
+            return new ArrayList<>();
+        }
+        return reminders ;
+    }
+
     /*
      * setters
      */
@@ -750,9 +765,22 @@ public class ScheduleManager
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("sync_time", syncTime));
     }
 
-    public void setDefaultReminders(String cId, List<Integer> reminders)
+    public void setReminders(String cId, List<Integer> reminders)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("default_reminders", reminders));
+    }
+
+    public void setEndReminders(String cId, List<Integer> reminders)
+    {
+        Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
+        if(!doc.containsKey("end_reminders"))
+        {
+            doc.append("end_reminders", reminders);
+            Main.getDBDriver().getScheduleCollection().replaceOne(eq("_id", cId), doc);
+        } else
+        {
+            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("end_reminders", reminders));
+        }
     }
 
     public void setReminderChan(String cId, String chan )

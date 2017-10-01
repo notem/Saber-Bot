@@ -1,8 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.User;
-import org.apache.http.annotation.Obsolete;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -40,6 +38,7 @@ public class ScheduleEntry
     private ArrayList<String> entryComments;      // ArrayList of strings that make up the desc
     private Integer entryRepeat;
     private List<Date> reminders;
+    private List<Date> endReminders;
 
     // rsvp
     private Map<String, List<String>> rsvpMembers;
@@ -126,7 +125,8 @@ public class ScheduleEntry
         this.entryEnd = ZonedDateTime.ofInstant((entryDocument.getDate("end")).toInstant(), zone);
         this.entryComments = (ArrayList<String>) entryDocument.get("comments");
         this.entryRepeat = entryDocument.getInteger("repeat");
-        this.reminders = (List<Date>) entryDocument.get("reminders");
+        this.reminders = entryDocument.get("reminders")!=null ? (List<Date>) entryDocument.get("reminders") : new ArrayList<>();
+        this.endReminders = entryDocument.get("end_reminders")!=null ? (List<Date>) entryDocument.get("end_reminders") : new ArrayList<>();
 
         // rsvp
         this.rsvpMembers = (Map) (entryDocument.get("rsvp_members")==null ? new LinkedHashMap<>() : entryDocument.get("rsvp_members"));
@@ -162,11 +162,39 @@ public class ScheduleEntry
         if(msg == null) return;         // if msg object is bad
         if(this.quietRemind) return;    // if the event's reminders are silenced
 
-        // don't send reminders after an event has started
-        if(this.entryEnd.isAfter(ZonedDateTime.now()))
+        // if reminders
+        if(!this.reminders.isEmpty())
+        {
+            // don't send reminders after an event has started
+            if(this.entryEnd.isAfter(ZonedDateTime.now()))
+            {
+                // parse message and get the target channels
+                String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
+                String name = Main.getScheduleManager().getReminderChan(this.chanId);
+                if(name!=null)
+                {
+                    List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
+                    for( TextChannel chan : channels )
+                    {
+                        MessageUtilities.sendMsg(remindMsg, chan, null);
+                    }
+                    Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
+                }
+            }
+
+            // remove expired reminders
+            reminders.removeIf(date -> date.before(new Date()));
+
+            // update document
+            Main.getDBDriver().getEventCollection()
+                    .updateOne(
+                            eq("_id", this.entryId),
+                            set("reminders", reminders));
+        }
+        else
         {
             // parse message and get the target channels
-            String remindMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
+            String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
             String name = Main.getScheduleManager().getReminderChan(this.chanId);
             if(name!=null)
             {
@@ -175,18 +203,18 @@ public class ScheduleEntry
                 {
                     MessageUtilities.sendMsg(remindMsg, chan, null);
                 }
-                Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
+                Logging.event(this.getClass(), "Sent end-reminder for event " + this.getTitle() + " [" + this.getId() + "]");
             }
+
+            // remove expired reminders
+            endReminders.removeIf(date -> date.before(new Date()));
+
+            // update document
+            Main.getDBDriver().getEventCollection()
+                    .updateOne(
+                            eq("_id", this.entryId),
+                            set("end_reminders", endReminders));
         }
-
-        // remove expired reminders
-        reminders.removeIf(date -> date.before(new Date()));
-
-        // update document
-        Main.getDBDriver().getEventCollection()
-                .updateOne(
-                        eq("_id", this.entryId),
-                        set("reminders", reminders));
     }
 
     /**
@@ -202,7 +230,7 @@ public class ScheduleEntry
             // dont send start announcements if 15 minutes late
             if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
-                String startMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
+                String startMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
                 String name = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
                 if(name!=null)
                 {
@@ -250,7 +278,7 @@ public class ScheduleEntry
             if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
                 // send the end announcement
-                String endMsg = ParsingUtilities.parseMsgFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
+                String endMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
                 String name = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
                 if(name != null)
                 {
@@ -456,6 +484,11 @@ public class ScheduleEntry
         return this.reminders;
     }
 
+    public List<Date> getEndReminders()
+    {
+        return this.endReminders;
+    }
+
     public String getGoogleId()
     {
         return this.googleId;
@@ -602,6 +635,12 @@ public class ScheduleEntry
     public ScheduleEntry setReminders(List<Date> reminders)
     {
         this.reminders = reminders;
+        return this;
+    }
+
+    public ScheduleEntry setEndReminders(List<Date> reminders)
+    {
+        this.endReminders = reminders;
         return this;
     }
 

@@ -47,6 +47,7 @@ public class MessageGenerator
 
         // generate reminder footer
         List<Date> reminders = se.getReminders();
+        reminders.addAll(se.getEndReminders());
         if (!reminders.isEmpty())
         {
             footerStr += " | remind in ";

@@ -67,8 +67,163 @@ public class ParsingUtilities
      * @param entry the entry associated with the message
      * @return a new message which has entry specific information inserted into the format string
      */
-    public static String parseMsgFormat(String format, ScheduleEntry entry)
+    public static String parseMessageFormat(String format, ScheduleEntry entry)
     {
+        // advanced parsing
+        /*
+         * parses the format string using regex grouping
+         * allows for an 'if element exists, print string + element + string' type of insertion
+         */
+        Matcher matcher = Pattern.compile("%\\{(.*?)}").matcher(format);
+        while(matcher.find())
+        {
+            String group = matcher.group();
+            String trimmed = group.substring(2, group.length()-1);
+            String sub = "";
+            if(!trimmed.isEmpty())
+            {
+                Matcher matcher2 = Pattern.compile("\\[.*?]").matcher(trimmed);
+                if(trimmed.matches("(\\[.*?])?c\\d+(\\[.*?])?")) // advanced comment
+                {
+                    int i = Integer.parseInt(trimmed.replaceAll("\\[.*?]c?", ""));
+                    if(entry.getComments().size() <= i && i > 0)
+                    {
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += entry.getComments().get(i);
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                    }
+                }
+                else if(trimmed.matches("(\\[.*?])?s(\\[.*?])?")) // advanced start
+                {
+                    if(!entry.hasStarted())
+                    {
+                        while(matcher2.find())
+                        {
+                            sub += matcher2.group().replaceAll("[\\[\\]]","");
+                        }
+                    }
+                }
+                else if(trimmed.matches("(\\[.*?])?e(\\[.*?])?")) // advanced end
+                {
+                    if(entry.hasStarted())
+                    {
+                        while(matcher2.find())
+                        {
+                            sub += matcher2.group().replaceAll("[\\[\\]]","");
+                        }
+                    }
+                }
+                else if(trimmed.matches("(\\[.*?])?m(\\[.*?])?")) // advanced remind in minutes
+                {
+                    if(!entry.hasStarted())
+                    {
+                        if(!entry.getReminders().isEmpty())
+                        {
+                            long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
+                            if(matcher2.find())
+                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                            sub += minutes;
+                            if(matcher2.find())
+                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        }
+                    }
+                    else
+                    {
+                        if(!entry.getEndReminders().isEmpty())
+                        {
+                            long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
+                            if(matcher2.find())
+                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                            sub += minutes;
+                            if(matcher2.find())
+                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        }
+                    }
+                }
+                else if(trimmed.matches("(\\[.*?])?h(\\[.*?])?")) // advanced remind in hours
+                {
+                    if(!entry.hasStarted())
+                    {
+                        if(!entry.getReminders().isEmpty())
+                        {
+                            long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
+                            if(matcher2.find())
+                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                            sub += minutes/60;
+                            if(matcher2.find())
+                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        }
+                    }
+                    else
+                    {
+                        if(!entry.getEndReminders().isEmpty())
+                        {
+                            long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
+                            if(matcher2.find())
+                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                            sub += minutes/60;
+                            if(matcher2.find())
+                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        }
+                    }
+                }
+                else if(trimmed.matches("(\\[.*?])?rsvp .+(\\[.*?])?")) // rsvp count
+                {
+                    String name = trimmed.replaceAll("rsvp ","").replaceAll("\\[.*?]","");
+                    List<String> members = entry.getRsvpMembers().get(name);
+                    if(members != null)
+                    {
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += members.size();
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                    }
+                }
+                else if(trimmed.matches("(\\[.*?])?u(\\[.*?])?")) // advanced title url
+                {
+                    if(entry.getTitleUrl() != null)
+                    {
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += entry.getTitleUrl();
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                    }
+                }
+                else if(trimmed.matches("(\\[.*?])?v(\\[.*?])?")) // advanced image url
+                {
+                    if(entry.getImageUrl() != null)
+                    {
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += entry.getImageUrl();
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                    }
+                }
+                else if(trimmed.matches("(\\[.*?])?w(\\[.*?])?")) // advanced thumbnail url
+                {
+                    if(entry.getThumbnailUrl() != null)
+                    {
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += entry.getThumbnailUrl();
+                        if(matcher2.find())
+                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                    }
+                }
+            }
+            format = format.replace(group,sub);
+        }
+
+        // legacy parsing
+        /*
+         * parses the format string character by character looking for % characters
+         * a token is one % character followed by a key character
+         */
         String announceMsg = "";
         for( int i = 0; i < format.length(); i++ )
         {
@@ -105,18 +260,24 @@ public class ParsingUtilities
                         if(!entry.hasStarted())
                         {
                             announceMsg += "begins";
-                            if(minutes > 120)
-                                announceMsg += " in " + (minutes+1)/60 + " hours";
-                            else if(minutes >= 5)
-                                announceMsg += " in " + (minutes+1) + " minutes";
+                            if(!entry.getReminders().isEmpty())
+                            {
+                                if(minutes > 120)
+                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                else
+                                    announceMsg += " in " + (minutes+1) + " minutes";
+                            }
                         }
                         else
                         {
                             announceMsg += "ends";
-                            if(minutes > 120)
-                                announceMsg += " in " + (minutes+1)/60 + " hours";
-                            else if(minutes >= 5)
-                                announceMsg += " in " + (minutes+1) + " minutes";
+                            if(!entry.getEndReminders().isEmpty())
+                            {
+                                if(minutes > 120)
+                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                else
+                                    announceMsg += " in " + (minutes+1) + " minutes";
+                            }
                         }
                         break;
                     case 'b' :
@@ -127,7 +288,7 @@ public class ParsingUtilities
                         break;
                     case 'x' :
                         if(minutes > 120)
-                            announceMsg += " in " + (minutes+1)/60 + " hours";
+                            announceMsg += " in " + (minutes+1)/60 + " hour(s)";
                         else if(minutes >= 5)
                             announceMsg += " in " + (minutes+1) + " minutes";
                         break;

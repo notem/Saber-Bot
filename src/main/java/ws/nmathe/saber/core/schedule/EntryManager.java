@@ -97,6 +97,16 @@ public class EntryManager
             }
         }
         se.setReminders(reminders);
+        // generate end reminders
+        List<Date> endReminders = new ArrayList<>();
+        for(Integer til : Main.getScheduleManager().getEndReminders(se.getChannelId()))
+        {
+            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > til)
+            {
+                reminders.add(Date.from(se.getStart().toInstant().minusSeconds(til*60)));
+            }
+        }
+        se.setEndReminders(reminders);
 
         // process expiration date
         Date expire = null;
@@ -148,6 +158,7 @@ public class EntryManager
                             .append("comments", se.getComments())
                             .append("repeat", se.getRepeat())
                             .append("reminders", reminders)
+                            .append("end_reminders", endReminders)
                             .append("url", se.getTitleUrl())
                             .append("hasStarted", se.hasStarted())
                             .append("messageId", msg.getId())
@@ -194,6 +205,16 @@ public class EntryManager
             }
         }
         se.setReminders(reminders);
+        // generate end reminders
+        List<Date> endReminders = new ArrayList<>();
+        for(Integer til : Main.getScheduleManager().getEndReminders(se.getChannelId()))
+        {
+            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > til)
+            {
+                reminders.add(Date.from(se.getStart().toInstant().minusSeconds(til*60)));
+            }
+        }
+        se.setEndReminders(reminders);
 
         // process expiration date
         Date expire = null;
@@ -229,6 +250,7 @@ public class EntryManager
                             .append("comments", se.getComments())
                             .append("repeat", se.getRepeat())
                             .append("reminders", reminders)
+                            .append("end_reminders", endReminders)
                             .append("url", se.getTitleUrl())
                             .append("hasStarted", se.hasStarted())
                             .append("messageId", msg.getId())
