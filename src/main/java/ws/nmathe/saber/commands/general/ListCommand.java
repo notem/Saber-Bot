@@ -290,7 +290,7 @@ public class ListCommand implements Command
             Message message = (new MessageBuilder()).setEmbed(
                     (new EmbedBuilder()).setDescription(content)
                             .setTitle(title, titleUrl)
-                            .setFooter(footer, "").build()
+                            .setFooter(footer, null).build()
                     ).build();
             MessageUtilities.sendMsg(message, event.getChannel(), null);
         }
