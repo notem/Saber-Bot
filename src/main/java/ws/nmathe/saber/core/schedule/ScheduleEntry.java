@@ -160,33 +160,34 @@ public class ScheduleEntry
     {
         Message msg = this.getMessageObject();
         if(msg == null) return;         // if msg object is bad
-        if(this.quietRemind) return;    // if the event's reminders are silenced
 
-        // if reminders
-        // parse message and get the target channels
-        String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
-        String name = Main.getScheduleManager().getReminderChan(this.chanId);
-        if(name!=null)
+        if(!this.quietRemind)
         {
-            List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
-            for( TextChannel chan : channels )
+            // parse message and get the target channels
+            String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
+            String name = Main.getScheduleManager().getReminderChan(this.chanId);
+            if(name!=null)
             {
-                MessageUtilities.sendMsg(remindMsg, chan, null);
+                List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
+                for( TextChannel chan : channels )
+                {
+                    MessageUtilities.sendMsg(remindMsg, chan, null);
+                }
+                Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
             }
-            Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
         }
 
         // remove expired reminders
         reminders.removeIf(date -> date.before(new Date()));
-
-        // remove expired reminders
-        endReminders.removeIf(date -> date.before(new Date()));
 
         // update document
         Main.getDBDriver().getEventCollection()
                 .updateOne(
                         eq("_id", this.entryId),
                         set("reminders", reminders));
+
+        // remove expired reminders
+        endReminders.removeIf(date -> date.before(new Date()));
 
         // update document
         Main.getDBDriver().getEventCollection()
