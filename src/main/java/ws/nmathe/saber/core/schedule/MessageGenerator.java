@@ -47,7 +47,8 @@ public class MessageGenerator
         }
 
         // generate reminder footer
-        List<Date> reminders = se.getReminders();
+        List<Date> reminders = new ArrayList<>();
+        reminders.addAll(se.getReminders());
         reminders.addAll(se.getEndReminders());
         if (!reminders.isEmpty())
         {

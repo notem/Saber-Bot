@@ -671,7 +671,8 @@ public class ConfigCommand implements Command
                             {
                                 // generate new entry reminders
                                 List<Date> reminders = new ArrayList<>();
-                                Instant start = ((Date) document.get("start")).toInstant();
+                                ScheduleEntry se = new ScheduleEntry(document);
+                                Instant start = se.getStart().toInstant();
                                 for(Integer til : rem)
                                 {
                                     if(Instant.now().until(start, ChronoUnit.MINUTES) > til)
@@ -679,13 +680,8 @@ public class ConfigCommand implements Command
                                         reminders.add(Date.from(start.minusSeconds(til*60)));
                                     }
                                 }
-
-                                // update db
-                                Main.getDBDriver().getEventCollection()
-                                        .updateOne(eq("_id", document.get("_id")), set("reminders", reminders));
-
-                                // reload displayed message
-                                Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
+                                se.setEndReminders(reminders);
+                                Main.getEntryManager().updateEntry(se, false);
                             });
 
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
@@ -707,7 +703,8 @@ public class ConfigCommand implements Command
                             {
                                 // generate new entry reminders
                                 List<Date> reminders = new ArrayList<>();
-                                Instant end = ((Date) document.get("end")).toInstant();
+                                ScheduleEntry se = new ScheduleEntry(document);
+                                Instant end = se.getEnd().toInstant();
                                 for(Integer til : rem2)
                                 {
                                     if(Instant.now().until(end, ChronoUnit.MINUTES) > til)
@@ -715,11 +712,8 @@ public class ConfigCommand implements Command
                                         reminders.add(Date.from(end.minusSeconds(til*60)));
                                     }
                                 }
-                                // update db
-                                Main.getDBDriver().getEventCollection()
-                                        .updateOne(eq("_id", document.get("_id")), set("end_reminders", reminders));
-                                // reload displayed message
-                                Main.getEntryManager().reloadEntry((Integer) document.get("_id"));
+                                se.setEndReminders(reminders);
+                                Main.getEntryManager().updateEntry(se, false);
                             });
 
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
@@ -1214,6 +1208,9 @@ public class ConfigCommand implements Command
         return content;
     }
 
+    /**
+     * helper function which generates the display string for an event's reminders
+     */
     private String makeReminderString(List<Integer> reminders)
     {
         String reminderStr = "";

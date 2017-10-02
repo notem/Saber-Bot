@@ -232,7 +232,6 @@ public class ParsingUtilities
             {
                 i++;
                 ch = format.charAt(i);
-                long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                 switch(ch)
                 {
                     case 'c' :
@@ -260,23 +259,25 @@ public class ParsingUtilities
                         if(!entry.hasStarted())
                         {
                             announceMsg += "begins";
+                            long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                             if(!entry.getReminders().isEmpty() && minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg += " in " + minutes/60 + " hour(s)";
+                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
                                 else
-                                    announceMsg += " in " + minutes + " minutes";
+                                    announceMsg += " in " + minutes+1 + " minutes";
                             }
                         }
                         else
                         {
                             announceMsg += "ends";
+                            long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                             if(!entry.getEndReminders().isEmpty() && minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg += " in " + minutes/60 + " hour(s)";
+                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
                                 else
-                                    announceMsg += " in " + minutes + " minutes";
+                                    announceMsg += " in " + minutes+1 + " minutes";
                             }
                         }
                         break;
@@ -287,10 +288,28 @@ public class ParsingUtilities
                             announceMsg += "ends";
                         break;
                     case 'x' :
-                        if(minutes > 120)
-                            announceMsg += " in " + (minutes+1)/60 + " hour(s)";
-                        else if(minutes >= 5)
-                            announceMsg += " in " + (minutes+1) + " minutes";
+                        if(!entry.hasStarted())
+                        {
+                            long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
+                            if(minutes>0)
+                            {
+                                if(minutes > 120)
+                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                else
+                                    announceMsg += " in " + minutes+1 + " minutes";
+                            }
+                        }
+                        else
+                        {
+                            long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
+                            if(minutes>0)
+                            {
+                                if(minutes > 120)
+                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                else
+                                    announceMsg += " in " + minutes+1 + " minutes";
+                            }
+                        }
                         break;
                     case 't' :
                         announceMsg += entry.getTitle();
@@ -423,7 +442,6 @@ public class ParsingUtilities
     /**
      * Parses user input for a date information
      * @param arg (String)
-     * @return
      */
     public static LocalDate parseDate(String arg)
     {

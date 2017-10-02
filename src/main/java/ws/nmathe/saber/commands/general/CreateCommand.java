@@ -86,7 +86,6 @@ public class CreateCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
-
         int index = 0;
 
         if (args.length < 3)

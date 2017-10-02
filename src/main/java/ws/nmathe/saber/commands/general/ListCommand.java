@@ -261,7 +261,7 @@ public class ListCommand implements Command
                     noInput.removeAll(se.getRsvpMembersOfType(type));
                 }
 
-                content += "**\nNo input\n======================\n**";
+                content += "**No input\n======================\n**";
                 if(!filterByType & noInput.size() > 10)
                 {
                     content += " Too many users to show: " + noInput.size() + " users with no rsvp\n";
@@ -284,7 +284,7 @@ public class ListCommand implements Command
                 }
             }
 
-            String footer = uniqueMembers.size() + " unique members appear in this search";
+            String footer = uniqueMembers.size() + " unique member(s) appear in this search";
 
             // build and send the embedded message object
             Message message = (new MessageBuilder()).setEmbed(
