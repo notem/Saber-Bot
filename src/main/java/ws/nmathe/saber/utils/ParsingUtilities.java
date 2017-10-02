@@ -260,23 +260,23 @@ public class ParsingUtilities
                         if(!entry.hasStarted())
                         {
                             announceMsg += "begins";
-                            if(!entry.getReminders().isEmpty())
+                            if(!entry.getReminders().isEmpty() && minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                    announceMsg += " in " + minutes/60 + " hour(s)";
                                 else
-                                    announceMsg += " in " + (minutes+1) + " minutes";
+                                    announceMsg += " in " + minutes + " minutes";
                             }
                         }
                         else
                         {
                             announceMsg += "ends";
-                            if(!entry.getEndReminders().isEmpty())
+                            if(!entry.getEndReminders().isEmpty() && minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                    announceMsg += " in " + minutes/60 + " hour(s)";
                                 else
-                                    announceMsg += " in " + (minutes+1) + " minutes";
+                                    announceMsg += " in " + minutes + " minutes";
                             }
                         }
                         break;
