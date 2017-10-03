@@ -179,17 +179,13 @@ public class ScheduleEntry
 
         // remove expired reminders
         reminders.removeIf(date -> date.before(new Date()));
+        endReminders.removeIf(date -> date.before(new Date()));
 
         // update document
         Main.getDBDriver().getEventCollection()
                 .updateOne(
                         eq("_id", this.entryId),
                         set("reminders", reminders));
-
-        // remove expired reminders
-        endReminders.removeIf(date -> date.before(new Date()));
-
-        // update document
         Main.getDBDriver().getEventCollection()
                 .updateOne(
                         eq("_id", this.entryId),

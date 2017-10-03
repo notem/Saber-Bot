@@ -124,7 +124,7 @@ public class ParsingUtilities
                         {
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                            sub += minutes;
+                            sub += minutes+1;
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
                         }
@@ -136,7 +136,7 @@ public class ParsingUtilities
                         {
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                            sub += minutes;
+                            sub += minutes+1;
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
                         }
@@ -151,7 +151,7 @@ public class ParsingUtilities
                         {
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                            sub += minutes/60;
+                            sub += (minutes+1)/60;
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
                         }
@@ -163,7 +163,7 @@ public class ParsingUtilities
                         {
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                            sub += minutes/60;
+                            sub += (minutes+1)/60;
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
                         }
@@ -265,7 +265,7 @@ public class ParsingUtilities
                                 if(minutes > 120)
                                     announceMsg += " in " + (minutes+1)/60 + " hour(s)";
                                 else
-                                    announceMsg += " in " + minutes+1 + " minutes";
+                                    announceMsg += " in " + (minutes+1) + " minutes";
                             }
                         }
                         else
@@ -277,7 +277,7 @@ public class ParsingUtilities
                                 if(minutes > 120)
                                     announceMsg += " in " + (minutes+1)/60 + " hour(s)";
                                 else
-                                    announceMsg += " in " + minutes+1 + " minutes";
+                                    announceMsg += " in " + (minutes+1) + " minutes";
                             }
                         }
                         break;
@@ -296,7 +296,7 @@ public class ParsingUtilities
                                 if(minutes > 120)
                                     announceMsg += " in " + (minutes+1)/60 + " hour(s)";
                                 else
-                                    announceMsg += " in " + minutes+1 + " minutes";
+                                    announceMsg += " in " + (minutes+1) + " minutes";
                             }
                         }
                         else
@@ -307,7 +307,7 @@ public class ParsingUtilities
                                 if(minutes > 120)
                                     announceMsg += " in " + (minutes+1)/60 + " hour(s)";
                                 else
-                                    announceMsg += " in " + minutes+1 + " minutes";
+                                    announceMsg += " in " + (minutes+1) + " minutes";
                             }
                         }
                         break;

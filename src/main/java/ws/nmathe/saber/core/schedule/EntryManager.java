@@ -91,7 +91,7 @@ public class EntryManager
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getReminders(se.getChannelId()))
         {
-            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > til)
+            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > 0)
             {
                 reminders.add(Date.from(se.getStart().toInstant().minusSeconds(til*60)));
             }
@@ -101,7 +101,7 @@ public class EntryManager
         List<Date> endReminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getEndReminders(se.getChannelId()))
         {
-            if(Instant.now().until(se.getEnd(), ChronoUnit.MINUTES) > til)
+            if(Instant.now().until(se.getEnd(), ChronoUnit.MINUTES) > 0)
             {
                 reminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
             }
@@ -191,7 +191,6 @@ public class EntryManager
      */
     public void updateEntry(ScheduleEntry se, boolean sort)
     {
-
         Message origMessage = se.getMessageObject();
         if(origMessage == null) return;
 
@@ -199,7 +198,7 @@ public class EntryManager
         List<Date> reminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getReminders(se.getChannelId()))
         {
-            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > til)
+            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) > 0)
             {
                 reminders.add(Date.from(se.getStart().toInstant().minusSeconds(til*60)));
             }
@@ -209,7 +208,7 @@ public class EntryManager
         List<Date> endReminders = new ArrayList<>();
         for(Integer til : Main.getScheduleManager().getEndReminders(se.getChannelId()))
         {
-            if(Instant.now().until(se.getEnd(), ChronoUnit.MINUTES) > til)
+            if(Instant.now().until(se.getEnd(), ChronoUnit.MINUTES) > 0)
             {
                 reminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
             }
