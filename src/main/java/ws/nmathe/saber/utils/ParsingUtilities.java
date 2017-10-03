@@ -119,9 +119,9 @@ public class ParsingUtilities
                 {
                     if(!entry.hasStarted())
                     {
-                        if(!entry.getReminders().isEmpty())
+                        long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
+                        if(minutes>0)
                         {
-                            long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
                             sub += minutes;
@@ -131,9 +131,9 @@ public class ParsingUtilities
                     }
                     else
                     {
-                        if(!entry.getEndReminders().isEmpty())
+                        long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
+                        if(minutes>0)
                         {
-                            long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
                             sub += minutes;
@@ -146,9 +146,9 @@ public class ParsingUtilities
                 {
                     if(!entry.hasStarted())
                     {
-                        if(!entry.getReminders().isEmpty())
+                        long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
+                        if(minutes>0)
                         {
-                            long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
                             sub += minutes/60;
@@ -158,9 +158,9 @@ public class ParsingUtilities
                     }
                     else
                     {
-                        if(!entry.getEndReminders().isEmpty())
+                        long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
+                        if(minutes>0)
                         {
-                            long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                             if(matcher2.find())
                                 sub += matcher2.group().replaceAll("[\\[\\]]", "");
                             sub += minutes/60;
@@ -260,7 +260,7 @@ public class ParsingUtilities
                         {
                             announceMsg += "begins";
                             long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
-                            if(!entry.getReminders().isEmpty() && minutes>0)
+                            if(minutes>0)
                             {
                                 if(minutes > 120)
                                     announceMsg += " in " + (minutes+1)/60 + " hour(s)";
@@ -272,7 +272,7 @@ public class ParsingUtilities
                         {
                             announceMsg += "ends";
                             long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
-                            if(!entry.getEndReminders().isEmpty() && minutes>0)
+                            if(minutes>0)
                             {
                                 if(minutes > 120)
                                     announceMsg += " in " + (minutes+1)/60 + " hour(s)";
