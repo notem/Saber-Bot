@@ -103,7 +103,7 @@ public class EntryManager
         {
             if(Instant.now().until(se.getEnd(), ChronoUnit.MINUTES) > 0)
             {
-                reminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
+                endReminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
             }
         }
         se.setEndReminders(endReminders);
@@ -210,7 +210,7 @@ public class EntryManager
         {
             if(Instant.now().until(se.getEnd(), ChronoUnit.MINUTES) > 0)
             {
-                reminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
+                endReminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
             }
         }
         se.setEndReminders(endReminders);
