@@ -726,7 +726,12 @@ public class EditCommand implements Command
 
                         case "limit":
                         case "l":
-                            se.setRsvpLimit(args[index], Integer.parseInt(args[index+1]));
+                            Integer lim = null;
+                            if(!args[index].equalsIgnoreCase("off"))
+                            {
+                                lim = Integer.parseInt(args[index+1]);
+                            }
+                            se.setRsvpLimit(args[index], lim);
                             index += 2;
                             break;
 
