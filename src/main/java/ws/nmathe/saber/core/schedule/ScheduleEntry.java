@@ -178,18 +178,9 @@ public class ScheduleEntry
         }
 
         // remove expired reminders
-        reminders.removeIf(date -> date.before(new Date()));
-        endReminders.removeIf(date -> date.before(new Date()));
-
-        // update document
-        Main.getDBDriver().getEventCollection()
-                .updateOne(
-                        eq("_id", this.entryId),
-                        set("reminders", reminders));
-        Main.getDBDriver().getEventCollection()
-                .updateOne(
-                        eq("_id", this.entryId),
-                        set("end_reminders", endReminders));
+        this.reminders.removeIf(date -> date.before(new Date()));
+        this.endReminders.removeIf(date -> date.before(new Date()));
+        Main.getEntryManager().updateEntry(this, false);
     }
 
     /**
@@ -398,7 +389,6 @@ public class ScheduleEntry
                     this.entryStart.plusDays(days) : this.entryStart.plusDays(days).plusYears(1);
             this.entryEnd = this.entryEnd.plusDays(days).isAfter(this.entryEnd) ?
                     this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
-
             return this;
         }
     }
@@ -607,15 +597,33 @@ public class ScheduleEntry
         return this;
     }
 
-    public ScheduleEntry setReminders(List<Date> reminders)
+    public ScheduleEntry reloadReminders(List<Integer> reminders)
     {
-        this.reminders = reminders;
+        // generate event reminders from schedule settings
+        List<Date> startReminders = new ArrayList<>();
+        for(Integer til : reminders)
+        {
+            if(Instant.now().until(this.getStart(), ChronoUnit.MINUTES) >= til)
+            {
+                startReminders.add(Date.from(this.getStart().toInstant().minusSeconds(til*60)));
+            }
+        }
+        this.reminders = startReminders;
         return this;
     }
 
-    public ScheduleEntry setEndReminders(List<Date> reminders)
+    public ScheduleEntry reloadEndReminders(List<Integer> reminders)
     {
-        this.endReminders = reminders;
+        // generate end reminders
+        List<Date> endReminders = new ArrayList<>();
+        for(Integer til : reminders)
+        {
+            if(Instant.now().until(this.getEnd(), ChronoUnit.MINUTES) >= til)
+            {
+                endReminders.add(Date.from(this.getEnd().toInstant().minusSeconds(til*60)));
+            }
+        }
+        this.endReminders = endReminders;
         return this;
     }
 

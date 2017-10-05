@@ -548,6 +548,8 @@ public class EditCommand implements Command
                             {
                                 se.setEnd(se.getEnd().plusDays(1));
                             }
+
+                            se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()));
                             index++;
                             break;
 
@@ -565,6 +567,8 @@ public class EditCommand implements Command
                             { // add a day to end if end is after start
                                 se.setEnd(se.getEnd().plusDays(1));
                             }
+
+                            se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
                             index++;
                             break;
 
@@ -586,6 +590,9 @@ public class EditCommand implements Command
                                     .withMonth(date.getMonthValue())
                                     .withDayOfMonth(date.getDayOfMonth())
                                     .withYear(date.getYear()));
+
+                            se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
+                                    .reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
                             index++;
                             break;
 
@@ -603,6 +610,8 @@ public class EditCommand implements Command
                             {
                                 se.setEnd(se.getStart());
                             }
+
+                            se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()));
                             index++;
                             break;
 
@@ -620,6 +629,8 @@ public class EditCommand implements Command
                             {
                                 se.setStart(se.getEnd());
                             }
+
+                            se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
                             index++;
                             break;
 

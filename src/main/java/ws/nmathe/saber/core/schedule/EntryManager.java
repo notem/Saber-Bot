@@ -85,28 +85,11 @@ public class EntryManager
         // identify which shard is responsible for the schedule
         String guildId = se.getGuildId();
         String channelId = se.getChannelId();
-        JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
+        JDA jda = Main.getShardManager().getJDA(guildId);
 
-        // generate event reminders from schedule settings
-        List<Date> reminders = new ArrayList<>();
-        for(Integer til : Main.getScheduleManager().getReminders(se.getChannelId()))
-        {
-            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) >= til)
-            {
-                reminders.add(Date.from(se.getStart().toInstant().minusSeconds(til*60)));
-            }
-        }
-        se.setReminders(reminders);
-        // generate end reminders
-        List<Date> endReminders = new ArrayList<>();
-        for(Integer til : Main.getScheduleManager().getEndReminders(se.getChannelId()))
-        {
-            if(Instant.now().until(se.getEnd(), ChronoUnit.MINUTES) >= til)
-            {
-                endReminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
-            }
-        }
-        se.setEndReminders(endReminders);
+        // generate the reminders
+        se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
+                .reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
 
         // process expiration date
         Date expire = null;
@@ -133,7 +116,6 @@ public class EntryManager
 
         // generate event display message
         se.setId(this.newId());
-
         Message message = MessageGenerator.generate(se);
 
         // send message to schedule
@@ -157,12 +139,12 @@ public class EntryManager
                             .append("end", Date.from(se.getEnd().toInstant()))
                             .append("comments", se.getComments())
                             .append("repeat", se.getRepeat())
-                            .append("reminders", reminders)
-                            .append("end_reminders", endReminders)
+                            .append("reminders", se.getReminders())
+                            .append("end_reminders", se.getEndReminders())
                             .append("url", se.getTitleUrl())
                             .append("hasStarted", se.hasStarted())
                             .append("messageId", msg.getId())
-                            .append("channelId", channelId)
+                            .append("channelId", se.getChannelId())
                             .append("googleId", se.getGoogleId())
                             .append("rsvp_members", se.getRsvpMembers())
                             .append("rsvp_limits", se.getRsvpLimits())
@@ -172,7 +154,7 @@ public class EntryManager
                             .append("rsvp_max", -1)
                             .append("expire", finalExpire)
                             .append("deadline", finalDeadline)
-                            .append("guildId", guildId);
+                            .append("guildId", se.getGuildId());
 
             Main.getDBDriver().getEventCollection().insertOne(entryDocument);
 
@@ -193,27 +175,6 @@ public class EntryManager
     {
         Message origMessage = se.getMessageObject();
         if(origMessage == null) return;
-
-        // generate event reminders from schedule settings
-        List<Date> reminders = new ArrayList<>();
-        for(Integer til : Main.getScheduleManager().getReminders(se.getChannelId()))
-        {
-            if(Instant.now().until(se.getStart(), ChronoUnit.MINUTES) >= 0)
-            {
-                reminders.add(Date.from(se.getStart().toInstant().minusSeconds(til*60)));
-            }
-        }
-        se.setReminders(reminders);
-        // generate end reminders
-        List<Date> endReminders = new ArrayList<>();
-        for(Integer til : Main.getScheduleManager().getEndReminders(se.getChannelId()))
-        {
-            if(Instant.now().until(se.getEnd(), ChronoUnit.MINUTES) >= 0)
-            {
-                endReminders.add(Date.from(se.getEnd().toInstant().minusSeconds(til*60)));
-            }
-        }
-        se.setEndReminders(endReminders);
 
         // process expiration date
         Date expire = null;
@@ -248,8 +209,8 @@ public class EntryManager
                             .append("end", Date.from(se.getEnd().toInstant()))
                             .append("comments", se.getComments())
                             .append("repeat", se.getRepeat())
-                            .append("reminders", reminders)
-                            .append("end_reminders", endReminders)
+                            .append("reminders", se.getReminders())
+                            .append("end_reminders", se.getEndReminders())
                             .append("url", se.getTitleUrl())
                             .append("hasStarted", se.hasStarted())
                             .append("messageId", msg.getId())

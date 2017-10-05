@@ -669,18 +669,9 @@ public class ConfigCommand implements Command
                     Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
                             .forEach((Consumer<? super Document>) document ->
                             {
-                                // generate new entry reminders
-                                List<Date> reminders = new ArrayList<>();
-                                ScheduleEntry se = new ScheduleEntry(document);
-                                Instant start = se.getStart().toInstant();
-                                for(Integer til : rem)
-                                {
-                                    if(Instant.now().until(start, ChronoUnit.MINUTES) > til)
-                                    {
-                                        reminders.add(Date.from(start.minusSeconds(til*60)));
-                                    }
-                                }
-                                se.setEndReminders(reminders);
+                                // reload entry reminders
+                                ScheduleEntry se = new ScheduleEntry(document)
+                                        .reloadReminders(Main.getScheduleManager().getReminders(scheduleChan.getId()));
                                 Main.getEntryManager().updateEntry(se, false);
                             });
 
@@ -701,18 +692,9 @@ public class ConfigCommand implements Command
                     Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
                             .forEach((Consumer<? super Document>) document ->
                             {
-                                // generate new entry reminders
-                                List<Date> reminders = new ArrayList<>();
-                                ScheduleEntry se = new ScheduleEntry(document);
-                                Instant end = se.getEnd().toInstant();
-                                for(Integer til : rem2)
-                                {
-                                    if(Instant.now().until(end, ChronoUnit.MINUTES) > til)
-                                    {
-                                        reminders.add(Date.from(end.minusSeconds(til*60)));
-                                    }
-                                }
-                                se.setEndReminders(reminders);
+                                // reload entry reminders
+                                ScheduleEntry se = new ScheduleEntry(document)
+                                        .reloadEndReminders(Main.getScheduleManager().getEndReminders(scheduleChan.getId()));
                                 Main.getEntryManager().updateEntry(se, false);
                             });
 

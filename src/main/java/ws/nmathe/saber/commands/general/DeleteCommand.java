@@ -109,7 +109,7 @@ public class DeleteCommand implements Command
 
                 Main.getEntryManager().removeEntry(entryId);
                 MessageUtilities.deleteMsg(msg, null);
-                MessageUtilities.sendMsg("The event with :id: " + entryId + " removed.", event.getChannel(), null);
+                MessageUtilities.sendMsg("The event with :id: " + ParsingUtilities.intToEncodedID(entryId) + " removed.", event.getChannel(), null);
             }
             else
             {
