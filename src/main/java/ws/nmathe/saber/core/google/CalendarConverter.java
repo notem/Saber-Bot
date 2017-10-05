@@ -264,7 +264,12 @@ public class CalendarConverter
                 Map<String, Integer> rsvpLimits = new HashMap<>();
                 if( event.getDescription() != null )
                 {
-                    for( String comment : event.getDescription().split("\n") )
+                    // convert encoded strings for < and > characters
+                    String description = event.getDescription()
+                            .replace("&lt;","<").replace("&gt;","");
+
+                    // process the description line by line
+                    for( String comment : description.split("\n") )
                     {
                         // image
                         if(comment.trim().toLowerCase().startsWith("image:"))
