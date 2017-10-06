@@ -280,6 +280,8 @@ public class ScheduleEntry
         {
             this.setNextOccurrence().setStarted(false);
             this.rsvpMembers = new HashMap<>();
+            this.reloadReminders(Main.getScheduleManager().getReminders(this.chanId))
+                    .reloadEndReminders(Main.getScheduleManager().getEndReminders(this.chanId));
             Main.getEntryManager().updateEntry(this, true);
         }
         else // otherwise remove entry and delete the message
