@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.utils.Logging;
 
+import javax.xml.soap.Text;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -165,14 +166,10 @@ public class ScheduleEntry
         {
             // parse message and get the target channels
             String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
-            String name = Main.getScheduleManager().getReminderChan(this.chanId);
-            if(name!=null)
+            String identifier = Main.getScheduleManager().getReminderChan(this.chanId);
+            if(identifier != null)
             {
-                List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
-                for( TextChannel chan : channels )
-                {
-                    MessageUtilities.sendMsg(remindMsg, chan, null);
-                }
+                announcementHelper(msg, remindMsg, identifier);
                 Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
             }
         }
@@ -197,14 +194,10 @@ public class ScheduleEntry
             if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
                 String startMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
-                String name = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
-                if(name!=null)
+                String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
+                if(identifier != null)
                 {
-                    List<TextChannel> channels = msg.getGuild().getTextChannelsByName(name, true);
-                    for( TextChannel chan : channels )
-                    {
-                        MessageUtilities.sendMsg(startMsg, chan, null);
-                    }
+                    announcementHelper(msg, startMsg, identifier);
                     Logging.event(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                             this.getStart().withZoneSameInstant(ZoneId.systemDefault())
                                     .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
@@ -235,8 +228,8 @@ public class ScheduleEntry
      */
     public void end()
     {
-        Message eMsg = this.getMessageObject();
-        if( eMsg==null ) return;
+        Message msg = this.getMessageObject();
+        if(msg == null) return;
 
         if(!this.quietEnd)
         {
@@ -245,14 +238,10 @@ public class ScheduleEntry
             {
                 // send the end announcement
                 String endMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
-                String name = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
-                if(name != null)
+                String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
+                if(identifier != null)
                 {
-                    List<TextChannel> channels = eMsg.getGuild().getTextChannelsByName(name, true);
-                    for( TextChannel chan : channels)
-                    {
-                        MessageUtilities.sendMsg(endMsg, chan, null);
-                    }
+                    announcementHelper(msg, endMsg, identifier);
                     Logging.event(this.getClass(), "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                             this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
                                     .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
@@ -265,6 +254,41 @@ public class ScheduleEntry
         }
 
         this.repeat();
+    }
+
+    /**
+     * processes a channel identifier (either a channel name or snowflake ID) into a valid channel
+     * and sends an event announcement
+     */
+    private void announcementHelper(Message message, String content, String channelIdentifier)
+    {
+        boolean success = false;
+
+        // if the identifier is all digits, attempt to treat the identifier as a snowflake ID
+        if(channelIdentifier.matches("\\d+"))
+        {
+            try
+            {
+                TextChannel channel = message.getGuild().getTextChannelById(channelIdentifier);
+                if(channel != null)
+                {
+                    MessageUtilities.sendMsg(content, channel, null);
+                    success = true;
+                }
+            }
+            catch(Exception ignored)
+            {}
+        }
+        // if the announcement has not sent using the identifier as a snowflake,
+        // treat the identifier as a channel name
+        if(!success)
+        {
+            List<TextChannel> channels = message.getGuild().getTextChannelsByName(channelIdentifier, true);
+            for( TextChannel chan : channels )
+            {
+                MessageUtilities.sendMsg(content, chan, null);
+            }
+        }
     }
 
 

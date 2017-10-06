@@ -144,6 +144,7 @@ public class EditCommand implements Command
                                 return "That's not enough arguments for *comment add*!\n" +
                                         "Use ``"+head+" "+args[0]+" "+args[index-2]+" "+args[index-1]+" \"your comment\"``";
                             }
+                            if(args[index].length() > 1024) return "Comments should not be larger than 1024 characters!";
                             index++;
                             break;
                         case "r":

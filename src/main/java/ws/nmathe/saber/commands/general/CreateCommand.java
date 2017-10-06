@@ -258,6 +258,10 @@ public class CreateCommand implements Command
                                 return "I cannot be schedule the event for today at " + args[2] + " as that time has already past!";
                             }
                             break;
+
+                        default:
+                            if(arg.length() > 1024) return "Comments should not be larger than 1024 characters!";
+                            break;
                     }
                 }
             }

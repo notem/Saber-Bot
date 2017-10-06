@@ -4,13 +4,10 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.calendar.Calendar;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Emote;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.*;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
-import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.google.GoogleAuth;
@@ -545,9 +542,8 @@ public class ConfigCommand implements Command
                 case "ch":
                 case "chan":
                 case "channel":
-                    String chanName;
-                    chanName = chanHelper(args[index], event);
-                    Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanName);
+                    String chanIdentifier = chanHelper(args[index], event);
+                    Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanIdentifier);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                     break;
 
@@ -564,19 +560,19 @@ public class ConfigCommand implements Command
                 case "ech":
                 case "end-chan":
                 case "end-channel":
-                    String endChanName;
+                    String endChanIdentifier;
                     switch(args[index].toLowerCase())
                     {
                         case "reset":
                         case "default":
                         case "null":
-                            endChanName = null;
+                            endChanIdentifier = null;
                             break;
 
                         default:
-                            endChanName = chanHelper(args[index], event);
+                            endChanIdentifier = chanHelper(args[index], event);
                     }
-                    Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanName);
+                    Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanIdentifier);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
                     break;
 
@@ -715,20 +711,20 @@ public class ConfigCommand implements Command
                 case "rem-chan":
                 case "remind-chan":
                 case "remind-channel":
-                    String remindChanName;
+                    String remindChanIdentifier;
                     switch(args[index].toLowerCase())
                     {
                         case "reset":
                         case "default":
                         case "null":
-                            remindChanName = null;
+                            remindChanIdentifier = null;
                             break;
 
                         default:
-                            remindChanName = chanHelper(args[index], event);
+                            remindChanIdentifier = chanHelper(args[index], event);
                             break;
                     }
-                    Main.getScheduleManager().setReminderChan(scheduleChan.getId(), remindChanName);
+                    Main.getScheduleManager().setReminderChan(scheduleChan.getId(), remindChanIdentifier);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
                     break;
 
@@ -970,17 +966,7 @@ public class ConfigCommand implements Command
      */
     private String chanHelper(String arg, MessageReceivedEvent event)
     {
-        try
-        {
-            String chanId = arg.replace("<#","").replace(">","");
-            TextChannel tmp2 = event.getGuild().getTextChannelById(chanId);
-            if(tmp2!=null) return tmp2.getName();
-            else return arg;
-        }
-        catch(Exception e)
-        {
-            return arg;
-        }
+        return arg.replace("<#","").replace(">","");
     }
 
     /**
@@ -1033,12 +1019,14 @@ public class ConfigCommand implements Command
             case 1:
                 String form1 = Main.getScheduleManager().getStartAnnounceFormat(cId);
                 String form2 = Main.getScheduleManager().getEndAnnounceFormat(cId);
+                String chanIdentifier = Main.getScheduleManager().getStartAnnounceChan(cId);
+                String endChanIdentifier = Main.getScheduleManager().getEndAnnounceChan(cId);
                 content += "```js\n" +
                         "// Event Announcement Settings" +
                         "\n[message]  " + (form1.isEmpty()?"(off)":
                         "\"" + form1.replace("```","`\uFEFF`\uFEFF`") + "\"") +
                         "\n[channel]  " +
-                        "\"" + Main.getScheduleManager().getStartAnnounceChan(cId) + "\"" +
+                        "\"" + this.channelIdentifierToString(chanIdentifier, jda) + "\"" +
                         "\n[end-msg]  " +
                         (Main.getScheduleManager().isEndFormatOverridden(cId) ?
                                 (form2.isEmpty()?"(off)":
@@ -1046,7 +1034,7 @@ public class ConfigCommand implements Command
                                 "(using [message])") +
                         "\n[end-chan] " +
                         (Main.getScheduleManager().isEndChannelOverridden(cId) ?
-                                "\"" + Main.getScheduleManager().getEndAnnounceChan(cId) + "\"" :
+                                "\"" + this.channelIdentifierToString(endChanIdentifier, jda) + "\"" :
                                 "(using [channel])") +
                         "```";
 
@@ -1061,6 +1049,7 @@ public class ConfigCommand implements Command
                 String form3 = Main.getScheduleManager().getReminderFormat(cId);
                 List<Integer> reminders = Main.getScheduleManager().getReminders(cId);
                 List<Integer> endReminders = Main.getScheduleManager().getEndReminders(cId);
+                String remindChanIdentifier = Main.getScheduleManager().getReminderChan(cId);
                 content += "```js\n" +
                         "// Event Reminder Settings" +
                         "\n[reminders]      " +
@@ -1074,7 +1063,7 @@ public class ConfigCommand implements Command
 
                         "\n[remind-chan] " +
                         (Main.getScheduleManager().isRemindChanOverridden(cId) ?
-                                "\"" + Main.getScheduleManager().getReminderChan(cId) + "\"":
+                                "\"" + this.channelIdentifierToString(remindChanIdentifier, jda) + "\"":
                                 "(using [chan])") +
                         "```";
 
@@ -1212,5 +1201,24 @@ public class ConfigCommand implements Command
             reminderStr += " minutes";
         }
         return reminderStr;
+    }
+
+    /**
+     * helper function to generate the display name for a channel identifier
+     */
+    private String channelIdentifierToString(String identifier, JDA jda)
+    {
+        String name = null;
+        if(identifier.matches("\\d+"))
+        {
+            try
+            {
+                name = "#" + jda.getTextChannelById(identifier).getName();
+            }
+            catch(Exception ignored)
+            {}
+        }
+        if(name == null) name = identifier;
+        return name;
     }
 }

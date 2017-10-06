@@ -8,7 +8,9 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.google.GoogleAuth;
+import ws.nmathe.saber.core.settings.GuildSettingsManager;
 import ws.nmathe.saber.utils.Logging;
+import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -20,6 +22,7 @@ import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 import static com.mongodb.client.model.Updates.set;
+import static ws.nmathe.saber.Main.getGuildSettingsManager;
 
 /**
  * Thread used to resync schedules once a day if that schedule
@@ -84,8 +87,11 @@ class ScheduleSyncer implements Runnable
                     }
                     else    // if sync address is not valid, set it to off
                     {
-                        Main.getDBDriver().getScheduleCollection()
-                                .updateOne(eq("_id", scheduleId), set("sync_address", "off"));
+                        GuildSettingsManager.GuildSettings gs = Main.getGuildSettingsManager().getGuildSettings(guildId);
+                        TextChannel control = Main.getShardManager().getJDA(guildId).getTextChannelById(gs.getCommandChannelId());
+                        String content = "**Warning:** I failed to auto-sync <#" + scheduleId + "> to *" + address + "*!\n" +
+                                "Please make sure that the calendar address is still correct and that the calendar privacy settings have not changed!";
+                        MessageUtilities.sendMsg(content, control, null);
                     }
                 }
                 catch(Exception e)
