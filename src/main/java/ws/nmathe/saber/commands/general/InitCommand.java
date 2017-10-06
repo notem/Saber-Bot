@@ -85,12 +85,6 @@ public class InitCommand implements Command
             }
 
             String chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
-            MessageChannel publicChannel = event.getGuild().getPublicChannel();
-            if(publicChannel != null && publicChannel.getId().equals(chanId))
-            {
-                return "Your guild's public channel cannot be converted to a schedule!";
-            }
-
             String commandChannelId = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId()).getCommandChannelId();
             if(chanId.equals(commandChannelId) || chanId.equals(event.getChannel().getId()))
             {

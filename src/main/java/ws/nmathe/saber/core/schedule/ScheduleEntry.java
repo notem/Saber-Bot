@@ -300,7 +300,14 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if( msg==null ) return;
 
-        if( this.entryRepeat != 0 ) // find next repeat date and edit the message
+        if(this.expire != null && this.expire.isBefore(ZonedDateTime.now()))
+        {
+            Main.getEntryManager().removeEntry(this.entryId);
+            MessageUtilities.deleteMsg( msg, null );
+            return;
+        }
+
+        if(this.entryRepeat != 0) // find next repeat date and edit the message
         {
             this.setNextOccurrence().setStarted(false);
             this.rsvpMembers = new HashMap<>();

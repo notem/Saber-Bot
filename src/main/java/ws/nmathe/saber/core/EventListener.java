@@ -289,7 +289,7 @@ public class EventListener extends ListenerAdapter
             ScheduleEntry se = new ScheduleEntry(doc);
 
             // if past the deadline, don't add handle new RSVPs
-            if(se.getDeadline()!=null && se.getDeadline().isBefore(ZonedDateTime.now())) return;
+            if(se.getDeadline()!=null && se.getDeadline().plusDays(1).isBefore(ZonedDateTime.now())) return;
 
             MessageReaction.ReactionEmote emote = event.getReactionEmote();
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());

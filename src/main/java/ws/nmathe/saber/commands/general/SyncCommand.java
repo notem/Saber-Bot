@@ -159,7 +159,6 @@ public class SyncCommand implements Command
                 }
 
                 address = args[index];
-
                 if(importFlag)
                 {
                     // enable auto-sync'ing timezone

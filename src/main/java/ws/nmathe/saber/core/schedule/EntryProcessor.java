@@ -128,7 +128,7 @@ class EntryProcessor implements Runnable
                 if(type == EntryManager.type.UPDATE2)
                 {
                     // purge expiring events
-                    query = lte("expire", new Date());
+                    query = lte("expire", Date.from(ZonedDateTime.now().plusDays(1).toInstant()));
 
                     //delete message objects
                     Main.getDBDriver().getEventCollection().find(query).forEach((Consumer<? super Document>) document ->

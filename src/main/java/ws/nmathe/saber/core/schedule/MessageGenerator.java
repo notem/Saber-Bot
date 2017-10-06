@@ -91,7 +91,6 @@ public class MessageGenerator
 
         // get embed color from first hoisted bot role
         Color color = Color.DARK_GRAY;
-
         List<Role> roles = new ArrayList<>(jda.getGuildById(se.getGuildId()).getMember(jda.getSelfUser()).getRoles());
         while(!roles.isEmpty())
         {
@@ -105,13 +104,6 @@ public class MessageGenerator
                 roles.remove(0);
             }
         }
-
-        /*  Invert color if event has started
-        if(Instant.now().isAfter(start.toInstant()))
-        {
-            color = new Color(255-color.getRed(), 255-color.getGreen(), 255-color.getBlue());
-        }
-        */
 
         // generate the body of the embed
         String bodyContent;
@@ -158,8 +150,12 @@ public class MessageGenerator
         String repeatLine = "> " + getRepeatString(se.getRepeat(), false) + "\n";
         if(se.getExpire() != null)
         {
-            repeatLine += "> expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
+            repeatLine += "> Expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
                     " " + se.getExpire().getDayOfMonth() + ", " + se.getExpire().getYear() + "\n";
+        }
+        else
+        {
+            repeatLine += "\n";
         }
         msg += "```Markdown\n\n" + timeLine + repeatLine + "```\n";
 
@@ -190,9 +186,10 @@ public class MessageGenerator
                 rsvpLine += "<" + type + " " + se.getRsvpMembersOfType(type).size() +
                         (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
             }
-            if(se.getDeadline()!=null)
+            if(se.getDeadline() != null)
             {
-                rsvpLine += "\n- RSVP closes on " + se.getDeadline().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".";
+                rsvpLine += "\n+ RSVP closes " + se.getDeadline().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
+                    " " + se.getDeadline().getDayOfMonth() + ", " + se.getDeadline().getYear() + ".";
             }
             msg += "```Markdown\n\n" + zoneLine + rsvpLine + "```";
         }
@@ -230,7 +227,6 @@ public class MessageGenerator
                 rsvpLine += "<" + type.charAt(0) + " " + se.getRsvpMembersOfType(type).size() +
                         (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
             }
-
             lineTwo += "\n"+rsvpLine;
         }
         else

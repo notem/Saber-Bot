@@ -468,7 +468,6 @@ public class CalendarConverter
             {
                 channel.getManagerUpdatable().getTopicField().setValue(calLink).update().queue();
             }
-
         }
         catch(Exception e)
         {
