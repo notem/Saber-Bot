@@ -70,16 +70,15 @@ class ScheduleSyncer implements Runnable
 
                     // get the sync address and google credentials, then create the calendar service
                     String address = document.getString("sync_address");
-                    Credential credential = document.get("sync_user")!=null ?
-                            GoogleAuth.authorize(document.getString("sync_user")) : GoogleAuth.authorize();
+                    Credential credential = GoogleAuth.getCredential(document.getString("sync_user"));
                     Calendar service = GoogleAuth.getCalendarService(credential);
+
+                    TextChannel channel = jda.getTextChannelById(document.getString("_id"));
+                    if(channel == null) return;
 
                     // attempt to sync schedule
                     if(Main.getCalendarConverter().checkValidAddress(address, service))
                     {
-                        TextChannel channel = jda.getTextChannelById(document.getString("_id"));
-                        if(channel == null) return;
-
                         Main.getCalendarConverter().importCalendar(address, channel, service);
                         Logging.info(this.getClass(), "Synchronized schedule #" + channel.getName() + " [" +
                                 document.getString("_id") + "] on '" + channel.getGuild().getName() + "' [" +
@@ -92,6 +91,10 @@ class ScheduleSyncer implements Runnable
                         String content = "**Warning:** I failed to auto-sync <#" + scheduleId + "> to *" + address + "*!\n" +
                                 "Please make sure that the calendar address is still correct and that the calendar privacy settings have not changed!";
                         MessageUtilities.sendMsg(content, control, null);
+
+                        Logging.warn(this.getClass(), "Failed to synchronize schedule #" + channel.getName() + " [" +
+                                document.getString("_id") + "] on '" + channel.getGuild().getName() + "' [" +
+                                channel.getGuild().getId() + "]");
                     }
                 }
                 catch(Exception e)

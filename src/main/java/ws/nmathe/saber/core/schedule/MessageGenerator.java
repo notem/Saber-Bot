@@ -150,7 +150,7 @@ public class MessageGenerator
         String repeatLine = "> " + getRepeatString(se.getRepeat(), false) + "\n";
         if(se.getExpire() != null)
         {
-            repeatLine += "> Expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
+            repeatLine += "> expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
                     " " + se.getExpire().getDayOfMonth() + ", " + se.getExpire().getYear() + "\n";
         }
         else

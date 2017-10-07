@@ -50,7 +50,7 @@ public class InitCommand implements Command
         info.addUsageCategory(cat1, cont1);
 
         info.addUsageExample(head);
-        info.addUsageExample(head+"\"Guild Events\"");
+        info.addUsageExample(head+" \"Guild Events\"");
         info.addUsageExample(head+" #events");
 
         return info;

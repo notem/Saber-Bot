@@ -163,7 +163,10 @@ public class SyncCommand implements Command
                 {
                     // enable auto-sync'ing timezone
                     Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("timezone_sync", true));
-                    Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("sync_user", event.getAuthor().getId()));
+                    if(GoogleAuth.authorize(event.getAuthor().getId()) != null)
+                        Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("sync_user", event.getAuthor().getId()));
+                    else
+                        Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("sync_user", null));
                 }
             }
 

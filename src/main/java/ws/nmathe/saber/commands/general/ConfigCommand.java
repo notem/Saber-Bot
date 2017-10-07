@@ -632,7 +632,7 @@ public class ConfigCommand implements Command
                     else
                         Main.getScheduleManager().setAddress(scheduleChan.getId(), "off");
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, 4, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "t":
