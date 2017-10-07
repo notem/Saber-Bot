@@ -70,7 +70,8 @@ class ScheduleSyncer implements Runnable
 
                     // get the sync address and google credentials, then create the calendar service
                     String address = document.getString("sync_address");
-                    Credential credential = GoogleAuth.getCredential(document.getString("sync_user"));
+                    Credential credential = document.get("sync_user")==null ? GoogleAuth.authorize() :
+                            GoogleAuth.getCredential(document.getString("sync_user"));
                     Calendar service = GoogleAuth.getCalendarService(credential);
 
                     TextChannel channel = jda.getTextChannelById(document.getString("_id"));
