@@ -100,7 +100,7 @@ public class CalendarConverter
     {
         if(channel == null || address == null) return false;
         if(!Main.getScheduleManager().isASchedule(channel.getId()))
-        {   // safety check to insure importCalendar is being applied to a valid channel
+        {   // safety check to insure exportCalendar is being applied to a valid channel
             return false;
         }
 
@@ -114,6 +114,7 @@ public class CalendarConverter
             if(se.getImageUrl() != null) description += "\nimage: " + se.getImageUrl();
             if(se.getThumbnailUrl() != null) description += "\nthumbnail: " + se.getThumbnailUrl();
             if(se.getDeadline() != null) description += "\ndeadline: " + se.getDeadline().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            if(se.getTitleUrl() != null) description += "\nurl: " + se.getTitleUrl();
             for(String key : se.getRsvpLimits().keySet())
             {
                 description += "\nlimit: " + key + " " + se.getRsvpLimit(key);
@@ -263,6 +264,7 @@ public class CalendarConverter
                 String thumbnailUrl = null;
                 ZonedDateTime rsvpDeadline = null;
                 Map<String, Integer> rsvpLimits = new HashMap<>();
+                String titleUrl = event.getHtmlLink();
                 if( event.getDescription() != null )
                 {
                     // convert encoded strings for < and > characters
@@ -285,7 +287,7 @@ public class CalendarConverter
                         // thumbnail
                         else if(comment.trim().toLowerCase().startsWith("thumbnail:"))
                         {
-                            String[] tmp = comment.trim().split(":",2); // split to limit:
+                            String[] tmp = comment.trim().split(":",2);
                             if(tmp.length > 1)
                             {
                                 thumbnailUrl = tmp[1].trim();
@@ -320,6 +322,15 @@ public class CalendarConverter
                                 }
                             }
 
+                        }
+                        // title url
+                        else if(comment.trim().startsWith("url:"))
+                        {
+                            String[] tmp = comment.trim().split(":",2);
+                            if(tmp.length > 1)
+                            {
+                                if(VerifyUtilities.verifyUrl(tmp[1])) titleUrl = tmp[1];
+                            }
                         }
                         // deadline
                         else if(comment.trim().toLowerCase().startsWith("deadline:"))
@@ -413,7 +424,7 @@ public class CalendarConverter
                                 .setStart(start)
                                 .setEnd(end)
                                 .setRepeat(repeat)
-                                .setTitleUrl(event.getHtmlLink())
+                                .setTitleUrl(titleUrl)
                                 .setGoogleId(googleId)
                                 .setExpire(expire)
                                 .setImageUrl(imageUrl)
@@ -429,7 +440,7 @@ public class CalendarConverter
                     {
                         ScheduleEntry se = (new ScheduleEntry(channel, title, start, end))
                                 .setRepeat(repeat)
-                                .setTitleUrl(event.getHtmlLink())
+                                .setTitleUrl(titleUrl)
                                 .setGoogleId(googleId)
                                 .setExpire(expire)
                                 .setImageUrl(imageUrl)
