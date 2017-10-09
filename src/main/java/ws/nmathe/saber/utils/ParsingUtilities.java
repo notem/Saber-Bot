@@ -344,6 +344,9 @@ public class ParsingUtilities
                     case 'w':
                         announceMsg += entry.getThumbnailUrl()==null?"":entry.getThumbnailUrl();
                         break;
+                    case 'n':
+                        announceMsg += "\n";
+                        break;
                 }
             }
             else

@@ -60,6 +60,7 @@ public class CommandHandler
         adminCommands.put((new ReloadSettingsCommand()).name(), new ReloadSettingsCommand());
         adminCommands.put((new ClearLocksCommand()).name(), new ClearLocksCommand());
         adminCommands.put((new ShardsCommand()).name(), new ShardsCommand());
+        adminCommands.put((new AvatarCommand()).name(), new AvatarCommand());
 
         initialized = true;
     }
@@ -150,8 +151,9 @@ public class CommandHandler
                             commands.get(cc.invoke).action(cc.prefix, cc.args, cc.event);
 
                             String info = "Executed command [" + cc.event.getMessage().getRawContent() +
-                                    "] by " + cc.event.getAuthor().getName() + " [" + cc.event.getMessage().getAuthor().getId()
-                                    + "] on " + cc.event.getGuild().getName()+ " [" + cc.event.getGuild().getId() + "]";
+                                    "] by " + cc.event.getAuthor().getName() + " [" + cc.event.getMessage().getAuthor().getId()+ "]";
+                            if(cc.event.getGuild() != null)
+                                info += " on " + cc.event.getGuild().getName()+ " [" + cc.event.getGuild().getId() + "]";
                             Logging.cmd(this.getClass(), info);
                         }
                         catch(Exception e)

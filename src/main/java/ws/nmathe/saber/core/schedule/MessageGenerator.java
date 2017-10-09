@@ -281,7 +281,6 @@ public class MessageGenerator
             timeLine += ", " + se.getStart().format(DateTimeFormatter.ofPattern(timeFormatter)) +
                     " " + dash + " " + se.getEnd().format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
         }
-
         return timeLine;
     }
 
