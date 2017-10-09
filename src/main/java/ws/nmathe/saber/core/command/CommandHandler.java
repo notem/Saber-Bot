@@ -145,12 +145,19 @@ public class CommandHandler
                 {
                     executor.submit( () ->
                     {
-                        commands.get(cc.invoke).action(cc.prefix, cc.args, cc.event);
+                        try
+                        {
+                            commands.get(cc.invoke).action(cc.prefix, cc.args, cc.event);
 
-                        String info = "Executed command [" + cc.event.getMessage().getRawContent() +
-                                "] by " + cc.event.getAuthor().getName() + " [" + cc.event.getMessage().getAuthor().getId()
-                                + "] on " + cc.event.getGuild().getName()+ " [" + cc.event.getGuild().getId() + "]";
-                        Logging.cmd(this.getClass(), info);
+                            String info = "Executed command [" + cc.event.getMessage().getRawContent() +
+                                    "] by " + cc.event.getAuthor().getName() + " [" + cc.event.getMessage().getAuthor().getId()
+                                    + "] on " + cc.event.getGuild().getName()+ " [" + cc.event.getGuild().getId() + "]";
+                            Logging.cmd(this.getClass(), info);
+                        }
+                        catch(Exception e)
+                        {
+                            Logging.exception(commands.get(cc.invoke).getClass(), e);
+                        }
                     });
                 }
                 // otherwise send error message
@@ -194,7 +201,17 @@ public class CommandHandler
                 // do command action if valid arguments
                 if (err.equals(""))
                 {
-                    executor.submit( () -> adminCommands.get(cc.invoke).action(cc.prefix + cc.invoke, cc.args, cc.event));
+                    executor.submit( () ->
+                    {
+                        try
+                        {
+                            adminCommands.get(cc.invoke).action(cc.prefix + cc.invoke, cc.args, cc.event);
+                        }
+                        catch(Exception e)
+                        {
+                            Logging.exception(adminCommands.get(cc.invoke).getClass(), e);
+                        }
+                    });
                 }
             }
             catch(Exception e)

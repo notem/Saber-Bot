@@ -4,10 +4,13 @@ import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Emote;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -217,5 +220,147 @@ public class VerifyUtilities
             }
         }
         return true;
+    }
+
+
+    // TODO cleanup and document!
+
+
+    public static String verifyInterval(String[] args, int index, String head)
+    {
+        if(args.length-index < 1)
+        {
+            return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                    "Use ``"+head+" "+args[0]+" "+args[index-1]+" [number]``";
+        }
+        if(!(args[index].matches("\\d+(([ ]?d(ay(s)?)?)?||([ ]?m(in(utes)?)?)||([ ]?h(our(s)?)?))")))
+        {
+            return "**" + args[index] + "** is not a correct interval format!\n" +
+                    "For days, use ``\"n days\"``. For hours, use ``\"n hours\"``. For minutes, use ``\"n minutes\"``.";
+        }
+        if(args[index].matches("\\d+([ ]?d(ay(s)?)?)?"))
+        {
+            Integer d = Integer.parseInt(args[index].replaceAll("[^\\d]", ""));
+            if(d < 0 || d > 9000) return "Invalid number of days!";
+        }
+        else if(args[index].matches("\\d+([ ]?m(in(utes)?)?)"))
+        {
+            Integer d = Integer.parseInt(args[index].replaceAll("[^\\d]", ""));
+            if(d > 100000) return "That's too many minutes!";
+            if(d < 10) return "Your minute interval must be greater than or equal to 10 minutes!";
+        }
+        else if(args[index].matches("\\d+([ ]?h(our(s)?)?)"))
+        {
+            Integer d = Integer.parseInt(args[index].replaceAll("[^\\d]", ""));
+            if(d < 0 || d > 1000) return "That's too many hours!";
+        }
+        return "";
+    }
+
+    public static String verifyUrl(String[] args, int index, String head)
+    {
+        if(args.length-index < 1)
+        {
+            return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                    "Use ``"+head+" "+args[0]+" "+args[index-1]+" [url]``";
+        }
+        switch(args[index])
+        {
+            case "off":
+            case "null":
+                break;
+
+            default:
+                if (!VerifyUtilities.verifyUrl(args[index]))
+                {
+                    return "**" + args[index] + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
+                }
+        }
+        return "";
+    }
+
+    public static String verifyExpire(String[] args, int index, String head)
+    {
+        if(args.length-index < 1)
+        {
+            return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                    "Use ``"+head+" "+args[0]+" "+args[index-1]+" [date]``";
+        }
+        switch(args[index])
+        {
+            case "none":
+            case "never":
+            case "null":
+                return "";
+
+            default:
+                if(!VerifyUtilities.verifyDate( args[index] ))
+                {
+                    return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+                }
+                if(ParsingUtilities.parseDate(args[index]).isBefore(LocalDate.now()))
+                {
+                    return "That date is in the past!";
+                }
+        }
+        return "";
+    }
+
+    public static String verifyDateAttribute(String[] args, int index, String head, ScheduleEntry entry, ZoneId zone)
+    {
+        if(args.length-index < 1)
+        {
+            return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                    "Use ``"+head+" "+args[0]+" "+args[index-1]+" [date]``";
+        }
+        if(!VerifyUtilities.verifyDate(args[index]))
+        {
+            return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+        }
+        ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDate(args[index]), LocalTime.now(zone), zone);
+        if(time.isBefore(ZonedDateTime.now()))
+        {
+            return "That date is in the past!";
+        }
+        if(entry!=null && entry.hasStarted())
+        {
+            return "You cannot modify the date of events which have already started!";
+        }
+        return "";
+    }
+
+    public static String verifyLimit(String[] args, int index, String head, ScheduleEntry entry)
+    {
+        if(args.length-index < 2)
+        {
+            return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
+                    "Use ``"+ head + " "+args[0]+" "+args[index-1]+" [group] [limit]`` where ``[group]`` " +
+                    "is the name of the rsvp group you wish to limit and ``[limit]`` maximum number of participants to allow.";
+        }
+        if(!Main.getScheduleManager().getRSVPOptions(entry.getChannelId()).containsValue(args[index]))
+        {
+            return "*" + args[index] + "* is not an rsvp group for that event's schedule!";
+        }
+        index++;
+        if(!args[index].equalsIgnoreCase("off") && !VerifyUtilities.verifyInteger(args[index]))
+        {
+            return "*" + args[index] + "* is not a number!\nTo disable the rsvp group's limit use \"off\".";
+        }
+        return "";
+    }
+
+    public static String verifyDeadline(String[] args, int index, String head)
+    {
+        if(args.length-index < 1)
+        {
+            return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
+                    "Use ``"+ head +" "+ args[0] +" "+ args[index-1]+" [deadline]`` where ``[deadline]`` is " +
+                    "the last day to RSVP for the event in a yyyy/mm/dd format.";
+        }
+        if(!VerifyUtilities.verifyDate(args[index]))
+        {
+            return "*" + args[index] + "* does not look like a date! Be sure to use the format yyyy/mm/dd!";
+        }
+        return "";
     }
 }

@@ -103,41 +103,35 @@ public class TestCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        try
+        int index = 0;
+
+        // get entry object
+        Integer entryId = ParsingUtilities.encodeIDToInt(args[index]);
+        ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
+
+        // verify the entry's message exists
+        Message msg = entry.getMessageObject();
+        if(msg == null) return;
+
+        index++;
+
+        String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getChannelId());
+        if(args.length == 2)
         {
-            int index = 0;
-
-            // get entry object
-            Integer entryId = ParsingUtilities.encodeIDToInt(args[index]);
-            ScheduleEntry entry = Main.getEntryManager().getEntry( entryId );
-            // verify the entry's message exists
-            Message msg = entry.getMessageObject();
-            if(msg == null) return;
-
-            index++;
-
-            String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getChannelId());
-            if(args.length == 2)
+            switch(args[index])
             {
-                switch(args[index])
-                {
-                    case "e":
-                    case "end":
-                        format = Main.getScheduleManager().getEndAnnounceFormat(entry.getChannelId());
-                        break;
-                    case "r":
-                    case "remind":
-                        format = Main.getScheduleManager().getReminderFormat(entry.getChannelId());
-                        break;
-                }
+                case "e":
+                case "end":
+                    format = Main.getScheduleManager().getEndAnnounceFormat(entry.getChannelId());
+                    break;
+                case "r":
+                case "remind":
+                    format = Main.getScheduleManager().getReminderFormat(entry.getChannelId());
+                    break;
             }
+        }
 
-            String remindMsg = ParsingUtilities.parseMessageFormat(format, entry);
-            MessageUtilities.sendMsg(remindMsg, event.getChannel(), null);
-        }
-        catch(Exception e)
-        {
-            Logging.exception(this.getClass(), e);
-        }
+        String remindMsg = ParsingUtilities.parseMessageFormat(format, entry);
+        MessageUtilities.sendMsg(remindMsg, event.getChannel(), null);
     }
 }

@@ -50,17 +50,23 @@ public class ScheduleManager
     {
         JDA jda = Main.getShardManager().getJDA(gId);
 
+        // bot self permissions
         Collection<Permission> channelPerms = Stream.of(Permission.MESSAGE_ADD_REACTION,
                 Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY,
                 Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_ATTACH_FILES)
                 .collect(Collectors.toList());
+
+        // create channel and get ID
         String cId;
         try
         {
             Guild guild = jda.getGuildById(gId);
             cId = guild.getController().createTextChannel(optional!=null ? optional : "new_schedule")
-                    .addPermissionOverride(guild.getMember(jda.getSelfUser()),
-                            channelPerms, new ArrayList<>()).complete().getId();
+                    .addPermissionOverride(guild.getMember(jda.getSelfUser()),          // allow self permissions
+                            channelPerms, new ArrayList<>())
+                    .addPermissionOverride(guild.getPublicRole(), new ArrayList<>(),    // disable @everyone message write
+                            Collections.singletonList(Permission.MESSAGE_WRITE))
+                    .complete().getId();
         }
         catch( PermissionException e)
         {
@@ -74,14 +80,17 @@ public class ScheduleManager
             return;
         }
 
+        // set default reminders
         List<Integer> default_reminders = new ArrayList<>();
         default_reminders.add(10);
 
+        // set default rsvp options
         Map<String, String> default_rsvp = new LinkedHashMap<>();
         default_rsvp.put(Main.getBotSettingsManager().getYesEmoji(), "Yes");
         default_rsvp.put(Main.getBotSettingsManager().getNoEmoji(), "No");
         default_rsvp.put(Main.getBotSettingsManager().getClearEmoji(), "Undecided");
 
+        // create DB document for new schedule
         Document schedule =
                 new Document("_id", cId)
                         .append("guildId", gId)
@@ -110,15 +119,19 @@ public class ScheduleManager
     {
         JDA jda = Main.getShardManager().getJDA(channel.getGuild().getId());
 
-        // attempt to set the channel permissions
+        // bot self permissions
         Collection<Permission> channelPerms = Stream.of(Permission.MESSAGE_ADD_REACTION,
                 Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY,
                 Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_ATTACH_FILES)
                 .collect(Collectors.toList());
+
+        // attempt to set the channel permissions
         try
         {
-            channel.createPermissionOverride(channel.getGuild().getMember(jda.getSelfUser()))
+            channel.createPermissionOverride(channel.getGuild().getMember(jda.getSelfUser())) // self perms
                     .setAllow(channelPerms).queue();
+            channel.createPermissionOverride(channel.getGuild().getPublicRole())              // @everyone perms
+                    .setDeny(Collections.singleton(Permission.MESSAGE_WRITE)).queue();
         }
         catch( PermissionException e)
         {
@@ -130,14 +143,17 @@ public class ScheduleManager
             Logging.exception(this.getClass(), e);
         }
 
+        // default reminders
         List<Integer> default_reminders = new ArrayList<>();
         default_reminders.add(10);
 
+        // default rsvp options
         Map<String, String> default_rsvp = new LinkedHashMap<>();
         default_rsvp.put(Main.getBotSettingsManager().getYesEmoji(), "Yes");
         default_rsvp.put(Main.getBotSettingsManager().getNoEmoji(), "No");
         default_rsvp.put(Main.getBotSettingsManager().getClearEmoji(), "Undecided");
 
+        // create DB entry
         Document schedule =
                 new Document("_id", channel.getId())
                         .append("guildId", channel.getGuild().getId())

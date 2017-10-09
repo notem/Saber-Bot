@@ -305,17 +305,17 @@ public class MessageGenerator
             // repeat x minutes
             if((bitset & 0b100000000000) == 0b100000000000)
             {
-                int mask = bitset &  0b011111111111;
-                if(mask%60 == 0)
+                int minutes = bitset & 0b011111111111;
+                if(minutes%60 == 0)
                 {
-                    if(mask == 60)
+                    if(minutes == 60)
                         return "every hour";
                     else
-                        return "every " + mask/60 + " hours";
+                        return "every "+ minutes/60 +" hours";
                 }
                 else
                 {
-                    return "every " + mask + " minutes";
+                    return "every " + minutes + " minutes";
                 }
             }
             // yearly repeat
@@ -348,7 +348,7 @@ public class MessageGenerator
                     if(mask == 60)
                         return "repeats hourly";
                     else
-                        return "repeats every " + mask + " hours";
+                        return "repeats every " + mask/60 + " hours";
                 }
                 else
                 {
@@ -374,7 +374,7 @@ public class MessageGenerator
         /// only reaches here for weekly repeat
         if( (bitset & 1) == 1 )
         {
-            if(bitset==0b0000001)
+            if(bitset==1)
                 return str + "Sunday";
 
             str += "Sun";
@@ -382,9 +382,9 @@ public class MessageGenerator
                 str += ", ";
         }
         bitset = bitset>>1;
-        if( (bitset & 1) == 1 )
+        if((bitset & 1) == 1)
         {
-            if(bitset==0b0000010)
+            if(bitset==1)
                 return str + "Monday";
 
             str += "Mon";
@@ -392,9 +392,9 @@ public class MessageGenerator
                 str += ", ";
         }
         bitset = bitset>>1;
-        if( (bitset & 1) == 1 )
+        if((bitset & 1) == 1)
         {
-            if(bitset==0b0000100)
+            if(bitset==1)
                 return str + "Tuesday";
 
             str += "Tue";
@@ -404,7 +404,7 @@ public class MessageGenerator
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            if(bitset==0b0001000)
+            if(bitset==1)
                 return str + "Wednesday";
 
             str += "Wed";
@@ -414,7 +414,7 @@ public class MessageGenerator
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            if(bitset==0b0010000)
+            if(bitset==1)
                 return str + "Thursday";
 
             str += "Thu";
@@ -424,7 +424,7 @@ public class MessageGenerator
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            if(bitset==0b0100000)
+            if(bitset==1)
                 return str + "Friday";
 
             str += "Fri";
@@ -434,7 +434,7 @@ public class MessageGenerator
         bitset = bitset>>1;
         if( (bitset & 1) == 1 )
         {
-            if(bitset==0b1000000)
+            if(bitset==1)
                 return str + "Saturday";
 
             str += "Sat";
@@ -466,16 +466,16 @@ public class MessageGenerator
                 if( minutesTil <= 1)
                     timer += "in a minute)";
                 else
-                    timer += "within " + minutesTil + " minutes)";
+                    timer += "in " + minutesTil + " minutes)";
                 //timer += "within the hour.)";
             }
             else if( timeTilStart < 24 * 60 * 60 )
             {
                 int hoursTil = (int)Math.ceil((double)timeTilStart/(60*60));
                 if( hoursTil <= 1)
-                    timer += "within the hour.)";
+                    timer += "in the hour.)";
                 else
-                    timer += "within " + hoursTil + " hours)";
+                    timer += "in " + hoursTil + " hours)";
             }
             else
             {
@@ -484,7 +484,7 @@ public class MessageGenerator
                 if( daysTil <= 1)
                     timer += "tomorrow)";
                 else
-                    timer += "within " + daysTil + " days)";
+                    timer += "in " + daysTil + " days)";
             }
         }
         else // if the event has started
@@ -496,7 +496,7 @@ public class MessageGenerator
                 if( minutesTil <= 1)
                     timer += "in a minute.)";
                 else
-                    timer += "within " + minutesTil + " minutes)";
+                    timer += "in " + minutesTil + " minutes)";
                 //timer += "within one hour.)";
             }
 
@@ -504,9 +504,9 @@ public class MessageGenerator
             {
                 int hoursTil = (int)Math.ceil((double)timeTilEnd/(60*60));
                 if( hoursTil <= 1)
-                    timer += "within one hour)";
+                    timer += "in one hour)";
                 else
-                    timer += "within " + hoursTil + " hours)";
+                    timer += "in " + hoursTil + " hours)";
             }
             else
             {
@@ -514,7 +514,7 @@ public class MessageGenerator
                 if( daysTil <= 1)
                     timer += "tomorrow.)";
                 else
-                    timer += "within " + daysTil + " days)";
+                    timer += "in " + daysTil + " days)";
             }
         }
         return timer;

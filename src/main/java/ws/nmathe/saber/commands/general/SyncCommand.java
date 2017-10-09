@@ -128,75 +128,70 @@ public class SyncCommand implements Command
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
-        try
+        // get user Google credentials (if they exist)
+        Credential credential = GoogleAuth.getCredential(event.getAuthor().getId());
+        Calendar service = GoogleAuth.getCalendarService(credential);
+
+        int index = 0;
+        String cId = args[index].replace("<#","").replace(">","");
+        TextChannel channel = event.getGuild().getTextChannelById(cId);
+
+        index++;
+
+        boolean importFlag = true;
+        String address;
+        if( args.length == 1 )
         {
-            // get user Google credentials (if they exist)
-            Credential credential = GoogleAuth.getCredential(event.getAuthor().getId());
-            Calendar service = GoogleAuth.getCalendarService(credential);
-
-            int index = 0;
-            String cId = args[index].replace("<#","").replace(">","");
-            TextChannel channel = event.getGuild().getTextChannelById(cId);
-
-            index++;
-
-            boolean importFlag = true;
-            String address;
-            if( args.length == 1 )
+            address = Main.getScheduleManager().getAddress(cId);
+        }
+        else
+        {
+            if(args[index].equalsIgnoreCase("export"))
             {
-                address = Main.getScheduleManager().getAddress(cId);
+                importFlag = false;
+                index++;
             }
-            else
+            else if(args[index].equalsIgnoreCase("import"))
             {
-                if(args[index].equalsIgnoreCase("export"))
-                {
-                    importFlag = false;
-                    index++;
-                }
-                else if(args[index].equalsIgnoreCase("import"))
-                {
-                    index++;
-                }
-
-                address = args[index];
-                if(importFlag)
-                {
-                    // enable auto-sync'ing timezone
-                    Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("timezone_sync", true));
-                    if(GoogleAuth.authorize(event.getAuthor().getId()) != null)
-                        Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("sync_user", event.getAuthor().getId()));
-                    else
-                        Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("sync_user", null));
-                }
+                index++;
             }
 
+            address = args[index];
             if(importFlag)
             {
-                Main.getCalendarConverter().importCalendar(address, channel, service);
-                Main.getScheduleManager().setAddress(cId,address);
+                // enable auto-sync'ing timezone
+                Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("timezone_sync", true));
 
-                String content = "I have finished syncing <#" + cId + ">!";
-                MessageUtilities.sendMsg(content, event.getChannel(), null);
-            }
-            else
-            {
-                boolean success = Main.getCalendarConverter().exportCalendar(address, channel, service);
-                String content;
-                if(success)
-                {
-                    content = "I have finished exporting <#" + cId + ">!";
-                } else
-                {
-                    content = "I was unable to export <#" + cId + "> to " + address + "!\n" +
-                            "Please make sure I am authorized to edit that calendar!\n" +
-                            "You can provide me access through the ``oauth`` command.";
-                }
-                MessageUtilities.sendMsg(content, event.getChannel(), null);
+                // set user who has authorized the sync
+                if(GoogleAuth.authorize(event.getAuthor().getId()) != null)
+                    Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("sync_user", event.getAuthor().getId()));
+                else
+                    Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("sync_user", null));
             }
         }
-        catch(Exception e)
+
+        if(importFlag)
         {
-            Logging.exception(this.getClass(), e);
+            Main.getCalendarConverter().importCalendar(address, channel, service);
+            Main.getScheduleManager().setAddress(cId,address);
+
+            String content = "I have finished syncing <#" + cId + ">!";
+            MessageUtilities.sendMsg(content, event.getChannel(), null);
+        }
+        else
+        {
+            boolean success = Main.getCalendarConverter().exportCalendar(address, channel, service);
+            String content;
+            if(success)
+            {
+                content = "I have finished exporting <#" + cId + ">!";
+            } else
+            {
+                content = "I was unable to export <#" + cId + "> to " + address + "!\n" +
+                        "Please make sure I am authorized to edit that calendar!\n" +
+                        "You can provide me access through the ``oauth`` command.";
+            }
+            MessageUtilities.sendMsg(content, event.getChannel(), null);
         }
     }
 }

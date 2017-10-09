@@ -89,38 +89,31 @@ public class DeleteCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        try
+        if(args[0].equals("all"))
         {
-            if( args[0].equals("all") )
-            {
-                // delete all schedule
-                Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId())
-                        .forEach(cId -> Main.getScheduleManager().deleteSchedule(cId));
-                MessageUtilities.sendMsg("All events and schedules for this guild has been cleared.", event.getChannel(), null);
-            }
-            else if(VerifyUtilities.verifyEntryID(args[0]))
-            {
-                // delete single event
-                Integer entryId = ParsingUtilities.encodeIDToInt(args[0]);
-                ScheduleEntry entry = Main.getEntryManager().getEntry(entryId);
-                Message msg = entry.getMessageObject();
-                if( msg==null )
-                    return;
-
-                Main.getEntryManager().removeEntry(entryId);
-                MessageUtilities.deleteMsg(msg, null);
-                MessageUtilities.sendMsg("The event with :id: " + ParsingUtilities.intToEncodedID(entryId) + " removed.", event.getChannel(), null);
-            }
-            else
-            {
-                // delete schedule
-                Main.getScheduleManager().deleteSchedule(args[0].replace("<#","").replace(">",""));
-                MessageUtilities.sendMsg("That schedule has been removed", event.getChannel(), null);
-            }
+            // delete all schedule
+            Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId())
+                    .forEach(cId -> Main.getScheduleManager().deleteSchedule(cId));
+            MessageUtilities.sendMsg("All events and schedules for this guild has been cleared.", event.getChannel(), null);
         }
-        catch(Exception e)
+        else if(VerifyUtilities.verifyEntryID(args[0]))
         {
-            Logging.exception(this.getClass(), e);
+            // delete single event
+            Integer entryId = ParsingUtilities.encodeIDToInt(args[0]);
+            ScheduleEntry entry = Main.getEntryManager().getEntry(entryId);
+            Message msg = entry.getMessageObject();
+            if( msg==null )
+                return;
+
+            Main.getEntryManager().removeEntry(entryId);
+            MessageUtilities.deleteMsg(msg, null);
+            MessageUtilities.sendMsg("The event with :id: " + ParsingUtilities.intToEncodedID(entryId) + " removed.", event.getChannel(), null);
+        }
+        else
+        {
+            // delete schedule
+            Main.getScheduleManager().deleteSchedule(args[0].replace("<#","").replace(">",""));
+            MessageUtilities.sendMsg("That schedule has been removed", event.getChannel(), null);
         }
     }
 }

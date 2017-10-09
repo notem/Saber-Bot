@@ -91,26 +91,19 @@ public class SortCommand implements Command
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
-        try
-        {
-            int index = 0;
-            String cId = args[index].replace("<#","").replace(">","");
+        int index = 0;
+        String cId = args[index].replace("<#","").replace(">","");
 
-            if(args.length <= 1 || args[1].equalsIgnoreCase("asc"))
-            {
-                Main.getScheduleManager().sortSchedule(cId, false);
-            }
-            else if(args.length > 1 && args[1].equalsIgnoreCase("desc"))
-            {
-                Main.getScheduleManager().sortSchedule(cId, true);
-            }
-
-            String content = "I have finished sorting <#" + cId + ">!";
-            MessageUtilities.sendMsg(content, event.getChannel(), null);
-        }
-        catch(Exception e)
+        if(args.length <= 1 || args[1].equalsIgnoreCase("asc"))
         {
-            Logging.exception(this.getClass(), e);
+            Main.getScheduleManager().sortSchedule(cId, false);
         }
+        else if(args.length > 1 && args[1].equalsIgnoreCase("desc"))
+        {
+            Main.getScheduleManager().sortSchedule(cId, true);
+        }
+
+        String content = "I have finished sorting <#" + cId + ">!";
+        MessageUtilities.sendMsg(content, event.getChannel(), null);
     }
 }

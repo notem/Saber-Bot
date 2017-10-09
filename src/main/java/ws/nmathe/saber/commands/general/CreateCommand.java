@@ -88,24 +88,24 @@ public class CreateCommand implements Command
         String head = prefix + this.name();
         int index = 0;
 
+        // arg count check
         if (args.length < 3)
         {
             return "That's not enough arguments! Use ``" + head + " <channel> <title> <start> [<end> <extra>]``";
         }
-
+        // schedule check
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
         {
             return "Channel " + args[index] + " is not a schedule for your guild. " +
                     "Use the ``" + prefix + "init`` command to create a new schedule!";
         }
-
         if( Main.getScheduleManager().isLocked(cId) )
         {
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
         }
 
-        index++;
+        index++; // 1
 
         // check <title>
         if( args[index].length() > 255 )
@@ -113,7 +113,7 @@ public class CreateCommand implements Command
             return "Your title can be at most 255 characters!";
         }
 
-        index++;
+        index++; // 2
 
         // check <start>
         if( !VerifyUtilities.verifyTime( args[index] ) )
@@ -121,148 +121,105 @@ public class CreateCommand implements Command
             return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
         }
 
-        /*
-        if(Main.getScheduleManager().getClockFormat(cId).equals("12") &&
-                !(args[index].toLowerCase().endsWith("pm") || args[index].toLowerCase().endsWith("am")))
-        {
-            return "You forgot the period indicator (AM/PM)!";
-        }
-        */
-
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
         ZonedDateTime startTime = ZonedDateTime.of(LocalDate.now().plusDays(1), ParsingUtilities.parseTime(args[index]), zone);
 
         // if minimum args, then ok
         if (args.length == 3) return "";
 
-        index++;
+        index++; // 3
 
         // if <end> fails verification, assume <end> has been omitted
         if( VerifyUtilities.verifyTime( args[index] ) )
         {
-            index++;
+            index++; // 4
         }
 
         // check remaining args
-        if( args.length - 1 > index )
+        if(args.length - 1 > index)
         {
-            String[] argsRemaining = Arrays.copyOfRange(args, index, args.length);
-
-            boolean dateFlag = false;
-            boolean urlFlag = false;
-            boolean intervalFlag = false;
-            boolean expireFlag = false;
-
-            for (String arg : argsRemaining)
+            args = Arrays.copyOfRange(args, index, args.length);
+            index = 0;
+            while(index < args.length)
             {
-                if (dateFlag)
+                String verify;
+                switch(args[index++].toLowerCase())
                 {
-                    if (!VerifyUtilities.verifyDate(arg))
-                    {
-                        return "I could not understand **" + arg + "** as a date! Please use the format yyyy/MM/dd.";
-                    }
-                    ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDate(arg), LocalTime.now(zone), zone);
-                    if(time.isBefore(ZonedDateTime.now()))
-                    {
-                        return "That date is in the past!";
-                    }
-                    dateFlag = false;
-                }
-                else if (urlFlag)
-                {
-                    if (!VerifyUtilities.verifyUrl(arg))
-                        return "**" + arg + "** doesn't look like a url to me! Please include the ``http://`` portion of the url!";
-                    urlFlag = false;
-                }
-                else if (intervalFlag)
-                {
-                    if(!(arg.matches("\\d+(([ ]?d(ay(s)?)?)?||([ ]?m(in(utes)?)?)||([ ]?h(our(s)?)?))")))
-                    {
-                        return "**" + arg + "** is not a correct interval format!\n" +
-                                "For days, use ``\"n days\"``. For hours, use ``\"n hours\"``. For minutes, use ``\"n minutes\"``.";
-                    }
-                    if(arg.matches("\\d+([ ]?d(ay(s)?)?)?"))
-                    {
-                        Integer d = Integer.parseInt(arg.replaceAll("[^\\d]", ""));
-                        if(d < 0 || d > 9000) return "Invalid number of days!";
-                    }
-                    else if(arg.matches("\\d+([ ]?m(in(utes)?)?)"))
-                    {
-                        Integer d = Integer.parseInt(arg.replaceAll("[^\\d]", ""));
-                        if(d > 100000) return "That's too many minutes!";
-                        if(d < 10) return "Your minute interval must be greater than or equal to 10 minutes!";
-                    }
-                    else if(arg.matches("\\d+([ ]?h(our(s)?)?)"))
-                    {
-                        Integer d = Integer.parseInt(arg.replaceAll("[^\\d]", ""));
-                        if(d < 0 || d > 1000) return "That's too many hours!";
-                    }
-                    intervalFlag = false;
-                }
-                else if (expireFlag)
-                {
-                    switch(arg)
-                    {
-                        case "none":
-                        case "never":
-                        case "null":
-                            break;
+                    case "d":
+                    case "date":
+                    case "sd":
+                    case "start-date":
+                    case "ed":
+                    case "end-date":
+                        verify = VerifyUtilities.verifyDateAttribute(args, index, head, null, zone);
+                        if (!verify.isEmpty()) return verify;
+                        index++;
+                        break;
 
-                        default:
-                            if( !VerifyUtilities.verifyDate( arg ) )
-                            {
-                                return "I could not understand **" + arg + "** as a date! Please use the format M/d.";
-                            }
-                            ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDate(arg), LocalTime.now(zone), zone);
-                            if(time.isBefore(ZonedDateTime.now()))
-                            {
-                                return "That date is in the past!";
-                            }
-                            break;
-                    }
-                    expireFlag = false;
-                }
-                else
-                {
-                    switch(arg.toLowerCase())
-                    {
-                        case "d":
-                        case "sd":
-                        case "ed":
-                        case "date":
-                        case "end date":
-                        case "start date":
-                        case "end-date":
-                        case "start-date":
-                            dateFlag = true;
-                            break;
+                    case "r":
+                    case "repeats":
+                    case "repeat":
+                        if (args.length - index < 1)
+                        {
+                            return "That's not the right number of arguments for **" + args[index - 1] + "**! " +
+                                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [repeat]``";
+                        }
+                        index++;
+                        break;
 
-                        case "u":
-                        case "url":
-                            urlFlag = true;
-                            break;
+                    case "i":
+                    case "interval":
+                        verify = VerifyUtilities.verifyInterval(args, index, head);
+                        if (!verify.isEmpty()) return verify;
+                        index++;
+                        break;
 
-                        case "i":
-                        case "interval":
-                            intervalFlag = true;
-                            break;
+                    case "im":
+                    case "image":
+                    case "th":
+                    case "thumbnail":
+                    case "u":
+                    case "url":
+                        verify = VerifyUtilities.verifyUrl(args, index, head);
+                        if (!verify.isEmpty()) return verify;
+                        index++;
+                        break;
 
-                        case "ex":
-                        case "expire":
-                            expireFlag = true;
-                            break;
+                    case "max":
+                    case "m":
+                        return "The ``max`` option has been made obsolete. Please use the ``limit`` option in it's place.";
 
-                        case "today":
-                            if(startTime.isBefore(ZonedDateTime.now()))
-                            {
-                                return "I cannot be schedule the event for today at " + args[2] + " as that time has already past!";
-                            }
-                            break;
+                    case "ex":
+                    case "expire":
+                        verify = VerifyUtilities.verifyExpire(args, index, head);
+                        if (!verify.isEmpty()) return verify;
+                        index++;
+                        break;
 
-                        default:
-                            if(arg.length() > 1024) return "Comments should not be larger than 1024 characters!";
-                            break;
-                    }
+                    case "limit":
+                    case "l":
+                        verify = VerifyUtilities.verifyLimit(args, index, head, null);
+                        if (!verify.isEmpty()) return verify;
+                        index++;
+                        break;
+
+                    case "deadline":
+                    case "dl":
+                        verify = VerifyUtilities.verifyDeadline(args, index, head);
+                        if (!verify.isEmpty()) return verify;
+                        index++;
+                        break;
+
+                    case "today":
+                        if(startTime.isBefore(ZonedDateTime.now()))
+                        {
+                            return "I cannot be schedule the event for today as the start time is in the past!";
+                        }
+                        break;
+
+                    default:
+                        if(args[index-1].length() > 1024) return "Comments should not be larger than 1024 characters!";
+                        break;
                 }
             }
         }
@@ -279,219 +236,216 @@ public class CreateCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        try
+        int index = 0;
+
+        // get schedule ID and zone information
+        String cId = args[index++].replace("<#","").replace(">","");
+        ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
+
+        // Initialize variables
+        String title;
+        LocalTime startTime;
+        LocalTime endTime = null;
+        ArrayList<String> comments = new ArrayList<>();
+        int repeat = 0;
+        LocalDate startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
+        LocalDate endDate = null;
+        String url = null;
+        String image = null;
+        String thumbnail = null;
+        LocalDate expireDate = null;
+        ZonedDateTime deadline = null;
+
+        // process title
+        title = args[index++];
+
+        // process start
+        startTime = ParsingUtilities.parseTime(args[index++].trim().toUpperCase());
+
+        // if minimum args, then ok
+        if (args.length != 3)
         {
-            String cId = args[0].replace("<#","").replace(">","");
-            ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
-
-            // Initialize variables with safe defaults
-            String title = "";
-            LocalTime startTime = ZonedDateTime.now(zone).toLocalTime();
-            LocalTime endTime = null;
-            ArrayList<String> comments = new ArrayList<>();
-            int repeat = 0;
-            LocalDate startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
-            LocalDate endDate = null;
-            String url = null;
-            LocalDate expireDate = null;
-
-            boolean channelFlag = false;
-            boolean titleFlag = false;
-            boolean startFlag = false;
-            boolean endFlag = false;
-            boolean repeatFlag = false;
-            boolean dateFlag = false;
-            boolean startDateFlag = false;
-            boolean endDateFlag = false;
-            boolean urlFlag = false;
-            boolean intervalFlag = false;
-            boolean expireFlag = false;
-
-            for( String arg : args )
+            // if <end> fails verification, assume <end> has been omitted
+            if(VerifyUtilities.verifyTime(args[index]))
             {
-                if(!channelFlag)
+                endTime = ParsingUtilities.parseTime(args[index++].trim().toUpperCase());
+            }
+
+            // check remaining args
+            if(args.length - 1 > index)
+            {
+                args = Arrays.copyOfRange(args, index, args.length);
+                index = 0;
+                while(index < args.length)
                 {
-                    channelFlag = true;
-                }
-                else if(!titleFlag)
-                {
-                    titleFlag = true;
-                    title = arg;
-                }
-                else if(!startFlag)
-                {
-                    startFlag = true;
-                    startTime = ParsingUtilities.parseTime(arg.trim().toUpperCase());
-                }
-                else if(!endFlag && VerifyUtilities.verifyTime(arg))
-                {
-                    endFlag = true;
-                    endTime = ParsingUtilities.parseTime(arg.trim().toUpperCase());
-                }
-                else
-                {
-                    if (!endFlag) // skip end if not provided at this point
+                    switch(args[index++].toLowerCase())
                     {
-                        endFlag = true;
-                    }
-                    if (repeatFlag)
-                    {
-                        repeat = ParsingUtilities.parseRepeat(arg.toLowerCase());
-                        repeatFlag = false;
-                    }
-                    else if (dateFlag)
-                    {
-                        startDate = ParsingUtilities.parseDate(arg.toLowerCase());
-                        endDate = startDate;
-                        dateFlag = false;
-                    }
-                    else if (startDateFlag)
-                    {
-                        startDate = ParsingUtilities.parseDate(arg.toLowerCase());
-                        startDateFlag = false;
-                    }
-                    else if (endDateFlag)
-                    {
-                        endDate = ParsingUtilities.parseDate(arg.toLowerCase());
-                        endDateFlag = false;
-                    }
-                    else if (urlFlag)
-                    {
-                        url = arg;
-                        urlFlag = false;
-                    }
-                    else if (intervalFlag)
-                    {
-                        if(arg.matches("\\d+([ ]?d(ay(s)?)?)?"))
-                            repeat = 0b10000000 | Integer.parseInt(arg.replaceAll("[^\\d]",""));
-                        else if(arg.matches("\\d+([ ]?m(in(utes)?)?)"))
-                            repeat = 0b100000000000 | Integer.parseInt(arg.replaceAll("[^\\d]",""));
-                        else if(arg.matches("\\d+([ ]?h(our(s)?)?)"))
-                            repeat = 0b100000000000 | (Integer.parseInt(arg.replaceAll("[^\\d]",""))*60);
-                        intervalFlag = false;
-                    }
-                    else if (expireFlag)
-                    {
-                        switch(arg.toLowerCase())
-                        {
-                            case "none":
-                            case "never":
-                            case "null":
-                                expireDate = null;
-                                break;
-                            default:
-                                expireDate = ParsingUtilities.parseDate(arg.toLowerCase());
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        switch(arg.toLowerCase())
-                        {
-                            case "r":
-                            case "repeat":
-                            case "repeats":
-                                repeatFlag = true;
-                                break;
-                            case "d":
-                            case "date":
-                                dateFlag = true;
-                                break;
-                            case "ed":
-                            case "end date":
-                            case "end-date":
-                                endDateFlag = true;
-                                break;
-                            case "sd":
-                            case "start date":
-                            case "start-date":
-                                startDateFlag = true;
-                                break;
-                            case "u":
-                                urlFlag = true;
-                                break;
-                            case "i":
-                            case "interval":
-                                intervalFlag = true;
-                                break;
-                            case "ex":
-                            case "expire":
-                                expireFlag = true;
-                                break;
-                            case "today":
-                                startDate = ZonedDateTime.now(zone).toLocalDate();
-                                endDate = ZonedDateTime.now(zone).toLocalDate();
-                                break;
-                            case "tomorrow":
-                                startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
-                                endDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
-                                break;
-                            default:
-                                comments.add(arg);
-                                break;
-                        }
+                        case "d":
+                        case "date":
+                            startDate = ParsingUtilities.parseDate(args[index].toLowerCase());
+                            endDate = startDate;
+                            index++;
+                            break;
+
+                        case "sd":
+                        case "start date":
+                        case "start-date":
+                            startDate = ParsingUtilities.parseDate(args[index].toLowerCase());
+                            index++;
+                            break;
+
+                        case "ed":
+                        case "end date":
+                        case "end-date":
+                            endDate = ParsingUtilities.parseDate(args[index].toLowerCase());
+                            index++;
+                            break;
+
+                        case "r":
+                        case "repeats":
+                        case "repeat":
+                            repeat = ParsingUtilities.parseRepeat(args[index].toLowerCase());
+                            index++;
+                            break;
+
+                        case "i":
+                        case "interval":
+                            if(args[index].matches("\\d+([ ]?d(ay(s)?)?)?"))
+                                repeat = 0b10000000 | Integer.parseInt(args[index].replaceAll("[^\\d]",""));
+                            else if(args[index].matches("\\d+([ ]?m(in(utes)?)?)"))
+                                repeat = 0b100000000000 | Integer.parseInt(args[index].replaceAll("[^\\d]",""));
+                            else if(args[index].matches("\\d+([ ]?h(our(s)?)?)"))
+                                repeat = 0b100000000000 | (Integer.parseInt(args[index].replaceAll("[^\\d]",""))*60);
+                            index++;
+                            break;
+
+                        case "u":
+                        case "url":
+                            url = args[index];
+                            index++;
+                            break;
+
+                        case "ex":
+                        case "expire":
+                            switch(args[index])
+                            {
+                                case "off":
+                                case "none":
+                                case "never":
+                                case "null":
+                                    expireDate = null;
+                                    break;
+                                default:
+                                    expireDate = ParsingUtilities.parseDate(args[index]);
+                                    break;
+                            }
+                            index++;
+                            break;
+
+                        case "im":
+                        case "image":
+                            switch(args[index])
+                            {
+                                case "null":
+                                case "off":
+                                    image = null;
+                                    break;
+                                default:
+                                    image = args[index];
+                                    break;
+                            }
+                            index++;
+                            break;
+
+                        case "th":
+                        case "thumbnail":
+                            switch(args[index])
+                            {
+                                case "null":
+                                case "off":
+                                    thumbnail = null;
+                                    break;
+                                default:
+                                    thumbnail = args[index];
+                                    break;
+                            }
+                            index++;
+                            break;
+
+                        case "deadline":
+                        case "dl":
+                            zone = Main.getScheduleManager().getTimeZone(cId);
+                            deadline = ZonedDateTime.of(ParsingUtilities.parseDate(args[index]), LocalTime.MAX, zone);
+                            index++;
+                            break;
+
+                        case "today":
+                            startDate = ZonedDateTime.now(zone).toLocalDate();
+                            endDate = ZonedDateTime.now(zone).toLocalDate();
+                            break;
+
+                        default:
+                            comments.add(args[index-1]);
+                            break;
                     }
                 }
             }
-
-            // handle all day events
-            if(startTime.equals(endTime) && (startTime.equals(LocalTime.MIN)||startTime.equals(LocalTime.MAX)) && endDate==null)
-            {
-                endDate = LocalDate.from(startDate).plusDays(1);
-            }
-
-            // if the end time has not been filled, copy start time
-            if(endTime == null)
-            {
-                endTime = LocalTime.from(startTime);
-            }
-
-            // if the end date has not been filled, copy start date
-            if(endDate == null)
-            {
-                endDate = LocalDate.from(startDate);
-            }
-
-            // create the zoned date time using the schedule's timezone
-            ZonedDateTime start = ZonedDateTime.of( startDate, startTime, zone );
-            ZonedDateTime end = ZonedDateTime.of( endDate, endTime, zone );
-            ZonedDateTime expire = expireDate == null ? null : ZonedDateTime.of(expireDate, LocalTime.MIN, zone);
-
-            // add a year to the date if the provided date is past current time
-            Instant now = Instant.now();
-            if(now.isAfter(start.toInstant()))
-            {
-                start = start.plusYears(1);
-            }
-            if(now.isAfter(end.toInstant()))
-            {
-                end = end.plusYears(1);
-            }
-
-            // add a day to end if end is after start
-            if(start.isAfter(end))
-            {
-                end = start.plusDays(1);
-            }
-
-            // create the dummy schedule entry
-            ScheduleEntry se = (new ScheduleEntry(event.getGuild().getTextChannelById(cId), title, start, end))
-                    .setComments(comments)
-                    .setRepeat(repeat)
-                    .setTitleUrl(url)
-                    .setExpire(expire);
-
-            // finalize the schedule entry
-            Integer entryId = Main.getEntryManager().newEntry(se, true);
-
-            // send the event summary to the command channel
-            String body = "New event created :id: **"+ ParsingUtilities.intToEncodedID(entryId) +"** on <#" + cId + ">\n" +
-                    "```js\n" + se.toString() + "\n```";
-            MessageUtilities.sendMsg(body, event.getChannel(), null);
         }
-        catch(Exception e)
+
+        // handle all day events
+        if(startTime.equals(endTime) && (startTime.equals(LocalTime.MIN)||startTime.equals(LocalTime.MAX)) && endDate==null)
         {
-            Logging.exception(this.getClass(), e);
+            endDate = LocalDate.from(startDate).plusDays(1);
         }
+        // if the end time has not been filled, copy start time
+        if(endTime == null)
+        {
+            endTime = LocalTime.from(startTime);
+        }
+        // if the end date has not been filled, copy start date
+        if(endDate == null)
+        {
+            endDate = LocalDate.from(startDate);
+        }
+
+        // create the zoned date time using the schedule's timezone
+        ZonedDateTime start = ZonedDateTime.of(startDate, startTime, zone);
+        ZonedDateTime end = ZonedDateTime.of(endDate, endTime, zone);
+        ZonedDateTime expire = expireDate == null ? null : ZonedDateTime.of(expireDate, LocalTime.MIN, zone);
+
+        // add a year to the date if the provided date is past current time
+        Instant now = Instant.now();
+        if(now.isAfter(start.toInstant()))
+        {
+            start = start.plusYears(1);
+        }
+        if(now.isAfter(end.toInstant()))
+        {
+            end = end.plusYears(1);
+        }
+
+        // add a day to end if end is after start
+        if(start.isAfter(end))
+        {
+            end = start.plusDays(1);
+        }
+
+        // create the dummy schedule entry
+        ScheduleEntry se = (new ScheduleEntry(event.getGuild().getTextChannelById(cId), title, start, end))
+                .setComments(comments)
+                .setRepeat(repeat)
+                .setTitleUrl(url)
+                .setExpire(expire)
+                .setImageUrl(image)
+                .setThumbnailUrl(thumbnail)
+                .setRsvpDeadline(deadline);
+
+        // finalize the schedule entry
+        Integer entryId = Main.getEntryManager().newEntry(se, true);
+
+        // send the event summary to the command channel
+        String body = "New event created :id: **"+ ParsingUtilities.intToEncodedID(entryId) +"** on <#" + cId + ">\n" +
+                "```js\n" + se.toString() + "\n```";
+        MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }

@@ -1052,10 +1052,8 @@ public class ConfigCommand implements Command
                 String remindChanIdentifier = Main.getScheduleManager().getReminderChan(cId);
                 content += "```js\n" +
                         "// Event Reminder Settings" +
-                        "\n[reminders]      " +
-                        "\"" + makeReminderString(reminders) + "\"" +
-                        "\n[end-remind]      " +
-                        "\"" + makeReminderString(endReminders) + "\"" +
+                        "\n[reminders]   " + "\"" + makeReminderString(reminders) + "\"" +
+                        "\n[end-remind]  " + "\"" + makeReminderString(endReminders) + "\"" +
                         "\n[remind-msg]  " +
                         (Main.getScheduleManager().isRemindFormatOverridden(cId) ? (form3.isEmpty()?"(off)":
                                 "\"" + form3.replace("```","`\uFEFF`\uFEFF`")  + "\""):
@@ -1110,26 +1108,30 @@ public class ConfigCommand implements Command
                     return content;
                 }
 
-                Date syncTime = Main.getScheduleManager().getSyncTime(cId);
-                OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
-                        .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
-
+                // get sync user object (if exists)
                 User user = null;
                 if(Main.getScheduleManager().getSyncUser(cId)!=null)
-                {
                     user = jda.getUserById(Main.getScheduleManager().getSyncUser(cId));
-                }
 
                 content += "```js\n" +
                         "// Schedule Sync Settings" +
                         "\n[sync]   " +
                         "\"" + Main.getScheduleManager().getAddress(cId) + "\"" +
-                            (user!=null?" (authorized by "+user.getName()+")":"") +
-                        "\n[time]   " +
-                        "\"" + sync_time_display + "\"" +
-                        "\n[length] " +
-                        "\"" + Main.getScheduleManager().getSyncLength(cId) + "\"" +
-                        "```";
+                            (user!=null?" (authorized by "+user.getName()+")":"");
+
+                // display full body only if sync is on
+                if(!Main.getScheduleManager().getAddress(cId).equalsIgnoreCase("off"))
+                {
+                    Date syncTime = Main.getScheduleManager().getSyncTime(cId);
+                    OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
+                            .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
+
+                    content += "\n[time]   " +
+                            "\"" + sync_time_display + "\"" +
+                            "\n[length] " +
+                            "\"" + Main.getScheduleManager().getSyncLength(cId) + "\"";
+                }
+                content += "```";
 
                 if(type == 4) break;
             case 5:
@@ -1142,36 +1144,42 @@ public class ConfigCommand implements Command
                 String clear = Main.getScheduleManager().getRSVPClear(cId);
                 content += "```js\n" +
                         "// RSVP Settings" +
-                        "\n[rsvp]        " +
-                        "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"" +
-                        "\n[exclusivity] " +
-                        "\""+ (Main.getScheduleManager().isRSVPExclusive(cId) ? "on" : "off") + "\"" +
-                        "\n[clear]       " + (clear.isEmpty() ? "(off)" : "\""+clear+"\"")  +
-                        "\n<Groups>\n";
+                        "\n[rsvp]   " +
+                        "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"";
 
-                Map<String, String> options = Main.getScheduleManager().getRSVPOptions(cId);
-                for(String key : options.keySet())
+                // only display full settings message when rsvp is enabled
+                if(Main.getScheduleManager().isRSVPEnabled(cId))
                 {
-                    if(EmojiManager.isEmoji(key))
+                    content +=
+                            "\n[clear]  " + (clear.isEmpty() ? "(off)" : "\""+clear+"\"")  +
+                            "\n[exclusivity] " +
+                            "\""+ (Main.getScheduleManager().isRSVPExclusive(cId) ? "on" : "off") + "\"" +
+                            "\n<Groups>\n";
+
+                    // generate the list of rsvp groups
+                    Map<String, String> options = Main.getScheduleManager().getRSVPOptions(cId);
+                    for(String key : options.keySet())
                     {
-                        content += " " + options.get(key) + " - " + key + "\n";
-                    }
-                    else
-                    {
-                        Emote emote = null;
-                        for(JDA shard : Main.getShardManager().getShards())
+                        if(EmojiManager.isEmoji(key))
                         {
-                            emote = shard.getEmoteById(key);
-                            if(emote != null) break;
+                            content += " " + options.get(key) + " - " + key + "\n";
                         }
-                        if(emote!=null)
+                        else
                         {
-                            String displayName = emote.getName();
-                            content += " " + options.get(key) + " - :" + displayName + ":\n";
+                            Emote emote = null;
+                            for(JDA shard : Main.getShardManager().getShards())
+                            {
+                                emote = shard.getEmoteById(key);
+                                if(emote != null) break;
+                            }
+                            if(emote!=null)
+                            {
+                                String displayName = emote.getName();
+                                content += " " + options.get(key) + " - :" + displayName + ":\n";
+                            }
                         }
                     }
                 }
-
                 content += "```";
 
                 if(type == 5) break;

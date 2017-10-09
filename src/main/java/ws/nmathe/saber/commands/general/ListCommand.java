@@ -157,118 +157,69 @@ public class ListCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        try
+        int index = 0;
+        Integer entryId = ParsingUtilities.encodeIDToInt(args[index++]);
+        ScheduleEntry se = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
+
+        String titleUrl = se.getTitleUrl()==null ? "https://nnmathe.ws/saber": se.getTitleUrl();
+        String title = se.getTitle()+" ["+ParsingUtilities.intToEncodedID(entryId)+"]";
+
+        String content = "";
+
+        List<String> userFilters = new ArrayList<>();
+        List<String> roleFilters = new ArrayList<>();
+        boolean filterByType = false;
+        Set<String> typeFilters = new HashSet<>();
+
+
+        boolean mobileFlag = false;
+        boolean IdFlag = false;
+        for(; index<args.length; index++)
         {
-            int index = 0;
-            Integer entryId = ParsingUtilities.encodeIDToInt(args[index++]);
-            ScheduleEntry se = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
-
-            String titleUrl = se.getTitleUrl()==null ? "https://nnmathe.ws/saber": se.getTitleUrl();
-            String title = se.getTitle()+" ["+ParsingUtilities.intToEncodedID(entryId)+"]";
-
-            String content = "";
-
-            List<String> userFilters = new ArrayList<>();
-            List<String> roleFilters = new ArrayList<>();
-            boolean filterByType = false;
-            Set<String> typeFilters = new HashSet<>();
-
-
-            boolean mobileFlag = false;
-            boolean IdFlag = false;
-            for(; index<args.length; index++)
+            if(args[index].equalsIgnoreCase("mobile") || args[index].equalsIgnoreCase("m"))
             {
-                if(args[index].equalsIgnoreCase("mobile") || args[index].equalsIgnoreCase("m"))
-                {
-                    mobileFlag = true;
-                    continue;
-                }
-                if(args[index].equalsIgnoreCase("id") || args[index].equalsIgnoreCase("i"))
-                {
-                    IdFlag = true;
-                    continue;
-                }
-
-                String filterType = args[index].toLowerCase().split(":")[0].trim();
-                String filterValue = args[index].toLowerCase().split(":")[1].trim();
-                switch(filterType)
-                {
-                    case "r":
-                    case "role":
-                        roleFilters.add(filterValue.replace("<@&","").replace(">",""));
-                        break;
-
-                    case "u":
-                    case "user":
-                        userFilters.add(filterValue.replace("<@","").replace(">",""));
-                        break;
-
-                    case "t":
-                    case "type":
-                        filterByType = true;
-                        typeFilters.add(filterValue);
-                        break;
-                }
+                mobileFlag = true;
+                continue;
+            }
+            if(args[index].equalsIgnoreCase("id") || args[index].equalsIgnoreCase("i"))
+            {
+                IdFlag = true;
+                continue;
             }
 
-            Set<String> uniqueMembers = new HashSet<>();
-            Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
-            for(String type : options.values())
+            String filterType = args[index].toLowerCase().split(":")[0].trim();
+            String filterValue = args[index].toLowerCase().split(":")[1].trim();
+            switch(filterType)
             {
-                if(!filterByType || typeFilters.contains(type))
-                {
-                    content += "**\"" + type + "\"\n======================**\n";
-                    List<String> members = se.getRsvpMembersOfType(type);
-                    for(String id : members)
-                    {
-                        if(content.length() > 1900) // if the message is nearing maximum length.
-                        {
-                            // build and send the embedded message object
-                            Message message = (new MessageBuilder()).setEmbed(
-                                    (new EmbedBuilder()).setDescription(content).setTitle(title, titleUrl).build()
-                            ).build();
-                            MessageUtilities.sendMsg(message, event.getChannel(), null);
+                case "r":
+                case "role":
+                    roleFilters.add(filterValue.replace("<@&","").replace(">",""));
+                    break;
 
-                            // clear the content sting
-                            content = "*continued. . .* \n";
-                        }
+                case "u":
+                case "user":
+                    userFilters.add(filterValue.replace("<@","").replace(">",""));
+                    break;
 
-                        Member member = event.getGuild().getMemberById(id);
-                        if(member != null) // if the user is still a member of the guild, add to the list
-                        {
-                            uniqueMembers.add(member.getUser().getId());
-                            content += this.getNameDisplay(mobileFlag, IdFlag, member);
-                        }
-                        else // otherwise, remove the member from the event and update
-                        {
-                            se.getRsvpMembersOfType(type).remove(id);
-                            Main.getEntryManager().updateEntry(se, false);
-                        }
-                    }
-                }
-                content += "\n";
+                case "t":
+                case "type":
+                    filterByType = true;
+                    typeFilters.add(filterValue);
+                    break;
             }
+        }
 
-            if(!filterByType || typeFilters.contains("no-input"))
+        Set<String> uniqueMembers = new HashSet<>();
+        Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
+        for(String type : options.values())
+        {
+            if(!filterByType || typeFilters.contains(type))
             {
-                // generate a list of all members of the guild who pass the filter and map to their ID
-                List<String> noInput = event.getGuild().getMembers().stream()
-                        .filter(member -> checkMember(member, userFilters, roleFilters))
-                        .map(member -> member.getUser().getId()).collect(Collectors.toList());
-
-                for(String type : options.values())
+                content += "**\"" + type + "\"\n======================**\n";
+                List<String> members = se.getRsvpMembersOfType(type);
+                for(String id : members)
                 {
-                    noInput.removeAll(se.getRsvpMembersOfType(type));
-                }
-
-                content += "**No input\n======================\n**";
-                if(!filterByType & noInput.size() > 10)
-                {
-                    content += " Too many users to show: " + noInput.size() + " users with no rsvp\n";
-                }
-                else for(String id : noInput)
-                {
-                    if(content.length() > 1900)
+                    if(content.length() > 1900) // if the message is nearing maximum length.
                     {
                         // build and send the embedded message object
                         Message message = (new MessageBuilder()).setEmbed(
@@ -279,25 +230,67 @@ public class ListCommand implements Command
                         // clear the content sting
                         content = "*continued. . .* \n";
                     }
+
                     Member member = event.getGuild().getMemberById(id);
-                    content += this.getNameDisplay(mobileFlag, IdFlag, member);
+                    if(member != null) // if the user is still a member of the guild, add to the list
+                    {
+                        uniqueMembers.add(member.getUser().getId());
+                        content += this.getNameDisplay(mobileFlag, IdFlag, member);
+                    }
+                    else // otherwise, remove the member from the event and update
+                    {
+                        se.getRsvpMembersOfType(type).remove(id);
+                        Main.getEntryManager().updateEntry(se, false);
+                    }
                 }
             }
-
-            String footer = uniqueMembers.size() + " unique member(s) appear in this search";
-
-            // build and send the embedded message object
-            Message message = (new MessageBuilder()).setEmbed(
-                    (new EmbedBuilder()).setDescription(content)
-                            .setTitle(title, titleUrl)
-                            .setFooter(footer, null).build()
-                    ).build();
-            MessageUtilities.sendMsg(message, event.getChannel(), null);
+            content += "\n";
         }
-        catch(Exception e)
+
+        if(!filterByType || typeFilters.contains("no-input"))
         {
-            Logging.exception(this.getClass(), e);
+            // generate a list of all members of the guild who pass the filter and map to their ID
+            List<String> noInput = event.getGuild().getMembers().stream()
+                    .filter(member -> checkMember(member, userFilters, roleFilters))
+                    .map(member -> member.getUser().getId()).collect(Collectors.toList());
+
+            for(String type : options.values())
+            {
+                noInput.removeAll(se.getRsvpMembersOfType(type));
+            }
+
+            content += "**No input\n======================\n**";
+            if(!filterByType & noInput.size() > 10)
+            {
+                content += " Too many users to show: " + noInput.size() + " users with no rsvp\n";
+            }
+            else for(String id : noInput)
+            {
+                if(content.length() > 1900)
+                {
+                    // build and send the embedded message object
+                    Message message = (new MessageBuilder()).setEmbed(
+                            (new EmbedBuilder()).setDescription(content).setTitle(title, titleUrl).build()
+                    ).build();
+                    MessageUtilities.sendMsg(message, event.getChannel(), null);
+
+                    // clear the content sting
+                    content = "*continued. . .* \n";
+                }
+                Member member = event.getGuild().getMemberById(id);
+                content += this.getNameDisplay(mobileFlag, IdFlag, member);
+            }
         }
+
+        String footer = uniqueMembers.size() + " unique member(s) appear in this search";
+
+        // build and send the embedded message object
+        Message message = (new MessageBuilder()).setEmbed(
+                (new EmbedBuilder()).setDescription(content)
+                        .setTitle(title, titleUrl)
+                        .setFooter(footer, null).build()
+        ).build();
+        MessageUtilities.sendMsg(message, event.getChannel(), null);
     }
 
     /**
