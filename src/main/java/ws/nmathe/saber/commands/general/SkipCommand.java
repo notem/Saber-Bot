@@ -65,10 +65,6 @@ public class SkipCommand implements Command
             {
                 return "The requested entry does not exist!";
             }
-            if (!Main.getScheduleManager().isRSVPEnabled(entry.getChannelId()))
-            {
-                return "The schedule that the entry is on is not rsvp enabled!";
-            }
         }
         else
         {
