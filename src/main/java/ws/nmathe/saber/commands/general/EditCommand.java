@@ -209,12 +209,13 @@ public class EditCommand implements Command
                 case "start":
                     if(args.length-index < 1)
                     {
-                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
+                        return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
                                 "Use ``" + head + " "+args[index-2]+" "+args[index-1]+" [start time]``";
                     }
                     if(!VerifyUtilities.verifyTime(args[index]))
                     {
-                        return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
+                        return "I could not understand **" + args[index] + "** as a time!" +
+                                "\nPlease use the format hh:mm[am|pm].";
                     }
                     if(ZonedDateTime.of(entry.getStart().toLocalDate(), ParsingUtilities.parseTime(args[index]), entry.getStart().getZone()).isBefore(ZonedDateTime.now()))
                     {
@@ -236,14 +237,23 @@ public class EditCommand implements Command
                         return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                                 "Use ``" + head + " "+args[0]+" "+args[index-1]+" [end time]``";
                     }
-                    if( !VerifyUtilities.verifyTime( args[index] ) )
+                    // if time is not "off" or an invalid time, fail
+                    if (!VerifyUtilities.verifyTime(args[index]) && !args[index].equalsIgnoreCase("off"))
                     {
-                        return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
+                        return "I could not understand **" + args[index] + "** as a time!\n" +
+                                "Please use the format hh:mm[am|pm].";
                     }
-                    if(ZonedDateTime.of(entry.getEnd().toLocalDate(), ParsingUtilities.parseTime(args[index]), entry.getEnd().getZone()).isBefore(ZonedDateTime.now()))
+                    // if time is not "off" do additional check
+                    if(!args[index].equalsIgnoreCase("off"))
                     {
-                        return "Today's time is already past *" + args[index] + "*!\n" +
-                                "Please use a different time, or change the date for the event!";
+                        ZonedDateTime end = ZonedDateTime.of(entry.getEnd().toLocalDate(),
+                                ParsingUtilities.parseTime(args[index]),
+                                entry.getEnd().getZone());
+                        if (end.isBefore(ZonedDateTime.now()))
+                        {
+                            return "Today's time is already past *" + args[index] + "*!\n" +
+                                    "Please use a different time, or change the date for the event!";
+                        }
                     }
                     index++;
                     break;
@@ -429,17 +439,23 @@ public class EditCommand implements Command
                     case "e":
                     case "ends":
                     case "end":
-                        ZonedDateTime newEnd = ZonedDateTime.of(se.getEnd().toLocalDate(), ParsingUtilities.parseTime(args[index]), se.getEnd().getZone());
-                        se.setEnd(newEnd);
+                        // if off, use start
+                        if(args[index].equalsIgnoreCase("off"))
+                        {
+                            se.setEnd(se.getStart());
+                        }
+                        else // otherwise parse the input for a time
+                        {
+                            se.setEnd(ZonedDateTime.of(se.getEnd().toLocalDate(),
+                                        ParsingUtilities.parseTime(args[index]),
+                                        se.getEnd().getZone()));
+                        }
 
-                        if(ZonedDateTime.now().isAfter(se.getEnd()))
-                        { // add a day if the time has already passed
-                            se.setEnd(se.getEnd().plusDays(1));
-                        }
-                        if(se.getStart().isAfter(se.getEnd()))
-                        { // add a day to end if end is after start
-                            se.setEnd(se.getEnd().plusDays(1));
-                        }
+                        // add a day if the time has already passed
+                        if(ZonedDateTime.now().isAfter(se.getEnd())) se.setEnd(se.getEnd().plusDays(1));
+
+                        // add a day to end if end is after start
+                        if(se.getStart().isAfter(se.getEnd())) se.setEnd(se.getEnd().plusDays(1));
 
                         se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
                         index++;
