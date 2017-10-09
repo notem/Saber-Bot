@@ -330,7 +330,7 @@ public class EditCommand implements Command
                 case "l":
                     verify = VerifyUtilities.verifyLimit(args, index, head, entry);
                     if(!verify.isEmpty()) return verify;
-                    index++;
+                    index+=2;
                     break;
 
                 case "deadline":
