@@ -14,7 +14,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * reloads the saber.toml settings
+ * updates the bot's discord avatar using an image uploaded in the command message
  */
 public class AvatarCommand implements Command
 {

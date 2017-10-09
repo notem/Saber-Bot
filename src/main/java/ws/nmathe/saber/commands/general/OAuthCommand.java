@@ -31,13 +31,15 @@ public class OAuthCommand implements Command
         CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.GOOGLE);
 
         String cat1 = "- Usage\n" + head + " [<token>]";
-        String cont1 = "This command is used to authorizes access to the private Google Calendar calendars and events associated with a Google User account.\n\n" +
+        String cont1 = "This command is used to authorizes access to the private Google Calendar calendars and events associated with a Google User account." +
+                "\n\n" +
                 "Authorizing access will allow me to both access (read) your private events" +
                 " and calendars and modify those events and calendars.\n" +
                 "This will allow you to export events created on discord to a Google Calendar.\n" +
                 "Using the command without arguments will indicate if there is currently an authorization token linked " +
                 "to your discord ID, as well as provides an authorization link.\n" +
-                "Authorizing through the provided link will provide you with an authorization token.\n\n" +
+                "Authorizing through the provided link will provide you with an authorization token." +
+                "\n\n" +
                 "To link that authorization token with your Discord user ID, add the authorization token as the first argument to this command.\n" +
                 "Only one Google Account may be authorized per discord user, providing another authorization token with this command will overwrite the old token.";
         info.addUsageCategory(cat1, cont1);

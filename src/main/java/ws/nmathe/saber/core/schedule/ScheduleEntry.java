@@ -295,21 +295,24 @@ public class ScheduleEntry
     /**
      * Determines what needs to be done to an event when an event ends
      */
-    private void repeat()
+    public void repeat()
     {
         Message msg = this.getMessageObject();
         if( msg==null ) return;
 
-        if(this.expire != null && this.expire.isBefore(ZonedDateTime.now()))
-        {
-            Main.getEntryManager().removeEntry(this.entryId);
-            MessageUtilities.deleteMsg( msg, null );
-            return;
-        }
-
         if(this.entryRepeat != 0) // find next repeat date and edit the message
         {
             this.setNextOccurrence().setStarted(false);
+
+            // if the next time an event repeats is after the event's expire, delete the event
+            if(this.expire != null && this.expire.isBefore(this.getStart()))
+            {
+                Main.getEntryManager().removeEntry(this.entryId);
+                MessageUtilities.deleteMsg( msg, null );
+                return;
+            }
+
+            // clear rsvp memberes list and reload reminders
             this.rsvpMembers = new HashMap<>();
             this.reloadReminders(Main.getScheduleManager().getReminders(this.chanId))
                     .reloadEndReminders(Main.getScheduleManager().getEndReminders(this.chanId));

@@ -38,14 +38,17 @@ public class ListCommand implements Command
 
         String cat1 = "- Usage\n" + head + " <ID> [mode] [filters]";
         String cont1 = "The list command will show all users who have rsvp'ed yes.\n" +
-                "The command takes a single argument which should be the ID of the event you wish query.\n" +
-                "\nThe schedule holding the event must have 'rsvp' turned on in the configuration settings.\n" +
+                "The command takes a single argument which should be the ID of the event you wish query." +
+                "\n\n" +
+                "The schedule holding the event must have 'rsvp' turned on in the configuration settings.\n" +
                 "RSVP can be enabled on a channel using the config command as followed, ``" +
-                prefix + "config #channel rsvp on``\n" +
-                "\nThe list may be filtered by either users or roles by appending \"r: @role\", \"u: @user\", or " +
+                prefix + "config #channel rsvp on``" +
+                "\n\n" +
+                "The list may be filtered by either users or roles by appending \"r: @role\", \"u: @user\", or " +
                 "\"t: [type]\" to the command.\n" +
                 "Any number of filters may be appended to the command.\n" +
-                "To display only users who have not rsvp'ed, use *no-input* as the ``[type]``.\n\n" +
+                "To display only users who have not rsvp'ed, use *no-input* as the ``[type]``." +
+                "\n\n" +
                 "The list command has two optional 'modes' of display. \n" +
                 "If the term 'mobile' is added as an argument to the command, non-mentionable usernames will be displayed.\n" +
                 "If the term 'id' is added as an argument, usernames will be displayed as they escaped mentionable ID tags.";

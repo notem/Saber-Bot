@@ -310,12 +310,7 @@ public class CreateCommand implements Command
 
                         case "i":
                         case "interval":
-                            if(args[index].matches("\\d+([ ]?d(ay(s)?)?)?"))
-                                repeat = 0b10000000 | Integer.parseInt(args[index].replaceAll("[^\\d]",""));
-                            else if(args[index].matches("\\d+([ ]?m(in(utes)?)?)"))
-                                repeat = 0b100000000000 | Integer.parseInt(args[index].replaceAll("[^\\d]",""));
-                            else if(args[index].matches("\\d+([ ]?h(our(s)?)?)"))
-                                repeat = 0b100000000000 | (Integer.parseInt(args[index].replaceAll("[^\\d]",""))*60);
+                            repeat = ParsingUtilities.parseInterval(args[index]);
                             index++;
                             break;
 

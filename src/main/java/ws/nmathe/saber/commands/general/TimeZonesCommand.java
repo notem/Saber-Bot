@@ -28,8 +28,8 @@ public class TimeZonesCommand implements Command
         CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.MISC);
 
         String cat1 = "- Usage\n" + head + " <filter>";
-        String cont1 = "The zones command will provide a list of valid timezone strings for schedule configuration." +
-                "\nA search filter argument is required (eg. ``us``).";
+        String cont1 =  "The zones command will provide a list of valid timezone strings for schedule configuration." +
+                        "\nA search filter argument is required (ex. ``us``).";
         info.addUsageCategory(cat1, cont1);
 
         info.addUsageExample(head+" america");
@@ -42,44 +42,35 @@ public class TimeZonesCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
-
-        return args.length==1 ? "" : "Incorrect amount of arguments! Use ``" + head + " <filter>``";
+        return args.length==1 ? "" : "Incorrect amount of arguments!" +
+                "\nUse ``" + head + " <filter>``";
     }
 
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        try
+        Set<String> zones = ZoneId.getAvailableZoneIds();
+        StringBuilder msg = new StringBuilder("**Available options for time zones**\n");
+        for (String zone : zones)
         {
-            Set<String> zones = ZoneId.getAvailableZoneIds();
-
-            String msg = "**Available options for time zones**\n";
-            for (String zone : zones )
+            if (msg.length() > 1900)
             {
-                if (msg.length() > 1900)
-                {
-                    MessageUtilities.sendMsg(msg, event.getChannel(), null);
-                    try
-                    {Thread.sleep(1000);}
-                    catch( Exception ignored )
-                    { }
-                    msg = "**continued. . .**\n";
-                }
-                if( args.length == 0 )
-                {
-                    msg += "  " + zone + "\n";
-                }
-                else if( zone.toUpperCase().contains(args[0].toUpperCase()) )
-                {
-                    msg += "  " + zone + "\n";
-                }
-            }
+                MessageUtilities.sendMsg(msg.toString(), event.getChannel(), null);
+                msg = new StringBuilder("**continued. . .**\n");
 
-            MessageUtilities.sendMsg(msg, event.getChannel(), null);
+                // sleep for a second so as to not get rate limited
+                try {Thread.sleep(1000);}
+                catch( Exception ignored ) { }
+            }
+            if (args.length == 0)
+            {
+                msg.append("  ").append(zone).append("\n");
+            }
+            else if (zone.toUpperCase().contains(args[0].toUpperCase()))
+            {
+                msg.append("  ").append(zone).append("\n");
+            }
         }
-        catch(Exception e)
-        {
-            Logging.exception(this.getClass(), e);
-        }
+        MessageUtilities.sendMsg(msg.toString(), event.getChannel(), null);
     }
 }

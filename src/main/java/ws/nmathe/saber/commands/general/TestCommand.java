@@ -32,7 +32,8 @@ public class TestCommand implements Command
         String cat1 = "- Usage\n" + head + " <ID> [<type>]";
         String cont1 = "The test command will send an test announcement for the event to the channel in which the command was used.\n" +
                         "The announcement message for an event is controlled by the schedule to which the event belongs to, and " +
-                        "can be changed using the ``config`` command.\n\n" +
+                        "can be changed using the ``config`` command." +
+                        "\n\n" +
                         "An optional ``<type>`` argument can be supplied.\n" +
                         "The ``<type>`` argument is used to determine which announcement type to test.\n" +
                         "Valid options are: **start**, **end**, and **remind**.";

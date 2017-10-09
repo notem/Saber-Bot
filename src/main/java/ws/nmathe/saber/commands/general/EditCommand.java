@@ -6,7 +6,6 @@ import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
@@ -517,14 +516,7 @@ public class EditCommand implements Command
 
                     case "i":
                     case "interval":
-                        int repeat = 0;
-                        if(args[index].matches("\\d+([ ]?d(ay(s)?)?)?"))
-                            repeat = 0b10000000 | Integer.parseInt(args[index].replaceAll("[^\\d]",""));
-                        else if(args[index].matches("\\d+([ ]?m(in(utes)?)?)"))
-                            repeat = 0b100000000000 | Integer.parseInt(args[index].replaceAll("[^\\d]",""));
-                        else if(args[index].matches("\\d+([ ]?h(our(s)?)?)"))
-                            repeat = 0b100000000000 | (Integer.parseInt(args[index].replaceAll("[^\\d]",""))*60);
-                        se.setRepeat(repeat);
+                        se.setRepeat(ParsingUtilities.parseInterval(args[index]));
                         index++;
                         break;
 
@@ -628,7 +620,6 @@ public class EditCommand implements Command
                         break;
                 }
             }
-
             Main.getEntryManager().updateEntry(se, true);
         }
 

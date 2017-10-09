@@ -69,6 +69,14 @@ public class ParsingUtilities
      */
     public static String parseMessageFormat(String format, ScheduleEntry entry)
     {
+        // determine time formatter from schedule settings
+        String clock = Main.getScheduleManager().getClockFormat(entry.getChannelId());
+        DateTimeFormatter timeFormatter;
+        if(clock.equalsIgnoreCase("12"))
+             timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+        else
+             timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
         // advanced parsing
         /*
          * parses the format string using regex grouping
@@ -224,7 +232,7 @@ public class ParsingUtilities
          * parses the format string character by character looking for % characters
          * a token is one % character followed by a key character
          */
-        String announceMsg = "";
+        StringBuilder announceMsg = new StringBuilder();
         for( int i = 0; i < format.length(); i++ )
         {
             char ch = format.charAt(i);
@@ -244,7 +252,7 @@ public class ParsingUtilities
                                 int x = Integer.parseInt("" + ch);
                                 if(entry.getComments().size()>=x && x!=0)
                                 {
-                                    announceMsg += entry.getComments().get(x-1);
+                                    announceMsg.append(entry.getComments().get(x - 1));
                                 }
                             }
                         }
@@ -252,40 +260,40 @@ public class ParsingUtilities
                     case 'f' :
                         for(String comment : entry.getComments())
                         {
-                            announceMsg += comment + "\n";
+                            announceMsg.append(comment).append("\n");
                         }
                         break;
                     case 'a' :
                         if(!entry.hasStarted())
                         {
-                            announceMsg += "begins";
+                            announceMsg.append("begins");
                             long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                             if(minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hour(s)");
                                 else
-                                    announceMsg += " in " + (minutes+1) + " minutes";
+                                    announceMsg.append(" in ").append(minutes + 1).append(" minutes");
                             }
                         }
                         else
                         {
-                            announceMsg += "ends";
+                            announceMsg.append("ends");
                             long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                             if(minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hour(s)");
                                 else
-                                    announceMsg += " in " + (minutes+1) + " minutes";
+                                    announceMsg.append(" in ").append(minutes + 1).append(" minutes");
                             }
                         }
                         break;
                     case 'b' :
                         if( !entry.hasStarted() )
-                            announceMsg += "begins";
+                            announceMsg.append("begins");
                         else
-                            announceMsg += "ends";
+                            announceMsg.append("ends");
                         break;
                     case 'x' :
                         if(!entry.hasStarted())
@@ -294,9 +302,9 @@ public class ParsingUtilities
                             if(minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hour(s)");
                                 else
-                                    announceMsg += " in " + (minutes+1) + " minutes";
+                                    announceMsg.append(" in ").append(minutes + 1).append(" minutes");
                             }
                         }
                         else
@@ -305,57 +313,63 @@ public class ParsingUtilities
                             if(minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg += " in " + (minutes+1)/60 + " hour(s)";
+                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hour(s)");
                                 else
-                                    announceMsg += " in " + (minutes+1) + " minutes";
+                                    announceMsg.append(" in ").append(minutes + 1).append(" minutes");
                             }
                         }
                         break;
+                    case 's':
+                        announceMsg.append(entry.getStart().format(timeFormatter));
+                        break;
+                    case 'e':
+                        announceMsg.append(entry.getEnd().format(timeFormatter));
+                        break;
                     case 't' :
-                        announceMsg += entry.getTitle();
+                        announceMsg.append(entry.getTitle());
                         break;
                     case 'd' :
-                        announceMsg += entry.getStart().getDayOfMonth();
+                        announceMsg.append(entry.getStart().getDayOfMonth());
                         break;
                     case 'D' :
-                        announceMsg += StringUtils.capitalize(entry.getStart().getDayOfWeek().toString());
+                        announceMsg.append(StringUtils.capitalize(entry.getStart().getDayOfWeek().toString()));
                         break;
                     case 'm' :
-                        announceMsg += entry.getStart().getMonthValue();
+                        announceMsg.append(entry.getStart().getMonthValue());
                         break;
                     case 'M' :
-                        announceMsg += StringUtils.capitalize(entry.getStart().getMonth().toString());
+                        announceMsg.append(StringUtils.capitalize(entry.getStart().getMonth().toString()));
                         break;
                     case 'y' :
-                        announceMsg += entry.getStart().getYear();
+                        announceMsg.append(entry.getStart().getYear());
                         break;
                     case 'i':
-                        announceMsg += ParsingUtilities.intToEncodedID(entry.getId());
+                        announceMsg.append(ParsingUtilities.intToEncodedID(entry.getId()));
                         break;
                     case '%' :
-                        announceMsg += '%';
+                        announceMsg.append('%');
                         break;
                     case 'u' :
-                        announceMsg += entry.getTitleUrl()==null?"":entry.getTitleUrl();
+                        announceMsg.append(entry.getTitleUrl() == null ? "" : entry.getTitleUrl());
                         break;
                     case 'v' :
-                        announceMsg += entry.getImageUrl()==null?"":entry.getImageUrl();
+                        announceMsg.append(entry.getImageUrl() == null ? "" : entry.getImageUrl());
                         break;
                     case 'w':
-                        announceMsg += entry.getThumbnailUrl()==null?"":entry.getThumbnailUrl();
+                        announceMsg.append(entry.getThumbnailUrl() == null ? "" : entry.getThumbnailUrl());
                         break;
                     case 'n':
-                        announceMsg += "\n";
+                        announceMsg.append("\n");
                         break;
                 }
             }
             else
             {
-                announceMsg += ch;
+                announceMsg.append(ch);
             }
         }
 
-        return announceMsg;
+        return announceMsg.toString();
     }
 
     /**
@@ -396,6 +410,24 @@ public class ParsingUtilities
             }
         }
         return bits;
+    }
+
+
+    /**
+     * parses out repeat information for the 'interval' edit/create option
+     * @param arg interval user-input
+     * @return repeat bitset
+     */
+    public static int parseInterval(String arg)
+    {
+        int repeat = 0;
+        if(arg.matches("\\d+([ ]?d(ay(s)?)?)?"))
+            repeat = 0b10000000 | Integer.parseInt(arg.replaceAll("[^\\d]",""));
+        else if(arg.matches("\\d+([ ]?m(in(utes)?)?)"))
+            repeat = 0b100000000000 | Integer.parseInt(arg.replaceAll("[^\\d]",""));
+        else if(arg.matches("\\d+([ ]?h(our(s)?)?)"))
+            repeat = 0b100000000000 | (Integer.parseInt(arg.replaceAll("[^\\d]",""))*60);
+        return repeat;
     }
 
 

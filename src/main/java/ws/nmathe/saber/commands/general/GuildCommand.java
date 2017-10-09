@@ -56,7 +56,6 @@ public class GuildCommand implements Command
         if(args.length > 0)
         {
             GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-
             switch(args[0])
             {
                 case "r":
@@ -148,74 +147,67 @@ public class GuildCommand implements Command
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
-        try
+        GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
+        if(args.length > 0)
         {
-            GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-
-            if(args.length > 0)
+            ArrayList<String> commands;
+            switch(args[0])
             {
-                ArrayList<String> commands;
-                switch(args[0])
-                {
-                    case "r":
-                    case "restrict":
-                        commands = guildSettings.getUnrestrictedCommands();
-                        commands.remove(args[1]);
-                        guildSettings.setUnrestrictedCommands(commands);
-                        break;
+                case "r":
+                case "restrict":
+                    commands = guildSettings.getUnrestrictedCommands();
+                    commands.remove(args[1]);
+                    guildSettings.setUnrestrictedCommands(commands);
+                    break;
 
-                    case "u":
-                    case "unrestrict":
-                        commands = guildSettings.getUnrestrictedCommands();
-                        commands.add(args[1]);
-                        guildSettings.setUnrestrictedCommands(commands);
-                        break;
+                case "u":
+                case "unrestrict":
+                    commands = guildSettings.getUnrestrictedCommands();
+                    commands.add(args[1]);
+                    guildSettings.setUnrestrictedCommands(commands);
+                    break;
 
-                    case "p":
-                    case "prefix":
-                        guildSettings.setPrefix(args[1]);
-                        break;
+                case "p":
+                case "prefix":
+                    guildSettings.setPrefix(args[1]);
+                    break;
 
-                    case "c":
-                    case "control":
-                        String trimmed = args[1].replace("<#", "").replace(">","");
-                        guildSettings.setCommandChannelId(trimmed);
-                        break;
-                }
+                case "c":
+                case "control":
+                    String trimmed = args[1].replace("<#", "").replace(">","");
+                    guildSettings.setCommandChannelId(trimmed);
+                    break;
             }
-
-            // send settings message
-            JDA.ShardInfo shardInfo = event.getJDA().getShardInfo();
-            String body = "```js\n" +
-                    (shardInfo!=null?("// Shard-" + shardInfo.getShardId() + " of " + shardInfo.getShardTotal() + "\n"):"") +
-                    "// Guild Settings\n" +
-                    "[prefix]  \"" + guildSettings.getPrefix() + "\"\n";
-
-            if(guildSettings.getCommandChannelId() != null)
-            {
-                body += "[control] \"#" + event.getGuild().getTextChannelById(guildSettings.getCommandChannelId()).getName() + "\"";
-            }
-            else
-            {
-                body += "[control] \"#" + Main.getBotSettingsManager().getControlChan() + "\" (default)";
-            }
-
-            body += "``````js\n// Command Settings\nRestricted Commands:\n";
-            for(String command : guildSettings.getRestrictedCommands())
-            {
-                body += "\"" + command + "\" ";
-            }
-            body += "\nUnrestricted commands:\n";
-            for(String command : guildSettings.getUnrestrictedCommands())
-            {
-                body += "\"" + command + "\" ";
-            }
-            body += "```";
-            MessageUtilities.sendMsg(body, event.getChannel(), null);
         }
-        catch(Exception e)
+
+        // send settings message
+        JDA.ShardInfo shardInfo = event.getJDA().getShardInfo();
+        String body = "```js\n" +
+                (shardInfo!=null?("// Shard-" + shardInfo.getShardId() + " of " + shardInfo.getShardTotal() + "\n"):"") +
+                "// Guild Settings\n" +
+                "[prefix]  \"" + guildSettings.getPrefix() + "\"\n";
+
+        if(guildSettings.getCommandChannelId() != null)
         {
-            Logging.exception(this.getClass(), e);
+            String control = event.getGuild().getTextChannelById(guildSettings.getCommandChannelId()).getName();
+            body += "[control] \"#" + control + "\"";
         }
+        else
+        {
+            body += "[control] \"#" + Main.getBotSettingsManager().getControlChan() + "\" (default)";
+        }
+
+        body += "``````js\n// Command Settings\nRestricted Commands:\n";
+        for(String command : guildSettings.getRestrictedCommands())
+        {
+            body += "\"" + command + "\" ";
+        }
+        body += "\nUnrestricted commands:\n";
+        for(String command : guildSettings.getUnrestrictedCommands())
+        {
+            body += "\"" + command + "\" ";
+        }
+        body += "```";
+        MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }
