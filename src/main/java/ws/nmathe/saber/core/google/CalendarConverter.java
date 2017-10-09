@@ -82,7 +82,6 @@ public class CalendarConverter
         }
         catch(Exception e)
         {
-            Logging.exception(this.getClass(), e);
             return false;
         }
 
