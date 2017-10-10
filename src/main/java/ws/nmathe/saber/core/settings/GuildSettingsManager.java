@@ -25,7 +25,7 @@ public class GuildSettingsManager
         if(guildDoc == null) // create a new guild document and add to db
         {
             // unrestricted commands are commands that may be used outside of the command channel
-            ArrayList<String> unrestrictedCommands = new ArrayList<>(Arrays.asList("list", "info")); // defaults
+            ArrayList<String> unrestrictedCommands = new ArrayList<>(Arrays.asList("list", "help", "schedules", "events")); // defaults
 
             // initialize with defaults
             guildDoc = new Document()

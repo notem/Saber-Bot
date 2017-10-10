@@ -50,7 +50,6 @@ public class TestCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
-
         int index = 0;
 
         // length checks

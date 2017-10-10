@@ -162,7 +162,6 @@ public class ConfigCommand implements Command
                     }
                     break;
 
-
                 case "em":
                 case "end-msg":
                     if (args.length < 3)
@@ -391,6 +390,13 @@ public class ConfigCommand implements Command
 
                         case "remove":
                         case "r":
+                            index++;
+                            if(args.length != 4)
+                            {
+                                return "Argument *" + args[index] + "* is not properly formed for the ``add`` option!\n" +
+                                        "Use ``" + cmd + " [#channel] rsvp remove [name]`` to remove a rsvp option " +
+                                        "where [name] is the display name of the rsvp option.";
+                            }
                             break;
 
                         case "off":
@@ -536,7 +542,7 @@ public class ConfigCommand implements Command
                 case "message":
                     String msgFormat = formatHelper(args[index]);
                     Main.getScheduleManager().setAnnounceFormat(scheduleChan.getId(), msgFormat);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.ANN, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "ch":
@@ -544,7 +550,7 @@ public class ConfigCommand implements Command
                 case "channel":
                     String chanIdentifier = chanHelper(args[index], event);
                     Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanIdentifier);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.ANN, event.getJDA()), event.getChannel(), null);
                     break;
 
 
@@ -554,7 +560,7 @@ public class ConfigCommand implements Command
                     String endFormat;
                     endFormat = formatHelper(args[index]);
                     Main.getScheduleManager().setEndAnnounceFormat(scheduleChan.getId(), endFormat);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.ANN, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "ech":
@@ -573,7 +579,7 @@ public class ConfigCommand implements Command
                             endChanIdentifier = chanHelper(args[index], event);
                     }
                     Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanIdentifier);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 1, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.ANN, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "z":
@@ -606,7 +612,7 @@ public class ConfigCommand implements Command
                     Main.getDBDriver().getScheduleCollection()
                             .updateOne(eq("_id", scheduleChan.getId()), set("timezone_sync", false));
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "cl":
@@ -618,7 +624,7 @@ public class ConfigCommand implements Command
                             .forEach((Consumer<? super Document>) document ->
                                     Main.getEntryManager().reloadEntry((Integer) document.get("_id")));
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "s":
@@ -632,7 +638,7 @@ public class ConfigCommand implements Command
                     else
                         Main.getScheduleManager().setAddress(scheduleChan.getId(), "off");
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 4, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.SYNC, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "t":
@@ -648,7 +654,7 @@ public class ConfigCommand implements Command
 
                     Main.getScheduleManager().setSyncTime(cId, Date.from(syncTime.toInstant()));
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 4, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.SYNC, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "r":
@@ -671,7 +677,7 @@ public class ConfigCommand implements Command
                                 Main.getEntryManager().updateEntry(se, false);
                             });
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.REM, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "er":
@@ -694,7 +700,7 @@ public class ConfigCommand implements Command
                                 Main.getEntryManager().updateEntry(se, false);
                             });
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.REM, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "rm":
@@ -704,7 +710,7 @@ public class ConfigCommand implements Command
                     String remindFormat;
                     remindFormat = formatHelper(args[index]);
                     Main.getScheduleManager().setReminderFormat(scheduleChan.getId(), remindFormat);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.REM, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "rc":
@@ -725,7 +731,7 @@ public class ConfigCommand implements Command
                             break;
                     }
                     Main.getScheduleManager().setReminderChan(scheduleChan.getId(), remindChanIdentifier);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 2, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.REM, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "rsvp":
@@ -838,7 +844,7 @@ public class ConfigCommand implements Command
                         }
                     }
 
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 5, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "c":
@@ -861,7 +867,7 @@ public class ConfigCommand implements Command
                         Message message = se.getMessageObject();
                         message.clearReactions().queue(ignored-> EntryManager.addRSVPReactions(rsvpOptions, finalEmoji, message));
                     });
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 5, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "ex":
@@ -876,7 +882,7 @@ public class ConfigCommand implements Command
                             break;
                     }
                     Main.getScheduleManager().setRSVPExclusivity(cId, exclusive);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 5, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
                     break;
 
 
@@ -892,14 +898,14 @@ public class ConfigCommand implements Command
                             .forEach((Consumer<? super Document>) document ->
                                     Main.getEntryManager().reloadEntry(document.getInteger("_id"))
                             );
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "l":
                 case "len":
                 case "length":
                     Main.getScheduleManager().setSyncLength(cId, Integer.parseInt(args[index]));
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 4, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.SYNC, event.getJDA()), event.getChannel(), null);
                     break;
 
                 case "so":
@@ -921,23 +927,17 @@ public class ConfigCommand implements Command
                             break;
                     }
                     Main.getScheduleManager().setAutoSort(cId, sortType);
-                    MessageUtilities.sendMsg(this.genMsgStr(cId, 3, event.getJDA()), event.getChannel(), null);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
 
                     // now sort the schedule
-                    if(sortType == 1)
-                    {
-                        Main.getScheduleManager().sortSchedule(cId, false);
-                    }
-                    if(sortType == 2)
-                    {
-                        Main.getScheduleManager().sortSchedule(cId, true);
-                    }
+                    if(sortType == 1) Main.getScheduleManager().sortSchedule(cId, false);
+                    if(sortType == 2) Main.getScheduleManager().sortSchedule(cId, true);
                     break;
             }
         }
         else    // print out all settings
         {
-            MessageUtilities.sendMsg(this.genMsgStr(cId, 0, event.getJDA()), event.getChannel(), null);
+            MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.FULL, event.getJDA()), event.getChannel(), null);
         }
     }
 
@@ -996,6 +996,8 @@ public class ConfigCommand implements Command
         return list;
     }
 
+    private enum Mode {FULL, ANN, REM, MISC, SYNC, RSVP}
+
     /**
      * Generates the schedule config message to display to the user
      * type codes:  0 - full message
@@ -1005,18 +1007,17 @@ public class ConfigCommand implements Command
      *              4 - sync settings
      *              5 - rsvp settings
      * @param cId (String) the ID of the schedule/channel
-     * @param type (int) the type code for the message to generate
      * @return (String) the message to display
      */
-    private String genMsgStr(String cId, int type, JDA jda)
+    private String genMsgStr(String cId, Mode mode, JDA jda)
     {
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
         String content = "**Configuration for** <#" + cId + ">\n";
 
-        switch(type)
+        switch(mode)
         {
             default:
-            case 1:
+            case ANN:
                 String form1 = Main.getScheduleManager().getStartAnnounceFormat(cId);
                 String form2 = Main.getScheduleManager().getEndAnnounceFormat(cId);
                 String chanIdentifier = Main.getScheduleManager().getStartAnnounceChan(cId);
@@ -1038,8 +1039,8 @@ public class ConfigCommand implements Command
                                 "(using [channel])") +
                         "```";
 
-                if(type == 1) break;
-            case 2:
+                if(mode == Mode.ANN) break;
+            case REM:
                 if(content.length() > 1900)
                 {
                     content += "```";
@@ -1065,8 +1066,8 @@ public class ConfigCommand implements Command
                                 "(using [chan])") +
                         "```";
 
-                if(type == 2) break;
-            case 3:
+                if(mode == Mode.REM) break;
+            case MISC:
                 if(content.length() > 1900)
                 {
                     content += "```";
@@ -1100,8 +1101,8 @@ public class ConfigCommand implements Command
                         "\"" + sort + "\"" +
                         "```";
 
-                if(type == 3) break;
-            case 4:
+                if(mode == Mode.MISC) break;
+            case SYNC:
                 if(content.length() > 1900)
                 {
                     content += "```";
@@ -1133,8 +1134,8 @@ public class ConfigCommand implements Command
                 }
                 content += "```";
 
-                if(type == 4) break;
-            case 5:
+                if(mode == Mode.SYNC) break;
+            case RSVP:
                 if(content.length() > 1900)
                 {
                     content += "```";
@@ -1182,7 +1183,7 @@ public class ConfigCommand implements Command
                 }
                 content += "```";
 
-                if(type == 5) break;
+                if(mode == Mode.RSVP) break;
         }
         return content;
     }
