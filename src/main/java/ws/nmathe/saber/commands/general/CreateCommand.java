@@ -82,6 +82,8 @@ public class CreateCommand implements Command
 
         return info;
     }
+
+
     @Override
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
@@ -91,8 +93,10 @@ public class CreateCommand implements Command
         // arg count check
         if (args.length < 3)
         {
-            return "That's not enough arguments! Use ``" + head + " <channel> <title> <start> [<end> <extra>]``";
+            return "That's not enough arguments!\n" +
+                    "Use ``" + head + " <channel> <title> <start> [<end> <extra>]``";
         }
+
         // schedule check
         String cId = args[index].replace("<#","").replace(">","");
         if( !Main.getScheduleManager().isASchedule(cId) )
@@ -104,46 +108,42 @@ public class CreateCommand implements Command
         {
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
         }
-
         index++; // 1
 
         // check <title>
-        if( args[index].length() > 255 )
+        if (args[index].length() > 255)
         {
             return "Your title can be at most 255 characters!";
         }
-
         index++; // 2
 
         // check <start>
-        if( !VerifyUtilities.verifyTime( args[index] ) )
+        if (!VerifyUtilities.verifyTime(args[index]))
         {
             return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
         }
-
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
         ZonedDateTime startTime = ZonedDateTime.of(LocalDate.now().plusDays(1), ParsingUtilities.parseTime(args[index]), zone);
 
         // if minimum args, then ok
         if (args.length == 3) return "";
-
         index++; // 3
 
         // if <end> fails verification, assume <end> has been omitted
-        if( VerifyUtilities.verifyTime( args[index] ) )
+        if (VerifyUtilities.verifyTime(args[index]))
         {
             index++; // 4
         }
 
         // check remaining args
-        if(args.length - 1 > index)
+        if (args.length - 1 > index)
         {
             args = Arrays.copyOfRange(args, index, args.length);
             index = 0;
-            while(index < args.length)
+            while (index < args.length)
             {
                 String verify;
-                switch(args[index++].toLowerCase())
+                switch (args[index++].toLowerCase())
                 {
                     case "d":
                     case "date":
@@ -151,7 +151,7 @@ public class CreateCommand implements Command
                     case "start-date":
                     case "ed":
                     case "end-date":
-                        verify = VerifyUtilities.verifyDateAttribute(args, index, head, null, zone);
+                        verify = VerifyUtilities.verifyDate(args, index, head, null, zone);
                         if (!verify.isEmpty()) return verify;
                         index++;
                         break;
@@ -159,11 +159,8 @@ public class CreateCommand implements Command
                     case "r":
                     case "repeats":
                     case "repeat":
-                        if (args.length - index < 1)
-                        {
-                            return "That's not the right number of arguments for **" + args[index - 1] + "**! " +
-                                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [repeat]``";
-                        }
+                        verify = VerifyUtilities.verifyRepeat(args, index, head);
+                        if (!verify.isEmpty()) return verify;
                         index++;
                         break;
 
@@ -185,13 +182,9 @@ public class CreateCommand implements Command
                         index++;
                         break;
 
-                    case "max":
-                    case "m":
-                        return "The ``max`` option has been made obsolete. Please use the ``limit`` option in it's place.";
-
                     case "ex":
                     case "expire":
-                        verify = VerifyUtilities.verifyExpire(args, index, head);
+                        verify = VerifyUtilities.verifyExpire(args, index, head, zone);
                         if (!verify.isEmpty()) return verify;
                         index++;
                         break;
@@ -224,6 +217,7 @@ public class CreateCommand implements Command
             }
         }
 
+        // verify that guild has not exceeded maximum entries
         if (Main.getEntryManager().isLimitReached(event.getGuild().getId()))
         {
             return "I can't allow your guild any more entries."
@@ -232,6 +226,7 @@ public class CreateCommand implements Command
 
         return ""; // return valid
     }
+
 
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
@@ -248,19 +243,21 @@ public class CreateCommand implements Command
         LocalTime endTime = null;
         ArrayList<String> comments = new ArrayList<>();
         int repeat = 0;
-        LocalDate startDate = ZonedDateTime.now(zone).toLocalDate().plusDays(1);
-        LocalDate endDate = null;
+        ZonedDateTime startDate = ZonedDateTime.now(zone).plusDays(1);
+        ZonedDateTime endDate = null;
         String url = null;
         String image = null;
         String thumbnail = null;
-        LocalDate expireDate = null;
+        ZonedDateTime expire = null;
         ZonedDateTime deadline = null;
 
         // process title
-        title = args[index++];
+        title = args[index];
+        index++;
 
         // process start
-        startTime = ParsingUtilities.parseTime(args[index++].trim().toUpperCase());
+        startTime = ParsingUtilities.parseTime(args[index].trim().toUpperCase());
+        index++;
 
         // if minimum args, then ok
         if (args.length != 3)
@@ -268,11 +265,12 @@ public class CreateCommand implements Command
             // if <end> fails verification, assume <end> has been omitted
             if(VerifyUtilities.verifyTime(args[index]))
             {
-                endTime = ParsingUtilities.parseTime(args[index++].trim().toUpperCase());
+                endTime = ParsingUtilities.parseTime(args[index].trim().toUpperCase());
+                index++;
             }
 
             // check remaining args
-            if(args.length - 1 > index)
+            if(args.length > index)
             {
                 args = Arrays.copyOfRange(args, index, args.length);
                 index = 0;
@@ -282,7 +280,7 @@ public class CreateCommand implements Command
                     {
                         case "d":
                         case "date":
-                            startDate = ParsingUtilities.parseDate(args[index].toLowerCase());
+                            startDate = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
                             endDate = startDate;
                             index++;
                             break;
@@ -290,14 +288,14 @@ public class CreateCommand implements Command
                         case "sd":
                         case "start date":
                         case "start-date":
-                            startDate = ParsingUtilities.parseDate(args[index].toLowerCase());
+                            startDate = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
                             index++;
                             break;
 
                         case "ed":
                         case "end date":
                         case "end-date":
-                            endDate = ParsingUtilities.parseDate(args[index].toLowerCase());
+                            endDate = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
                             index++;
                             break;
 
@@ -316,67 +314,47 @@ public class CreateCommand implements Command
 
                         case "u":
                         case "url":
-                            url = args[index];
+                            url = ParsingUtilities.parseUrl(args[index]);
                             index++;
                             break;
 
                         case "ex":
                         case "expire":
-                            switch(args[index])
-                            {
-                                case "off":
-                                case "none":
-                                case "never":
-                                case "null":
-                                    expireDate = null;
-                                    break;
-                                default:
-                                    expireDate = ParsingUtilities.parseDate(args[index]);
-                                    break;
-                            }
+                            expire = ParsingUtilities.parseNullableDate(args[index], zone);
                             index++;
                             break;
 
                         case "im":
                         case "image":
-                            switch(args[index])
-                            {
-                                case "null":
-                                case "off":
-                                    image = null;
-                                    break;
-                                default:
-                                    image = args[index];
-                                    break;
-                            }
+                            image = ParsingUtilities.parseUrl(args[index]);
                             index++;
                             break;
 
                         case "th":
                         case "thumbnail":
-                            switch(args[index])
-                            {
-                                case "null":
-                                case "off":
-                                    thumbnail = null;
-                                    break;
-                                default:
-                                    thumbnail = args[index];
-                                    break;
-                            }
+                            thumbnail = ParsingUtilities.parseUrl(args[index]);
                             index++;
                             break;
 
                         case "deadline":
                         case "dl":
-                            zone = Main.getScheduleManager().getTimeZone(cId);
-                            deadline = ZonedDateTime.of(ParsingUtilities.parseDate(args[index]), LocalTime.MAX, zone);
+                            deadline = ParsingUtilities.parseNullableDate(args[index], zone);
                             index++;
                             break;
 
                         case "today":
-                            startDate = ZonedDateTime.now(zone).toLocalDate();
-                            endDate = ZonedDateTime.now(zone).toLocalDate();
+                            startDate = ZonedDateTime.now(zone);
+                            endDate = ZonedDateTime.now(zone);
+                            break;
+
+                        case "tomorrow":
+                            startDate = ZonedDateTime.now(zone).plusDays(1);
+                            endDate = ZonedDateTime.now(zone).plusDays(1);
+                            break;
+
+                        case "overmorrow":
+                            startDate = ZonedDateTime.now(zone).plusDays(2);
+                            endDate = ZonedDateTime.now(zone).plusDays(2);
                             break;
 
                         default:
@@ -387,10 +365,17 @@ public class CreateCommand implements Command
             }
         }
 
+        /*
+         * Finalize the start and end times from
+         * the user-provided arguments
+         */
+
         // handle all day events
-        if(startTime.equals(endTime) && (startTime.equals(LocalTime.MIN)||startTime.equals(LocalTime.MAX)) && endDate==null)
+        boolean a = startTime.equals(endTime) && startTime.equals(LocalTime.MIN); // is all day event
+        boolean b = startTime.equals(LocalTime.MAX) && endDate == null;           // another way to define all-day events?
+        if(a || b)
         {
-            endDate = LocalDate.from(startDate).plusDays(1);
+            endDate = ZonedDateTime.from(startDate).plusDays(1);
         }
         // if the end time has not been filled, copy start time
         if(endTime == null)
@@ -400,13 +385,12 @@ public class CreateCommand implements Command
         // if the end date has not been filled, copy start date
         if(endDate == null)
         {
-            endDate = LocalDate.from(startDate);
+            endDate = ZonedDateTime.from(startDate);
         }
 
         // create the zoned date time using the schedule's timezone
-        ZonedDateTime start = ZonedDateTime.of(startDate, startTime, zone);
-        ZonedDateTime end = ZonedDateTime.of(endDate, endTime, zone);
-        ZonedDateTime expire = expireDate == null ? null : ZonedDateTime.of(expireDate, LocalTime.MIN, zone);
+        ZonedDateTime start = ZonedDateTime.of(startDate.toLocalDate(), startTime, zone);
+        ZonedDateTime end = ZonedDateTime.of(endDate.toLocalDate(), endTime, zone);
 
         // add a year to the date if the provided date is past current time
         Instant now = Instant.now();
@@ -424,6 +408,11 @@ public class CreateCommand implements Command
         {
             end = start.plusDays(1);
         }
+
+        /*
+         * Create a dummy schedule entry with all processed variables
+         * and create the new event via EntryManager
+         */
 
         // create the dummy schedule entry
         ScheduleEntry se = (new ScheduleEntry(event.getGuild().getTextChannelById(cId), title, start, end))

@@ -223,9 +223,17 @@ public class VerifyUtilities
     }
 
 
-    // TODO cleanup and document!
+    /*
+     *  The verify functions below return string (error messages) rather
+     *  than success/fail booleans.
+     *  These functions are primarily used by the edit and create command
+     *  during their verification stages.
+     */
 
 
+    /**
+     *  Returns error message (or empty string) for interval keyword verification
+     */
     public static String verifyInterval(String[] args, int index, String head)
     {
         if(args.length-index < 1)
@@ -257,6 +265,10 @@ public class VerifyUtilities
         return "";
     }
 
+
+    /**
+     *  Returns error message (or empty string) for interval url, image, and thumbnail verification
+     */
     public static String verifyUrl(String[] args, int index, String head)
     {
         if(args.length-index < 1)
@@ -279,7 +291,11 @@ public class VerifyUtilities
         return "";
     }
 
-    public static String verifyExpire(String[] args, int index, String head)
+
+    /**
+     *  Returns error message (or empty string) for expire keyword verification
+     */
+    public static String verifyExpire(String[] args, int index, String head, ZoneId zone)
     {
         if(args.length-index < 1)
         {
@@ -298,7 +314,7 @@ public class VerifyUtilities
                 {
                     return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
                 }
-                if(ParsingUtilities.parseDate(args[index]).isBefore(LocalDate.now()))
+                if(ParsingUtilities.parseDate(args[index], zone).isBefore(ZonedDateTime.now()))
                 {
                     return "That date is in the past!";
                 }
@@ -306,7 +322,11 @@ public class VerifyUtilities
         return "";
     }
 
-    public static String verifyDateAttribute(String[] args, int index, String head, ScheduleEntry entry, ZoneId zone)
+
+    /**
+     *  Returns error message (or empty string) for several date-based keywords
+     */
+    public static String verifyDate(String[] args, int index, String head, ScheduleEntry entry, ZoneId zone)
     {
         if(args.length-index < 1)
         {
@@ -317,7 +337,7 @@ public class VerifyUtilities
         {
             return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
         }
-        ZonedDateTime time = ZonedDateTime.of(ParsingUtilities.parseDate(args[index]), LocalTime.now(zone), zone);
+        ZonedDateTime time = ParsingUtilities.parseDate(args[index], zone);
         if(time.isBefore(ZonedDateTime.now()))
         {
             return "That date is in the past!";
@@ -329,6 +349,9 @@ public class VerifyUtilities
         return "";
     }
 
+    /**
+     *  Returns error message (or empty string) for limit keyword verification
+     */
     public static String verifyLimit(String[] args, int index, String head, ScheduleEntry entry)
     {
         if(args.length-index < 2)
@@ -349,6 +372,9 @@ public class VerifyUtilities
         return "";
     }
 
+    /**
+     *  Returns error message (or empty string) for deadline keyword verification
+     */
     public static String verifyDeadline(String[] args, int index, String head)
     {
         if(args.length-index < 1)
@@ -360,6 +386,19 @@ public class VerifyUtilities
         if(!VerifyUtilities.verifyDate(args[index]))
         {
             return "*" + args[index] + "* does not look like a date! Be sure to use the format yyyy/mm/dd!";
+        }
+        return "";
+    }
+
+    /**
+     *  Returns error message (or empty string) for repeat keyword verification
+     */
+    public static String verifyRepeat(String[] args, int index, String head)
+    {
+        if (args.length - index < 1)
+        {
+            return "That's not the right number of arguments for **" + args[index - 1] + "**! " +
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [repeat]``";
         }
         return "";
     }

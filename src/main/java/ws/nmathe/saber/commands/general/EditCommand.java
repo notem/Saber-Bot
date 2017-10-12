@@ -10,8 +10,6 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -278,7 +276,7 @@ public class EditCommand implements Command
                 case "start-date":
                 case "ed":
                 case "end-date":
-                    verify = VerifyUtilities.verifyDateAttribute(args, index, head, entry, zone);
+                    verify = VerifyUtilities.verifyDate(args, index, head, entry, zone);
                     if(!verify.isEmpty()) return verify;
                     index++;
                     index++;
@@ -287,12 +285,8 @@ public class EditCommand implements Command
                 case "r":
                 case "repeats":
                 case "repeat":
-                    if(args.length-index < 1)
-                    {
-
-                        return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                                "Use ``"+head+" "+args[0]+" "+args[index-1]+" [repeat]``";
-                    }
+                    verify = VerifyUtilities.verifyRepeat(args, index, head);
+                    if (!verify.isEmpty()) return verify;
                     index++;
                     break;
 
@@ -324,13 +318,9 @@ public class EditCommand implements Command
                 case "qa":
                     break;
 
-                case "max":
-                case "m":
-                    return "The ``max`` option has been made obsolete. Please use the ``limit`` option in it's place.";
-
                 case "ex":
                 case "expire":
-                    verify = VerifyUtilities.verifyExpire(args, index, head);
+                    verify = VerifyUtilities.verifyExpire(args, index, head, zone);
                     if(!verify.isEmpty()) return verify;
                     index++;
                     break;
@@ -350,7 +340,8 @@ public class EditCommand implements Command
                     break;
 
                 default:
-                    return "**" + args[index-1] + "** is not an option I know of! Please use the ``help`` command to see available options!";
+                    return "**" + args[index-1] + "** is not an option I know of!\n" +
+                            "Please use the ``help`` command to see available options!";
             }
         }
 
@@ -376,6 +367,7 @@ public class EditCommand implements Command
             index++;    // 1
             while(index < args.length)
             {
+                ZoneId zone = Main.getScheduleManager().getTimeZone(se.getChannelId());
                 switch( args[index++] )
                 {
                     case "c":
@@ -418,20 +410,27 @@ public class EditCommand implements Command
                     case "s":
                     case "starts":
                     case "start":
+                        // create new datetime and update the schedule entry object
                         ZonedDateTime newStart = ZonedDateTime.of(se.getStart().toLocalDate(),
                                 ParsingUtilities.parseTime(args[index]), se.getStart().getZone());
-
                         se.setStart(newStart);
 
-                        if(ZonedDateTime.now().isAfter(se.getStart())) //add a day if the time has already passed
+                        // do some final processing on start/end times
+                        if(ZonedDateTime.now().isAfter(se.getStart()))
                         {
+                            //add a day if the time has already passed
                             se.setStart(se.getStart().plusDays(1));
                         }
-                        if(se.getStart().isAfter(se.getEnd()))        //add a day to end if end is after start
+                        if(se.getStart().isAfter(se.getEnd()))
                         {
+                            //add a day to end if end is after start
                             se.setEnd(se.getEnd().plusDays(1));
+
+                            // reload end reminders
+                            se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
                         }
 
+                        // reload start reminders
                         se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()));
                         index++;
                         break;
@@ -444,8 +443,9 @@ public class EditCommand implements Command
                         {
                             se.setEnd(se.getStart());
                         }
-                        else // otherwise parse the input for a time
+                        else
                         {
+                            // otherwise parse the input for a time
                             se.setEnd(ZonedDateTime.of(se.getEnd().toLocalDate(),
                                         ParsingUtilities.parseTime(args[index]),
                                         se.getEnd().getZone()));
@@ -457,6 +457,7 @@ public class EditCommand implements Command
                         // add a day to end if end is after start
                         if(se.getStart().isAfter(se.getEnd())) se.setEnd(se.getEnd().plusDays(1));
 
+                        // reload end reminders
                         se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
                         index++;
                         break;
@@ -469,8 +470,7 @@ public class EditCommand implements Command
 
                     case "d":
                     case "date":
-                        LocalDate date = ParsingUtilities.parseDate(args[index].toLowerCase());
-
+                        ZonedDateTime date = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
                         se.setStart(se.getStart()
                                 .withMonth(date.getMonthValue())
                                 .withDayOfMonth(date.getDayOfMonth())
@@ -488,8 +488,7 @@ public class EditCommand implements Command
                     case "sd":
                     case "start date":
                     case "start-date":
-                        LocalDate sdate = ParsingUtilities.parseDate(args[index].toLowerCase());
-
+                        ZonedDateTime sdate = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
                         se.setStart(se.getStart()
                                 .withMonth(sdate.getMonthValue())
                                 .withDayOfMonth(sdate.getDayOfMonth())
@@ -498,6 +497,7 @@ public class EditCommand implements Command
                         if(se.getEnd().isBefore(se.getStart()))
                         {
                             se.setEnd(se.getStart());
+                            se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
                         }
 
                         se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()));
@@ -507,8 +507,7 @@ public class EditCommand implements Command
                     case "ed":
                     case "end date":
                     case "end-date":
-                        LocalDate edate = ParsingUtilities.parseDate(args[index].toLowerCase());
-
+                        ZonedDateTime edate = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
                         se.setEnd(se.getEnd()
                                 .withMonth(edate.getMonthValue())
                                 .withDayOfMonth(edate.getDayOfMonth())
@@ -517,6 +516,7 @@ public class EditCommand implements Command
                         if(se.getEnd().isBefore(se.getStart()))
                         {
                             se.setStart(se.getEnd());
+                            se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()));
                         }
 
                         se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
@@ -538,7 +538,31 @@ public class EditCommand implements Command
 
                     case "u":
                     case "url":
-                        se.setTitleUrl(args[index]);
+                        se.setTitleUrl(ParsingUtilities.parseUrl(args[index]));
+                        index++;
+                        break;
+
+                    case "im":
+                    case "image":
+                        se.setImageUrl(ParsingUtilities.parseUrl(args[index]));
+                        index++;
+                        break;
+
+                    case "th":
+                    case "thumbnail":
+                        se.setThumbnailUrl(ParsingUtilities.parseUrl(args[index]));
+                        index++;
+                        break;
+
+                    case "ex":
+                    case "expire":
+                        se.setExpire(ParsingUtilities.parseNullableDate(args[index], zone));
+                        index++;
+                        break;
+
+                    case "deadline":
+                    case "dl":
+                        se.setRsvpDeadline(ParsingUtilities.parseNullableDate(args[index], zone));
                         index++;
                         break;
 
@@ -569,54 +593,6 @@ public class EditCommand implements Command
                         }
                         break;
 
-                    case "ex":
-                    case "expire":
-                        switch(args[index])
-                        {
-                            case "off":
-                            case "none":
-                            case "never":
-                            case "null":
-                                se.setExpire(null);
-                                break;
-                            default:
-                                se.setExpire(ZonedDateTime.of(ParsingUtilities.parseDate(args[index]),
-                                        LocalTime.MIN, se.getStart().getZone()));
-                                break;
-                        }
-                        index++;
-                        break;
-
-                    case "im":
-                    case "image":
-                        switch(args[index])
-                        {
-                            case "null":
-                            case "off":
-                                se.setImageUrl(null);
-                                break;
-                            default:
-                                se.setImageUrl(args[index]);
-                                break;
-                        }
-                        index++;
-                        break;
-
-                    case "th":
-                    case "thumbnail":
-                        switch(args[index])
-                        {
-                            case "null":
-                            case "off":
-                                se.setThumbnailUrl(null);
-                                break;
-                            default:
-                                se.setThumbnailUrl(args[index]);
-                                break;
-                        }
-                        index++;
-                        break;
-
                     case "limit":
                     case "l":
                         Integer lim = null;
@@ -626,13 +602,6 @@ public class EditCommand implements Command
                         }
                         se.setRsvpLimit(args[index], lim);
                         index += 2;
-                        break;
-
-                    case "deadline":
-                    case "dl":
-                        ZoneId zone = Main.getScheduleManager().getTimeZone(se.getChannelId());
-                        se.setRsvpDeadline(ZonedDateTime.of(ParsingUtilities.parseDate(args[index]), LocalTime.MAX, zone));
-                        index++;
                         break;
                 }
             }

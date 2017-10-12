@@ -337,7 +337,7 @@ public class CalendarConverter
                             String tmp = comment.trim().toLowerCase().replace("deadline:","").trim();
                             if(VerifyUtilities.verifyDate(tmp))
                             {
-                                rsvpDeadline = ZonedDateTime.of(ParsingUtilities.parseDate(tmp), LocalTime.MAX, zone);
+                                rsvpDeadline = ParsingUtilities.parseDate(tmp, zone);
                             }
                         }
                         else if(!comment.trim().isEmpty())
