@@ -195,7 +195,8 @@ public class EventListener extends ListenerAdapter
         );
 
         // update web stats
-        HttpUtilities.updateStats();
+        JDA.ShardInfo info = event.getJDA().getShardInfo();
+        HttpUtilities.updateStats(info==null ? null : info.getShardId());
     }
 
     @Override
@@ -212,7 +213,8 @@ public class EventListener extends ListenerAdapter
         Main.getDBDriver().getGuildCollection().deleteOne(eq("_id", event.getGuild().getId()));
         */
 
-        HttpUtilities.updateStats();
+        JDA.ShardInfo info = event.getJDA().getShardInfo();
+        HttpUtilities.updateStats(info==null ? null : info.getShardId());
     }
 
     @Override

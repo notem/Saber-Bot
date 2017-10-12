@@ -43,7 +43,6 @@ public class Main
 
         // create the shard manager
         shardManager = new ShardManager(botSettingsManager.getShards(), botSettingsManager.getShardTotal());
-        HttpUtilities.updateStats();
     }
 
     /*

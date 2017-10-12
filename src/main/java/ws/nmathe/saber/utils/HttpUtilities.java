@@ -17,28 +17,42 @@ public class HttpUtilities
     /**
      * Updates bot metrics for any connected metric tracking services
      */
-    public static void updateStats()
+    public static void updateStats(Integer shardId)
     {
         String auth = Main.getBotSettingsManager().getWebToken();
-        if( auth != null )
+        if (auth != null)
         {
-            HttpUtilities.updateStats_abal(Main.getShardManager().getGuilds().size(), auth);
+            HttpUtilities.updateStats_abal(auth, shardId);
         }
     }
 
+
     /**
      * updates bot metrics for bots.discord.pw tracking
-     * @param i the guild count
      * @param auth the abal authentication token for the bot
      */
-    private static void updateStats_abal(int i, String auth)
+    private static void updateStats_abal(String auth, Integer shardId)
     {
         if (lastUpdate.until(LocalDateTime.now(), ChronoUnit.SECONDS) > 60)
         {
-            JSONObject json = new JSONObject().put("server_count", i);
+            JSONObject json;
+            if (Main.getShardManager().isSharding() && shardId != null)
+            {
+                // if the bot is sharding send shard information
+                int count = Main.getShardManager().getGuilds().size();
+                int total = Main.getBotSettingsManager().getShardTotal();
+                json = new JSONObject().put("shard_count", total).put("shard_id", shardId).put("server_count", count);
+            }
+            else
+            {
+                // otherwise send only the server count
+                int count = Main.getShardManager().getGuilds().size();
+                json = new JSONObject().put("server_count", count);
+            }
 
             try
             {
+                // send the API request
                 Unirest.post("https://bots.discord.pw/api/bots/" + Main.getShardManager().getJDA().getSelfUser().getId() + "/stats")
                         .header("Authorization", auth)
                         .header("Content-Type", "application/json")
