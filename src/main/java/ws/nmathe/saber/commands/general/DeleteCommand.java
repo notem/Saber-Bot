@@ -78,7 +78,7 @@ public class DeleteCommand implements Command
         }
         else // arg should be a schedule id
         {
-            if(!Main.getScheduleManager().isASchedule(args[0].replace("<#","").replace(">","")))
+            if(!Main.getScheduleManager().isASchedule(args[0].replaceAll("[^\\d]","")))
             {
                 return "Argument ``" + args[0] + "`` is not a schedule channel or an event id!";
             }
@@ -94,7 +94,8 @@ public class DeleteCommand implements Command
             // delete all schedule
             Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId())
                     .forEach(cId -> Main.getScheduleManager().deleteSchedule(cId));
-            MessageUtilities.sendMsg("All events and schedules for this guild has been cleared.", event.getChannel(), null);
+            MessageUtilities.sendMsg("All events and schedules for this guild has been cleared.",
+                    event.getChannel(), null);
         }
         else if(VerifyUtilities.verifyEntryID(args[0]))
         {
@@ -107,12 +108,13 @@ public class DeleteCommand implements Command
 
             Main.getEntryManager().removeEntry(entryId);
             MessageUtilities.deleteMsg(msg, null);
-            MessageUtilities.sendMsg("The event with :id: " + ParsingUtilities.intToEncodedID(entryId) + " removed.", event.getChannel(), null);
+            MessageUtilities.sendMsg("The event with :id: " +
+                    ParsingUtilities.intToEncodedID(entryId) + " removed.", event.getChannel(), null);
         }
         else
         {
             // delete schedule
-            Main.getScheduleManager().deleteSchedule(args[0].replace("<#","").replace(">",""));
+            Main.getScheduleManager().deleteSchedule(args[0].replaceAll("[^\\d]",""));
             MessageUtilities.sendMsg("That schedule has been removed", event.getChannel(), null);
         }
     }

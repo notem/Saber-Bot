@@ -98,7 +98,7 @@ public class CreateCommand implements Command
         }
 
         // schedule check
-        String cId = args[index].replace("<#","").replace(">","");
+        String cId = args[index].replaceAll("[^\\d]","");
         if( !Main.getScheduleManager().isASchedule(cId) )
         {
             return "Channel " + args[index] + " is not a schedule for your guild. " +
@@ -234,7 +234,7 @@ public class CreateCommand implements Command
         int index = 0;
 
         // get schedule ID and zone information
-        String cId = args[index++].replace("<#","").replace(">","");
+        String cId = args[index++].replaceAll("[^\\d]","");
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
 
         // Initialize variables

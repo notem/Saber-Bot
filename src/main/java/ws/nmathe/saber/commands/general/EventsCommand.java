@@ -75,7 +75,7 @@ public class EventsCommand implements Command
                 {
                     content += ":id:``"+ ParsingUtilities.intToEncodedID(se.getId())+"`` - " +
                             "**"+se.getTitle()+ "** at *"+se.getStart().format(DateTimeFormatter.ofPattern("h:mm a, MMM d"))+
-                            "* ["+se.getStart().getZone().getDisplayName(TextStyle.NARROW, Locale.getDefault())+"]\n";
+                            "* ["+se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.getDefault())+"]\n";
                     count++;
                 }
                 content += "\n";
