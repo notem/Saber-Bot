@@ -3,6 +3,7 @@ package ws.nmathe.saber.utils;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Emote;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
@@ -399,6 +400,25 @@ public class VerifyUtilities
         {
             return "That's not the right number of arguments for **" + args[index - 1] + "**! " +
                     "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [repeat]``";
+        }
+        return "";
+    }
+
+    /**
+     *  Returns error message (or empty string) for announcement keyword verification
+     */
+    public static String verifyAnnouncementTime(String[] args, int index, String head, MessageReceivedEvent event)
+    {
+        if (args.length - index < 3)
+        {
+            return "That's not the right number of arguments for **" + args[index - 1] + "**! " +
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [#target] [time] [message]``";
+        }
+        JDA jda = Main.getShardManager().getJDA(event.getGuild().getId());
+        if (args[index].matches("\\d+") || jda.getTextChannelById(args[index])==null)
+        {
+            return "**" + args[index] + "** is not a channel on your server! " +
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [#target] [time] [message]``";
         }
         return "";
     }

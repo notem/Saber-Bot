@@ -60,6 +60,14 @@ public class ScheduleEntry
     private boolean hasStarted;
     private ZonedDateTime expire;
 
+    // announcement overrides
+    private List<Date> announcements;
+    private List<Integer> announcementIDs;
+    private Map<Integer, Date> announcementDates;
+    private Map<Integer, String> announcementTimes;
+    private Map<Integer, String> announcementTargets;
+    private Map<Integer, String> announcementMessages;
+
 
     /**
      * Constructor for a partially initialized ScheduleEntry
@@ -101,6 +109,14 @@ public class ScheduleEntry
         // misc
         this.hasStarted = false;
         this.expire = null;
+
+        // announcement overrides
+        this.announcements = null;
+        this.announcementIDs = null;
+        this.announcementDates= null;
+        this.announcementTimes = null;
+        this.announcementTargets = null;
+        this.announcementMessages = null;
     }
 
 
@@ -126,13 +142,20 @@ public class ScheduleEntry
         this.entryEnd = ZonedDateTime.ofInstant((entryDocument.getDate("end")).toInstant(), zone);
         this.entryComments = (ArrayList<String>) entryDocument.get("comments");
         this.entryRepeat = entryDocument.getInteger("repeat");
-        this.reminders = entryDocument.get("reminders")!=null ? (List<Date>) entryDocument.get("reminders") : new ArrayList<>();
-        this.endReminders = entryDocument.get("end_reminders")!=null ? (List<Date>) entryDocument.get("end_reminders") : new ArrayList<>();
+
+        // reminders
+        this.reminders = entryDocument.get("reminders")!=null ?
+                (List<Date>) entryDocument.get("reminders") : new ArrayList<>();
+        this.endReminders = entryDocument.get("end_reminders")!=null ?
+                (List<Date>) entryDocument.get("end_reminders") : new ArrayList<>();
 
         // rsvp
-        this.rsvpMembers = (Map) (entryDocument.get("rsvp_members")==null ? new LinkedHashMap<>() : entryDocument.get("rsvp_members"));
-        this.rsvpLimits = (Map) (entryDocument.get("rsvp_limits")==null ? new LinkedHashMap<>() : entryDocument.get("rsvp_limits"));
-        this.rsvpDeadline = entryDocument.get("deadline")==null ? null : ZonedDateTime.ofInstant(entryDocument.getDate("deadline").toInstant(), zone);
+        this.rsvpMembers = (Map) (entryDocument.get("rsvp_members") == null ?
+                new LinkedHashMap<>() : entryDocument.get("rsvp_members"));
+        this.rsvpLimits = (Map) (entryDocument.get("rsvp_limits") == null ?
+                new LinkedHashMap<>() : entryDocument.get("rsvp_limits"));
+        this.rsvpDeadline = entryDocument.get("deadline") == null ?
+                null : ZonedDateTime.ofInstant(entryDocument.getDate("deadline").toInstant(), zone);
 
         // urls
         this.titleUrl = entryDocument.getString("url");
@@ -140,17 +163,29 @@ public class ScheduleEntry
         this.thumbnailUrl = entryDocument.getString("thumbnail");
 
         // toggles
-        this.quietStart = (boolean) (entryDocument.get("start_disabled")!=null ?
+        this.quietStart = (boolean) (entryDocument.get("start_disabled") != null ?
                 entryDocument.get("start_disabled") : false);
-        this.quietEnd = (boolean) (entryDocument.get("end_disabled")!=null ?
+        this.quietEnd = (boolean) (entryDocument.get("end_disabled") != null ?
                 entryDocument.get("end_disabled") : false);
-        this.quietRemind = (boolean) (entryDocument.get("reminders_disabled")!=null ?
+        this.quietRemind = (boolean) (entryDocument.get("reminders_disabled") != null ?
                 entryDocument.get("reminders_disabled") : false);
 
         // misc
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
-        this.expire = entryDocument.get("expire") == null ? null :
-                ZonedDateTime.ofInstant(entryDocument.getDate("expire").toInstant(), zone);
+        this.expire = entryDocument.get("expire") == null ?
+                null : ZonedDateTime.ofInstant(entryDocument.getDate("expire").toInstant(), zone);
+
+        // announcement overrides
+        this.announcements = entryDocument.get("announcements") == null ?
+                new ArrayList<>() : (List<Date>) entryDocument.get("announcements");
+        this.announcementDates = entryDocument.get("announcement_dates") == null ?
+                new HashMap<>() : (Map<Integer, Date>) entryDocument.get("announcement_dates");
+        this.announcementTimes = entryDocument.get("announcement_times") == null ?
+                new HashMap<>() : (Map<Integer,String>) entryDocument.get("announcement_times");
+        this.announcementTargets = entryDocument.get("announcement_targets") == null ?
+                new HashMap<>() : (Map<Integer,String>) entryDocument.get("announcement_targets");
+        this.announcementMessages = entryDocument.get("announcement_messages") == null ?
+                new HashMap<>() : (Map<Integer,String>) entryDocument.get("announcement_messages");
     }
 
 
@@ -760,6 +795,24 @@ public class ScheduleEntry
     public ScheduleEntry setRsvpDeadline(ZonedDateTime deadline)
     {
         this.rsvpDeadline = deadline;
+        return this;
+    }
+
+    public ScheduleEntry addAnnouncementOverride(String channelId, String timeString, String message)
+    {
+        // create a new event-local ID for the announcement
+        int id;
+        for (int i=0; i<Integer.MAX_VALUE; i++)
+        {
+            if (!this.announcementIDs.contains(i))
+            {
+                id = i;
+                break;
+            }
+        }
+
+        // r
+
         return this;
     }
 

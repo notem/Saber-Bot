@@ -339,6 +339,13 @@ public class EditCommand implements Command
                     index++;
                     break;
 
+                case "ann":
+                case "announcement":
+                    verify = VerifyUtilities.verifyAnnouncementTime(args, index, head, event);
+                    if(!verify.isEmpty()) return verify;
+                    index +=3;
+                    break;
+
                 default:
                     return "**" + args[index-1] + "** is not an option I know of!\n" +
                             "Please use the ``help`` command to see available options!";
@@ -602,6 +609,15 @@ public class EditCommand implements Command
                         }
                         se.setRsvpLimit(args[index], lim);
                         index += 2;
+                        break;
+
+                    case "ann":
+                    case "announcement":
+                        String target = args[index].replace("<#","").replace(">","");
+                        String time = args[index+1];
+                        String message = args[index+2];
+                        se.addAnnouncementOverride(target, time, message);
+                        index += 3;
                         break;
                 }
             }

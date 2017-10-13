@@ -93,7 +93,7 @@ public class ParsingUtilities
                 Matcher matcher2 = Pattern.compile("\\[.*?]").matcher(trimmed);
                 if(trimmed.matches("(\\[.*?])?c\\d+(\\[.*?])?")) // advanced comment
                 {
-                    int i = Integer.parseInt(trimmed.replaceAll("\\[.*?]c?", ""));
+                    int i = Integer.parseInt(trimmed.replaceAll("\\[.*?]?c", ""));
                     if(entry.getComments().size() <= i && i > 0)
                     {
                         if(matcher2.find())
@@ -566,6 +566,20 @@ public class ParsingUtilities
             default:
                 return input;
         }
+    }
+
+    public static ZonedDateTime parseTimeString(String time, ScheduleEntry se)
+    {
+        ZonedDateTime t;
+        if(time.startsWith("start"))
+        {
+
+        }
+        else if(time.startsWith("end"))
+        {
+
+        }
+        return null;
     }
 
     /**
