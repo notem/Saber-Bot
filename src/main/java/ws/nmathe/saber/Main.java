@@ -46,7 +46,7 @@ public class Main
     }
 
     /*
-     *
+     * Getters for manager type objects
      */
 
     public static ShardManager getShardManager()
