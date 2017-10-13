@@ -223,6 +223,18 @@ public class VerifyUtilities
         return true;
     }
 
+    /**
+     * Verify that an announcement override time string is properly formed
+     * @param time 'time string'
+     * @return boolean, true if valid
+     */
+    public static boolean verifyTimeString(String time)
+    {
+        time = time.toUpperCase();  // all caps
+        String regex = "(START|END)([+-](\\d+([MHD])?)?)?";
+        return time.matches(regex);
+    }
+
 
     /*
      *  The verify functions below return string (error messages) rather
@@ -409,16 +421,35 @@ public class VerifyUtilities
      */
     public static String verifyAnnouncementTime(String[] args, int index, String head, MessageReceivedEvent event)
     {
-        if (args.length - index < 3)
+        if (args.length - index < 4)
         {
             return "That's not the right number of arguments for **" + args[index - 1] + "**! " +
-                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [#target] [time] [message]``";
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [add|remove] [#target] [time] [message]``";
         }
-        JDA jda = Main.getShardManager().getJDA(event.getGuild().getId());
-        if (args[index].matches("\\d+") || jda.getTextChannelById(args[index])==null)
+        switch(args[index++].toLowerCase())
         {
-            return "**" + args[index] + "** is not a channel on your server! " +
-                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [#target] [time] [message]``";
+            case "a":
+            case "add":
+                JDA jda = Main.getShardManager().getJDA(event.getGuild().getId());
+                String channelId = args[index].replaceAll("[^\\d]", "");
+                if (!channelId.matches("\\d+") || jda.getTextChannelById(channelId)==null)
+                {
+                    return "**" + args[index] + "** is not a channel on your server!";
+                }
+                if(!VerifyUtilities.verifyTimeString(args[index+1]))
+                {
+                    return "**" + args[index+1] + "** is not a properly formed announcement time!\n" +
+                            "Times use the format \"TYPE+/-OFFSET\". Ex: ``START-1h``, ``END-5m``";
+                }
+                break;
+
+            case "r":
+            case "remove":
+                break;
+
+            default:
+                return "**" + args[index] + "** is not a valid option!\n" +
+                        "You should use either *add* or *remove*!";
         }
         return "";
     }

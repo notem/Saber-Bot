@@ -568,18 +568,69 @@ public class ParsingUtilities
         }
     }
 
+    /**
+     * evaluates a announcement override 'time string' into a definite ZonedDateTime object
+     * @param time 'time string'
+     * @param se ScheduleEntry the override resides on
+     * @return ZonedDateTime for announcement override, or null if un-parsable
+     */
     public static ZonedDateTime parseTimeString(String time, ScheduleEntry se)
     {
-        ZonedDateTime t;
-        if(time.startsWith("start"))
-        {
+        time = time.toUpperCase();  // all caps
 
-        }
-        else if(time.startsWith("end"))
+        // determine basis for the announcement time
+        ZonedDateTime announcementTime;
+        if(time.startsWith("START"))
         {
-
+            time = time.replace("START", "");
+            announcementTime = se.getStart();
         }
-        return null;
+        else if(time.startsWith("END"))
+        {
+            time = time.replace("END", "");
+            announcementTime = se.getEnd();
+        }
+        else
+        {
+            return null;
+        }
+
+        // determine if offset is positive or negative
+        boolean positive;
+        if(time.startsWith("+"))
+        {
+            time = time.replace("+", "");
+            positive = true;
+        }
+        else if(time.startsWith("-"))
+        {
+            time = time.replace("-", "");
+            positive = false;
+        }
+        else
+        {
+            return announcementTime;
+        }
+
+        // parse out the time offset
+        Integer minutes = time.replaceAll("[^\\d]", "").isEmpty() ?
+                0 : Integer.parseInt(time.replaceAll("[^\\d]", ""));
+        if (minutes != 0)
+        {
+            switch(time.charAt(time.length()-1))
+            {
+                case 'H':
+                    minutes = minutes*60;
+                    break;
+                case 'D':
+                    minutes = 60*24;
+                    break;
+            }
+        }
+
+        // add offset to the time and return
+        if(positive) return announcementTime.plusMinutes(minutes);
+        else return announcementTime.minusMinutes(minutes);
     }
 
     /**

@@ -339,11 +339,14 @@ public class EditCommand implements Command
                     index++;
                     break;
 
-                case "ann":
+                case "a":
+                case "an":
+                case "announce":
                 case "announcement":
+                case "announcements":
                     verify = VerifyUtilities.verifyAnnouncementTime(args, index, head, event);
                     if(!verify.isEmpty()) return verify;
-                    index +=3;
+                    index += 4;
                     break;
 
                 default:
@@ -611,13 +614,33 @@ public class EditCommand implements Command
                         index += 2;
                         break;
 
-                    case "ann":
+                    case "a":
+                    case "an":
+                    case "announce":
                     case "announcement":
-                        String target = args[index].replace("<#","").replace(">","");
-                        String time = args[index+1];
-                        String message = args[index+2];
-                        se.addAnnouncementOverride(target, time, message);
-                        index += 3;
+                    case "announcements":
+                        switch(args[index++].toLowerCase())
+                        {
+                            default:
+                                index++;
+                                break;
+
+                            case "a":
+                            case "add":
+                                String target = args[index].replaceAll("[^\\d]","");
+                                String time = args[index+1];
+                                String message = args[index+2];
+                                se.addAnnouncementOverride(target, time, message);
+                                index += 4;
+                                break;
+
+                            case "r":
+                            case "remove":
+                                Integer id = Integer.parseInt(args[index].replaceAll("[^\\d]",""));
+                                se.removeAnnouncementOverride(id);
+                                index ++;
+                                break;
+                        }
                         break;
                 }
             }

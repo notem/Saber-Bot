@@ -7,6 +7,7 @@ import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
 
@@ -124,42 +125,49 @@ public class EntryManager
         Date finalDeadline = deadline;
         MessageUtilities.sendMsg(message, channel, msg ->
         {
-            // add reaction options if rsvp is enabled
-            if( Main.getScheduleManager().isRSVPEnabled(channelId) )
+            try
             {
-                Map<String, String> map = Main.getScheduleManager().getRSVPOptions(channelId);
-                addRSVPReactions(map, Main.getScheduleManager().getRSVPClear(channelId), msg);
+                // add reaction options if rsvp is enabled
+                if( Main.getScheduleManager().isRSVPEnabled(channelId) )
+                {
+                    Map<String, String> map = Main.getScheduleManager().getRSVPOptions(channelId);
+                    addRSVPReactions(map, Main.getScheduleManager().getRSVPClear(channelId), msg);
+                }
+
+                // add new document
+                Document entryDocument =
+                        new Document("_id", se.getId())
+                                .append("title", se.getTitle())
+                                .append("start", Date.from(se.getStart().toInstant()))
+                                .append("end", Date.from(se.getEnd().toInstant()))
+                                .append("comments", se.getComments())
+                                .append("repeat", se.getRepeat())
+                                .append("reminders", se.getReminders())
+                                .append("end_reminders", se.getEndReminders())
+                                .append("url", se.getTitleUrl())
+                                .append("hasStarted", se.hasStarted())
+                                .append("messageId", msg.getId())
+                                .append("channelId", se.getChannelId())
+                                .append("googleId", se.getGoogleId())
+                                .append("rsvp_members", se.getRsvpMembers())
+                                .append("rsvp_limits", se.getRsvpLimits())
+                                .append("start_disabled", false)
+                                .append("end_disabled", false)
+                                .append("reminders_disabled", false)
+                                .append("rsvp_max", -1)
+                                .append("expire", finalExpire)
+                                .append("deadline", finalDeadline)
+                                .append("guildId", se.getGuildId());
+
+                Main.getDBDriver().getEventCollection().insertOne(entryDocument);
+
+                // auto-sort
+                autoSort(sort, channelId);
             }
-
-            // add new document
-            Document entryDocument =
-                    new Document("_id", se.getId())
-                            .append("title", se.getTitle())
-                            .append("start", Date.from(se.getStart().toInstant()))
-                            .append("end", Date.from(se.getEnd().toInstant()))
-                            .append("comments", se.getComments())
-                            .append("repeat", se.getRepeat())
-                            .append("reminders", se.getReminders())
-                            .append("end_reminders", se.getEndReminders())
-                            .append("url", se.getTitleUrl())
-                            .append("hasStarted", se.hasStarted())
-                            .append("messageId", msg.getId())
-                            .append("channelId", se.getChannelId())
-                            .append("googleId", se.getGoogleId())
-                            .append("rsvp_members", se.getRsvpMembers())
-                            .append("rsvp_limits", se.getRsvpLimits())
-                            .append("start_disabled", false)
-                            .append("end_disabled", false)
-                            .append("reminders_disabled", false)
-                            .append("rsvp_max", -1)
-                            .append("expire", finalExpire)
-                            .append("deadline", finalDeadline)
-                            .append("guildId", se.getGuildId());
-
-            Main.getDBDriver().getEventCollection().insertOne(entryDocument);
-
-            // auto-sort
-            autoSort(sort, channelId);
+            catch(Exception e)
+            {
+                Logging.exception(EntryManager.class, e);
+            }
         });
 
         return se.getId();
@@ -198,39 +206,51 @@ public class EntryManager
         Date finalDeadline = deadline;
         MessageUtilities.editMsg(message, origMessage, msg ->
         {
-            String guildId = msg.getGuild().getId();
-            String channelId = msg.getChannel().getId();
+            try
+            {
+                String guildId = msg.getGuild().getId();
+                String channelId = msg.getChannel().getId();
 
-            // replace whole document
-            Document entryDocument =
-                    new Document("_id", se.getId())
-                            .append("title", se.getTitle())
-                            .append("start", Date.from(se.getStart().toInstant()))
-                            .append("end", Date.from(se.getEnd().toInstant()))
-                            .append("comments", se.getComments())
-                            .append("repeat", se.getRepeat())
-                            .append("reminders", se.getReminders())
-                            .append("end_reminders", se.getEndReminders())
-                            .append("url", se.getTitleUrl())
-                            .append("hasStarted", se.hasStarted())
-                            .append("messageId", msg.getId())
-                            .append("channelId", channelId)
-                            .append("googleId", se.getGoogleId())
-                            .append("rsvp_members", se.getRsvpMembers())
-                            .append("rsvp_limits", se.getRsvpLimits())
-                            .append("start_disabled", se.isQuietStart())
-                            .append("end_disabled", se.isQuietEnd())
-                            .append("reminders_disabled", se.isQuietRemind())
-                            .append("expire", finalExpire)
-                            .append("image", se.getImageUrl())
-                            .append("thumbnail", se.getThumbnailUrl())
-                            .append("deadline", finalDeadline)
-                            .append("guildId", guildId);
+                // replace whole document
+                Document entryDocument =
+                        new Document("_id", se.getId())
+                                .append("title", se.getTitle())
+                                .append("start", Date.from(se.getStart().toInstant()))
+                                .append("end", Date.from(se.getEnd().toInstant()))
+                                .append("comments", se.getComments())
+                                .append("repeat", se.getRepeat())
+                                .append("reminders", se.getReminders())
+                                .append("end_reminders", se.getEndReminders())
+                                .append("url", se.getTitleUrl())
+                                .append("hasStarted", se.hasStarted())
+                                .append("messageId", msg.getId())
+                                .append("channelId", channelId)
+                                .append("googleId", se.getGoogleId())
+                                .append("rsvp_members", se.getRsvpMembers())
+                                .append("rsvp_limits", se.getRsvpLimits())
+                                .append("start_disabled", se.isQuietStart())
+                                .append("end_disabled", se.isQuietEnd())
+                                .append("reminders_disabled", se.isQuietRemind())
+                                .append("expire", finalExpire)
+                                .append("image", se.getImageUrl())
+                                .append("thumbnail", se.getThumbnailUrl())
+                                .append("deadline", finalDeadline)
+                                .append("guildId", guildId)
+                                .append("announcements", se.getAnnouncements())
+                                .append("announcement_dates", se.getAnnouncementDates())
+                                .append("announcement_times", se.getAnnouncementTimes())
+                                .append("announcement_messages", se.getAnnouncementMessages())
+                                .append("announcement_targets", se.getAnnouncementTargets());
 
-            Main.getDBDriver().getEventCollection().replaceOne(eq("_id", se.getId()), entryDocument);
+                Main.getDBDriver().getEventCollection().replaceOne(eq("_id", se.getId()), entryDocument);
 
-            // auto-sort
-            autoSort(sort, channelId);
+                // auto-sort
+                autoSort(sort, channelId);
+            }
+            catch(Exception e)
+            {
+                Logging.exception(EntryManager.class, e);
+            }
         });
     }
 

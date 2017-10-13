@@ -61,12 +61,11 @@ public class ScheduleEntry
     private ZonedDateTime expire;
 
     // announcement overrides
-    private List<Date> announcements;
-    private List<Integer> announcementIDs;
-    private Map<Integer, Date> announcementDates;
-    private Map<Integer, String> announcementTimes;
-    private Map<Integer, String> announcementTargets;
-    private Map<Integer, String> announcementMessages;
+    private List<Date> announcements;                   // used by DB for queries
+    private Map<String, Date> announcementDates;       // maps Date to IDs
+    private Map<String, String> announcementTimes;     // maps ID to rel-time string
+    private Map<String, String> announcementTargets;   // maps ID to channel target
+    private Map<String, String> announcementMessages;  // maps ID to announcement message
 
 
     /**
@@ -111,12 +110,11 @@ public class ScheduleEntry
         this.expire = null;
 
         // announcement overrides
-        this.announcements = null;
-        this.announcementIDs = null;
-        this.announcementDates= null;
-        this.announcementTimes = null;
-        this.announcementTargets = null;
-        this.announcementMessages = null;
+        this.announcements = new ArrayList<>();
+        this.announcementDates= new HashMap<>();
+        this.announcementTimes = new HashMap<>();
+        this.announcementTargets = new HashMap<>();
+        this.announcementMessages = new HashMap<>();
     }
 
 
@@ -179,13 +177,13 @@ public class ScheduleEntry
         this.announcements = entryDocument.get("announcements") == null ?
                 new ArrayList<>() : (List<Date>) entryDocument.get("announcements");
         this.announcementDates = entryDocument.get("announcement_dates") == null ?
-                new HashMap<>() : (Map<Integer, Date>) entryDocument.get("announcement_dates");
+                new HashMap<>() : (Map<String, Date>) entryDocument.get("announcement_dates");
         this.announcementTimes = entryDocument.get("announcement_times") == null ?
-                new HashMap<>() : (Map<Integer,String>) entryDocument.get("announcement_times");
+                new HashMap<>() : (Map<String,String>) entryDocument.get("announcement_times");
         this.announcementTargets = entryDocument.get("announcement_targets") == null ?
-                new HashMap<>() : (Map<Integer,String>) entryDocument.get("announcement_targets");
+                new HashMap<>() : (Map<String,String>) entryDocument.get("announcement_targets");
         this.announcementMessages = entryDocument.get("announcement_messages") == null ?
-                new HashMap<>() : (Map<Integer,String>) entryDocument.get("announcement_messages");
+                new HashMap<>() : (Map<String,String>) entryDocument.get("announcement_messages");
     }
 
 
@@ -605,6 +603,31 @@ public class ScheduleEntry
         return this.rsvpDeadline;
     }
 
+    public Map<String, String> getAnnouncementTimes()
+    {
+        return this.announcementTimes;
+    }
+
+    public Map<String, String> getAnnouncementTargets()
+    {
+        return this.announcementTargets;
+    }
+
+    public Map<String, String> getAnnouncementMessages()
+    {
+        return this.announcementMessages;
+    }
+
+    public Map<String, Date> getAnnouncementDates()
+    {
+        return this.announcementDates;
+    }
+
+    public List<Date> getAnnouncements()
+    {
+        return this.announcements;
+    }
+
     /**
      * Attempts to retrieve the discord Message, if the message does not exist
      * (or the bot can for any other reason cannot retrieve it) the method returns null
@@ -798,21 +821,61 @@ public class ScheduleEntry
         return this;
     }
 
+    /**
+     * creates a new announcement override for the event
+     */
     public ScheduleEntry addAnnouncementOverride(String channelId, String timeString, String message)
     {
         // create a new event-local ID for the announcement
-        int id;
+        Integer id = null;
         for (int i=0; i<Integer.MAX_VALUE; i++)
         {
-            if (!this.announcementIDs.contains(i))
+            if (!this.announcementDates.keySet().contains(i))
             {
                 id = i;
                 break;
             }
         }
+        if (id == null)
+        {
+            Logging.warn(this.getClass(), "Unable to generate an ID");
+            return this;
+        }
 
-        // r
+        // create hard date time object
+        ZonedDateTime datetime = ParsingUtilities.parseTimeString(timeString, this);
+        if (datetime == null)
+        {
+            Logging.warn(this.getClass(), "Unable to generate the time");
+            return this;
+        }
 
+        // add to lists
+        this.announcements.add(Date.from(datetime.toInstant()));
+
+        // create mappings
+        this.announcementDates.put(id.toString(), Date.from(datetime.toInstant()));
+        this.announcementTimes.put(id.toString(), timeString);
+        this.announcementTargets.put(id.toString(), channelId);
+        this.announcementMessages.put(id.toString(), message);
+
+        return this;
+    }
+
+    /**
+     * removes an announcement override (if one exists)
+     */
+    public ScheduleEntry removeAnnouncementOverride(Integer id)
+    {
+        Date date = this.announcementDates.get(id.toString());
+        if (date != null)
+        {
+            this.announcements.remove(date);
+            this.announcementDates.remove(id.toString());
+            this.announcementMessages.remove(id.toString());
+            this.announcementTimes.remove(id.toString());
+            this.announcementTargets.remove(id.toString());
+        }
         return this;
     }
 
@@ -911,10 +974,24 @@ public class ScheduleEntry
         if(!this.getComments().isEmpty())
         {
             body += "// Comments\n";
+            for(int i=1; i<this.getComments().size()+1; i++)
+            {
+                body += "[" + i + "] \"" + this.getComments().get(i-1) + "\"\n";
+            }
         }
-        for(int i=1; i<this.getComments().size()+1; i++)
+
+        // announcement overrides
+        if(!this.announcements.isEmpty())
         {
-            body += "[" + i + "] \"" + this.getComments().get(i-1) + "\"\n";
+            JDA jda = Main.getShardManager().getJDA(this.guildId);
+            body += "// Announcements\n";
+            for (String id : this.announcementTargets.keySet())
+            {
+                TextChannel channel = jda.getTextChannelById(this.announcementTargets.get(id));
+                body += "[" + id + "] \"" + this.announcementMessages.get(id)+ "\"" +
+                        " at \"" + this.announcementTimes.get(id) + "\"" +
+                        " to \"#" + (channel==null?"unknown_channel":channel.getName())+"\"";
+            }
         }
         return body;
     }
