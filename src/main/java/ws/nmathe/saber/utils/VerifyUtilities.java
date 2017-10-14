@@ -421,15 +421,20 @@ public class VerifyUtilities
      */
     public static String verifyAnnouncementTime(String[] args, int index, String head, MessageReceivedEvent event)
     {
-        if (args.length - index < 4)
+        if (args.length - index < 1)
         {
-            return "That's not the right number of arguments for **" + args[index - 1] + "**! " +
+            return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
                     "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [add|remove] [#target] [time] [message]``";
         }
         switch(args[index++].toLowerCase())
         {
             case "a":
             case "add":
+                if (args.length - index < 3)
+                {
+                    return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
+                            "Use ``" + head + " " + args[0] + " " + args[index - 1] + " add [#target] [time] [message]``";
+                }
                 JDA jda = Main.getShardManager().getJDA(event.getGuild().getId());
                 String channelId = args[index].replaceAll("[^\\d]", "");
                 if (!channelId.matches("\\d+") || jda.getTextChannelById(channelId)==null)
@@ -445,6 +450,11 @@ public class VerifyUtilities
 
             case "r":
             case "remove":
+                if (args.length - index < 1)
+                {
+                    return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
+                            "Use ``" + head + " " + args[0] + " " + args[index - 1] + " remove [number]``";
+                }
                 break;
 
             default:

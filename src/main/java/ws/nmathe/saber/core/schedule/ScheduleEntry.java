@@ -871,7 +871,7 @@ public class ScheduleEntry
         Integer id = null;
         for (int i=0; i<Integer.MAX_VALUE; i++)
         {
-            if (!this.announcementDates.keySet().contains(i))
+            if (!this.announcementDates.keySet().contains(i+""))
             {
                 id = i;
                 break;
@@ -1034,9 +1034,9 @@ public class ScheduleEntry
             for (String id : this.announcementTargets.keySet())
             {
                 TextChannel channel = jda.getTextChannelById(this.announcementTargets.get(id));
-                body += "[" + id + "] \"" + this.announcementMessages.get(id)+ "\"" +
+                body += "[" + (Integer.parseInt(id)+1) + "] \"" + this.announcementMessages.get(id)+ "\"" +
                         " at \"" + this.announcementTimes.get(id) + "\"" +
-                        " to \"#" + (channel==null?"unknown_channel":channel.getName())+"\"";
+                        " to \"#" + (channel==null ? "unknown_channel" : channel.getName())+"\"\n";
             }
         }
         return body;

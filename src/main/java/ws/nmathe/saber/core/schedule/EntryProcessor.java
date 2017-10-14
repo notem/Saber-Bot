@@ -255,6 +255,13 @@ class EntryProcessor implements Runnable
                                     //Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the start queue");
                                 }
                                 break;
+                            case ANNOUNCEMENT_QUEUE:
+                                if(!announcementQueue.contains(se.getId()))
+                                {
+                                    announcementQueue.add(se.getId());
+                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the announce queue");
+                                }
+                                break;
                         }
                     }
                     catch(Exception e)
