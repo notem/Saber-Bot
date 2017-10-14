@@ -231,7 +231,7 @@ public class VerifyUtilities
     public static boolean verifyTimeString(String time)
     {
         time = time.toUpperCase();  // all caps
-        String regex = "(START|END)([+-](\\d+([MHD])?)?)?";
+        String regex = "START([+-](\\d+([MHD])?)?)?|END([-](\\d+([MHD])?)?)?";
         return time.matches(regex);
     }
 
@@ -444,7 +444,7 @@ public class VerifyUtilities
                 if(!VerifyUtilities.verifyTimeString(args[index+1]))
                 {
                     return "**" + args[index+1] + "** is not a properly formed announcement time!\n" +
-                            "Times use the format \"TYPE+/-OFFSET\". Ex: ``START-1h``, ``END-5m``";
+                            "Times use the format \"TYPE+/-OFFSET\". Ex: ``START+10m``, ``END-1h``";
                 }
                 break;
 
