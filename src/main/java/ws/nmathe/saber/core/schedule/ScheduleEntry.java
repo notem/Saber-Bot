@@ -62,8 +62,10 @@ public class ScheduleEntry
     private ZonedDateTime expire;
 
     // announcement overrides
+    // these hold temporary values
     private Set<Date> announcements;                   // used by DB for queries
     private Map<String, Date> announcementDates;       // maps Date to IDs
+    // these are constant across events in a series
     private Map<String, String> announcementTimes;     // maps ID to rel-time string
     private Map<String, String> announcementTargets;   // maps ID to channel target
     private Map<String, String> announcementMessages;  // maps ID to announcement message
@@ -224,7 +226,15 @@ public class ScheduleEntry
         });
 
         // remove all the processed announcements and update event
-        removeQueue.forEach(key->this.removeAnnouncementOverride(Integer.parseInt(key)));
+        removeQueue.forEach(key->
+        {
+            Date date = this.announcementDates.get(key);
+            this.announcements.remove(date);
+            if(!this.announcementDates.containsValue(date))
+            {
+                this.announcements.remove(date);
+            }
+        });
         Main.getEntryManager().updateEntry(this, false);
     }
 
@@ -385,6 +395,9 @@ public class ScheduleEntry
                 MessageUtilities.deleteMsg( msg, null );
                 return;
             }
+
+            // recreate the announcement overrides
+            this.regenerateAnnouncementOverrides();
 
             // clear rsvp memberes list and reload reminders
             this.rsvpMembers = new HashMap<>();
@@ -696,42 +709,68 @@ public class ScheduleEntry
      * Setters
      */
 
+    /**
+     * sets the entry object's title
+     */
     public ScheduleEntry setTitle(String title)
     {
         this.entryTitle = title;
         return this;
     }
 
+    /**
+     * sets the entry object's start datetime
+     */
     public ScheduleEntry setStart(ZonedDateTime start)
     {
+        if(this.entryStart.equals(this.entryEnd))
+        {
+            // if the event's end is 'off', update the end to match start
+            this.entryEnd = start;
+        }
         this.entryStart = start;
         return this;
     }
 
+    /**
+     * sets the entry object's end datetime
+     */
     public ScheduleEntry setEnd(ZonedDateTime end)
     {
         this.entryEnd = end;
         return this;
     }
 
+    /**
+     * sets the entry object's array of comments
+     */
     public ScheduleEntry setComments(ArrayList<String> comments)
     {
         this.entryComments = comments;
         return this;
     }
 
+    /**
+     * sets the entry object's repeat settings
+     */
     public ScheduleEntry setRepeat(Integer repeat)
     {
         this.entryRepeat = repeat;
         return this;
     }
 
+    /**
+     * sets the entry object's title url
+     */
     public ScheduleEntry setTitleUrl(String url)
     {
         this.titleUrl = url;
         return this;
     }
 
+    /**
+     * regenerates entry reminders from schedule settings
+     */
     public ScheduleEntry reloadReminders(List<Integer> reminders)
     {
         // generate event reminders from schedule settings
@@ -747,6 +786,9 @@ public class ScheduleEntry
         return this;
     }
 
+    /**
+     * regenerates entry end-reminders from schedule settings
+     */
     public ScheduleEntry reloadEndReminders(List<Integer> reminders)
     {
         // generate end reminders
@@ -762,60 +804,90 @@ public class ScheduleEntry
         return this;
     }
 
+    /**
+     * set's the entry's google event ID
+     */
     public ScheduleEntry setGoogleId(String id)
     {
         this.googleId = id;
         return this;
     }
 
+    /**
+     * set's the entry's expire date
+     */
     public ScheduleEntry setExpire(ZonedDateTime expire)
     {
         this.expire = expire;
         return this;
     }
 
+    /**
+     * set's the entry's main image
+     */
     public ScheduleEntry setImageUrl(String url)
     {
         this.imageUrl = url;
         return this;
     }
 
+    /**
+     * set's the entry's thumbnail image
+     */
     public ScheduleEntry setThumbnailUrl(String url)
     {
         this.thumbnailUrl = url;
         return this;
     }
 
+    /**
+     * quiet the event's start announcement
+     */
     public ScheduleEntry setQuietStart(boolean bool)
     {
         this.quietStart = bool;
         return this;
     }
 
+    /**
+     * quiet the event's end announcement
+     */
     public ScheduleEntry setQuietEnd(boolean bool)
     {
         this.quietEnd = bool;
         return this;
     }
 
+    /**
+     * quiet the event's reminders
+     */
     public ScheduleEntry setQuietRemind(boolean bool)
     {
         this.quietRemind = bool;
         return this;
     }
 
+    /**
+     * flag the event as having been started
+     */
     public ScheduleEntry setStarted(boolean bool)
     {
         this.hasStarted = bool;
         return this;
     }
 
+    /**
+     * set the event's unique ID
+     */
     public ScheduleEntry setId(Integer id)
     {
         this.entryId = id;
         return this;
     }
 
+    /**
+     * set the event's associated discord message object
+     */
     public ScheduleEntry setMessageObject(Message msg)
     {
         this.chanId = msg.getChannel().getId();
@@ -824,6 +896,9 @@ public class ScheduleEntry
         return this;
     }
 
+    /**
+     * set an rsvp limit for the event
+     */
     public ScheduleEntry setRsvpLimit(String type, Integer limit)
     {
         if(rsvpLimits.containsKey(type))
@@ -837,12 +912,18 @@ public class ScheduleEntry
         return this;
     }
 
+    /**
+     * set all rsvp limits for the event
+     */
     public ScheduleEntry setRsvpLimits(Map<String, Integer> limits)
     {
         this.rsvpLimits = limits;
         return this;
     }
 
+    /**
+     * set the full mapping of rsvp'ed members
+     */
     public ScheduleEntry setRsvpMembers(String type, List<String> members)
     {
         if(this.rsvpMembers.containsKey(type))
@@ -856,6 +937,9 @@ public class ScheduleEntry
         return this;
     }
 
+    /**
+     * set the deadline by which members must rsvp
+     */
     public ScheduleEntry setRsvpDeadline(ZonedDateTime deadline)
     {
         this.rsvpDeadline = deadline;
@@ -925,6 +1009,76 @@ public class ScheduleEntry
         return this;
     }
 
+    /**
+     * repopulates the announcements set and announcementDates
+     * based on values in announcementTimes, announcementMessages, and announcementTargets
+     */
+    public ScheduleEntry regenerateAnnouncementOverrides()
+    {
+        for(String key : this.announcementTimes.keySet())
+        {
+            // create hard date time object
+            ZonedDateTime datetime = ParsingUtilities.parseTimeString(this.announcementTimes.get(key), this);
+            if (datetime == null)
+            {
+                Logging.warn(this.getClass(), "Unable to generate the time");
+            }
+            else if (datetime.isAfter(ZonedDateTime.now()))
+            {
+                // add to lists
+                this.announcements.add(Date.from(datetime.toInstant()));
+                this.announcementDates.put(key, Date.from(datetime.toInstant()));
+            }
+        }
+        return this;
+    }
+
+    /**
+     * creates string display for event comments
+     * @return
+     */
+    public String commentsToString()
+    {
+        String body = "// Comments\n";
+        for(int i=1; i<this.getComments().size()+1; i++)
+        {
+            body += "[" + i + "] \"" + this.getComments().get(i-1) + "\"\n";
+        }
+        return body;
+    }
+
+    /**
+     * creates string display for event limits
+     * @return
+     */
+    public String limitsToString()
+    {
+        String body = "// Limits\n";
+        for(String key : this.getRsvpLimits().keySet())
+        {
+            body += key + " - " + this.getRsvpLimits().get(key) + "\n";
+        }
+        return body;
+    }
+
+    /**
+     * creates string display for event announcements
+     * @return
+     */
+    public String announcementsToString()
+    {
+        String body = "// Event Announcements\n";
+        JDA jda = Main.getShardManager().getJDA(this.guildId);
+        for (String id : this.announcementTimes.keySet())
+        {
+            TextChannel channel = jda.getTextChannelById(this.announcementTargets.get(id));
+            body += "(" + (Integer.parseInt(id)+1) + ") \"" + this.announcementMessages.get(id)+ "\"" +
+                    " at \"" + this.announcementTimes.get(id) + "\"" +
+                    " to \"#" + (channel==null ? "unknown_channel" : channel.getName())+"\"\n";
+        }
+        return body;
+    }
+
     @Override
     public String toString()
     {
@@ -938,10 +1092,10 @@ public class ScheduleEntry
             dtf = DateTimeFormatter.ofPattern("yyy-MM-dd hh:mma [z]");
         }
 
-        String body = "" +
+        String body = "```js\n" +
                 "Title:  \"" + this.getTitle() + "\"\n" +
                 "Start:  " + this.getStart().format(dtf) + "\n" +
-                "End:    " + this.getEnd().format(dtf) + "\n" +
+                "End:    " + (this.getEnd().equals(this.getStart()) ? "\"off\"" : this.getEnd().format(dtf)) + "\n" +
                 "Repeat: " + MessageGenerator.getRepeatString(this.getRepeat(), true) + " (" + this.getRepeat() + ")" + "\n";
 
         // title url
@@ -1008,37 +1162,21 @@ public class ScheduleEntry
             }
             if(!this.getRsvpLimits().isEmpty())
             {
-                body += "// Limits\n";
-                for(String key : this.getRsvpLimits().keySet())
-                {
-                    body += key + " - " + this.getRsvpLimits().get(key) + "\n";
-                }
+                body += "``````js\n" + this.limitsToString();
             }
         }
 
         // comments
         if(!this.getComments().isEmpty())
         {
-            body += "// Comments\n";
-            for(int i=1; i<this.getComments().size()+1; i++)
-            {
-                body += "[" + i + "] \"" + this.getComments().get(i-1) + "\"\n";
-            }
+            body += "``````js\n" + this.commentsToString();
         }
 
         // announcement overrides
-        if(!this.announcements.isEmpty())
+        if(!this.announcementTimes.isEmpty())
         {
-            JDA jda = Main.getShardManager().getJDA(this.guildId);
-            body += "// Announcements\n";
-            for (String id : this.announcementTargets.keySet())
-            {
-                TextChannel channel = jda.getTextChannelById(this.announcementTargets.get(id));
-                body += "[" + (Integer.parseInt(id)+1) + "] \"" + this.announcementMessages.get(id)+ "\"" +
-                        " at \"" + this.announcementTimes.get(id) + "\"" +
-                        " to \"#" + (channel==null ? "unknown_channel" : channel.getName())+"\"\n";
-            }
+            body += "``````js\n" + this.announcementsToString();
         }
-        return body;
+        return body + "\n```";
     }
 }

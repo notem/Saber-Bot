@@ -1042,7 +1042,6 @@ public class ConfigCommand implements Command
             case REM:
                 if(content.length() > 1900)
                 {
-                    content += "```";
                     return content;
                 }
 
@@ -1069,7 +1068,6 @@ public class ConfigCommand implements Command
             case MISC:
                 if(content.length() > 1900)
                 {
-                    content += "```";
                     return content;
                 }
 
@@ -1104,7 +1102,6 @@ public class ConfigCommand implements Command
             case SYNC:
                 if(content.length() > 1900)
                 {
-                    content += "```";
                     return content;
                 }
 
@@ -1137,7 +1134,6 @@ public class ConfigCommand implements Command
             case RSVP:
                 if(content.length() > 1900)
                 {
-                    content += "```";
                     return content;
                 }
 

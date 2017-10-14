@@ -103,7 +103,7 @@ class EntryProcessor implements Runnable
                     }
                     while(announcementQueue.peek() != null)
                     {
-                        Main.getEntryManager().getEntry(remindQueue.poll()).announce();
+                        Main.getEntryManager().getEntry(announcementQueue.poll()).announce();
                     }
 
                     Logging.info(this.getClass(), "Finished emptying queues.");
@@ -238,28 +238,32 @@ class EntryProcessor implements Runnable
                                 if(!endQueue.contains(se.getId()))
                                 {
                                     endQueue.add(se.getId());
-                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the end queue");
+                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() +
+                                    // "\" ["+se.getId()+"] to the end queue");
                                 }
                                 break;
                             case REMIND_QUEUE:
                                 if(!remindQueue.contains(se.getId()))
                                 {
                                     remindQueue.add(se.getId());
-                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the remind queue");
+                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() +
+                                    // "\" ["+se.getId()+"] to the remind queue");
                                 }
                                 break;
                             case START_QUEUE:
                                 if(!startQueue.contains(se.getId()))
                                 {
                                     startQueue.add(se.getId());
-                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the start queue");
+                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() +
+                                    // "\" ["+se.getId()+"] to the start queue");
                                 }
                                 break;
                             case ANNOUNCEMENT_QUEUE:
                                 if(!announcementQueue.contains(se.getId()))
                                 {
                                     announcementQueue.add(se.getId());
-                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the announce queue");
+                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() +
+                                    // "\" ["+se.getId()+"] to the announce queue");
                                 }
                                 break;
                         }

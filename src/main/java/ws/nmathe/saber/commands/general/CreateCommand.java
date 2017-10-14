@@ -428,8 +428,8 @@ public class CreateCommand implements Command
         Integer entryId = Main.getEntryManager().newEntry(se, true);
 
         // send the event summary to the command channel
-        String body = "New event created :id: **"+ ParsingUtilities.intToEncodedID(entryId) +"** on <#" + cId + ">\n" +
-                "```js\n" + se.toString() + "\n```";
+        String body = "New event created :id: **"+ ParsingUtilities.intToEncodedID(entryId) +"** on <#" +
+                cId + ">\n" + se.toString();
         MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }

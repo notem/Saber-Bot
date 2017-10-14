@@ -41,11 +41,11 @@ public class CommandHandler
     public void init()
     {
         // add bot commands with their lookup name
+        commands.put((new HelpCommand()).name(), new HelpCommand());
         commands.put((new InitCommand()).name(), new InitCommand());
         commands.put((new CreateCommand()).name(), new CreateCommand());
         commands.put((new DeleteCommand()).name(), new DeleteCommand());
         commands.put((new EditCommand()).name(), new EditCommand());
-        commands.put((new HelpCommand()).name(), new HelpCommand());
         commands.put((new ConfigCommand()).name(), new ConfigCommand());
         commands.put((new TimeZonesCommand()).name(), new TimeZonesCommand());
         commands.put((new TestCommand()).name(), new TestCommand());
@@ -56,6 +56,7 @@ public class CommandHandler
         commands.put((new SkipCommand()).name(), new SkipCommand());
         commands.put((new EventsCommand()).name(), new EventsCommand());
         commands.put((new SchedulesCommand()).name(), new SchedulesCommand());
+        commands.put((new AnnouncementsCommand()).name(), new AnnouncementsCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put((new GlobalMsgCommand()).name(), new GlobalMsgCommand());

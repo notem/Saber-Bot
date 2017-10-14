@@ -34,7 +34,7 @@ public class SchedulesCommand implements Command
     {
         String head = prefix + this.name();
         String usage = "``" + head + "`` - lists all schedules";
-        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.MISC);
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.USER);
 
         String cat1 = "- Usage\n" + head + "";
         String cont1 = "This command will generate a list of all schedules active for the guild.\n" +

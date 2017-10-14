@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class CommandInfo
 {
-    public enum CommandType {ADMIN, CORE, GOOGLE, MISC}
+    public enum CommandType {ADMIN, CORE, GOOGLE, MISC, USER}
 
     private String usage;
     private Map<String, String> usageExtended;

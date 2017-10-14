@@ -34,7 +34,7 @@ public class ListCommand implements Command
     {
         String head = prefix + this.name();
         String usage = "``" + head + "`` - show an event's rsvp list";
-        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.MISC);
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.USER);
 
         String cat1 = "- Usage\n" + head + " <ID> [mode] [filters]";
         String cont1 = "The list command will show all users who have rsvp'ed yes.\n" +

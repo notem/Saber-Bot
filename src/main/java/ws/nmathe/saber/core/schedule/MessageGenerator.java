@@ -509,7 +509,8 @@ public class MessageGenerator
             }
             else
             {
-                int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS), end.truncatedTo(ChronoUnit.DAYS));
+                int daysTil = (int) ChronoUnit.DAYS
+                        .between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS), end.truncatedTo(ChronoUnit.DAYS));
                 if( daysTil <= 1)
                     timer += "tomorrow.)";
                 else

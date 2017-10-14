@@ -81,6 +81,8 @@ public class EditCommand implements Command
         info.addUsageExample(head + " AJ@29l quiet-start");
         info.addUsageExample(head + " AJ@29l expire 2019/1/1");
         info.addUsageExample(head + " AJ@29l limit Yes 15");
+        info.addUsageExample(head + " J09DlA announcement add #general start-1h \"Get ready! **%t** begins in one hour!\"");
+        info.addUsageExample(head +  "J09DlA announcement remove 1");
 
         return info;
     }
@@ -650,8 +652,8 @@ public class EditCommand implements Command
         //
         // send the event summary to the command channel
         //
-        String body = "Updated event :id: **"+ ParsingUtilities.intToEncodedID(se.getId()) +"** on <#" + se.getChannelId() + ">\n" +
-                "```js\n" + se.toString() + "\n```";
+        String body = "Updated event :id: **"+ ParsingUtilities.intToEncodedID(se.getId()) +"** on <#" +
+                se.getChannelId() + ">\n" + se.toString();
         MessageUtilities.sendMsg(body, event.getChannel(), null);
     }
 }

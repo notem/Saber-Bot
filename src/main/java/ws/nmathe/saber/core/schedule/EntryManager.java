@@ -51,11 +51,11 @@ public class EntryManager
      */
     public void init()
     {
-        // create thread every 50s to fill queues
+        // create thread every 30s to fill queues
         ScheduledExecutorService scheduler1 = Executors.newSingleThreadScheduledExecutor();
         scheduler1.scheduleAtFixedRate(
                 new EntryProcessor(type.FILL, endQueue, startQueue, remindQueue, announcementQueue),
-                50, 50, TimeUnit.SECONDS);
+                30, 30, TimeUnit.SECONDS);
 
         // create thread to empty queues every 20s
         ScheduledExecutorService scheduler2 = Executors.newSingleThreadScheduledExecutor();
@@ -76,7 +76,7 @@ public class EntryManager
         // 4.5 min timer
         scheduler3.scheduleAtFixedRate(
                 new EntryProcessor(type.UPDATE1, endQueue, startQueue, remindQueue, announcementQueue),
-                60*4+30, 60*3, TimeUnit.SECONDS );
+                60*4+30, 60*3, TimeUnit.SECONDS);
     }
 
     /**

@@ -39,9 +39,9 @@ public class TestCommand implements Command
                         "Valid options are: **start**, **end**, and **remind**.";
         info.addUsageCategory(cat1, cont1);
 
-        info.addUsageExample(head + "J09DlA");
-        info.addUsageExample(head + "J09DlA end");
-        info.addUsageExample(head + "J09DlA remind");
+        info.addUsageExample(head + " J09DlA");
+        info.addUsageExample(head + " J09DlA end");
+        info.addUsageExample(head + " J09DlA remind");
 
         return info;
     }

@@ -25,7 +25,7 @@ public class HelpCommand implements Command
     {
         String head = prefix + this.name();
         String usage = "``" + head + "`` - receive info message";
-        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.MISC);
+        CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.USER);
 
         String cat1 = "";
         String cont1 = "This commands provides access to the command help documentation.\n" +
@@ -70,6 +70,12 @@ public class HelpCommand implements Command
             {
                 CommandInfo info = cmd.info(prefix);
                 if(info.getType()== CommandInfo.CommandType.CORE) commands += info.getUsage()+"\n";
+            }
+            commands += "\n**User commands**\n================\n";
+            for(Command cmd : Main.getCommandHandler().getCommands())
+            {
+                CommandInfo info = cmd.info(prefix);
+                if(info.getType()== CommandInfo.CommandType.USER) commands += info.getUsage()+"\n";
             }
             commands += "\n**Google commands**\n================\n";
             for(Command cmd : Main.getCommandHandler().getCommands())
