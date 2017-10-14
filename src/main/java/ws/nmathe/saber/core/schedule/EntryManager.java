@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.*;
 
@@ -237,7 +238,7 @@ public class EntryManager
                                 .append("thumbnail", se.getThumbnailUrl())
                                 .append("deadline", finalDeadline)
                                 .append("guildId", guildId)
-                                .append("announcements", se.getAnnouncements())
+                                .append("announcements", new ArrayList<>(se.getAnnouncements()))
                                 .append("announcement_dates", se.getAnnouncementDates())
                                 .append("announcement_times", se.getAnnouncementTimes())
                                 .append("announcement_messages", se.getAnnouncementMessages())

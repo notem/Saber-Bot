@@ -176,7 +176,7 @@ public class ScheduleEntry
 
         // announcement overrides
         this.announcements = entryDocument.get("announcements") == null ?
-                new HashSet<>() : (Set<Date>) entryDocument.get("announcements");
+                new HashSet<>() : new HashSet<>(((List<Date>) entryDocument.get("announcements")));
         this.announcementDates = entryDocument.get("announcement_dates") == null ?
                 new HashMap<>() : (Map<String, Date>) entryDocument.get("announcement_dates");
         this.announcementTimes = entryDocument.get("announcement_times") == null ?
