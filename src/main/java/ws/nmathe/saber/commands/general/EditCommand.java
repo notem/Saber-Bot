@@ -636,7 +636,7 @@ public class EditCommand implements Command
 
                             case "r":
                             case "remove":
-                                Integer id = Integer.parseInt(args[index].replaceAll("[^\\d]",""));
+                                Integer id = Integer.parseInt(args[index].replaceAll("[^\\d]",""))-1;
                                 se.removeAnnouncementOverride(id);
                                 index ++;
                                 break;
