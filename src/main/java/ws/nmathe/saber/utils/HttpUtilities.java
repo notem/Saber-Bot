@@ -39,7 +39,7 @@ public class HttpUtilities
             if (Main.getShardManager().isSharding() && shardId != null)
             {
                 // if the bot is sharding send shard information
-                int count = Main.getShardManager().getGuilds().size();
+                int count = Main.getShardManager().getShard(shardId).getGuilds().size();
                 int total = Main.getBotSettingsManager().getShardTotal();
                 json = new JSONObject().put("shard_count", total).put("shard_id", shardId).put("server_count", count);
             }

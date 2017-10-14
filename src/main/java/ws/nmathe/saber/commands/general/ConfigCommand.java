@@ -115,7 +115,7 @@ public class ConfigCommand implements Command
             return "That's not enough arguments! Use ``" + cmd + " <channel> [<option> <new config>]``";
         }
 
-        String cId = args[index].replace("<#","").replace(">","");
+        String cId = args[index].replaceAll("[^\\d]","");
         if( !Main.getScheduleManager().isASchedule(cId) )
         {
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
@@ -527,9 +527,8 @@ public class ConfigCommand implements Command
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
         int index = 0;
-        String cId = args[index].replace("<#","").replace(">","");
-        TextChannel scheduleChan = event.getGuild()
-                .getTextChannelById(args[index].replace("<#","").replace(">",""));
+        String cId = args[index].replaceAll("[^\\d]","");
+        TextChannel scheduleChan = event.getGuild().getTextChannelById(cId);
 
         index++;
 

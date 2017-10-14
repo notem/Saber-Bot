@@ -93,14 +93,10 @@ public class ParsingUtilities
                 Matcher matcher2 = Pattern.compile("\\[.*?]").matcher(trimmed);
                 if(trimmed.matches("(\\[.*?])?c\\d+(\\[.*?])?")) // advanced comment
                 {
-                    int i = Integer.parseInt(trimmed.replaceAll("\\[.*?]?c", ""));
-                    if(entry.getComments().size() <= i && i > 0)
+                    int i = Integer.parseInt(trimmed.replaceAll("(\\[.*?])?c|\\[.*?]", ""));
+                    if(entry.getComments().size() >= i && i > 0)
                     {
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                        sub += entry.getComments().get(i);
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += messageFormatHelper(entry.getComments().get(i-1), matcher2);
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?s(\\[.*?])?")) // advanced start
@@ -130,11 +126,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            if(matcher2.find())
-                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                            sub += minutes+1;
-                            if(matcher2.find())
-                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                            sub += messageFormatHelper(""+minutes+1, matcher2);
                         }
                     }
                     else
@@ -142,11 +134,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            if(matcher2.find())
-                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                            sub += minutes+1;
-                            if(matcher2.find())
-                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                            sub += messageFormatHelper(""+minutes+1, matcher2);
                         }
                     }
                 }
@@ -157,11 +145,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            if(matcher2.find())
-                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                            sub += (minutes+1)/60;
-                            if(matcher2.find())
-                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                            sub += messageFormatHelper(""+(minutes+1)/60, matcher2);
                         }
                     }
                     else
@@ -169,11 +153,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            if(matcher2.find())
-                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                            sub += (minutes+1)/60;
-                            if(matcher2.find())
-                                sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                            sub += messageFormatHelper(""+(minutes+1)/60, matcher2);
                         }
                     }
                 }
@@ -183,44 +163,28 @@ public class ParsingUtilities
                     List<String> members = entry.getRsvpMembers().get(name);
                     if(members != null)
                     {
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                        sub += members.size();
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += messageFormatHelper(""+members.size(), matcher2);
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?u(\\[.*?])?")) // advanced title url
                 {
                     if(entry.getTitleUrl() != null)
                     {
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                        sub += entry.getTitleUrl();
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += messageFormatHelper(entry.getTitleUrl(), matcher2);
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?v(\\[.*?])?")) // advanced image url
                 {
                     if(entry.getImageUrl() != null)
                     {
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                        sub += entry.getImageUrl();
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += messageFormatHelper(entry.getImageUrl(), matcher2);
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?w(\\[.*?])?")) // advanced thumbnail url
                 {
                     if(entry.getThumbnailUrl() != null)
                     {
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
-                        sub += entry.getThumbnailUrl();
-                        if(matcher2.find())
-                            sub += matcher2.group().replaceAll("[\\[\\]]", "");
+                        sub += messageFormatHelper(entry.getThumbnailUrl(), matcher2);
                     }
                 }
             }
@@ -370,6 +334,20 @@ public class ParsingUtilities
         }
 
         return announceMsg.toString();
+    }
+
+    /**
+     * aids parseMessageFormat() in parsing strings for advanced substitution
+     */
+    private static String messageFormatHelper(String insert, Matcher matcher)
+    {
+        String str = "";
+        if(matcher.find())
+            str += matcher.group().replaceAll("[\\[\\]]", "");
+        str += insert;
+        if(matcher.find())
+            str += matcher.group().replaceAll("[\\[\\]]", "");
+        return str;
     }
 
     /**

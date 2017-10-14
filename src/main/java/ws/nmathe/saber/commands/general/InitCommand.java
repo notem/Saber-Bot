@@ -106,7 +106,7 @@ public class InitCommand implements Command
             String chanId = null;
             try
             {
-                chanId = args[0].replaceFirst("<#","").replaceFirst(">","");
+                chanId = args[0].replaceAll("[^\\d]","");
                 chan = event.getGuild().getTextChannelById(chanId);
                 if(chan != null) isAChannel = true;
             }

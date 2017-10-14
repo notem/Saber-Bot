@@ -118,7 +118,7 @@ public class GuildCommand implements Command
                                 "The correct usage is ``" + head + " control [#channel]`` where ``[#channel]`` " +
                                 "is the channel to use as the bot control channel.";
                     }
-                    String chanId = args[1].replace("<#", "").replace(">", "");
+                    String chanId = args[1].replaceAll("[^\\d]", "");
                     try
                     {
                         Channel chan = event.getGuild().getTextChannelById(chanId);
@@ -174,7 +174,7 @@ public class GuildCommand implements Command
 
                 case "c":
                 case "control":
-                    String trimmed = args[1].replace("<#", "").replace(">","");
+                    String trimmed = args[1].replaceAll("[^\\d]", "");
                     guildSettings.setCommandChannelId(trimmed);
                     break;
             }

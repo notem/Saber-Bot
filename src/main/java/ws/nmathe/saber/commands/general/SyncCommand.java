@@ -74,7 +74,7 @@ public class SyncCommand implements Command
         }
 
         // validate the supplied channel
-        String cId = args[0].replace("<#","").replace(">","");
+        String cId = args[0].replaceAll("[^\\d]","");
         if(!Main.getScheduleManager().isASchedule(cId))
         {
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild.";
@@ -135,7 +135,7 @@ public class SyncCommand implements Command
         Calendar service = GoogleAuth.getCalendarService(credential);
 
         int index = 0;
-        String cId = args[index].replace("<#","").replace(">","");
+        String cId = args[index].replaceAll("[^\\d]","");
         TextChannel channel = event.getGuild().getTextChannelById(cId);
 
         index++;
