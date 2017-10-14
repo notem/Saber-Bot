@@ -35,6 +35,7 @@ public class EntryManager
     private static Queue<Integer> endQueue = new ConcurrentLinkedQueue<>();
     private static Queue<Integer> startQueue = new ConcurrentLinkedQueue<>();
     private static Queue<Integer> remindQueue = new ConcurrentLinkedQueue<>();
+    private static Queue<Integer> announcementQueue = new ConcurrentLinkedQueue<>();
 
     public enum type { FILL, EMPTY, UPDATE1, UPDATE2, UPDATE3 }
 
@@ -52,28 +53,28 @@ public class EntryManager
         // create thread every 50s to fill queues
         ScheduledExecutorService scheduler1 = Executors.newSingleThreadScheduledExecutor();
         scheduler1.scheduleAtFixedRate(
-                new EntryProcessor(type.FILL, endQueue, startQueue, remindQueue),
+                new EntryProcessor(type.FILL, endQueue, startQueue, remindQueue, announcementQueue),
                 50, 50, TimeUnit.SECONDS);
 
         // create thread to empty queues every 20s
         ScheduledExecutorService scheduler2 = Executors.newSingleThreadScheduledExecutor();
         scheduler2.scheduleAtFixedRate(
-                new EntryProcessor(type.EMPTY, endQueue, startQueue, remindQueue),
+                new EntryProcessor(type.EMPTY, endQueue, startQueue, remindQueue, announcementQueue),
                 20, 20, TimeUnit.SECONDS);
 
         // thread to adjust entry display timers
         ScheduledExecutorService scheduler3 = Executors.newSingleThreadScheduledExecutor();
         // 1 day timer
         scheduler3.scheduleAtFixedRate(
-                new EntryProcessor(type.UPDATE3, endQueue, startQueue, remindQueue),
+                new EntryProcessor(type.UPDATE3, endQueue, startQueue, remindQueue, announcementQueue),
                 12*60*60, 12*60*60, TimeUnit.SECONDS);
         // 1 hour timer
         scheduler3.scheduleAtFixedRate(
-                new EntryProcessor(type.UPDATE2, endQueue, startQueue, remindQueue),
+                new EntryProcessor(type.UPDATE2, endQueue, startQueue, remindQueue, announcementQueue),
                 60*30, 60*30, TimeUnit.SECONDS);
         // 4.5 min timer
         scheduler3.scheduleAtFixedRate(
-                new EntryProcessor(type.UPDATE1, endQueue, startQueue, remindQueue),
+                new EntryProcessor(type.UPDATE1, endQueue, startQueue, remindQueue, announcementQueue),
                 60*4+30, 60*3, TimeUnit.SECONDS );
     }
 

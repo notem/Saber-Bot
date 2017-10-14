@@ -14,6 +14,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
@@ -61,7 +62,7 @@ public class ScheduleEntry
     private ZonedDateTime expire;
 
     // announcement overrides
-    private List<Date> announcements;                   // used by DB for queries
+    private Set<Date> announcements;                   // used by DB for queries
     private Map<String, Date> announcementDates;       // maps Date to IDs
     private Map<String, String> announcementTimes;     // maps ID to rel-time string
     private Map<String, String> announcementTargets;   // maps ID to channel target
@@ -110,7 +111,7 @@ public class ScheduleEntry
         this.expire = null;
 
         // announcement overrides
-        this.announcements = new ArrayList<>();
+        this.announcements = new HashSet<>();
         this.announcementDates= new HashMap<>();
         this.announcementTimes = new HashMap<>();
         this.announcementTargets = new HashMap<>();
@@ -175,7 +176,7 @@ public class ScheduleEntry
 
         // announcement overrides
         this.announcements = entryDocument.get("announcements") == null ?
-                new ArrayList<>() : (List<Date>) entryDocument.get("announcements");
+                new HashSet<>() : (Set<Date>) entryDocument.get("announcements");
         this.announcementDates = entryDocument.get("announcement_dates") == null ?
                 new HashMap<>() : (Map<String, Date>) entryDocument.get("announcement_dates");
         this.announcementTimes = entryDocument.get("announcement_times") == null ?
@@ -186,6 +187,46 @@ public class ScheduleEntry
                 new HashMap<>() : (Map<String,String>) entryDocument.get("announcement_messages");
     }
 
+    /**
+     * handles sending special announcements
+     */
+    public void announce()
+    {
+        Message msg = this.getMessageObject();
+        if(msg == null) return;         // if msg object is bad
+
+        // collection of announcement IDs to be removed below enumeration
+        Collection<String> removeQueue = new ArrayList<>();
+
+        // enumerate over all dates in the past
+        this.announcements.stream().filter(date-> date.before(new Date())).forEach(date->
+        {
+            for(String key : this.announcementTimes.keySet())
+            {
+                // for each announcement ID that scheduled for the date, send announcement
+                if(this.announcementDates.get(key).equals(date))
+                {
+                    String message = ParsingUtilities.parseMessageFormat(this.announcementMessages.get(key), this);
+                    String target = this.announcementTargets.get(key);
+                    try
+                    {
+                        announcementHelper(msg, message, target);
+                        Logging.event(this.getClass(), "Sent special announcement for event " +
+                                this.getTitle() + " [" + this.getId() + "]");
+                    }
+                    catch(Exception e)
+                    {
+                        Logging.exception(this.getClass(), e);
+                    }
+                    removeQueue.add(key);
+                }
+            }
+        });
+
+        // remove all the processed announcements and update event
+        removeQueue.forEach(key->this.removeAnnouncementOverride(Integer.parseInt(key)));
+        Main.getEntryManager().updateEntry(this, false);
+    }
 
     /**
      * handles sending reminder notifications
@@ -623,7 +664,7 @@ public class ScheduleEntry
         return this.announcementDates;
     }
 
-    public List<Date> getAnnouncements()
+    public Set<Date> getAnnouncements()
     {
         return this.announcements;
     }
@@ -870,11 +911,16 @@ public class ScheduleEntry
         Date date = this.announcementDates.get(id.toString());
         if (date != null)
         {
-            this.announcements.remove(date);
             this.announcementDates.remove(id.toString());
             this.announcementMessages.remove(id.toString());
             this.announcementTimes.remove(id.toString());
             this.announcementTargets.remove(id.toString());
+
+            // only remove from the announcements list if there are no other announcements scheduled for that time
+            if(!this.announcementDates.containsValue(date))
+            {
+                this.announcements.remove(date);
+            }
         }
         return this;
     }

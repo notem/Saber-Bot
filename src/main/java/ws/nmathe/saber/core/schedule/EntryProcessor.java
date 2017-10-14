@@ -32,18 +32,20 @@ class EntryProcessor implements Runnable
     private static Future future = null;
     private static ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
 
-    private enum queue { END_QUEUE, START_QUEUE, REMIND_QUEUE }
+    private enum queue { END_QUEUE, START_QUEUE, REMIND_QUEUE, ANNOUNCEMENT_QUEUE }
 
     private EntryManager.type type;
     private Queue<Integer> endQueue;
     private Queue<Integer> startQueue;
     private Queue<Integer> remindQueue;
-    EntryProcessor(EntryManager.type type, Queue<Integer> endQueue, Queue<Integer> startQueue, Queue<Integer> remindQueue)
+    private Queue<Integer> announcementQueue;
+    EntryProcessor(EntryManager.type type, Queue<Integer> endQueue, Queue<Integer> startQueue, Queue<Integer> remindQueue, Queue<Integer> announcementQueue)
     {
         this.type = type;
         this.endQueue = endQueue;
         this.startQueue = startQueue;
         this.remindQueue = remindQueue;
+        this.announcementQueue = announcementQueue;
     }
 
     @SuppressWarnings("unchecked")
@@ -71,6 +73,10 @@ class EntryProcessor implements Runnable
                 query = and(eq("hasStarted",true), lte("end_reminders", new Date()));
                 processAndQueueEvents(queue.REMIND_QUEUE, query);
 
+                // process entries with announcement overrides
+                query = lte("announcements", new Date());
+                processAndQueueEvents(queue.ANNOUNCEMENT_QUEUE, query);
+
                 Logging.info(this.getClass(), "Finished filling queues.");
             }
             else if(type == EntryManager.type.EMPTY) // process and empty the queues
@@ -94,6 +100,10 @@ class EntryProcessor implements Runnable
                     while(remindQueue.peek() != null)
                     {
                         Main.getEntryManager().getEntry(remindQueue.poll()).remind();
+                    }
+                    while(announcementQueue.peek() != null)
+                    {
+                        Main.getEntryManager().getEntry(remindQueue.poll()).announce();
                     }
 
                     Logging.info(this.getClass(), "Finished emptying queues.");
@@ -228,21 +238,21 @@ class EntryProcessor implements Runnable
                                 if(!endQueue.contains(se.getId()))
                                 {
                                     endQueue.add(se.getId());
-                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the end queue");
+                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the end queue");
                                 }
                                 break;
                             case REMIND_QUEUE:
                                 if(!remindQueue.contains(se.getId()))
                                 {
                                     remindQueue.add(se.getId());
-                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the remind queue");
+                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the remind queue");
                                 }
                                 break;
                             case START_QUEUE:
                                 if(!startQueue.contains(se.getId()))
                                 {
                                     startQueue.add(se.getId());
-                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the start queue");
+                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() + "\" ["+se.getId()+"] to the start queue");
                                 }
                                 break;
                         }
