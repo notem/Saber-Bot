@@ -1188,13 +1188,7 @@ public class ScheduleEntry
                 "Title:  \"" + this.getTitle() + "\"\n" +
                 "Start:  " + this.getStart().format(dtf) + "\n" +
                 "End:    " + (this.getEnd().equals(this.getStart()) ? "\"off\"" : this.getEnd().format(dtf)) + "\n" +
-                "Repeat: " + MessageGenerator.getRepeatString(this.getRepeat(), true) + " (" + this.getRepeat() + ")" + "\n";
-
-        // title url
-        if(this.getTitleUrl()!=null)
-        {
-            body += "Url: \"" + this.getTitleUrl() + "\"\n";
-        }
+                "Repeat: \"" + MessageGenerator.getRepeatString(this.getRepeat(), true) + "\"\n";
 
         // quiet settings
         if(this.isQuietRemind() | this.isQuietEnd() | this.isQuietStart())
@@ -1233,16 +1227,22 @@ public class ScheduleEntry
             body += "Expire: \"" + this.getExpire().toLocalDate() + "\"\n";
         }
 
+        // title url
+        if(this.getTitleUrl()!=null)
+        {
+            body += "Url: \n\"" + this.getTitleUrl() + "\"\n";
+        }
+
         // image
         if(this.getImageUrl() != null)
         {
-            body += "Image: \"" + this.getImageUrl() + "\"\n";
+            body += "Image: \n\"" + this.getImageUrl() + "\"\n";
         }
 
         // thumbnail
         if(this.getThumbnailUrl() != null)
         {
-            body += "Thumbnail: \"" + this.getThumbnailUrl() + "\"\n";
+            body += "Thumbnail: \n\"" + this.getThumbnailUrl() + "\"\n";
         }
 
         // rsvp limits

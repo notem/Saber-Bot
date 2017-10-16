@@ -160,7 +160,7 @@ public class AnnouncementsCommand implements Command
                 catch(Exception ignored)
                 {}
             }
-            content += "\"" + format + "\" at \"START\" on \"#" + target + "\"\n";
+            content += "[s] \"" + format + "\" at \"START\" on \"#" + target + "\"\n";
         }
         if(!entry.isQuietEnd())
         {
@@ -174,7 +174,7 @@ public class AnnouncementsCommand implements Command
                 catch(Exception ignored)
                 {}
             }
-            content += "\"" + format + "\" at \"END\" on \"#" + target + "\"\n";
+            content += "[e] \"" + format + "\" at \"END\" on \"#" + target + "\"\n";
         }
         if(!entry.isQuietRemind())
         {
@@ -190,13 +190,13 @@ public class AnnouncementsCommand implements Command
             }
             for(Integer reminder : Main.getScheduleManager().getReminders(entry.getChannelId()))
             {
-                content += "\"" + format + "\" at \"START" +
+                content += "[r] \"" + format + "\" at \"START" +
                         (reminder>0?"-"+reminder:"+"+Math.abs(reminder)) + "m\" on \"#" + target + "\"\n";
             }
             format = Main.getScheduleManager().getReminderFormat(entry.getChannelId());
             for(Integer reminder : Main.getScheduleManager().getEndReminders(entry.getChannelId()))
             {
-                content += "\"" + format + "\" at \"END" +
+                content += "[r] \"" + format + "\" at \"END" +
                         (reminder>0?"-"+reminder:"+"+Math.abs(reminder)) + "m\" on \"#" + target + "\"\n";
             }
         }
