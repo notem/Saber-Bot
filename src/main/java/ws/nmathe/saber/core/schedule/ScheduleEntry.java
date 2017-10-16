@@ -520,11 +520,17 @@ public class ScheduleEntry
      * getters
      */
 
+    /**
+     * true if the event has been started
+     */
     public boolean hasStarted()
     {
         return this.hasStarted;
     }
 
+    /**
+     * true if the event can accept no more members for an rsvp category
+     */
     public boolean isFull(String type)
     {
         Integer limit = this.rsvpLimits.get(type)==null ? -1 : this.rsvpLimits.get(type);
@@ -532,56 +538,89 @@ public class ScheduleEntry
         return (limit > -1) && (size >= limit);
     }
 
+    /**
+     * retrieves the event's title
+     */
     public String getTitle()
     {
         return this.entryTitle;
     }
 
+    /**
+     * retrieves the event's start datetime
+     */
     public ZonedDateTime getStart()
     {
         return this.entryStart;
     }
 
+    /**
+     * retrieves the event's end datetime
+     */
     public ZonedDateTime getEnd()
     {
         return this.entryEnd;
     }
 
+    /**
+     * retrieves the event's comments
+     */
     public ArrayList<String> getComments()
     {
         return this.entryComments;
     }
 
+    /**
+     * retrieves the event's unique ID
+     */
     public Integer getId()
     {
         return this.entryId;
     }
 
+    /**
+     * retrieves the event's repeat settings
+     */
     public Integer getRepeat()
     {
         return this.entryRepeat;
     }
 
+    /**
+     * retrieves the event's title url
+     */
     public String getTitleUrl()
     {
         return this.titleUrl;
     }
 
+    /**
+     * retrieves the event's reminders
+     */
     public List<Date> getReminders()
     {
         return this.reminders;
     }
 
+    /**
+     * retrieves the event's end reminders
+     */
     public List<Date> getEndReminders()
     {
         return this.endReminders;
     }
 
+    /**
+     * retrieves the event's google ID
+     */
     public String getGoogleId()
     {
         return this.googleId;
     }
 
+    /**
+     * retrieves an rsvp category's limit
+     */
     public Integer getRsvpLimit(String type)
     {
         Integer limit = this.rsvpLimits.get(type);
@@ -592,6 +631,9 @@ public class ScheduleEntry
         return limit;
     }
 
+    /**
+     * retrieves an rsvp category's list of members
+     */
     public List<String> getRsvpMembersOfType(String type)
     {
         List<String> members = this.rsvpMembers.get(type);
@@ -602,81 +644,130 @@ public class ScheduleEntry
         return members;
     }
 
+    /**
+     * retrieves full map of rsvp member
+     */
     public Map<String, List<String>> getRsvpMembers()
     {
         return this.rsvpMembers;
     }
 
+    /**
+     * retrieves full map of rsvp limits
+     */
     public Map<String, Integer> getRsvpLimits()
     {
         return this.rsvpLimits;
     }
 
+    /**
+     * retrieves the datetime the event is set to expire or null
+     */
     public ZonedDateTime getExpire()
     {
         return this.expire;
     }
 
+
+    /**
+     * should the event send start announcements?
+     */
     public boolean isQuietStart()
     {
         return this.quietStart;
     }
 
+    /**
+     * should the event send end announcements?
+     */
     public boolean isQuietEnd()
     {
         return this.quietEnd;
     }
 
+    /**
+     * should the event reminders?
+     */
     public boolean isQuietRemind()
     {
         return this.quietRemind;
     }
 
+    /**
+     * retrieves the event's image url
+     */
     public String getImageUrl()
     {
         return this.imageUrl;
     }
 
+    /**
+     * retrieves the event's thumbnail url
+     */
     public String getThumbnailUrl()
     {
         return this.thumbnailUrl;
     }
 
+    /**
+     * retrieves the event's guild ID url
+     */
     public String getGuildId()
     {
         return this.guildId;
     }
 
+    /**
+     * retrieves the event's channel ID url
+     */
     public String getChannelId()
     {
         return this.chanId;
     }
 
+    /**
+     * retrieves the event's rsvp deadline
+     */
     public ZonedDateTime getDeadline()
     {
         return this.rsvpDeadline;
     }
 
+    /**
+     * retrieves the full map of announcement override relative times
+     */
     public Map<String, String> getAnnouncementTimes()
     {
         return this.announcementTimes;
     }
 
+    /**
+     * retrieves the full map of announcement override target channels
+     */
     public Map<String, String> getAnnouncementTargets()
     {
         return this.announcementTargets;
     }
 
+    /**
+     * retrieves the full map of announcement override message format strings
+     */
     public Map<String, String> getAnnouncementMessages()
     {
         return this.announcementMessages;
     }
 
+    /**
+     * retrieves the full map of announcement override active date object
+     */
     public Map<String, Date> getAnnouncementDates()
     {
         return this.announcementDates;
     }
 
+    /**
+     * retrieves the full list of active date announcement objects
+     */
     public Set<Date> getAnnouncements()
     {
         return this.announcements;
@@ -975,11 +1066,14 @@ public class ScheduleEntry
             return this;
         }
 
-        // add to lists
-        this.announcements.add(Date.from(datetime.toInstant()));
+        if(datetime.isAfter(ZonedDateTime.now()))
+        {
+            // add to active announcement list
+            this.announcements.add(Date.from(datetime.toInstant()));
+            this.announcementDates.put(id.toString(), Date.from(datetime.toInstant()));
+        }
 
         // create mappings
-        this.announcementDates.put(id.toString(), Date.from(datetime.toInstant()));
         this.announcementTimes.put(id.toString(), timeString);
         this.announcementTargets.put(id.toString(), channelId);
         this.announcementMessages.put(id.toString(), message);
@@ -1035,7 +1129,6 @@ public class ScheduleEntry
 
     /**
      * creates string display for event comments
-     * @return
      */
     public String commentsToString()
     {
@@ -1049,7 +1142,6 @@ public class ScheduleEntry
 
     /**
      * creates string display for event limits
-     * @return
      */
     public String limitsToString()
     {

@@ -139,64 +139,20 @@ public class EditCommand implements Command
                     {
                         case "a":
                         case "add":
-                            if(args.length-index < 1)
-                            {
-                                return "That's not enough arguments for *comment add*!\n" +
-                                        "Use ``"+head+" "+args[0]+" "+args[index-2]+" "+args[index-1]+" \"your comment\"``";
-                            }
-                            if(args[index].length() > 1024) return "Comments should not be larger than 1024 characters!";
+                            verify = VerifyUtilities.verifyCommentAdd(args, index, head);
+                            if(!verify.isEmpty()) return verify;
                             index++;
                             break;
                         case "r":
                         case "remove":
-                            if(args.length-index < 1)
-                            {
-                                return "That's not enough arguments for *comment remove*!\n" +
-                                        "Use ``"+head+" "+args[0]+" "+args[index-2]+" "+args[index-1]+" [number]``";
-                            }
-                            if((!args[index].isEmpty() && Character.isDigit(args[index].charAt(0)))
-                                    && !VerifyUtilities.verifyInteger(args[index]))
-                            {
-                                return "I cannot use **" + args[index] + "** to remove a comment!";
-                            }
-                            if(VerifyUtilities.verifyInteger(args[index]))
-                            {
-                                Integer it = Integer.parseInt(args[index]);
-                                if(it > entry.getComments().size())
-                                {
-                                    return "The event doesn't have a comment number " + it + "!";
-                                }
-                                if(it < 1)
-                                {
-                                    return "The comment number must be above 0!";
-                                }
-                            }
+                            verify = VerifyUtilities.verifyCommentRemove(args, index, head, entry);
+                            if(!verify.isEmpty()) return verify;
                             index++;
                             break;
                         case "s":
                         case "swap":
-                            if(args.length-index < 2)
-                            {
-                                return "That's not enough arguments for *comment swap*!" +
-                                        "\nUse ``"+ head +" "+args[0]+" "+args[index-2]+" "+args[index-1]+" [number] [number]``";
-                            }
-                            if(!VerifyUtilities.verifyInteger(args[index]))
-                            {
-                                return "Argument **" + args[index] + "** is not a number!";
-                            }
-                            if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
-                            {
-                                return "Comment **#" + args[index] + "** does not exist!";
-                            }
-                            index++;
-                            if(!VerifyUtilities.verifyInteger(args[index]))
-                            {
-                                return "Argument **" + args[index] + "** is not a number!";
-                            }
-                            if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
-                            {
-                                return "Comment **#" + args[index] + "** does not exist!";
-                            }
+                            verify = VerifyUtilities.verifyCommentSwap(args, index, head, entry);
+                            if(!verify.isEmpty()) return verify;
                             index += 2;
                             break;
                         default:
@@ -341,14 +297,91 @@ public class EditCommand implements Command
                     index++;
                     break;
 
-                case "a":
                 case "an":
                 case "announce":
                 case "announcement":
                 case "announcements":
-                    verify = VerifyUtilities.verifyAnnouncementTime(args, index, head, event);
-                    if(!verify.isEmpty()) return verify;
-                    index += 4;
+                    if (args.length - index < 1)
+                    {
+                        return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
+                                "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [add|remove] [#target] [time] [message]``";
+                    }
+                    switch(args[index++].toLowerCase())
+                    {
+                        case "a":
+                        case "add":
+                            verify = VerifyUtilities.verifyAnnouncementAdd(args, index, head, event);
+                            if(!verify.isEmpty()) return verify;
+                            index += 3;
+                            break;
+
+                        case "r":
+                        case "remove":
+                            verify = VerifyUtilities.verifyAnnouncementRemove(args, index, head, entry);
+                            if(!verify.isEmpty()) return verify;
+                            index ++;
+                            break;
+
+                        default:
+                            return "**" + args[index] + "** is not a valid option!\n" +
+                                    "You should use either *add* or *remove*!";
+                    }
+                    break;
+
+                case "a":
+                case "add":
+                    switch(args[index++].toLowerCase())
+                    {
+                        case "a":
+                        case "an":
+                        case "announce":
+                        case "announcement":
+                        case "announcements":
+                            verify = VerifyUtilities.verifyAnnouncementAdd(args, index, head, event);
+                            if(!verify.isEmpty()) return verify;
+                            index += 3;
+                            break;
+
+                        case "c":
+                        case "comment":
+                        case "comments":
+                            verify = VerifyUtilities.verifyCommentAdd(args, index, head);
+                            if(!verify.isEmpty()) return verify;
+                            index++;
+                            break;
+
+                        default:
+                            return "*" + args[index-1] + "* is not a valid option!\n" +
+                                    "Please use either *comment* or **announcement*!";
+                    }
+                    break;
+
+                case "re":
+                case "remove":
+                    switch(args[index++].toLowerCase())
+                    {
+                        case "a":
+                        case "an":
+                        case "announce":
+                        case "announcement":
+                        case "announcements":
+                            verify = VerifyUtilities.verifyAnnouncementRemove(args, index, head, entry);
+                            if(!verify.isEmpty()) return verify;
+                            index ++;
+                            break;
+
+                        case "c":
+                        case "comment":
+                        case "comments":
+                            verify = VerifyUtilities.verifyCommentRemove(args, index, head, entry);
+                            if(!verify.isEmpty()) return verify;
+                            index++;
+                            break;
+
+                        default:
+                            return "*" + args[index-1] + "* is not a valid option!\n" +
+                                    "Please use either *comment* or **announcement*!";
+                    }
                     break;
 
                 default:
@@ -380,16 +413,18 @@ public class EditCommand implements Command
             while(index < args.length)
             {
                 ZoneId zone = Main.getScheduleManager().getTimeZone(se.getChannelId());
+                ArrayList<String> comments;
                 switch( args[index++] )
                 {
                     case "c":
                     case "comment":
-                        ArrayList<String> comments = se.getComments();
+                    case "comments":
+                        comments = se.getComments();
                         switch( args[index++] )
                         {
                             case "a":
                             case "add" :
-                                comments.add( args[index] );
+                                comments.add(args[index]);
                                 se.setComments(comments);
                                 index++;
                                 break;
@@ -616,31 +651,85 @@ public class EditCommand implements Command
                         index += 2;
                         break;
 
-                    case "a":
                     case "an":
                     case "announce":
                     case "announcement":
                     case "announcements":
                         switch(args[index++].toLowerCase())
                         {
-                            default:
-                                index++;
-                                break;
-
                             case "a":
                             case "add":
                                 String target = args[index].replaceAll("[^\\d]","");
                                 String time = args[index+1];
                                 String message = args[index+2];
                                 se.addAnnouncementOverride(target, time, message);
-                                index += 4;
+                                index += 3;
                                 break;
 
                             case "r":
                             case "remove":
                                 Integer id = Integer.parseInt(args[index].replaceAll("[^\\d]",""))-1;
                                 se.removeAnnouncementOverride(id);
-                                index ++;
+                                index++;
+                                break;
+                        }
+                        break;
+
+                    case "a":
+                    case "add":
+                        switch(args[index++].toLowerCase())
+                        {
+                            case "a":
+                            case "an":
+                            case "announce":
+                            case "announcement":
+                            case "announcements":
+                                String target = args[index].replaceAll("[^\\d]","");
+                                String time = args[index+1];
+                                String message = args[index+2];
+                                se.addAnnouncementOverride(target, time, message);
+                                index += 3;
+                                break;
+
+                            case "c":
+                            case "comment":
+                            case "comments":
+                                comments = se.getComments();
+                                comments.add( args[index] );
+                                se.setComments(comments);
+                                index++;
+                                break;
+                        }
+                        break;
+
+                    case "re":
+                    case "remove":
+                        switch(args[index++].toLowerCase())
+                        {
+                            case "a":
+                            case "an":
+                            case "announce":
+                            case "announcement":
+                            case "announcements":
+                                Integer id = Integer.parseInt(args[index].replaceAll("[^\\d]",""))-1;
+                                se.removeAnnouncementOverride(id);
+                                index++;
+                                break;
+
+                            case "c":
+                            case "comment":
+                            case "comments":
+                                comments = se.getComments();
+                                if(VerifyUtilities.verifyInteger(args[index]))
+                                {
+                                    comments.remove(Integer.parseInt(args[index])-1);
+                                }
+                                else
+                                {
+                                    comments.remove(args[index]);
+                                }
+                                se.setComments(comments);
+                                index++;
                                 break;
                         }
                         break;

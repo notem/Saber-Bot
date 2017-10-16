@@ -417,49 +417,123 @@ public class VerifyUtilities
     }
 
     /**
-     *  Returns error message (or empty string) for announcement keyword verification
+     *  Returns error message (or empty string) for announcement add keyword verification
      */
-    public static String verifyAnnouncementTime(String[] args, int index, String head, MessageReceivedEvent event)
+    public static String verifyAnnouncementAdd(String[] args, int index, String head, MessageReceivedEvent event)
+    {
+        if (args.length - index < 3)
+        {
+            return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " add [#target] [time] [message]``";
+        }
+        JDA jda = Main.getShardManager().getJDA(event.getGuild().getId());
+        String channelId = args[index].replaceAll("[^\\d]", "");
+        if (!channelId.matches("\\d+") || jda.getTextChannelById(channelId)==null)
+        {
+            return "**" + args[index] + "** is not a channel on your server!";
+        }
+        if(!VerifyUtilities.verifyTimeString(args[index+1]))
+        {
+            return "**" + args[index+1] + "** is not a properly formed announcement time!\n" +
+                    "Times use the format \"TYPE+/-OFFSET\". Ex: ``START+10m``, ``END-1h``";
+        }
+        return "";
+    }
+
+    /**
+     *  Returns error message (or empty string) for announcement remove keyword
+     */
+    public static String verifyAnnouncementRemove(String[] args, int index, String head, ScheduleEntry se)
     {
         if (args.length - index < 1)
         {
             return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
-                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [add|remove] [#target] [time] [message]``";
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " remove [number]``";
         }
-        switch(args[index++].toLowerCase())
+        if (!verifyInteger(args[index]))
         {
-            case "a":
-            case "add":
-                if (args.length - index < 3)
-                {
-                    return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
-                            "Use ``" + head + " " + args[0] + " " + args[index - 1] + " add [#target] [time] [message]``";
-                }
-                JDA jda = Main.getShardManager().getJDA(event.getGuild().getId());
-                String channelId = args[index].replaceAll("[^\\d]", "");
-                if (!channelId.matches("\\d+") || jda.getTextChannelById(channelId)==null)
-                {
-                    return "**" + args[index] + "** is not a channel on your server!";
-                }
-                if(!VerifyUtilities.verifyTimeString(args[index+1]))
-                {
-                    return "**" + args[index+1] + "** is not a properly formed announcement time!\n" +
-                            "Times use the format \"TYPE+/-OFFSET\". Ex: ``START+10m``, ``END-1h``";
-                }
-                break;
+            return "*" + args[index] + "* is not a number!\n" +
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " remove [number]``";
+        }
+        Integer i = Integer.parseInt(args[index]);
+        if (se.getAnnouncementTimes().size() > i || i < 1)
+        {
+            return "There does not exist an announcement with number *" + args[index] + "*!\n" +
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " remove [number]``";
+        }
+        return "";
+    }
 
-            case "r":
-            case "remove":
-                if (args.length - index < 1)
-                {
-                    return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
-                            "Use ``" + head + " " + args[0] + " " + args[index - 1] + " remove [number]``";
-                }
-                break;
+    /**
+     *  Returns error message (or empty string) for comment add verification
+     */
+    public static String verifyCommentAdd(String[] args, int index, String head)
+    {
+        if(args.length-index < 1)
+        {
+            return "That's not enough arguments for *comment add*!\n" +
+                    "Use ``"+head+" "+args[0]+" "+args[index-2]+" "+args[index-1]+" \"your comment\"``";
+        }
+        if(args[index].length() > 1024) return "Comments should not be larger than 1024 characters!";
+        return "";
+    }
 
-            default:
-                return "**" + args[index] + "** is not a valid option!\n" +
-                        "You should use either *add* or *remove*!";
+    /**
+     *  Returns error message (or empty string) for comment swap verification
+     */
+    public static String verifyCommentSwap(String[] args, int index, String head, ScheduleEntry entry)
+    {
+        if(args.length-index < 2)
+        {
+            return "That's not enough arguments for *comment swap*!" +
+                    "\nUse ``"+ head +" "+args[0]+" "+args[index-2]+" "+args[index-1]+" [number] [number]``";
+        }
+        if(!VerifyUtilities.verifyInteger(args[index]))
+        {
+            return "Argument **" + args[index] + "** is not a number!";
+        }
+        if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
+        {
+            return "Comment **#" + args[index] + "** does not exist!";
+        }
+        index++;
+        if(!VerifyUtilities.verifyInteger(args[index]))
+        {
+            return "Argument **" + args[index] + "** is not a number!";
+        }
+        if(Integer.parseInt(args[index]) > entry.getComments().size() || Integer.parseInt(args[index]) < 1)
+        {
+            return "Comment **#" + args[index] + "** does not exist!";
+        }
+        return "";
+    }
+
+    /**
+     *  Returns error message (or empty string) for comment remove verification
+     */
+    public static String verifyCommentRemove(String[] args, int index, String head, ScheduleEntry entry)
+    {
+        if(args.length-index < 1)
+        {
+            return "That's not enough arguments for *comment remove*!\n" +
+                    "Use ``"+head+" "+args[0]+" "+args[index-2]+" "+args[index-1]+" [number]``";
+        }
+        if((!args[index].isEmpty() && Character.isDigit(args[index].charAt(0)))
+                && !VerifyUtilities.verifyInteger(args[index]))
+        {
+            return "I cannot use **" + args[index] + "** to remove a comment!";
+        }
+        if(VerifyUtilities.verifyInteger(args[index]))
+        {
+            Integer it = Integer.parseInt(args[index]);
+            if(it > entry.getComments().size())
+            {
+                return "The event doesn't have a comment number " + it + "!";
+            }
+            if(it < 1)
+            {
+                return "The comment number must be above 0!";
+            }
         }
         return "";
     }

@@ -77,8 +77,30 @@ public class AnnouncementsCommand implements Command
 
         if(args.length > 2)
         {
-            String verify = VerifyUtilities.verifyAnnouncementTime(args, index, head, event);
-            if(!verify.isEmpty()) return verify;
+            String verify;
+            if (args.length - index < 1)
+            {
+                return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
+                        "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [add|remove] [#target] [time] [message]``";
+            }
+            switch(args[index++].toLowerCase())
+            {
+                case "a":
+                case "add":
+                    verify = VerifyUtilities.verifyAnnouncementAdd(args, index, head, event);
+                    if(!verify.isEmpty()) return verify;
+                    break;
+
+                case "r":
+                case "remove":
+                    verify = VerifyUtilities.verifyAnnouncementRemove(args, index, head, entry);
+                    if(!verify.isEmpty()) return verify;
+                    break;
+
+                default:
+                    return "**" + args[index] + "** is not a valid option!\n" +
+                            "You should use either *add* or *remove*!";
+            }
         }
 
         return ""; // return valid
@@ -169,13 +191,13 @@ public class AnnouncementsCommand implements Command
             for(Integer reminder : Main.getScheduleManager().getReminders(entry.getChannelId()))
             {
                 content += "\"" + format + "\" at \"START" +
-                        (reminder>0?"-"+reminder:"+"+Math.abs(reminder)) + "\" on \"#" + target + "\"\n";
+                        (reminder>0?"-"+reminder:"+"+Math.abs(reminder)) + "m\" on \"#" + target + "\"\n";
             }
             format = Main.getScheduleManager().getReminderFormat(entry.getChannelId());
             for(Integer reminder : Main.getScheduleManager().getEndReminders(entry.getChannelId()))
             {
                 content += "\"" + format + "\" at \"END" +
-                        (reminder>0?"-"+reminder:"+"+Math.abs(reminder)) + "\" on \"#" + target + "\"\n";
+                        (reminder>0?"-"+reminder:"+"+Math.abs(reminder)) + "m\" on \"#" + target + "\"\n";
             }
         }
         if(!entry.getAnnouncementTimes().values().isEmpty())
