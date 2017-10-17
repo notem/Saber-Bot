@@ -433,6 +433,10 @@ public class CalendarConverter
                                 .setComments(comments)
                                 .setRsvpDeadline(rsvpDeadline);
 
+                        se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
+                                .reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()))
+                                .regenerateAnnouncementOverrides();
+
                         Main.getEntryManager().updateEntry(se, false);
                     }
                     else // create a new event

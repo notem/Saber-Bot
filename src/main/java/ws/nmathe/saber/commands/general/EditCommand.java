@@ -478,7 +478,8 @@ public class EditCommand implements Command
                         }
 
                         // reload start reminders
-                        se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()));
+                        se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
+                                .regenerateAnnouncementOverrides();
                         index++;
                         break;
 
@@ -505,7 +506,8 @@ public class EditCommand implements Command
                         if(se.getStart().isAfter(se.getEnd())) se.setEnd(se.getEnd().plusDays(1));
 
                         // reload end reminders
-                        se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
+                        se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()))
+                                .regenerateAnnouncementOverrides();
                         index++;
                         break;
 
@@ -528,7 +530,8 @@ public class EditCommand implements Command
                                 .withYear(date.getYear()));
 
                         se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
-                                .reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
+                                .reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()))
+                                .regenerateAnnouncementOverrides();
                         index++;
                         break;
 
@@ -547,7 +550,8 @@ public class EditCommand implements Command
                             se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
                         }
 
-                        se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()));
+                        se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
+                                .regenerateAnnouncementOverrides();
                         index++;
                         break;
 
@@ -566,7 +570,8 @@ public class EditCommand implements Command
                             se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()));
                         }
 
-                        se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
+                        se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()))
+                                .regenerateAnnouncementOverrides();
                         index++;
                         break;
 
