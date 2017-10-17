@@ -97,6 +97,16 @@ public class AnnouncementsCommand implements Command
                     if(!verify.isEmpty()) return verify;
                     break;
 
+                case "qs":
+                case "quiet-start":
+                case "qe":
+                case "quiet-end":
+                case "qr":
+                case "quiet-remind":
+                case "quiet-all":
+                case "qa":
+                    break;
+
                 default:
                     return "**" + args[index] + "** is not a valid option!\n" +
                             "You should use either *add* or *remove*!";
@@ -138,6 +148,33 @@ public class AnnouncementsCommand implements Command
                 case "remove":
                     Integer id = Integer.parseInt(args[index].replaceAll("[^\\d]",""))-1;
                     entry.removeAnnouncementOverride(id);
+                    break;
+
+                case "qs":
+                case "quiet-start":
+                    entry.setQuietStart(!entry.isQuietStart());
+                    break;
+
+                case "qe":
+                case "quiet-end":
+                    entry.setQuietEnd(!entry.isQuietEnd());
+                    break;
+
+                case "qr":
+                case "quiet-remind":
+                    entry.setQuietRemind(!entry.isQuietRemind());
+                    break;
+
+                case "qa":
+                case "quiet-all":
+                    if(entry.isQuietRemind() && entry.isQuietEnd() && entry.isQuietStart())
+                    {
+                        entry.setQuietRemind(false).setQuietEnd(false).setQuietStart(false);
+                    }
+                    else
+                    {
+                        entry.setQuietRemind(true).setQuietEnd(true).setQuietStart(true);
+                    }
                     break;
             }
             Main.getEntryManager().updateEntry(entry, false);

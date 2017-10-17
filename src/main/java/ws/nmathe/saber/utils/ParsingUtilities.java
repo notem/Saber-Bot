@@ -330,6 +330,12 @@ public class ParsingUtilities
                     case 'n':
                         announceMsg.append("\n");
                         break;
+                    case 'h':
+                        announceMsg.append(entry.getStart().getHour());
+                        break;
+                    case 'k':
+                        announceMsg.append(entry.getStart().getMinute());
+                        break;
                 }
             }
             else
