@@ -67,7 +67,7 @@ public class ParsingUtilities
      * @param entry the entry associated with the message
      * @return a new message which has entry specific information inserted into the format string
      */
-    public static String parseMessageFormat(String format, ScheduleEntry entry)
+    public static String parseMessageFormat(String format, ScheduleEntry entry, boolean displayComments)
     {
         // determine time formatter from schedule settings
         String clock = Main.getScheduleManager().getClockFormat(entry.getChannelId());
@@ -91,7 +91,7 @@ public class ParsingUtilities
             if(!trimmed.isEmpty())
             {
                 Matcher matcher2 = Pattern.compile("\\[.*?]").matcher(trimmed);
-                if(trimmed.matches("(\\[.*?])?c\\d+(\\[.*?])?")) // advanced comment
+                if(trimmed.matches("(\\[.*?])?c\\d+(\\[.*?])?") && displayComments) // advanced comment
                 {
                     int i = Integer.parseInt(trimmed.replaceAll("(\\[.*?])?c|\\[.*?]", ""));
                     if(entry.getComments().size() >= i && i > 0)
@@ -207,7 +207,7 @@ public class ParsingUtilities
                 switch(ch)
                 {
                     case 'c' :
-                        if( i+1 < format.length() )
+                        if(i+1 < format.length() && displayComments)
                         {
                             ch = format.charAt(i+1);
                             if( Character.isDigit( ch ) )
@@ -216,15 +216,20 @@ public class ParsingUtilities
                                 int x = Integer.parseInt("" + ch);
                                 if(entry.getComments().size()>=x && x!=0)
                                 {
-                                    announceMsg.append(entry.getComments().get(x - 1));
+                                    String parsedComment = ParsingUtilities.parseMessageFormat(entry.getComments().get(x - 1), entry, false);
+                                    announceMsg.append(parsedComment);
                                 }
                             }
                         }
                         break;
                     case 'f' :
-                        for(String comment : entry.getComments())
+                        if(displayComments)
                         {
-                            announceMsg.append(comment).append("\n");
+                            for(String comment : entry.getComments())
+                            {
+                                String parsedComment = ParsingUtilities.parseMessageFormat(comment, entry, false);
+                                announceMsg.append(parsedComment).append("\n");
+                            }
                         }
                         break;
                     case 'a' :

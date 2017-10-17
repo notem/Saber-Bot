@@ -131,7 +131,7 @@ public class TestCommand implements Command
             }
         }
 
-        String remindMsg = ParsingUtilities.parseMessageFormat(format, entry);
+        String remindMsg = ParsingUtilities.parseMessageFormat(format, entry, true);
         MessageUtilities.sendMsg(remindMsg, event.getChannel(), null);
     }
 }

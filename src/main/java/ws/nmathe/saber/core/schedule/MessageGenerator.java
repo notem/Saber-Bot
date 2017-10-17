@@ -167,8 +167,8 @@ public class MessageGenerator
 
             // code blocks in comments must be closed
             int code = StringUtils.countMatches("```", comment);
-            if((code%2) == 1) msg += comment + " ```" + "\n";
-            else msg += comment + "\n\n";
+            if((code%2) == 1) msg += ParsingUtilities.parseMessageFormat(comment, se, false) + " ```" + "\n";
+            else msg += ParsingUtilities.parseMessageFormat(comment, se, false) + "\n\n";
         }
 
         // generate the lower code block

@@ -208,7 +208,7 @@ public class ScheduleEntry
                 // for each announcement ID that scheduled for the date, send announcement
                 if(this.announcementDates.get(key).equals(date))
                 {
-                    String message = ParsingUtilities.parseMessageFormat(this.announcementMessages.get(key), this);
+                    String message = ParsingUtilities.parseMessageFormat(this.announcementMessages.get(key), this, true);
                     String target = this.announcementTargets.get(key);
                     try
                     {
@@ -249,7 +249,7 @@ public class ScheduleEntry
         if(!this.quietRemind)
         {
             // parse message and get the target channels
-            String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this);
+            String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this, true);
             String identifier = Main.getScheduleManager().getReminderChan(this.chanId);
             if(identifier != null)
             {
@@ -277,7 +277,7 @@ public class ScheduleEntry
             // dont send start announcements if 15 minutes late
             if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
-                String startMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this);
+                String startMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
                 String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
                 if(identifier != null)
                 {
@@ -321,7 +321,7 @@ public class ScheduleEntry
             if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
                 // send the end announcement
-                String endMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this);
+                String endMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this, true);
                 String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
                 if(identifier != null)
                 {
