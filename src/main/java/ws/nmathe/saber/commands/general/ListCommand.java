@@ -6,6 +6,7 @@ import net.dv8tion.jda.core.entities.ISnowflake;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
@@ -212,6 +213,8 @@ public class ListCommand implements Command
             }
         }
 
+        int lengthCap = 1900;   // maximum number of characters before creating a new message
+        int mobileLineCap = 25; // maximum number of lines until new message, in mobile mode
         Set<String> uniqueMembers = new HashSet<>();
         Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
         for(String type : options.values())
@@ -222,7 +225,8 @@ public class ListCommand implements Command
                 List<String> members = se.getRsvpMembersOfType(type);
                 for(String id : members)
                 {
-                    if(content.length() > 1900) // if the message is nearing maximum length.
+                    // if the message is nearing maximum length, or if in mobile mode and the max lines have been reached
+                    if(content.length() > lengthCap || (mobileFlag && StringUtils.countMatches(content, "\n") > mobileLineCap))
                     {
                         // build and send the embedded message object
                         Message message = (new MessageBuilder()).setEmbed(
@@ -269,7 +273,7 @@ public class ListCommand implements Command
             }
             else for(String id : noInput)
             {
-                if(content.length() > 1900)
+                if(content.length() > lengthCap || (mobileFlag && StringUtils.countMatches(content, "\n") > mobileLineCap))
                 {
                     // build and send the embedded message object
                     Message message = (new MessageBuilder()).setEmbed(
