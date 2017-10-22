@@ -512,7 +512,7 @@ public class ScheduleEntry
                     String content = "You have rescinded your RSVP(s) for **" + this.getTitle() + "**";
                     MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
                 }
-                Main.getEntryManager().updateEntry(this, false); // update the entry
+                return true;
             }
             else
             {
@@ -537,15 +537,18 @@ public class ScheduleEntry
                         {
                             for(String group : options.values())
                             {
-                                members = this.getRsvpMembersOfType(group);
-                                members.remove(event.getUser().getId());
-                                this.setRsvpMembers(group, members);
+                                if (!group.equals(name))
+                                {
+                                    members = this.getRsvpMembersOfType(group);
+                                    members.remove(event.getUser().getId());
+                                    this.setRsvpMembers(group, members);
+                                }
                             }
                         }
+                        return true;
                     }
                 }
             }
-            return true;
         }
         return false;
     }
