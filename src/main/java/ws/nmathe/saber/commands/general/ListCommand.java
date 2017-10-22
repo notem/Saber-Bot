@@ -238,16 +238,24 @@ public class ListCommand implements Command
                         content = "*continued. . .* \n";
                     }
 
-                    Member member = event.getGuild().getMemberById(id);
-                    if(member != null) // if the user is still a member of the guild, add to the list
-                    {
-                        uniqueMembers.add(member.getUser().getId());
-                        content += this.getNameDisplay(mobileFlag, IdFlag, member);
+                    if (id.matches("\\d+"))
+                    {   // cases in which the id is most likely a valid discord user's ID
+                        Member member = event.getGuild().getMemberById(id);
+                        if(member != null) // if the user is still a member of the guild, add to the list
+                        {
+                            uniqueMembers.add(member.getUser().getId());
+                            content += this.getNameDisplay(mobileFlag, IdFlag, member);
+                        }
+                        else // otherwise, remove the member from the event and update
+                        {
+                            se.getRsvpMembersOfType(type).remove(id);
+                            Main.getEntryManager().updateEntry(se, false);
+                        }
                     }
-                    else // otherwise, remove the member from the event and update
-                    {
-                        se.getRsvpMembersOfType(type).remove(id);
-                        Main.getEntryManager().updateEntry(se, false);
+                    else
+                    {   // handles cases in which a non-discord user was added by an admin
+                        uniqueMembers.add(id);
+                        content += "*"+id+"*\n";
                     }
                 }
             }

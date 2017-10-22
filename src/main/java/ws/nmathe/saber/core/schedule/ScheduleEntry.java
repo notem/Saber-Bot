@@ -1,19 +1,22 @@
 package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.utils.Logging;
 
 import javax.xml.soap.Text;
+import java.awt.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -399,7 +402,7 @@ public class ScheduleEntry
             // recreate the announcement overrides
             this.regenerateAnnouncementOverrides();
 
-            // clear rsvp memberes list and reload reminders
+            // clear rsvp members list and reload reminders
             this.rsvpMembers = new HashMap<>();
             this.reloadReminders(Main.getScheduleManager().getReminders(this.chanId))
                     .reloadEndReminders(Main.getScheduleManager().getEndReminders(this.chanId));
@@ -422,6 +425,129 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if( msg == null ) return;
         MessageUtilities.editMsg(MessageGenerator.generate(this), msg, null);
+    }
+
+
+    /**
+     * generates a temporary RSVP group role for dynamic user mentioning
+     * the role will last for some time before being removed
+     * @param group the rsvp group
+     * @return the newly created Role
+     */
+    public Role spawnRole(String group)
+    {
+        List<String> members = this.rsvpMembers.get(group);
+        JDA jda = Main.getShardManager().getJDA(this.guildId);
+        Guild guild = jda.getGuildById(guildId);
+
+        // create the event RSVP role
+        Role role = guild.getController().createRole()
+                .setName(group)
+                .setMentionable(true)
+                .setColor(Color.ORANGE)
+                //.setColor((int) (Math.random()*Integer.MAX_VALUE+1)) // use a random color
+                .complete();
+
+        // add all RSVP'ed members to the role
+        members.forEach(memberId ->
+        {
+            if (memberId.matches("\\d+"))
+            {
+                Member member = guild.getMemberById(memberId);
+                guild.getController().addSingleRoleToMember(member, role)
+                        .reason("dynamic RSVP role for event announcement").complete();
+            }
+        });
+
+        // automatically remove the role after 10 seconds
+        role.delete().queueAfter(10, TimeUnit.SECONDS);
+        return role;
+    }
+
+    /**
+     * handles processing an reaction event
+     * TODO improve the legibility of this function
+     * @param event reaction event
+     * @return true if the reactin should be removed
+     */
+    public boolean handleRSVPReaction(MessageReactionAddEvent event)
+    {
+        // if past the deadline, don't add handle new RSVPs
+        if(this.getDeadline()!=null && this.getDeadline().plusDays(1).isBefore(ZonedDateTime.now()))
+            return false;
+
+        MessageReaction.ReactionEmote emote = event.getReactionEmote();
+        Map<String, String> options = Main.getScheduleManager().getRSVPOptions(this.getChannelId());
+        String clearEmoji = Main.getScheduleManager().getRSVPClear(this.getChannelId());
+
+        boolean emoteIsRSVP = false;
+        String emoteKey = "";
+
+        // does options contain the emote's name?
+        String emoteName = emote.getName();
+        String emoteId = emote.getId();
+        if(emoteName!=null && (options.containsKey(emoteName) || emoteName.equals(clearEmoji)))
+        {
+            emoteIsRSVP = true;
+            emoteKey = emoteName;
+        }
+        // does options contain the emote's ID?
+        else if(emoteId!=null && (options.containsKey(emoteId) || emoteId.equals(clearEmoji)))
+        {
+            emoteIsRSVP = true;
+            emoteKey = emoteId;
+        }
+        // only if options contained the emote's name or ID
+        if(emoteIsRSVP)
+        {
+            if(emoteKey.equals(clearEmoji))
+            {
+                // remove the user from groups
+                for(String group : options.values())
+                {
+                    List<String> members = this.getRsvpMembersOfType(group);
+                    members.remove(event.getUser().getId());
+                    this.setRsvpMembers(group, members);
+
+                    String content = "You have rescinded your RSVP(s) for **" + this.getTitle() + "**";
+                    MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
+                }
+                Main.getEntryManager().updateEntry(this, false); // update the entry
+            }
+            else
+            {
+                // get the name of the rsvp group
+                String name = options.get(emoteKey);
+
+                // if the rsvp group is full, do nothing
+                if(!this.isFull(name))
+                {
+                    // add the user to the rsvp type
+                    List<String> members = this.getRsvpMembersOfType(name);
+                    if(!members.contains(event.getUser().getId()))
+                    {
+                        members.add(event.getUser().getId());
+                        this.setRsvpMembers(name, members);
+
+                        String content = "You have RSVPed ``" + name + "`` for **" + this.getTitle() + "**";
+                        MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
+
+                        // remove the user from any other rsvp lists for that event if exclusivity is enabled
+                        if(Main.getScheduleManager().isRSVPExclusive(event.getChannel().getId()))
+                        {
+                            for(String group : options.values())
+                            {
+                                members = this.getRsvpMembersOfType(group);
+                                members.remove(event.getUser().getId());
+                                this.setRsvpMembers(group, members);
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
 
@@ -1271,4 +1397,5 @@ public class ScheduleEntry
         }
         return body + "\n```";
     }
+
 }

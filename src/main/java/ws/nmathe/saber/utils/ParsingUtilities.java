@@ -1,5 +1,6 @@
 package ws.nmathe.saber.utils;
 
+import net.dv8tion.jda.core.entities.Role;
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -166,6 +167,16 @@ public class ParsingUtilities
                         sub += messageFormatHelper(""+members.size(), matcher2);
                     }
                 }
+                else if(trimmed.matches("(\\[.*?])?mention .+(\\[.*?])?")) // rsvp mentions
+                {
+                    String name = trimmed.replaceAll("mention ","").replaceAll("\\[.*?]","");
+                    List<String> members = entry.getRsvpMembers().get(name);
+                    if(members != null)
+                    {
+                        Role role = entry.spawnRole(name);
+                        sub += messageFormatHelper("<@&"+role.getId()+">", matcher2);
+                    }
+                }
                 else if(trimmed.matches("(\\[.*?])?u(\\[.*?])?")) // advanced title url
                 {
                     if(entry.getTitleUrl() != null)
@@ -240,7 +251,7 @@ public class ParsingUtilities
                             if(minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hour(s)");
+                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hours");
                                 else
                                     announceMsg.append(" in ").append(minutes + 1).append(" minutes");
                             }
@@ -252,7 +263,7 @@ public class ParsingUtilities
                             if(minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hour(s)");
+                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hours");
                                 else
                                     announceMsg.append(" in ").append(minutes + 1).append(" minutes");
                             }
@@ -271,7 +282,7 @@ public class ParsingUtilities
                             if(minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hour(s)");
+                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hours");
                                 else
                                     announceMsg.append(" in ").append(minutes + 1).append(" minutes");
                             }
@@ -282,7 +293,7 @@ public class ParsingUtilities
                             if(minutes>0)
                             {
                                 if(minutes > 120)
-                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hour(s)");
+                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hours");
                                 else
                                     announceMsg.append(" in ").append(minutes + 1).append(" minutes");
                             }
@@ -334,7 +345,7 @@ public class ParsingUtilities
                         announceMsg.append(entry.getStart().getHour());
                         break;
                     case 'k':
-                        announceMsg.append(entry.getStart().getMinute());
+                        announceMsg.append(String.format("%02d",entry.getStart().getMinute()));
                         break;
                 }
             }

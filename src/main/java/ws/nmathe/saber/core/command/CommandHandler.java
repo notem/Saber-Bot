@@ -57,6 +57,7 @@ public class CommandHandler
         commands.put((new EventsCommand()).name(), new EventsCommand());
         commands.put((new SchedulesCommand()).name(), new SchedulesCommand());
         commands.put((new AnnouncementsCommand()).name(), new AnnouncementsCommand());
+        commands.put((new ManageCommand()).name(), new ManageCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put((new GlobalMsgCommand()).name(), new GlobalMsgCommand());
