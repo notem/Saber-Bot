@@ -509,9 +509,14 @@ public class ScheduleEntry
                     members.remove(event.getUser().getId());
                     this.setRsvpMembers(group, members);
 
-                    String content = "You have rescinded your RSVP(s) for **" + this.getTitle() + "**";
-                    MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
+                    // send rsvp rescinded confirmation to the user
+                    if (Main.getScheduleManager().isRSVPConfirmationsEnabled(chanId))
+                    {
+                        String content = "You have rescinded your RSVP(s) for **" + this.getTitle() + "**";
+                        MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
+                    }
                 }
+                Main.getEntryManager().updateEntry(this, false);
                 return true;
             }
             else
@@ -529,8 +534,12 @@ public class ScheduleEntry
                         members.add(event.getUser().getId());
                         this.setRsvpMembers(name, members);
 
-                        String content = "You have RSVPed ``" + name + "`` for **" + this.getTitle() + "**";
-                        MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
+                        // send rsvp confirmation to the user
+                        if (Main.getScheduleManager().isRSVPConfirmationsEnabled(chanId))
+                        {
+                            String content = "You have RSVPed ``" + name + "`` for **" + this.getTitle() + "**";
+                            MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
+                        }
 
                         // remove the user from any other rsvp lists for that event if exclusivity is enabled
                         if(Main.getScheduleManager().isRSVPExclusive(event.getChannel().getId()))
@@ -545,6 +554,7 @@ public class ScheduleEntry
                                 }
                             }
                         }
+                        Main.getEntryManager().updateEntry(this, false);
                         return true;
                     }
                 }
@@ -770,7 +780,7 @@ public class ScheduleEntry
         {
             return new ArrayList<>();
         }
-        return members;
+        return new ArrayList<>(members);
     }
 
     /**
@@ -778,7 +788,7 @@ public class ScheduleEntry
      */
     public Map<String, List<String>> getRsvpMembers()
     {
-        return this.rsvpMembers;
+        return new HashMap<>(this.rsvpMembers);
     }
 
     /**
@@ -1400,5 +1410,4 @@ public class ScheduleEntry
         }
         return body + "\n```";
     }
-
 }

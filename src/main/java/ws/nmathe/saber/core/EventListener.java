@@ -292,9 +292,6 @@ public class EventListener extends ListenerAdapter
             boolean removeReaction = se.handleRSVPReaction(event);
             if (removeReaction)
             {
-                // update the entry
-                Main.getEntryManager().updateEntry(se, false);
-
                 // attempt to remove the reaction
                 Consumer<Throwable> errorProcessor = e ->
                 {

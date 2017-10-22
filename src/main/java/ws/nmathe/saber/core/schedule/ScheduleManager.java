@@ -373,12 +373,17 @@ public class ScheduleManager
         {
             return false;
         }
-        Object obj = settings.get("rsvp_enabled");
-        if(obj == null)
+        return settings.getBoolean("rsvp_enabled", false);
+    }
+
+    public boolean isRSVPConfirmationsEnabled(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if( settings == null )
         {
             return false;
         }
-        return (Boolean) obj;
+        return settings.getBoolean("rsvp_confirmations", false);
     }
 
     public boolean isEndFormatOverridden(String cId)
@@ -865,6 +870,19 @@ public class ScheduleManager
         } else
         {
             Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("rsvp_exclusivity", bool));
+        }
+    }
+
+    public void setRSVPConfirmations(String cId, Boolean bool)
+    {
+        Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
+        if(!doc.containsKey("rsvp_confirmations"))
+        {
+            doc.append("rsvp_confirmations", bool);
+            Main.getDBDriver().getScheduleCollection().replaceOne(eq("_id", cId), doc);
+        } else
+        {
+            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("rsvp_confirmations", bool));
         }
     }
 }

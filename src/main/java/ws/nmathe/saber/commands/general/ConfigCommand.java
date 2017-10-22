@@ -435,6 +435,30 @@ public class ConfigCommand implements Command
                     }
                     break;
 
+                case "co":
+                case "confirm":
+                case "confirmation":
+                case "confirmations":
+                    if (args.length < 3)
+                    {
+                        return "That's not enough arguments!\n" +
+                                "Use ``" + cmd + " [#chan] confirmation <on|off>`` to enable/disable confirmation DMs on rsvp actions.";
+                    }
+                    switch(args[index].toLowerCase())
+                    {
+                        case "yes":
+                        case "no":
+                        case "false":
+                        case "true":
+                        case "on":
+                        case "off":
+                            break;
+
+                        default:
+                            return "RSVP confirmations should be either *on* or *off*!";
+                    }
+                    break;
+
                 case "ex":
                 case "exclusivity":
                     if (args.length < 3)
@@ -869,6 +893,23 @@ public class ConfigCommand implements Command
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
                     break;
 
+                case "co":
+                case "confirm":
+                case "confirmation":
+                case "confirmations":
+                    boolean confirmation = true;
+                    switch(args[index].toLowerCase())
+                    {
+                        case "no":
+                        case "false":
+                        case "off":
+                            confirmation = false;
+                            break;
+                    }
+                    Main.getScheduleManager().setRSVPConfirmations(cId, confirmation);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
+                    break;
+
                 case "ex":
                 case "exclusivity":
                     boolean exclusive = true;
@@ -1140,17 +1181,19 @@ public class ConfigCommand implements Command
                 String clear = Main.getScheduleManager().getRSVPClear(cId);
                 content += "```js\n" +
                         "// RSVP Settings" +
-                        "\n[rsvp]   " +
+                        "\n[rsvp]         " +
                         "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"";
 
                 // only display full settings message when rsvp is enabled
                 if(Main.getScheduleManager().isRSVPEnabled(cId))
                 {
                     content +=
-                            "\n[clear]  " + (clear.isEmpty() ? "(off)" : "\""+clear+"\"")  +
+                            "\n[clear]       " + (clear.isEmpty() ? "(off)" : "\""+clear+"\"")  +
+                            "\n[confirm]     " +
+                            "\""+ (Main.getScheduleManager().isRSVPConfirmationsEnabled(cId) ? "on" : "off") + "\"" +
                             "\n[exclusivity] " +
                             "\""+ (Main.getScheduleManager().isRSVPExclusive(cId) ? "on" : "off") + "\"" +
-                            "\n<Groups>\n";
+                            "\n<Groups>      ";
 
                     // generate the list of rsvp groups
                     Map<String, String> options = Main.getScheduleManager().getRSVPOptions(cId);
@@ -1158,7 +1201,7 @@ public class ConfigCommand implements Command
                     {
                         if(EmojiManager.isEmoji(key))
                         {
-                            content += " " + options.get(key) + " - " + key + "\n";
+                            content += " (" + options.get(key) + " - " + key + ")";
                         }
                         else
                         {
@@ -1171,7 +1214,7 @@ public class ConfigCommand implements Command
                             if(emote!=null)
                             {
                                 String displayName = emote.getName();
-                                content += " " + options.get(key) + " - :" + displayName + ":\n";
+                                content += " (" + options.get(key) + " - :" + displayName + ":)";
                             }
                         }
                     }
