@@ -517,7 +517,6 @@ public class ScheduleEntry
                     }
                 }
                 Main.getEntryManager().updateEntry(this, false);
-                return true;
             }
             else
             {
@@ -555,12 +554,13 @@ public class ScheduleEntry
                             }
                         }
                         Main.getEntryManager().updateEntry(this, false);
-                        return true;
                     }
                 }
             }
         }
-        return false;
+
+        // finally, indicate the reaction should be removed if it is an rsvp reaction
+        return emoteIsRSVP;
     }
 
 

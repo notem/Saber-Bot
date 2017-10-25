@@ -460,6 +460,7 @@ public class ConfigCommand implements Command
                     break;
 
                 case "ex":
+                case "exclude":
                 case "exclusivity":
                     if (args.length < 3)
                     {
@@ -911,6 +912,7 @@ public class ConfigCommand implements Command
                     break;
 
                 case "ex":
+                case "exclude":
                 case "exclusivity":
                     boolean exclusive = true;
                     switch(args[index].toLowerCase())
@@ -1181,19 +1183,19 @@ public class ConfigCommand implements Command
                 String clear = Main.getScheduleManager().getRSVPClear(cId);
                 content += "```js\n" +
                         "// RSVP Settings" +
-                        "\n[rsvp]         " +
+                        "\n[rsvp]    " +
                         "\"" + (Main.getScheduleManager().isRSVPEnabled(cId) ? "on" : "off") + "\"";
 
                 // only display full settings message when rsvp is enabled
                 if(Main.getScheduleManager().isRSVPEnabled(cId))
                 {
                     content +=
-                            "\n[clear]       " + (clear.isEmpty() ? "(off)" : "\""+clear+"\"")  +
-                            "\n[confirm]     " +
+                            "\n[clear]   " + (clear.isEmpty() ? "\"off\"" : "\""+clear+"\"")  +
+                            "\n[confirm] " +
                             "\""+ (Main.getScheduleManager().isRSVPConfirmationsEnabled(cId) ? "on" : "off") + "\"" +
-                            "\n[exclusivity] " +
+                            "\n[exclude] " +
                             "\""+ (Main.getScheduleManager().isRSVPExclusive(cId) ? "on" : "off") + "\"" +
-                            "\n<Groups>      ";
+                            "\n<Groups>  ";
 
                     // generate the list of rsvp groups
                     Map<String, String> options = Main.getScheduleManager().getRSVPOptions(cId);

@@ -35,7 +35,7 @@ public class EventsCommand implements Command
     public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
-        String usage = "``" + head + "`` - lists all events";
+        String usage = "``" + head + "`` - lists all events for the guild";
         CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.USER);
 
         String cat1 = "- Usage\n" + head + "";
@@ -67,23 +67,33 @@ public class EventsCommand implements Command
         String content = "";
         for(String sId : scheduleIds)
         {
+            // for each schedule, generate a list of events scheduled
             Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromChannel(sId);
             if(!entries.isEmpty())
             {
-                content += "<#" + sId + "> ...\n";
-                for(ScheduleEntry se : entries)
+                content += "<#" + sId + "> ...\n";  // start a new schedule list
+                while(!entries.isEmpty())
                 {
-                    content += ":id:``"+ ParsingUtilities.intToEncodedID(se.getId())+"`` - " +
-                            "**"+se.getTitle()+ "** at *"+se.getStart().format(DateTimeFormatter.ofPattern("h:mm a, MMM d"))+
-                            "* ["+se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.getDefault())+"]\n";
-                    count++;
+                    // find and remove the next earliest occuring event
+                    ScheduleEntry top = entries.toArray(new ScheduleEntry[entries.size()])[0];
+                    for(ScheduleEntry se : entries)
+                    {
+                        if(se.getStart().isBefore(top.getStart())) top = se;
+                    }
+                    entries.remove(top);
+
+                    // create entry in the message for the event
+                    content += ":id:``"+ ParsingUtilities.intToEncodedID(top.getId())+"`` ~ " +
+                            "**"+top.getTitle()+ "** at *"+top.getStart().format(DateTimeFormatter.ofPattern("h:mm a, MMM d"))+
+                            "* ``["+top.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.getDefault())+"]``\n";
+                    count++;    // iterate event counter
                 }
-                content += "\n";
+                content += "\n";                   // end a schedule list
             }
         }
 
         String title = "Events on " + guild.getName();          // title for embed
-        String footer = count + " event(s)";                      // footer for embed
+        String footer = count + " event(s)";                    // footer for embed
 
         // build embed and message
         MessageEmbed embed = new EmbedBuilder()
