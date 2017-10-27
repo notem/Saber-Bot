@@ -424,8 +424,15 @@ public class ConfigCommand implements Command
                     }
                     if(!VerifyUtilities.verifyEmoji(args[index]))
                     {
-                        return "*" + args[index] + "* is not an emoji!\n" +
-                                "Your clear emoji must be a valid unicode emoji or custom discord emoji!";
+                        switch(args[index])
+                        {
+                            case "off":
+                                break;
+
+                            default:
+                                return "*" + args[index] + "* is not an emoji!\n" +
+                                        "Your clear emoji must be a valid unicode emoji or custom discord emoji!";
+                        }
                     }
                     Set<String> keys = Main.getScheduleManager().getRSVPOptions(cId).keySet();
                     if(keys.contains(args[index].trim()) || keys.contains(args[index].replaceAll("[^\\d]","")))
