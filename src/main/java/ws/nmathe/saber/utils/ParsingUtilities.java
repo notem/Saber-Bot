@@ -342,7 +342,7 @@ public class ParsingUtilities
                         announceMsg.append("\n");
                         break;
                     case 'h':
-                        announceMsg.append(entry.getStart().getHour());
+                        announceMsg.append(String.format("%02d",entry.getStart().getHour()));
                         break;
                     case 'k':
                         announceMsg.append(String.format("%02d",entry.getStart().getMinute()));

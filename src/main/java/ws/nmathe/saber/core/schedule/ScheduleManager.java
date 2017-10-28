@@ -761,51 +761,81 @@ public class ScheduleManager
      * setters
      */
 
+    /**
+     * Sets the default announcement target channel for a schedule
+     */
     public void setAnnounceChan(String cId, String chan )
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("announcement_channel", chan));
     }
 
+    /**
+     * Sets the default announcement message format for a schedule
+     */
     public void setAnnounceFormat(String cId, String format )
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("announcement_format", format));
     }
 
+    /**
+     * Sets the end announcement target channel for a schedule
+     */
     public void setEndAnnounceChan(String cId, String chan )
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("announcement_channel_end", chan));
     }
 
+    /**
+     * Sets the end announcement message format for a schedule
+     */
     public void setEndAnnounceFormat(String cId, String format )
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("announcement_format_end", format));
     }
 
+    /**
+     * Sets the display format for event times
+     */
     public void setClockFormat(String cId, String clock )
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("clock_format", clock));
     }
 
-    public void setTimeZone(String cId, ZoneId zone )
+    /**
+     * Sets the schedule's timezone
+     */
+    public void setTimeZone(String cId, ZoneId zone)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("timezone", zone.toString()));
     }
 
+    /**
+     * Sets the google calendar address to be used for synchronization
+     */
     public void setAddress(String cId, String address)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("sync_address", address));
     }
 
+    /**
+     * Sets the daily time in which a schedule synced with a google calendar should re-sync
+     */
     public void setSyncTime(String cId, Date syncTime)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("sync_time", syncTime));
     }
 
+    /**
+     * Sets the time offsets for reminders
+     */
     public void setReminders(String cId, List<Integer> reminders)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("default_reminders", reminders));
     }
 
+    /**
+     * Sets the time offsets for end reminders
+     */
     public void setEndReminders(String cId, List<Integer> reminders)
     {
         Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
@@ -819,36 +849,60 @@ public class ScheduleManager
         }
     }
 
+    /**
+     * Sets the reminder target channel for a schedule
+     */
     public void setReminderChan(String cId, String chan )
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("reminder_channel", chan));
     }
 
+    /**
+     * Sets the reminder message format for a schedule
+     */
     public void setReminderFormat(String cId, String format )
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("reminder_format", format));
     }
 
+    /**
+     * Sets whether or not to allow RSVP for events on a schedule
+     */
     public void setRSVPEnable(String cId, boolean value)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("rsvp_enabled", value));
     }
 
+    /**
+     * Sets the style type to be used by events on a schedule
+     * "full"- all information
+     * "narrow"- truncated, less information
+     */
     public void setStyle(String cId, String style)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("display_style", style));
     }
 
+    /**
+     * Sets the number of days a schedule should sync when syncing to a google calendar
+     */
     public void setSyncLength(String cId, int len)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("sync_length", len));
     }
 
+    /**
+     * Sets if/how a schedule should auto sort events
+     * 0- off; 1- asc; 2- desc
+     */
     public void setAutoSort(String cId, int type)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("auto_sort", type));
     }
 
+    /**
+     * Sets the mapping of emoji->rsvp_groups for a schedule
+     */
     public void setRSVPOptions(String cId, Map<String, String> options)
     {
         Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
@@ -862,6 +916,9 @@ public class ScheduleManager
         }
     }
 
+    /**
+     * Sets whether or not a schedule should add a 'clear all RSVPs' emoji reaction to events
+     */
     public void setRSVPClear(String cId, String emoji)
     {
         Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
@@ -875,6 +932,9 @@ public class ScheduleManager
         }
     }
 
+    /**
+     * Sets whether or not a schedule should allow users to RSVP for multiple group
+     */
     public void setRSVPExclusivity(String cId, Boolean bool)
     {
         Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
@@ -888,6 +948,9 @@ public class ScheduleManager
         }
     }
 
+    /**
+     * Sets whether or not a schedule should notify users when they RSVP
+     */
     public void setRSVPConfirmations(String cId, Boolean bool)
     {
         Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
@@ -901,6 +964,9 @@ public class ScheduleManager
         }
     }
 
+    /**
+     * Sets a schedule's channel to be used for RSVP logging
+     */
     public void setRSVPLoggingChannel(String cId, String channelIdentifier)
     {
         Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
