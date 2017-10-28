@@ -489,6 +489,15 @@ public class ConfigCommand implements Command
                     }
                     break;
 
+                case "log":
+                case "logging":
+                    if (args.length < 3)
+                    {
+                        return "That's not enough arguments!\n" +
+                                "Use ``" + cmd + " [#chan] logging <off|#channel>`` to configure rsvp logging.";
+                    }
+                    break;
+
                 case "st":
                 case "style":
                     if (args.length < 3)
@@ -925,12 +934,30 @@ public class ConfigCommand implements Command
                     switch(args[index].toLowerCase())
                     {
                         case "no":
-                        case "false":
                         case "off":
+                        case "false":
                             exclusive = false;
                             break;
                     }
                     Main.getScheduleManager().setRSVPExclusivity(cId, exclusive);
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
+                    break;
+
+                case "log":
+                case "logging":
+                    String loggingChannel = null;
+                    switch(args[index].toLowerCase())
+                    {
+                        case "no":
+                        case "off":
+                        case "false":
+                            break;
+
+                        default:
+                            loggingChannel = args[index].replaceAll("[^\\d]","");
+                            break;
+                    }
+                    Main.getScheduleManager().setRSVPLoggingChannel(cId, loggingChannel);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
                     break;
 
@@ -1196,12 +1223,16 @@ public class ConfigCommand implements Command
                 // only display full settings message when rsvp is enabled
                 if(Main.getScheduleManager().isRSVPEnabled(cId))
                 {
+                    // rsvp logging channel
+                    String logging = Main.getScheduleManager().getRSVPLogging(cId);
                     content +=
-                            "\n[clear]   " + (clear.isEmpty() ? "\"off\"" : "\""+clear+"\"")  +
+                            "\n[clear]   " + "\"" + (clear.isEmpty() ? "off" : clear) + "\"" +
                             "\n[confirm] " +
                             "\""+ (Main.getScheduleManager().isRSVPConfirmationsEnabled(cId) ? "on" : "off") + "\"" +
                             "\n[exclude] " +
                             "\""+ (Main.getScheduleManager().isRSVPExclusive(cId) ? "on" : "off") + "\"" +
+                            "\n[logging] " +
+                            "\""+ (logging.isEmpty() ? "off" : channelIdentifierToString(logging, jda)) + "\"" +
                             "\n<Groups>  ";
 
                     // generate the list of rsvp groups

@@ -727,6 +727,21 @@ public class ScheduleManager
         return emoji;
     }
 
+    public String getRSVPLogging(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if(settings == null)
+        {
+            return "";
+        }
+        String loggingChannel = settings.getString("rsvp_logging");
+        if(loggingChannel == null)
+        {
+            return "";
+        }
+        return loggingChannel;
+    }
+
     public List<Integer> getEndReminders(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
@@ -883,6 +898,19 @@ public class ScheduleManager
         } else
         {
             Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("rsvp_confirmations", bool));
+        }
+    }
+
+    public void setRSVPLoggingChannel(String cId, String channelIdentifier)
+    {
+        Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
+        if(!doc.containsKey("rsvp_logging"))
+        {
+            doc.append("rsvp_logging", channelIdentifier);
+            Main.getDBDriver().getScheduleCollection().replaceOne(eq("_id", cId), doc);
+        } else
+        {
+            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("rsvp_logging", channelIdentifier));
         }
     }
 }

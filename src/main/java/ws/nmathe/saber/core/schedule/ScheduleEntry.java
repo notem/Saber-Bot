@@ -459,14 +459,13 @@ public class ScheduleEntry
             }
         });
 
-        // automatically remove the role after 10 seconds
-        role.delete().queueAfter(10, TimeUnit.SECONDS);
+        // automatically remove the role after 5 minutes
+        role.delete().queueAfter(60*5, TimeUnit.SECONDS);
         return role;
     }
 
     /**
      * handles processing an reaction event
-     * TODO improve the legibility of this function
      * @param event reaction event
      * @return true if the reactin should be removed
      */
@@ -500,23 +499,41 @@ public class ScheduleEntry
         // only if options contained the emote's name or ID
         if(emoteIsRSVP)
         {
+            String logging = Main.getScheduleManager().getRSVPLogging(chanId);
             if(emoteKey.equals(clearEmoji))
             {
                 // remove the user from groups
+                boolean atLeastOne = false;
                 for(String group : options.values())
                 {
                     List<String> members = this.getRsvpMembersOfType(group);
-                    members.remove(event.getUser().getId());
-                    this.setRsvpMembers(group, members);
+                    if (members.contains(event.getUser().getId()))
+                    {
+                        members.remove(event.getUser().getId());
+                        this.setRsvpMembers(group, members);
+                        atLeastOne = true;
+                    }
+                }
 
+                if(atLeastOne)  // if the user was removed from at least one group
+                {
                     // send rsvp rescinded confirmation to the user
                     if (Main.getScheduleManager().isRSVPConfirmationsEnabled(chanId))
                     {
                         String content = "You have rescinded your RSVP(s) for **" + this.getTitle() + "**";
                         MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
                     }
+
+                    // log the rsvp action
+                    if (!logging.isEmpty())
+                    {
+                        String content = "<@" + event.getUser().getId() + "> has rescinded their RSVP(s) for **" +
+                                this.getTitle() + "** - :id: **" + ParsingUtilities.intToEncodedID(this.getId()) + "**";
+                        MessageUtilities.sendMsg(content, event.getJDA().getTextChannelById(logging), null);
+                    }
+
+                    Main.getEntryManager().updateEntry(this, false);
                 }
-                Main.getEntryManager().updateEntry(this, false);
             }
             else
             {
@@ -533,14 +550,8 @@ public class ScheduleEntry
                         members.add(event.getUser().getId());
                         this.setRsvpMembers(name, members);
 
-                        // send rsvp confirmation to the user
-                        if (Main.getScheduleManager().isRSVPConfirmationsEnabled(chanId))
-                        {
-                            String content = "You have RSVPed ``" + name + "`` for **" + this.getTitle() + "**";
-                            MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
-                        }
-
                         // remove the user from any other rsvp lists for that event if exclusivity is enabled
+                        boolean hasChangedRSVP = false;
                         if(Main.getScheduleManager().isRSVPExclusive(event.getChannel().getId()))
                         {
                             for(String group : options.values())
@@ -548,11 +559,33 @@ public class ScheduleEntry
                                 if (!group.equals(name))
                                 {
                                     members = this.getRsvpMembersOfType(group);
-                                    members.remove(event.getUser().getId());
-                                    this.setRsvpMembers(group, members);
+                                    if (members.contains(event.getUser().getId()))
+                                    {
+                                        members.remove(event.getUser().getId());
+                                        hasChangedRSVP = true;
+                                        this.setRsvpMembers(group, members);
+                                    }
                                 }
                             }
                         }
+
+                        // send rsvp confirmation to the user
+                        if (Main.getScheduleManager().isRSVPConfirmationsEnabled(chanId))
+                        {
+                            String content = "You " + (hasChangedRSVP ? "have changed your RSVP to":"have RSVPed") +
+                                    " ``" + name + "`` for **" + this.getTitle() + "**";
+                            MessageUtilities.sendPrivateMsg(content, event.getUser(), null);
+                        }
+
+                        // log the rsvp action
+                        if (!logging.isEmpty())
+                        {
+                            String content = "<@" + event.getUser().getId() + "> " +
+                                    (hasChangedRSVP ? "has changed their RSVP to":"has RSVPed") +" ``" + name + "`` for **" +
+                                    this.getTitle() + "** - :id: **" + ParsingUtilities.intToEncodedID(this.getId()) + "**";
+                            MessageUtilities.sendMsg(content, event.getJDA().getTextChannelById(logging), null);
+                        }
+
                         Main.getEntryManager().updateEntry(this, false);
                     }
                 }

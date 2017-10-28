@@ -89,8 +89,8 @@ public class MessageUtilities
         {
             return chan.sendMessage(message).complete();
         }
-        catch( PermissionException e) { return null; }
-        catch(Exception e)
+        catch (PermissionException e) { return null; }
+        catch (Exception e)
         {
             Logging.exception( MessageUtilities.class, e );
             return null;
@@ -106,15 +106,15 @@ public class MessageUtilities
      */
     public static void sendPrivateMsg(String content, User user, Consumer<Message> action )
     {
-        if(content.isEmpty()) return;
-        if(user.isBot()) return;
+        if (content.isEmpty()) return;
+        if (user.isBot()) return;
 
         try
         {
-            sendMsg(content, user.openPrivateChannel().complete(), action);
+            user.openPrivateChannel().queue(privateChannel -> sendMsg(content, privateChannel, action), null);
         }
-        catch( PermissionException ignored) { }
-        catch( Exception e)
+        catch (PermissionException ignored) { }
+        catch (Exception e)
         {
             Logging.exception( MessageUtilities.class, e );
         }
@@ -129,7 +129,7 @@ public class MessageUtilities
      */
     public static void editMsg(Message newMsg, Message msg, Consumer<Message> action )
     {
-        if(newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return;
+        if (newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return;
 
         try
         {
@@ -141,8 +141,8 @@ public class MessageUtilities
                 }
             });
         }
-        catch( PermissionException ignored) {}
-        catch(Exception e)
+        catch (PermissionException ignored) {}
+        catch (Exception e)
         {
             Logging.exception(MessageUtilities.class, e);
         }
