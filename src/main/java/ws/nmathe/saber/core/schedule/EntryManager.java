@@ -10,15 +10,11 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.core.entities.Message;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.security.SecureRandom;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.*;
 
@@ -32,17 +28,12 @@ import static com.mongodb.client.model.Filters.*;
 public class EntryManager
 {
     private Random generator;
-
-    private static Queue<Integer> endQueue = new ConcurrentLinkedQueue<>();
-    private static Queue<Integer> startQueue = new ConcurrentLinkedQueue<>();
-    private static Queue<Integer> remindQueue = new ConcurrentLinkedQueue<>();
-    private static Queue<Integer> announcementQueue = new ConcurrentLinkedQueue<>();
-
     public enum type { FILL, EMPTY, UPDATE1, UPDATE2, UPDATE3 }
 
+    /** construct EntryManager and seed random from OS random source */
     public EntryManager()
     {
-        this.generator = new Random(Instant.now().toEpochMilli());
+        this.generator = new Random(new SecureRandom().nextLong()); // not cryptographically secure, which is fine
     }
 
     /**
@@ -56,26 +47,26 @@ public class EntryManager
         ScheduledExecutorService announcementScheduler = Executors.newSingleThreadScheduledExecutor();
         // fill
         announcementScheduler.scheduleAtFixedRate(
-                new EntryProcessor(type.FILL, endQueue, startQueue, remindQueue, announcementQueue),
+                new EntryProcessor(type.FILL),
                 30, 30, TimeUnit.SECONDS);
         // empty
         announcementScheduler.scheduleAtFixedRate(
-                new EntryProcessor(type.EMPTY, endQueue, startQueue, remindQueue, announcementQueue),
+                new EntryProcessor(type.EMPTY),
                 15, 20, TimeUnit.SECONDS);
 
         // scheduler for threads to adjust entry display timers
         ScheduledExecutorService scheduler3 = Executors.newSingleThreadScheduledExecutor();
         // 1 day timer
         scheduler3.scheduleAtFixedRate(
-                new EntryProcessor(type.UPDATE3, endQueue, startQueue, remindQueue, announcementQueue),
+                new EntryProcessor(type.UPDATE3),
                 12*60*60, 12*60*60, TimeUnit.SECONDS);
         // 1 hour timer
         scheduler3.scheduleAtFixedRate(
-                new EntryProcessor(type.UPDATE2, endQueue, startQueue, remindQueue, announcementQueue),
+                new EntryProcessor(type.UPDATE2),
                 60*30, 60*30, TimeUnit.SECONDS);
         // 4.5 min timer
         scheduler3.scheduleAtFixedRate(
-                new EntryProcessor(type.UPDATE1, endQueue, startQueue, remindQueue, announcementQueue),
+                new EntryProcessor(type.UPDATE1),
                 60*4+30, 60*3, TimeUnit.SECONDS);
     }
 
@@ -156,7 +147,6 @@ public class EntryManager
                                 .append("start_disabled", false)
                                 .append("end_disabled", false)
                                 .append("reminders_disabled", false)
-                                .append("rsvp_max", -1)
                                 .append("expire", finalExpire)
                                 .append("deadline", finalDeadline)
                                 .append("guildId", se.getGuildId());
@@ -412,7 +402,7 @@ public class EntryManager
         MongoIterable<ScheduleEntry> entries = Main.getDBDriver().getEventCollection()
                 .find(eq("guildId", guildId)).map(ScheduleEntry::new);
 
-        return entries.into(new ArrayList<ScheduleEntry>());
+        return entries.into(new ArrayList<>());
     }
 
 
@@ -426,7 +416,7 @@ public class EntryManager
         MongoIterable<ScheduleEntry> entries = Main.getDBDriver().getEventCollection()
                 .find(eq("channelId", channelId)).map(ScheduleEntry::new);
 
-        return entries.into(new ArrayList<ScheduleEntry>());
+        return entries.into(new ArrayList<>());
     }
 
     /**

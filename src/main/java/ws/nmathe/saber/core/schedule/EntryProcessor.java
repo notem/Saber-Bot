@@ -10,6 +10,7 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -35,17 +36,15 @@ class EntryProcessor implements Runnable
     private enum queue { END_QUEUE, START_QUEUE, REMIND_QUEUE, ANNOUNCEMENT_QUEUE }
 
     private EntryManager.type type;
-    private Queue<Integer> endQueue;
-    private Queue<Integer> startQueue;
-    private Queue<Integer> remindQueue;
-    private Queue<Integer> announcementQueue;
-    EntryProcessor(EntryManager.type type, Queue<Integer> endQueue, Queue<Integer> startQueue, Queue<Integer> remindQueue, Queue<Integer> announcementQueue)
+    private static Queue<Integer> endQueue = new ConcurrentLinkedQueue<>();
+    private static Queue<Integer> startQueue = new ConcurrentLinkedQueue<>();
+    private static Queue<Integer> remindQueue = new ConcurrentLinkedQueue<>();
+    private static Queue<Integer> announcementQueue = new ConcurrentLinkedQueue<>();
+
+    /** construct the entry processor with type */
+    EntryProcessor(EntryManager.type type)
     {
         this.type = type;
-        this.endQueue = endQueue;
-        this.startQueue = startQueue;
-        this.remindQueue = remindQueue;
-        this.announcementQueue = announcementQueue;
     }
 
     @SuppressWarnings("unchecked")
