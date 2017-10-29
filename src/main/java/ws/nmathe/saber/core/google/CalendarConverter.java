@@ -265,7 +265,7 @@ public class CalendarConverter
                     if (event.getDescription() != null)
                     {
                         // process the description line by line
-                        String description = HTMLStripper.cleanDescription(event.getDescription());
+                        String description = HTMLStripper.cleanDescription(event.getDescription().replace("\n", "<br>"));
                         for (String comment : description.split("\n"))
                         {
                             comment = comment.trim();
