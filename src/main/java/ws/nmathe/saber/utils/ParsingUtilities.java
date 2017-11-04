@@ -127,7 +127,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub += messageFormatHelper(""+minutes+1, matcher2);
+                            sub += messageFormatHelper(""+(minutes+1), matcher2);
                         }
                     }
                     else
@@ -135,7 +135,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub += messageFormatHelper(""+minutes+1, matcher2);
+                            sub += messageFormatHelper(""+(minutes+1), matcher2);
                         }
                     }
                 }
