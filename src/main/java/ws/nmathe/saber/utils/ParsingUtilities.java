@@ -309,13 +309,13 @@ public class ParsingUtilities
                         announceMsg.append(entry.getTitle());
                         break;
                     case 'd' :
-                        announceMsg.append(entry.getStart().getDayOfMonth());
+                        announceMsg.append(String.format("%02d",entry.getStart().getDayOfMonth()));
                         break;
                     case 'D' :
                         announceMsg.append(StringUtils.capitalize(entry.getStart().getDayOfWeek().toString()));
                         break;
                     case 'm' :
-                        announceMsg.append(entry.getStart().getMonthValue());
+                        announceMsg.append(String.format("%02d",entry.getStart().getMonthValue()));
                         break;
                     case 'M' :
                         announceMsg.append(StringUtils.capitalize(entry.getStart().getMonth().toString()));

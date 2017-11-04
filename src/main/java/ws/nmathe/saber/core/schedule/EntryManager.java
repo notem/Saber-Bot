@@ -144,6 +144,8 @@ public class EntryManager
                                 .append("googleId", se.getGoogleId())
                                 .append("rsvp_members", se.getRsvpMembers())
                                 .append("rsvp_limits", se.getRsvpLimits())
+                                .append("image", se.getImageUrl())
+                                .append("thumbnail", se.getThumbnailUrl())
                                 .append("start_disabled", false)
                                 .append("end_disabled", false)
                                 .append("reminders_disabled", false)
