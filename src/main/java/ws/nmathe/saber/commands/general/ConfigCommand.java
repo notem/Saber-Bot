@@ -369,12 +369,11 @@ public class ConfigCommand implements Command
                             index++;
                             if(args.length != 5)
                             {
-                                return "Argument *" + args[index] + "* is not properly formed for the ``add`` option!\n" +
+                                return "Argument *" + args[index-1] + "* is not properly formed for the ``add`` option!\n" +
                                         "Use ``" + cmd + " [#channel] rsvp add [name] [emoji]`` to add a new rsvp option " +
                                         "where [emoji] is the discord emoji for the rsvp option to use and " +
                                         "[name] is the display name of the rsvp option.";
                             }
-
                             // verify input is either a valid unicode emoji or discord emoji
                             if(!VerifyUtilities.verifyEmoji(args[index+1]))
                             {
@@ -393,7 +392,7 @@ public class ConfigCommand implements Command
                             index++;
                             if(args.length != 4)
                             {
-                                return "Argument *" + args[index] + "* is not properly formed for the ``add`` option!\n" +
+                                return "Argument *" + args[index-1] + "* is not properly formed for the ``add`` option!\n" +
                                         "Use ``" + cmd + " [#channel] rsvp remove [name]`` to remove a rsvp option " +
                                         "where [name] is the display name of the rsvp option.";
                             }

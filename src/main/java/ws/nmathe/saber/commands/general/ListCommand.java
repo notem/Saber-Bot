@@ -126,7 +126,7 @@ public class ListCommand implements Command
                 return "Invalid filter ``" + args[index] + "``!\nFilters must be of the form \"r: @role\" or \"u: @user\"";
             }
 
-            String filterType = filter[0].trim();
+            String filterType = filter[0].toLowerCase().trim();
             String filterValue = filter[1].trim();
             switch(filterType)
             {
@@ -191,8 +191,8 @@ public class ListCommand implements Command
                 continue;
             }
 
-            String filterType = args[index].toLowerCase().split(":")[0].trim();
-            String filterValue = args[index].toLowerCase().split(":")[1].trim();
+            String filterType = args[index].split(":")[0].toLowerCase().trim();
+            String filterValue = args[index].split(":")[1].trim();
             switch(filterType)
             {
                 case "r":

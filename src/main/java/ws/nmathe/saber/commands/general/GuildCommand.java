@@ -118,6 +118,11 @@ public class GuildCommand implements Command
                                 "The correct usage is ``" + head + " control [#channel]`` where ``[#channel]`` " +
                                 "is the channel to use as the bot control channel.";
                     }
+                    if(!args[1].matches("<#\\d+>"))
+                    {
+                        return "**" + args[1] + "** does not look like a #channel to me!\n" +
+                                "Please use the usual discord channel notation!";
+                    }
                     String chanId = args[1].replaceAll("[^\\d]", "");
                     try
                     {

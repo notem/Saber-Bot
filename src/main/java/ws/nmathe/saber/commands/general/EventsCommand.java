@@ -74,7 +74,7 @@ public class EventsCommand implements Command
                 content += "<#" + sId + "> ...\n";  // start a new schedule list
                 while(!entries.isEmpty())
                 {
-                    // find and remove the next earliest occuring event
+                    // find and remove the next earliest occurring event
                     ScheduleEntry top = entries.toArray(new ScheduleEntry[entries.size()])[0];
                     for(ScheduleEntry se : entries)
                     {
@@ -86,9 +86,9 @@ public class EventsCommand implements Command
                     content += ":id:``"+ ParsingUtilities.intToEncodedID(top.getId())+"`` ~ " +
                             "**"+top.getTitle()+ "** at *"+top.getStart().format(DateTimeFormatter.ofPattern("h:mm a, MMM d"))+
                             "* ``["+top.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.getDefault())+"]``\n";
-                    count++;    // iterate event counter
+                    count++;     // iterate event counter
                 }
-                content += "\n";                   // end a schedule list
+                content += "\n"; // end a schedule list
             }
         }
 
