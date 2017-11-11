@@ -88,7 +88,7 @@ public class ParsingUtilities
         {
             String group = matcher.group();
             String trimmed = group.substring(2, group.length()-1);
-            String sub = "";
+            StringBuilder sub = new StringBuilder();
             if(!trimmed.isEmpty())
             {
                 Matcher matcher2 = Pattern.compile("\\[.*?]").matcher(trimmed);
@@ -97,7 +97,7 @@ public class ParsingUtilities
                     int i = Integer.parseInt(trimmed.replaceAll("(\\[.*?])?c|\\[.*?]", ""));
                     if(entry.getComments().size() >= i && i > 0)
                     {
-                        sub += messageFormatHelper(entry.getComments().get(i-1), matcher2);
+                        sub.append(messageFormatHelper(entry.getComments().get(i - 1), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?s(\\[.*?])?")) // advanced start
@@ -106,7 +106,7 @@ public class ParsingUtilities
                     {
                         while(matcher2.find())
                         {
-                            sub += matcher2.group().replaceAll("[\\[\\]]","");
+                            sub.append(matcher2.group().replaceAll("[\\[\\]]", ""));
                         }
                     }
                 }
@@ -116,7 +116,7 @@ public class ParsingUtilities
                     {
                         while(matcher2.find())
                         {
-                            sub += matcher2.group().replaceAll("[\\[\\]]","");
+                            sub.append(matcher2.group().replaceAll("[\\[\\]]", ""));
                         }
                     }
                 }
@@ -127,7 +127,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub += messageFormatHelper(""+(minutes+1), matcher2);
+                            sub.append(messageFormatHelper("" + (minutes + 1), matcher2));
                         }
                     }
                     else
@@ -135,7 +135,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub += messageFormatHelper(""+(minutes+1), matcher2);
+                            sub.append(messageFormatHelper(""+(minutes+1), matcher2));
                         }
                     }
                 }
@@ -146,7 +146,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub += messageFormatHelper(""+(minutes+1)/60, matcher2);
+                            sub.append(messageFormatHelper(""+(minutes+1)/60, matcher2));
                         }
                     }
                     else
@@ -154,7 +154,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub += messageFormatHelper(""+(minutes+1)/60, matcher2);
+                            sub.append(messageFormatHelper(""+(minutes+1)/60, matcher2));
                         }
                     }
                 }
@@ -164,7 +164,7 @@ public class ParsingUtilities
                     List<String> members = entry.getRsvpMembers().get(name);
                     if(members != null)
                     {
-                        sub += messageFormatHelper(""+members.size(), matcher2);
+                        sub.append(messageFormatHelper(""+members.size(), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?mention .+(\\[.*?])?")) // rsvp mentions
@@ -173,33 +173,45 @@ public class ParsingUtilities
                     List<String> members = entry.getRsvpMembers().get(name);
                     if(members != null)
                     {
+                        /*
                         Role role = entry.spawnRole(name);
                         sub += messageFormatHelper("<@&"+role.getId()+">", matcher2);
+                        */
+                        StringBuilder userMentions = new StringBuilder();
+                        List<String> users = entry.getRsvpMembersOfType(name);
+                        for(int i=0; i<users.size(); i++)
+                        {
+                            if (users.get(i).matches("\\d+"))
+                                userMentions.append("<@").append(users.get(i)).append(">");
+                            if (!(i+1<users.size()))
+                                userMentions.append(" ");
+                        }
+                        sub.append(messageFormatHelper(userMentions.toString(), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?u(\\[.*?])?")) // advanced title url
                 {
                     if(entry.getTitleUrl() != null)
                     {
-                        sub += messageFormatHelper(entry.getTitleUrl(), matcher2);
+                        sub.append(messageFormatHelper(entry.getTitleUrl(), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?v(\\[.*?])?")) // advanced image url
                 {
                     if(entry.getImageUrl() != null)
                     {
-                        sub += messageFormatHelper(entry.getImageUrl(), matcher2);
+                        sub.append(messageFormatHelper(entry.getImageUrl(), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?w(\\[.*?])?")) // advanced thumbnail url
                 {
                     if(entry.getThumbnailUrl() != null)
                     {
-                        sub += messageFormatHelper(entry.getThumbnailUrl(), matcher2);
+                        sub.append(messageFormatHelper(entry.getThumbnailUrl(), matcher2));
                     }
                 }
             }
-            format = format.replace(group,sub);
+            format = format.replace(group, sub.toString());
         }
 
         // legacy parsing
