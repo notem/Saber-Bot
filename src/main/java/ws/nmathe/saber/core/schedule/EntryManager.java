@@ -46,26 +46,26 @@ public class EntryManager
          share the same scheduler to avoid collisions */
         ScheduledExecutorService announcementScheduler = Executors.newSingleThreadScheduledExecutor();
         // fill
-        announcementScheduler.scheduleAtFixedRate(
+        announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.FILL),
                 30, 30, TimeUnit.SECONDS);
         // empty
-        announcementScheduler.scheduleAtFixedRate(
+        announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.EMPTY),
                 15, 20, TimeUnit.SECONDS);
 
         // scheduler for threads to adjust entry display timers
         ScheduledExecutorService scheduler3 = Executors.newSingleThreadScheduledExecutor();
         // 1 day timer
-        scheduler3.scheduleAtFixedRate(
+        scheduler3.scheduleWithFixedDelay(
                 new EntryProcessor(type.UPDATE3),
                 12*60*60, 12*60*60, TimeUnit.SECONDS);
         // 1 hour timer
-        scheduler3.scheduleAtFixedRate(
+        scheduler3.scheduleWithFixedDelay(
                 new EntryProcessor(type.UPDATE2),
                 60*30, 60*30, TimeUnit.SECONDS);
         // 4.5 min timer
-        scheduler3.scheduleAtFixedRate(
+        scheduler3.scheduleWithFixedDelay(
                 new EntryProcessor(type.UPDATE1),
                 60*4+30, 60*3, TimeUnit.SECONDS);
     }

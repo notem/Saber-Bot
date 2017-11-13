@@ -120,7 +120,8 @@ public class CreateCommand implements Command
         // check <start>
         if (!VerifyUtilities.verifyTime(args[index]))
         {
-            return "I could not understand **" + args[index] + "** as a time! Please use the format hh:mm[am|pm].";
+            return "I could not understand **" + args[index] + "** as a time!\n" +
+                    "Please use the format hh:mm[am|pm].";
         }
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
         ZonedDateTime startTime = ZonedDateTime.of(LocalDate.now().plusDays(1), ParsingUtilities.parseTime(args[index]), zone);
@@ -136,7 +137,7 @@ public class CreateCommand implements Command
         }
 
         // check remaining args
-        if (args.length - 1 > index)
+        if (args.length > index)
         {
             args = Arrays.copyOfRange(args, index, args.length);
             index = 0;
@@ -185,13 +186,6 @@ public class CreateCommand implements Command
                     case "ex":
                     case "expire":
                         verify = VerifyUtilities.verifyExpire(args, index, head, zone);
-                        if (!verify.isEmpty()) return verify;
-                        index++;
-                        break;
-
-                    case "limit":
-                    case "l":
-                        verify = VerifyUtilities.verifyLimit(args, index, head, null);
                         if (!verify.isEmpty()) return verify;
                         index++;
                         break;
