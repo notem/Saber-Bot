@@ -129,9 +129,7 @@ public class ShardManager
 
                             this.jdaShards.put(shardId, shard);
                         }
-
                         this.startGamesTimer();
-                        this.startRestartTimer();
 
                         Main.getEntryManager().init();
                         Main.getCommandHandler().init();
@@ -153,9 +151,7 @@ public class ShardManager
                         .buildBlocking();
 
                 this.jda.setAutoReconnect(true);
-
                 this.startGamesTimer();
-                this.startRestartTimer();
 
                 Main.getEntryManager().init();
                 Main.getCommandHandler().init();
@@ -347,60 +343,5 @@ public class ShardManager
 
             }
         }, 0, 30*1000);
-    }
-
-    /**
-     * Schedules a runnable to task to restart shards after a certain number of responses is reached.
-     * Runs every 5 minutes
-     */
-    private void startRestartTimer()
-    {
-        Runnable runnable = new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    Long responseThreshold = 500000L; // place holder value
-                    if(isSharding())
-                    {
-                        Logging.info(ShardManager.class, "Checking shards for automatic restart. . .");
-                        for(JDA shard : getShards())
-                        {
-                            Integer shardId = shard.getShardInfo().getShardId();
-                            if(shard.getResponseTotal() > responseThreshold)
-                            {
-                                restartShard(shardId);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Logging.info(ShardManager.class, "Checking primary jda for automatic restart. . .");
-                        try
-                        {
-                            if(jda.getResponseTotal() > responseThreshold)
-                            {
-                                Logging.info(ShardManager.class, "Shutting down primary jda. . .");
-                                jda.shutdown();
-
-                                Logging.info(this.getClass(), "Restarting primary jda. . .");
-                                jda = builder.setCorePoolSize(primaryPoolSize).buildAsync();
-                            }
-                        }
-                        catch(RateLimitedException e)
-                        {
-                            Logging.warn(this.getClass(), e.getMessage() + " : " + e.getRateLimitedRoute());
-                        }
-                    }
-                }
-                catch(Exception e)
-                {
-                    Logging.exception(ShardManager.class, e);
-                }
-            }
-        };
-        scheduler.scheduleAtFixedRate(runnable,60, 300, TimeUnit.SECONDS);
     }
 }

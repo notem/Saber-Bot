@@ -179,7 +179,7 @@ public class EventListener extends ListenerAdapter
 
         // send welcome message to the server owner
         String welcomeMessage = "```diff\n- Joined```\n" +
-                "**" + jda.getSelfUser().getName() + "**, a calendar bot, has been added to the guild own, '"
+                "**" + jda.getSelfUser().getName() + "**, a calendar bot, has been added to the guild you own, '"
                 + event.getGuild().getName() + "'." +
                 "\n\n" +
                 "If this is your first time using the bot, you will need to create a new channel in your guild named" +
