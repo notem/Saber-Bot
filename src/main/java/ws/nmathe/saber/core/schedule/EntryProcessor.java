@@ -83,11 +83,13 @@ class EntryProcessor implements Runnable
                 // execute new thread to empty queues
                 // the future/executor system is used to insure that event.getMessage() issues
                 // will not indefinitely hang up processing while maintaining serial execution of events
-                if(future!=null && !future.isDone()) future.cancel(true); // cancel old thread
+                if (future!=null && !future.isDone())
+                    if (!future.cancel(true))       // cancel thread; log warning if future fails to be cancelled
+                        Logging.warn(this.getClass(), "Failed to cancel Queue Emptying thread's future!");
+
                 future = singleExecutor.submit(() ->
                 {
                     Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
-
                     while(endQueue.peek() != null)
                     {
                         Main.getEntryManager().getEntry(endQueue.poll()).end();
@@ -104,7 +106,6 @@ class EntryProcessor implements Runnable
                     {
                         Main.getEntryManager().getEntry(announcementQueue.poll()).announce();
                     }
-
                     Logging.info(this.getClass(), "Finished emptying queues.");
                 });
             }

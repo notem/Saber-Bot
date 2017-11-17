@@ -16,12 +16,15 @@ import ws.nmathe.saber.utils.ParsingUtilities;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
- * used for generating the list of valid timezone strings
+ * command which summarizes all events currently scheduled
+ * for the guild in which the command is called
  */
 public class EventsCommand implements Command
 {
@@ -41,6 +44,7 @@ public class EventsCommand implements Command
         String cat1 = "- Usage\n" + head + "";
         String cont1 = "This command will generate a list of all events for the guild.\n" +
                 "Each event is listed with a short summary detailing the event's title, ID, and start-time.\n" +
+                "The output can be filtered by channel by appending desired schedules to the command.\n" +
                 "This command is non-destructive, and can be safely used by non-administrator users.";
         info.addUsageCategory(cat1, cont1);
 
@@ -53,25 +57,42 @@ public class EventsCommand implements Command
     @Override
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
+        /*
+        * this command is non-destructive, so it is allowable that verify never fails
+        * this command is intended to be used by anyone on a server, so it is desirable
+        * that the command should fail silently so as to not avoid message spam
+        */
         return "";
     }
 
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
+        // process any optional channel arguments
+        List<String> channelIds = new ArrayList<>();
+        for (String arg : args)
+        {
+            channelIds.add(arg.replaceAll("[^\\d]", ""));
+        }
+
         Guild guild = event.getGuild();
         List<String> scheduleIds = Main.getScheduleManager().getSchedulesForGuild(guild.getId());
+        if(!channelIds.isEmpty())
+        {
+            // filter the list of schedules
+            scheduleIds = scheduleIds.stream().filter(channelIds::contains).collect(Collectors.toList());
+        }
 
         // build the embed body content
         int count = 0;
-        String content = "";
+        StringBuilder content = new StringBuilder();
         for(String sId : scheduleIds)
         {
             // for each schedule, generate a list of events scheduled
             Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromChannel(sId);
             if(!entries.isEmpty())
             {
-                content += "<#" + sId + "> ...\n";  // start a new schedule list
+                content.append("<#").append(sId).append("> ...\n");  // start a new schedule list
                 while(!entries.isEmpty())
                 {
                     // find and remove the next earliest occurring event
@@ -83,12 +104,15 @@ public class EventsCommand implements Command
                     entries.remove(top);
 
                     // create entry in the message for the event
-                    content += ":id:``"+ ParsingUtilities.intToEncodedID(top.getId())+"`` ~ " +
-                            "**"+top.getTitle()+ "** at *"+top.getStart().format(DateTimeFormatter.ofPattern("h:mm a, MMM d"))+
-                            "* ``["+top.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.getDefault())+"]``\n";
+                    content.append(":id:``").append(ParsingUtilities.intToEncodedID(top.getId()))
+                            .append("`` ~ **").append(top.getTitle()).append("** at *")
+                            .append(top.getStart().format(DateTimeFormatter.ofPattern("h:mm a, MMM d")))
+                            .append("* ``[")
+                            .append(top.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.getDefault()))
+                            .append("]``\n");
                     count++;     // iterate event counter
                 }
-                content += "\n"; // end a schedule list
+                content.append("\n"); // end a schedule list
             }
         }
 
@@ -99,7 +123,7 @@ public class EventsCommand implements Command
         MessageEmbed embed = new EmbedBuilder()
                                 .setFooter(footer, null)
                                 .setTitle(title)
-                                .setDescription(content).build();
+                                .setDescription(content.toString()).build();
 
         Message message = new MessageBuilder().setEmbed(embed).build();            // build message
         MessageUtilities.sendMsg(message, event.getTextChannel(), null);     // send message

@@ -91,7 +91,10 @@ public class MessageGenerator
 
         // get embed color from first hoisted bot role
         Color color = Color.DARK_GRAY;
-        List<Role> roles = new ArrayList<>(jda.getGuildById(se.getGuildId()).getMember(jda.getSelfUser()).getRoles());
+        List<Role> roles = new ArrayList<>(
+                        jda.getGuildById(se.getGuildId())
+                                .getMember(jda.getSelfUser())
+                                .getRoles());
         while(!roles.isEmpty())
         {
             if(roles.get(0).isHoisted())

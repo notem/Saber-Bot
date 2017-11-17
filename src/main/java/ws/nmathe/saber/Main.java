@@ -31,7 +31,7 @@ public class Main
      */
     public static void main(String[] args)
     {
-        if( botSettingsManager.hasSettings() )
+        if(botSettingsManager.hasSettings())
         {
             Logging.info(Main.class, "A 'saber.toml' configuration file has been created. Add your " +
                     "bot token to the file and restart the bot.\n");

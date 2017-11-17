@@ -34,11 +34,11 @@ public class ShardManager
 
     private Iterator<String> games;
 
-    private Integer primaryPoolSize = 15;   // used by the jda responsible for handling DMs
-    private Integer secondaryPoolSize = 6;  // used by all other shards
+    private Integer primaryPoolSize = 15;    // used by the jda responsible for handling DMs
+    private Integer secondaryPoolSize = 6;   // used by all other shards
+    private Integer queryTimeout = 5*60*1000;// time to wait for API queries (milliseconds)
 
     private JDABuilder builder;
-    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * Populates the shard manager with initialized JDA shards (if sharding)
@@ -57,13 +57,13 @@ public class ShardManager
             // custom OkHttpClient builder
             OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
             httpBuilder.connectionPool(new ConnectionPool())
-                    .connectTimeout(300000, TimeUnit.MILLISECONDS)
-                    .readTimeout(300000, TimeUnit.MILLISECONDS)
-                    .writeTimeout(300000, TimeUnit.MILLISECONDS)
+                    .connectTimeout(queryTimeout, TimeUnit.MILLISECONDS)
+                    .readTimeout(queryTimeout, TimeUnit.MILLISECONDS)
+                    .writeTimeout(queryTimeout, TimeUnit.MILLISECONDS)
                     .retryOnConnectionFailure(true);
 
             // custom web socket factory
-            WebSocketFactory webSocketFactory = new WebSocketFactory().setConnectionTimeout(300000);
+            WebSocketFactory webSocketFactory = new WebSocketFactory().setConnectionTimeout(queryTimeout);
 
             // basic skeleton of a jda shard
             this.builder = new JDABuilder(AccountType.BOT)
@@ -277,9 +277,12 @@ public class ShardManager
     {
         try
         {
-            Logging.info(this.getClass(), "Shutting down shard-" + shardId + ". . .");
-            this.getShard(shardId).shutdown();
-            this.jdaShards.remove(shardId);
+            if(this.jdaShards.containsKey(shardId))
+            {
+                Logging.info(this.getClass(), "Shutting down shard-" + shardId + ". . .");
+                this.getShard(shardId).shutdown();
+                this.jdaShards.remove(shardId);
+            }
 
             Logging.info(this.getClass(), "Starting shard-" + shardId + ". . .");
             JDABuilder shardBuilder;
@@ -296,6 +299,7 @@ public class ShardManager
         catch(RateLimitedException e)
         {
             Logging.warn(this.getClass(), e.getMessage() + " : " + e.getRateLimitedRoute());
+            this.restartShard(shardId);
         }
         catch(Exception e)
         {
