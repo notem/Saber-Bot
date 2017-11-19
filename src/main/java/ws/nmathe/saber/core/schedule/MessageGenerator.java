@@ -7,7 +7,6 @@ import net.dv8tion.jda.core.entities.Role;
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import net.dv8tion.jda.core.entities.Message;
-import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
@@ -150,7 +149,7 @@ public class MessageGenerator
 
         // create the upper code block containing the event start/end/repeat/expire info
         String timeLine = genTimeLine(se);
-        String repeatLine = "> " + getRepeatString(se.getRepeat(), false) + "\n";
+        String repeatLine = "> " + se.getRecurrence().toString(false) + "\n";
         if(se.getExpire() != null)
         {
             repeatLine += "> expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
@@ -217,7 +216,7 @@ public class MessageGenerator
 
         // create the second line of the body
         String lineTwo = "[" + se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
-                "](" + getRepeatString(se.getRepeat(), true) + ")";
+                "](" + se.getRecurrence().toString(true) + ")";
 
         // if rsvp is enabled, show the number of rsvps
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
@@ -289,165 +288,6 @@ public class MessageGenerator
 
 
     /**
-     * Generated a string describing the repeat settings of an event
-     * @param bitset (int) representing a set of bits where each bit of the digit
-     *               represents has distinct meaning when it comes to an event's recurrence
-     * @param isNarrow (boolean) for use with narrow style events
-     * @return string
-     */
-    public static String getRepeatString(int bitset, boolean isNarrow)
-    {
-        String str;
-        if(isNarrow)
-        {
-            if( bitset == 0 )
-                return "once";
-            if( bitset == 0b1111111 || bitset == 0b10000001)
-                return "every day";
-            // repeat x minutes
-            if((bitset & 0b100000000000) == 0b100000000000)
-            {
-                int minutes = bitset & 0b011111111111;
-                if(minutes%60 == 0)
-                {
-                    if(minutes == 60)
-                        return "every hour";
-                    else
-                        return "every "+ minutes/60 +" hours";
-                }
-                else
-                {
-                    return "every " + minutes + " minutes";
-                }
-            }
-            // yearly repeat
-            if((bitset & 0b100000000) == 0b100000000)
-            {
-                return "every year";
-            }
-            // repeat on interval
-            if((bitset & 0b10000000) == 0b10000000 )
-            {
-                Integer interval = (0b10000000 ^ bitset);
-                String[] spellout = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
-                return "every " + (interval>spellout.length ? interval : spellout[interval-1]) + " days";
-            }
-            // repeat on fixed days
-            str = "every ";
-        }
-        else
-        {
-            if( bitset == 0 )
-                return "does not repeat";
-            if( bitset == 0b1111111 )
-                return "repeats daily";
-            // repeat x minutes
-            if((bitset & 0b100000000000) == 0b100000000000)
-            {
-                int mask = bitset &  0b011111111111;
-                if(mask%60 == 0)
-                {
-                    if(mask == 60)
-                        return "repeats hourly";
-                    else
-                        return "repeats every " + mask/60 + " hours";
-                }
-                else
-                {
-                    return "repeats every " + mask + " minutes";
-                }
-            }
-            // yearly repeat
-            if((bitset & 0b100000000) == 0b100000000)
-            {
-                return "repeats yearly";
-            }
-            // repeat on interval
-            if((bitset & 0b10000000) == 0b10000000 )
-            {
-                Integer interval = (0b10000000 ^ bitset);
-                String[] spellout = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
-                return "repeats every " + (interval>spellout.length ? interval : spellout[interval-1]) + " days";
-            }
-            // repeat on fixed days
-            str = "repeats weekly on ";
-        }
-
-        /// only reaches here for weekly repeat
-        if( (bitset & 1) == 1 )
-        {
-            if(bitset==1)
-                return str + "Sunday";
-
-            str += "Sun";
-            if( (bitset>>1) != 0 )
-                str += ", ";
-        }
-        bitset = bitset>>1;
-        if((bitset & 1) == 1)
-        {
-            if(bitset==1)
-                return str + "Monday";
-
-            str += "Mon";
-            if( (bitset>>1) != 0 )
-                str += ", ";
-        }
-        bitset = bitset>>1;
-        if((bitset & 1) == 1)
-        {
-            if(bitset==1)
-                return str + "Tuesday";
-
-            str += "Tue";
-            if( (bitset>>1) != 0 )
-                str += ", ";
-        }
-        bitset = bitset>>1;
-        if( (bitset & 1) == 1 )
-        {
-            if(bitset==1)
-                return str + "Wednesday";
-
-            str += "Wed";
-            if( (bitset>>1) != 0 )
-                str += ", ";
-        }
-        bitset = bitset>>1;
-        if( (bitset & 1) == 1 )
-        {
-            if(bitset==1)
-                return str + "Thursday";
-
-            str += "Thu";
-            if( (bitset>>1) != 0 )
-                str += ", ";
-        }
-        bitset = bitset>>1;
-        if( (bitset & 1) == 1 )
-        {
-            if(bitset==1)
-                return str + "Friday";
-
-            str += "Fri";
-            if( (bitset>>1) != 0 )
-                str += ", ";
-        }
-        bitset = bitset>>1;
-        if( (bitset & 1) == 1 )
-        {
-            if(bitset==1)
-                return str + "Saturday";
-
-            str += "Sat";
-            if( (bitset>>1) != 0 )
-                str += ", ";
-        }
-        return str;
-    }
-
-
-    /**
      * Generated a string describing the current time left before an event begins or ends
      * @param start the start time of event
      * @param end the end time of event
@@ -475,7 +315,7 @@ public class MessageGenerator
             {
                 int hoursTil = (int)Math.ceil((double)timeTilStart/(60*60));
                 if( hoursTil <= 1)
-                    timer += "in the hour.)";
+                    timer += "in the hour)";
                 else
                     timer += "in " + hoursTil + " hours)";
             }
@@ -496,7 +336,7 @@ public class MessageGenerator
             {
                 int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
                 if( minutesTil <= 1)
-                    timer += "in a minute.)";
+                    timer += "in a minute)";
                 else
                     timer += "in " + minutesTil + " minutes)";
                 //timer += "within one hour.)";
@@ -515,7 +355,7 @@ public class MessageGenerator
                 int daysTil = (int) ChronoUnit.DAYS
                         .between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS), end.truncatedTo(ChronoUnit.DAYS));
                 if( daysTil <= 1)
-                    timer += "tomorrow.)";
+                    timer += "tomorrow)";
                 else
                     timer += "in " + daysTil + " days)";
             }

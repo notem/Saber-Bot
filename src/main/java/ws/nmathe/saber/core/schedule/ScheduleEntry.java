@@ -9,7 +9,6 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.Logging;
 
-import javax.xml.soap.Text;
 import java.awt.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +16,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
@@ -41,7 +39,9 @@ public class ScheduleEntry
     private ZonedDateTime entryStart;             // the time when the event starts
     private ZonedDateTime entryEnd;               // the ending time
     private ArrayList<String> entryComments;      // ArrayList of strings that make up the desc
-    private Integer entryRepeat;
+    private EventRecurrence recurrence;
+
+    //private Integer entryRepeat;
     private List<Date> reminders;
     private List<Date> endReminders;
 
@@ -62,7 +62,7 @@ public class ScheduleEntry
 
     // misc
     private boolean hasStarted;
-    private ZonedDateTime expire;
+    //private ZonedDateTime expire;
 
     // announcement overrides
     // these hold temporary values
@@ -85,41 +85,40 @@ public class ScheduleEntry
     {
         // identifiers
         this.entryId = null;
-        this.msgId = null;
-        this.chanId = channel.getId();
+        this.msgId   = null;
+        this.chanId  = channel.getId();
         this.guildId = channel.getGuild().getId();
 
         // entry parameters
-        this.entryTitle = title;
-        this.entryStart = start;
-        this.entryEnd = end;
-        this.entryRepeat = 0;
+        this.entryTitle    = title;
+        this.entryStart    = start;
+        this.entryEnd      = end;
+        this.recurrence    = new EventRecurrence();
         this.entryComments = new ArrayList<>();
 
         // rsvp
-        this.rsvpMembers = new LinkedHashMap<>();
-        this.rsvpLimits = new LinkedHashMap<>();
+        this.rsvpMembers  = new LinkedHashMap<>();
+        this.rsvpLimits   = new LinkedHashMap<>();
         this.rsvpDeadline = null;
 
         // toggles
-        this.quietStart = false;
-        this.quietEnd = false;
+        this.quietStart  = false;
+        this.quietEnd    = false;
         this.quietRemind = false;
 
         // urls
-        this.titleUrl = null;
-        this.imageUrl = null;
+        this.titleUrl     = null;
+        this.imageUrl     = null;
         this.thumbnailUrl = null;
 
         // misc
         this.hasStarted = false;
-        this.expire = null;
 
         // announcement overrides
-        this.announcements = new HashSet<>();
-        this.announcementDates= new HashMap<>();
-        this.announcementTimes = new HashMap<>();
-        this.announcementTargets = new HashMap<>();
+        this.announcements        = new HashSet<>();
+        this.announcementDates    = new HashMap<>();
+        this.announcementTimes    = new HashMap<>();
+        this.announcementTargets  = new HashMap<>();
         this.announcementMessages = new HashMap<>();
     }
 
@@ -132,20 +131,39 @@ public class ScheduleEntry
     public ScheduleEntry(Document entryDocument)
     {
         // identifiers
-        this.entryId = entryDocument.getInteger("_id");
-        this.msgId = (String) entryDocument.get("messageId");
-        this.chanId = (String) entryDocument.get("channelId");
-        this.guildId = (String) entryDocument.get("guildId");
+        this.entryId  = entryDocument.getInteger("_id");
+        this.msgId    = (String) entryDocument.get("messageId");
+        this.chanId   = (String) entryDocument.get("channelId");
+        this.guildId  = (String) entryDocument.get("guildId");
         this.googleId = (String) entryDocument.get("googleId");
 
+        // entry zone information
         ZoneId zone = Main.getScheduleManager().getTimeZone(this.chanId);
 
-        // entry parameters
-        this.entryTitle = entryDocument.getString("title");
-        this.entryStart = ZonedDateTime.ofInstant((entryDocument.getDate("start")).toInstant(), zone);
-        this.entryEnd = ZonedDateTime.ofInstant((entryDocument.getDate("end")).toInstant(), zone);
+        // main parameters
+        this.entryTitle    = entryDocument.getString("title");
+        this.entryStart    = ZonedDateTime.ofInstant((entryDocument.getDate("start")).toInstant(), zone);
+        this.entryEnd      = ZonedDateTime.ofInstant((entryDocument.getDate("end")).toInstant(), zone);
         this.entryComments = (ArrayList<String>) entryDocument.get("comments");
-        this.entryRepeat = entryDocument.getInteger("repeat");
+        this.hasStarted    = (boolean) entryDocument.get("hasStarted");
+
+        // construct the recurrence object
+        if (entryDocument.getInteger("recurrence") != null)
+        {
+            this.recurrence = new EventRecurrence(entryDocument.getInteger("recurrence"));
+        }
+        else
+        {   // if recurrence is not set, use legacy support
+            this.recurrence = new EventRecurrence().fromLegacy(entryDocument.getInteger("repeat"));
+        }
+        if (entryDocument.get("expire") != null)
+        {
+            this.recurrence.setExpire(ZonedDateTime.ofInstant(entryDocument.getDate("expire").toInstant(), zone));
+        }
+        else if (entryDocument.get("occurrences") != null)
+        {
+            //todo
+        }
 
         // reminders
         this.reminders = entryDocument.get("reminders")!=null ?
@@ -161,11 +179,6 @@ public class ScheduleEntry
         this.rsvpDeadline = entryDocument.get("deadline") == null ?
                 null : ZonedDateTime.ofInstant(entryDocument.getDate("deadline").toInstant(), zone);
 
-        // urls
-        this.titleUrl = entryDocument.getString("url");
-        this.imageUrl = entryDocument.getString("image");
-        this.thumbnailUrl = entryDocument.getString("thumbnail");
-
         // toggles
         this.quietStart = (boolean) (entryDocument.get("start_disabled") != null ?
                 entryDocument.get("start_disabled") : false);
@@ -174,10 +187,10 @@ public class ScheduleEntry
         this.quietRemind = (boolean) (entryDocument.get("reminders_disabled") != null ?
                 entryDocument.get("reminders_disabled") : false);
 
-        // misc
-        this.hasStarted = (boolean) entryDocument.get("hasStarted");
-        this.expire = entryDocument.get("expire") == null ?
-                null : ZonedDateTime.ofInstant(entryDocument.getDate("expire").toInstant(), zone);
+        // urls
+        this.titleUrl     = entryDocument.getString("url");
+        this.imageUrl     = entryDocument.getString("image");
+        this.thumbnailUrl = entryDocument.getString("thumbnail");
 
         // announcement overrides
         this.announcements = entryDocument.get("announcements") == null ?
@@ -387,15 +400,16 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if( msg==null ) return;
 
-        if(this.entryRepeat != 0) // find next repeat date and edit the message
+        if(this.recurrence.repeat()) // find next repeat date and edit the message
         {
             this.setNextOccurrence().setStarted(false);
 
             // if the next time an event repeats is after the event's expire, delete the event
-            if(this.expire != null && this.expire.isBefore(this.getStart()))
+            ZonedDateTime expire = this.recurrence.getExpire();
+            if(expire != null && expire.isBefore(this.getStart()))
             {
                 Main.getEntryManager().removeEntry(this.entryId);
-                MessageUtilities.deleteMsg( msg, null );
+                MessageUtilities.deleteMsg(msg, null);
                 return;
             }
 
@@ -598,94 +612,13 @@ public class ScheduleEntry
 
 
     /**
-     * Bit designations:
-     * 1-7 : repeat on specific weekdays
-     * 8   : repeat on day interval
-     * 9   : repeat yearly
-     * 12  : repeat every [x] minutes
-     * The schedule object's start and end zoneddatetimes are updated accordingly
-     * @return (ScheduleEntry) this object
      */
     private ScheduleEntry setNextOccurrence()
     {
-        // 12th bit denotes minute repeat
-        if((this.entryRepeat & 0b100000000000) == 0b100000000000)
-        {
-            int masked = this.entryRepeat & 0b011111111111;
-            this.entryStart = entryStart.plusMinutes(masked);
-            this.entryEnd = entryEnd.plusMinutes(masked);
-            return this;
-        }
-        // yearly repeat (9th bit)
-        if((this.entryRepeat & 0b100000000) == 0b100000000)
-        {
-            this.entryStart = entryStart.plusYears(1);
-            this.entryEnd = entryEnd.plusYears(1);
-            return this;
-        }
-        // determine the number of days until the next scheduled occurrence
-        // and update the start and end by adding the appropriate number of days
-        else
-        {
-            int days;
-
-            // repeat on daily interval (8th bit)
-            if((this.entryRepeat & 0b10000000) == 0b10000000)
-            {
-                days = this.entryRepeat ^ 0b10000000;
-            }
-            else // repeat on weekday schedule
-            {
-                // convert to current day of week to binary representation
-                int dayOfWeek = entryStart.getDayOfWeek().getValue();
-                int dayAsBitSet;
-                if( dayOfWeek == 7 ) //sunday
-                {
-                    dayAsBitSet = 1;
-                }
-                else                //monday - saturday
-                {
-                    dayAsBitSet = 1<<dayOfWeek;
-                }
-
-                // if repeats on same weekday next week
-                if( (dayAsBitSet | this.entryRepeat) == dayAsBitSet )
-                {
-                    days = 7;
-                }
-                else
-                {
-                    // if the eighth bit is off, the event repeats on fixed days of the week (ie. on tuesday and wednesday)
-                    int daysTil = 0;
-                    for( int i = 1; i < 7; i++)
-                    {
-                        if( dayAsBitSet == 0b1000000 )      //if bitset is SATURDAY, then
-                        {
-                            dayAsBitSet = 0b0000001;        //set bitset to SUNDAY
-                        }
-                        else
-                        {
-                            dayAsBitSet <<= 1;     // else, set to the next day
-                        }
-
-                        if( (dayAsBitSet & this.entryRepeat) == dayAsBitSet )
-                        {
-                            daysTil = i;
-                            break;
-                        }
-                    }
-                    days = daysTil; // if this is zero, eRepeat was zero
-                }
-            }
-
-            // update the entry's start and end
-            // check to insure that the year is incremented when the addition caused wrapping
-            this.entryStart = this.entryStart.plusDays(days).isAfter(this.entryStart) ?
-                    this.entryStart.plusDays(days) : this.entryStart.plusDays(days).plusYears(1);
-            this.entryEnd = this.entryEnd.plusDays(days).isAfter(this.entryEnd) ?
-                    this.entryEnd.plusDays(days) : this.entryEnd.plusDays(days).plusYears(1);
-            return this;
-        }
+        long dif = this.entryEnd.toInstant().toEpochMilli() - this.entryStart.toInstant().toEpochMilli();
+        this.entryStart = recurrence.next(this.entryStart);
+        this.entryEnd.plusNanos(1000 * dif);    // could this overflow?
+        return this;
     }
 
     /*
@@ -706,7 +639,7 @@ public class ScheduleEntry
     public boolean isFull(String type)
     {
         Integer limit = this.rsvpLimits.get(type)==null ? -1 : this.rsvpLimits.get(type);
-        Integer size = this.rsvpMembers.get(type)==null ? 0 : this.rsvpMembers.get(type).size();
+        Integer size  = this.rsvpMembers.get(type)==null ? 0 : this.rsvpMembers.get(type).size();
         return (limit > -1) && (size >= limit);
     }
 
@@ -755,7 +688,15 @@ public class ScheduleEntry
      */
     public Integer getRepeat()
     {
-        return this.entryRepeat;
+        return this.recurrence.getRepeat();
+    }
+
+    /**
+     * retrieves the event's full EventRecurrence object
+     */
+    public EventRecurrence getRecurrence()
+    {
+        return this.recurrence;
     }
 
     /**
@@ -837,7 +778,7 @@ public class ScheduleEntry
      */
     public ZonedDateTime getExpire()
     {
-        return this.expire;
+        return this.recurrence.getExpire();
     }
 
 
@@ -1018,7 +959,7 @@ public class ScheduleEntry
      */
     public ScheduleEntry setRepeat(Integer repeat)
     {
-        this.entryRepeat = repeat;
+        this.recurrence.setRepeat(repeat);
         return this;
     }
 
@@ -1081,7 +1022,7 @@ public class ScheduleEntry
      */
     public ScheduleEntry setExpire(ZonedDateTime expire)
     {
-        this.expire = expire;
+        this.recurrence.setExpire(expire);
         return this;
     }
 
@@ -1360,7 +1301,7 @@ public class ScheduleEntry
                 "Title:  \"" + this.getTitle() + "\"\n" +
                 "Start:  " + this.getStart().format(dtf) + "\n" +
                 "End:    " + (this.getEnd().equals(this.getStart()) ? "\"off\"" : this.getEnd().format(dtf)) + "\n" +
-                "Repeat: \"" + MessageGenerator.getRepeatString(this.getRepeat(), true) + "\"\n";
+                "Repeat: \"" + this.recurrence.toString(true) + "\"\n";
 
         // quiet settings
         if(this.isQuietRemind() | this.isQuietEnd() | this.isQuietStart())

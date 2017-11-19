@@ -11,6 +11,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.EntryManager;
+import ws.nmathe.saber.core.schedule.EventRecurrence;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
@@ -32,8 +33,6 @@ import static com.mongodb.client.model.Filters.*;
  */
 public class CalendarConverter
 {
-    /** DateTimeFormatter that is RFC3339 compliant  */
-    private static DateTimeFormatter RFC3339_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     public void init()
     {
@@ -71,8 +70,8 @@ public class CalendarConverter
         try
         {
             service.events().list(address)
-                    .setTimeMin(new DateTime(ZonedDateTime.now().format(RFC3339_FORMATTER)))
-                    .setTimeMax(new DateTime(ZonedDateTime.now().plusDays(7).format(RFC3339_FORMATTER)))
+                    .setTimeMin(new DateTime(ZonedDateTime.now().format(EventRecurrence.RFC3339_FORMATTER)))
+                    .setTimeMax(new DateTime(ZonedDateTime.now().plusDays(7).format(EventRecurrence.RFC3339_FORMATTER)))
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
                     .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
@@ -108,13 +107,12 @@ public class CalendarConverter
         entries.forEach(se->
         {
             // compose the event's description
-            String description = String.join("\n", se.getComments());
-            description += "\n";
-            if(se.getImageUrl() != null) description += "\nimage: " + se.getImageUrl();
-            if(se.getThumbnailUrl() != null) description += "\nthumbnail: " + se.getThumbnailUrl();
-            if(se.getDeadline() != null) description += "\ndeadline: " + se.getDeadline().format(DateTimeFormatter.ISO_LOCAL_DATE);
-            if(se.getTitleUrl() != null) description += "\nurl: " + se.getTitleUrl();
-            for(String key : se.getRsvpLimits().keySet())
+            String description = String.join("\n", se.getComments())+"\n";
+            if (se.getImageUrl() != null)     description += "\nimage: " + se.getImageUrl();
+            if (se.getThumbnailUrl() != null) description += "\nthumbnail: " + se.getThumbnailUrl();
+            if (se.getDeadline() != null)     description += "\ndeadline: " + se.getDeadline().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            if (se.getTitleUrl() != null)     description += "\nurl: " + se.getTitleUrl();
+            for (String key : se.getRsvpLimits().keySet())
             {
                 description += "\nlimit: " + key + " " + se.getRsvpLimit(key);
             }
@@ -132,7 +130,7 @@ public class CalendarConverter
             Event event = new Event();
             event.setDescription(description)
                     .setSummary(se.getTitle())
-                    .setRecurrence(toRFC5545(se.getRepeat(), se.getExpire()))
+                    .setRecurrence(se.getRecurrence().toRFC5545())
                     .setStart(start)
                     .setEnd(end);
 
@@ -151,7 +149,7 @@ public class CalendarConverter
                     Main.getEntryManager().updateEntry(se.setGoogleId(e.getId()), false);
                 }
             }
-            catch( Exception e )
+            catch (Exception e)
             {
                 Logging.warn(this.getClass(), "Unable to export calendar:" +e.getMessage());
                 failure[0] = 1;
@@ -181,14 +179,14 @@ public class CalendarConverter
             ZonedDateTime min = ZonedDateTime.now();
             ZonedDateTime max = min.plusDays(Main.getScheduleManager().getSyncLength(channel.getId()));
             events = service.events().list(address)
-                    .setTimeMin(new DateTime(min.format(RFC3339_FORMATTER)))
-                    .setTimeMax(new DateTime(max.format(RFC3339_FORMATTER)))
+                    .setTimeMin(new DateTime(min.format(EventRecurrence.RFC3339_FORMATTER)))
+                    .setTimeMax(new DateTime(max.format(EventRecurrence.RFC3339_FORMATTER)))
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
                     .setMaxResults(Main.getBotSettingsManager().getMaxEntries())
                     .execute();
         }
-        catch( Exception e )
+        catch (Exception e)
         {
             Logging.exception(this.getClass(), e);
             return;
@@ -249,17 +247,15 @@ public class CalendarConverter
                                 zone);
                     } else
                     {   /* parse start and end times for normal events */
-                        start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), RFC3339_FORMATTER)
+                        start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
                                 .withZoneSameInstant(zone);
-                        end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), RFC3339_FORMATTER)
+                        end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
                                 .withZoneSameInstant(zone);
                     }
 
                     // get event title
-                    if(event.getSummary() == null)
-                        title = "(No title)";
-                    else
-                        title = event.getSummary();
+                    if(event.getSummary() == null) title = "(No title)";
+                    else title = event.getSummary();
 
                     // process event description into event comments or other settings
                     if (event.getDescription() != null)
@@ -297,7 +293,7 @@ public class CalendarConverter
                                 String[] tmp = comment.split(":",2); // split to limit:
                                 if(tmp.length > 1)
                                 {
-                                    String[] str = tmp[1].trim().split("[^\\S\n\r]+"); // split into white space separate segments
+                                    String[] str = tmp[1].trim().split("[^\\S\n\r]+"); // split into white space separated segments
                                     if(str.length >= 2)
                                     {
                                         // rebuild the rsvp group name
@@ -347,42 +343,9 @@ public class CalendarConverter
                     // parse the event recurrence information
                     if(recurrence != null)
                     {
-                        for(String rule : recurrence)
-                        {
-                            if(rule.startsWith("RRULE") && rule.contains("FREQ" ))
-                            {
-                                // parse out the frequency of recurrence
-                                String tmp = rule.split("FREQ=")[1].split(";")[0];
-                                if(tmp.equals("DAILY" ))
-                                {
-                                    if(rule.contains("INTERVAL"))
-                                    {
-                                        int interval = Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]);
-                                        repeat = (0b10000000 | interval);
-                                    }
-                                    else
-                                    {
-                                        repeat = 0b1111111;
-                                    }
-                                }
-                                else if(tmp.equals("WEEKLY") && rule.contains("BYDAY"))
-                                {
-                                    tmp = rule.split("BYDAY=")[1].split(";")[0];
-                                    repeat = ParsingUtilities.parseRepeat(tmp);
-                                }
-
-                                // parse out the end date of recurrence
-                                if(rule.contains("UNTIL="))
-                                {
-                                    tmp = rule.split("UNTIL=")[1].split(";")[0];
-                                    int year = Integer.parseInt(tmp.substring(0, 4));
-                                    int month = Integer.parseInt(tmp.substring(4,6));
-                                    int day = Integer.parseInt(tmp.substring(6, 8));
-
-                                    expire = ZonedDateTime.of(LocalDate.of(year, month, day), LocalTime.MIN, zone);
-                                }
-                            }
-                        }
+                        EventRecurrence eventRecurrence = new EventRecurrence(recurrence);
+                        expire = eventRecurrence.getExpire();
+                        repeat = eventRecurrence.getRepeat();
                     }
 
                     // if the google event already exists as a saber event on the schedule, update it
@@ -485,56 +448,5 @@ public class CalendarConverter
 
         // auto-sort
         EntryManager.autoSort(true, channel.getId());
-    }
-
-
-    /**
-     * generates a valid list of event recurrence rules
-     * as specified by RFC5545
-     * @param repeat the repeat settings of the event
-     * @param expire the expire date for the event
-     * @return
-     */
-    private static List<String> toRFC5545(Integer repeat, ZonedDateTime expire)
-    {
-        List<String> recurrence = new ArrayList<>();
-        if(repeat == 0 || repeat > 0b11111111)
-        {
-            return recurrence;
-        }
-
-        String rule = "RRULE:";
-        if((repeat&0b10000000) == 0b10000000) // interval
-        {
-            rule += "FREQ=DAILY;";
-            int tmp = repeat & 0b01111111;    // take the first 7 bits
-            rule += "INTERVAL=" + tmp + ";";
-        }
-        else // weekly
-        {
-            if(repeat == 0b1111111) // every day
-            {
-                rule += "FREQ=DAILY;";
-            }
-            else
-            {
-                rule += "FREQ=WEEKLY;BYDAY=";
-                List<String> tmp = new ArrayList<>();
-                if((repeat&0b0000001) == 0b0000001) tmp.add("SU");
-                if((repeat&0b0000010) == 0b0000010) tmp.add("MO");
-                if((repeat&0b0000100) == 0b0000100) tmp.add("TU");
-                if((repeat&0b0001000) == 0b0001000) tmp.add("WE");
-                if((repeat&0b0010000) == 0b0010000) tmp.add("TH");
-                if((repeat&0b0100000) == 0b0100000) tmp.add("FR");
-                if((repeat&0b1000000) == 0b1000000) tmp.add("SA");
-                rule += String.join(",",tmp) + ";";
-            }
-        }
-        if(expire != null)
-        {
-            rule += "UNTIL=" + String.format("%04d%02d%02d", expire.getYear(), expire.getMonthValue(), expire.getDayOfMonth()) +"T000000Z;";
-        }
-        recurrence.add(rule);
-        return recurrence;
     }
 }

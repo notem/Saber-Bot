@@ -384,46 +384,6 @@ public class ParsingUtilities
         return str;
     }
 
-    /**
-     * Parses out the intended event repeat information from user input
-     * @param input (String) the user input
-     * @return (int) an integer representing the repeat information (stored in binary)
-     */
-    public static int parseRepeat(String input)
-    {
-        input = input.toLowerCase().trim();
-        int bits = 0;
-        if(input.toLowerCase().equals("daily"))
-        {
-            bits = 0b1111111;
-        }
-        else if(input.toLowerCase().equals("yearly"))
-        {
-            bits = 0b100000000;
-        }
-        else if(input.equals("off") || input.startsWith("no"))
-        {
-            bits = 0;
-        }
-        else
-        {
-            //String regex = "^((su(n(day)?)?)?(mo(n(day)?)?)?(tu(e(sday)?)?)?(we(d(nesday)?)?)?(th(u(rsday)?)?)?(fr(i(day)?)?)?(sa(t(urday)?)?)?)";
-            String regex = "[,;:. ]([ ]+)?";
-            String[] s = input.split(regex);
-            for(String string : s)
-            {
-                if(string.matches("su(n(day)?)?")) bits |= 1;
-                if(string.matches("mo(n(day)?)?")) bits |= 1<<1;
-                if(string.matches("tu(e(sday)?)?")) bits |= 1<<2;
-                if(string.matches("we(d(nesday)?)?")) bits |= 1<<3;
-                if(string.matches("th(u(rsday)?)?")) bits |= 1<<4;
-                if(string.matches("fr(i(day)?)?")) bits |= 1<<5;
-                if(string.matches("sa(t(urday)?)?")) bits |= 1<<6;
-            }
-        }
-        return bits;
-    }
-
 
     /**
      * parses out repeat information for the 'interval' edit/create option

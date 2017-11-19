@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.schedule.EventRecurrence;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -578,7 +579,7 @@ public class EditCommand implements Command
                     case "r":
                     case "repeats":
                     case "repeat":
-                        se.setRepeat(ParsingUtilities.parseRepeat(args[index].toLowerCase()));
+                        se.setRepeat(EventRecurrence.parseRepeat(args[index].toLowerCase()));
                         index++;
                         break;
 

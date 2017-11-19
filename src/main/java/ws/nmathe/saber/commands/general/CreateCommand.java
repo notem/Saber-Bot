@@ -3,6 +3,7 @@ package ws.nmathe.saber.commands.general;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.schedule.EventRecurrence;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -296,7 +297,7 @@ public class CreateCommand implements Command
                         case "r":
                         case "repeats":
                         case "repeat":
-                            repeat = ParsingUtilities.parseRepeat(args[index].toLowerCase());
+                            repeat = EventRecurrence.parseRepeat(args[index].toLowerCase());
                             index++;
                             break;
 
