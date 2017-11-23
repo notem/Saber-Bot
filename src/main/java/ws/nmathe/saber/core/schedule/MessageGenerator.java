@@ -156,10 +156,6 @@ public class MessageGenerator
             repeatLine += "> expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
                     " " + se.getExpire().getDayOfMonth() + ", " + se.getExpire().getYear() + "\n";
         }
-        else
-        {
-            repeatLine += "\n";
-        }
         msg += "```Markdown\n\n" + timeLine + repeatLine +
                 (se.getLocation()==null ? "":"<Location: "+se.getLocation()+">\n")+"```\n";
 
