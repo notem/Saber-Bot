@@ -160,7 +160,8 @@ public class MessageGenerator
         {
             repeatLine += "\n";
         }
-        msg += "```Markdown\n\n" + timeLine + repeatLine + "```\n";
+        msg += "```Markdown\n\n" + timeLine + repeatLine +
+                (se.getLocation()==null ? "":"<Location: "+se.getLocation()+">\n")+"```\n";
 
         // insert each comment line with a gap line
         for( String comment : se.getComments() )

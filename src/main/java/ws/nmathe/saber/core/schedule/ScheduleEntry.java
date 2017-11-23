@@ -63,6 +63,7 @@ public class ScheduleEntry
     // misc
     private boolean hasStarted;
     private ZonedDateTime expire;
+    private String location;
 
     // announcement overrides
     // these hold temporary values
@@ -114,6 +115,7 @@ public class ScheduleEntry
         // misc
         this.hasStarted = false;
         this.expire = null;
+        this.location = null;
 
         // announcement overrides
         this.announcements = new HashSet<>();
@@ -178,6 +180,8 @@ public class ScheduleEntry
         this.hasStarted = (boolean) entryDocument.get("hasStarted");
         this.expire = entryDocument.get("expire") == null ?
                 null : ZonedDateTime.ofInstant(entryDocument.getDate("expire").toInstant(), zone);
+        this.location = entryDocument.get("location") == null ?
+                null : entryDocument.getString("location");
 
         // announcement overrides
         this.announcements = entryDocument.get("announcements") == null ?
@@ -946,6 +950,14 @@ public class ScheduleEntry
     }
 
     /**
+     * retrieves the location string for an event, may be null
+     */
+    public String getLocation()
+    {
+        return this.location;
+    }
+
+    /**
      * Attempts to retrieve the discord Message, if the message does not exist
      * (or the bot can for any other reason cannot retrieve it) the method returns null
      * @return (Message) if exists, otherwise null
@@ -1206,6 +1218,15 @@ public class ScheduleEntry
     public ScheduleEntry setRsvpDeadline(ZonedDateTime deadline)
     {
         this.rsvpDeadline = deadline;
+        return this;
+    }
+
+    /**
+     * retrieves the location string for an event, may be null
+     */
+    public ScheduleEntry setLocation(String location)
+    {
+        this.location = location;
         return this;
     }
 

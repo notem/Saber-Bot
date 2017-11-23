@@ -38,7 +38,7 @@ public class Logging
     {
         if(Main.getBotSettingsManager().getLogLevel() < 5) return;
 
-        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] [Info]" +
                 ANSI_RESET + " " + ANSI_CYAN_BACKGROUND + ANSI_BLACK +
                 "[" + caller.getSimpleName() + "]" +
@@ -57,7 +57,7 @@ public class Logging
     {
         if(Main.getBotSettingsManager().getLogLevel() < 4) return;
 
-        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] [Info]" +
                 ANSI_RESET + " " + ANSI_BLUE_BACKGROUND + ANSI_BLACK +
                 "[" + caller.getSimpleName() + "]" +
@@ -76,7 +76,7 @@ public class Logging
     {
         if(Main.getBotSettingsManager().getLogLevel() < 3) return;
 
-        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] [Cmnd]" +
                 ANSI_RESET + " " + ANSI_GREEN_BACKGROUND + ANSI_BLACK +
                 "[" + caller.getSimpleName() + "]" +
@@ -95,7 +95,7 @@ public class Logging
     {
         if(Main.getBotSettingsManager().getLogLevel() < 2) return;
 
-        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] " +
                 ANSI_RED + "[Warn]" + ANSI_RESET + " " +
                 ANSI_YELLOW_BACKGROUND + ANSI_BLACK +
@@ -115,7 +115,7 @@ public class Logging
     {
         if(Main.getBotSettingsManager().getLogLevel() < 1) return;
 
-        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         String content = "[" + now.truncatedTo(ChronoUnit.SECONDS) + "] " +
                 ANSI_PURPLE + "[Excp]" + ANSI_RESET + " " +
                 ANSI_PURPLE_BACKGROUND + ANSI_BLACK +
