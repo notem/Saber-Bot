@@ -386,24 +386,6 @@ public class ParsingUtilities
 
 
     /**
-     * parses out repeat information for the 'interval' edit/create option
-     * @param arg interval user-input
-     * @return repeat bitset
-     */
-    public static int parseInterval(String arg)
-    {
-        int repeat = 0;
-        if(arg.matches("\\d+([ ]?d(ay(s)?)?)?"))
-            repeat = 0b10000000 | Integer.parseInt(arg.replaceAll("[^\\d]",""));
-        else if(arg.matches("\\d+([ ]?m(in(utes)?)?)"))
-            repeat = 0b100000000000 | Integer.parseInt(arg.replaceAll("[^\\d]",""));
-        else if(arg.matches("\\d+([ ]?h(our(s)?)?)"))
-            repeat = 0b100000000000 | (Integer.parseInt(arg.replaceAll("[^\\d]",""))*60);
-        return repeat;
-    }
-
-
-    /**
      * Parses user supplied input for information indicating the reminder intervals to use for a schedule's
      * reminder settings
      * @param arg (String) user input

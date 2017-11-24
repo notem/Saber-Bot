@@ -585,7 +585,7 @@ public class EditCommand implements Command
 
                     case "i":
                     case "interval":
-                        se.setRepeat(ParsingUtilities.parseInterval(args[index]));
+                        se.setRepeat(EventRecurrence.parseInterval(args[index]));
                         index++;
                         break;
 

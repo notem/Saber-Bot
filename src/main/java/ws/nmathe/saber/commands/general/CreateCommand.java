@@ -303,7 +303,7 @@ public class CreateCommand implements Command
 
                         case "i":
                         case "interval":
-                            repeat = ParsingUtilities.parseInterval(args[index]);
+                            repeat = EventRecurrence.parseInterval(args[index]);
                             index++;
                             break;
 

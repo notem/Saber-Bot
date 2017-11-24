@@ -62,7 +62,6 @@ public class ScheduleEntry
 
     // misc
     private boolean hasStarted;
-    //private ZonedDateTime expire;
 
     // announcement overrides
     // these hold temporary values
@@ -615,9 +614,9 @@ public class ScheduleEntry
      */
     private ScheduleEntry setNextOccurrence()
     {
-        long dif = this.entryEnd.toInstant().toEpochMilli() - this.entryStart.toInstant().toEpochMilli();
+        long dif = this.entryEnd.toInstant().toEpochMilli()-this.entryStart.toInstant().toEpochMilli();
         this.entryStart = recurrence.next(this.entryStart);
-        this.entryEnd.plusNanos(1000 * dif);    // could this overflow?
+        this.entryEnd   = this.entryStart.plusNanos(1000 * dif);    // could this overflow?
         return this;
     }
 
