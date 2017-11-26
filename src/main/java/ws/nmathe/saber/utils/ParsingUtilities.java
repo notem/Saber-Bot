@@ -359,6 +359,9 @@ public class ParsingUtilities
                     case 'k':
                         announceMsg.append(String.format("%02d",entry.getStart().getMinute()));
                         break;
+                    case 'l':
+                        announceMsg.append(entry.getLocation());
+                        break;
                 }
             }
             else
