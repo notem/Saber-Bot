@@ -1,7 +1,5 @@
 package ws.nmathe.saber.core.schedule;
 
-import ws.nmathe.saber.utils.Logging;
-
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -94,7 +92,6 @@ public class EventRecurrence
         int mode = 0, data = 0;
         for(String rule : rfc5545)
         {
-            Logging.warn(this.getClass(), rule);
             if(rule.startsWith("RRULE") && rule.contains("FREQ"))
             {
                 // parse out the frequency of recurrence
@@ -321,7 +318,6 @@ public class EventRecurrence
         StringBuilder str = new StringBuilder();
         int mode = recurrence&0b111;
         int data = recurrence >> 3;
-        Logging.info(this.getClass(), "mode: "+mode+" | data: "+data);
         if(isNarrow)
         {
             // not repeat
