@@ -368,7 +368,8 @@ public class CalendarConverter
                                 .setGoogleId(googleId)
                                 .setExpire(expire)
                                 .setStarted(hasStarted)
-                                .setComments(comments);
+                                .setComments(comments)
+                                .setLocation(event.getLocation());
 
                         // set special attributes if not null
                         if (titleUrl!=null)
@@ -396,7 +397,8 @@ public class CalendarConverter
                                 .setGoogleId(googleId)
                                 .setExpire(expire)
                                 .setStarted(hasStarted)
-                                .setComments(comments);
+                                .setComments(comments)
+                                .setLocation(event.getLocation());
 
                         // set special attributes if not null
                         if (imageUrl!=null)

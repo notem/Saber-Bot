@@ -326,9 +326,10 @@ public class ShardManager
                     String name = games.next();
                     if(name.contains("%"))
                     {
-                        if(name.contains("%%")) name = name.replaceAll("%%", "%");
-                        if(name.contains("%shardId")) name = name.replaceAll("%%", shard.getShardInfo().getShardId() + "");
-                        if(name.contains("%shardTotal")) name = name.replaceAll("%%", shard.getShardInfo().getShardTotal() + "");
+                        if(name.contains("%shardId"))
+                            name = name.replaceAll("%shardId", shard.getShardInfo().getShardId() + "");
+                        if(name.contains("%shardTotal"))
+                            name = name.replaceAll("%shardTotal", shard.getShardInfo().getShardTotal() + "");
                     }
                     shard.getPresence().setGame(Game.of(name, "https://nmathe.ws/bots/saber"));
                 };
