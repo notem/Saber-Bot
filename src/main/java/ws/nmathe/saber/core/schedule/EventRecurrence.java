@@ -446,7 +446,7 @@ public class EventRecurrence
             else
             {
                 if(isNarrow) str = new StringBuilder("weekly on ");
-                else str = new StringBuilder("weekly on ");
+                else str = new StringBuilder("repeats weekly on ");
             }
             for(int j=0; data!=0; j++, data>>=1)
             {
