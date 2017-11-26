@@ -183,8 +183,13 @@ public class EventRecurrence
     public EventRecurrence fromLegacy(Integer legacyRepeat)
     {
         int mode, data;
+        if (legacyRepeat == 0)
+        {
+            mode = 0;
+            data = 0;
+        }
         // minute repeat (12th bit)
-        if ((legacyRepeat & (1<<11)) == 0b100000000000)
+        else if ((legacyRepeat & (1<<11)) == 0b100000000000)
         {
             int minutes = legacyRepeat & 0b011111111111; // first 11 bits represent minute interval
             mode = 2;
