@@ -31,28 +31,31 @@ public class EventRecurrence
      *
      * ..0...1...2...3...4...5...6...7...8...9..10..11..12..13..14..15.
      * +-----------+---------------------------------------------------+
-     * | mode=0-3  |                    interval                       |
+     * | mode=0-3  |                    interval                       |  max = 2^13
      * +---------------------------------------------------------------+
      *
      * ..0...1...2...3...4...5...6...7...8...9..10..11..12..13..14..15.
      * +-----------+---------------------------------------------------+
-     * |  mode=4   | Su  Mo  Tu  We  Th  Fr  Sa |    weekly interval   |
+     * |  mode=4   | Su  Mo  Tu  We  Th  Fr  Sa|     weekly interval   |  max = 64
      * +---------------------------------------------------------------+
      *
      * ..0...1...2...3...4...5...6...7...8...9..10..11..12..13..14..15.
      * +-----------+---------------------------------------------------+
-     * |  mode=5   |  weekday  |    nth    |     monthly interval      |
+     * |  mode=5   |  weekday  |    nth    |     monthly interval      |  max = 128
      * +---------------------------------------------------------------+
      *
      * ..0...1...2...3...4...5...6...7...8...9..10..11..12..13..14..15.
      * +-----------+---------------------------------------------------+
-     * |  mode=6   |    day of month   |       monthly interval        |
+     * |  mode=6   |    day of month   |       monthly interval        |  max = 256
      * +---------------------------------------------------------------+
      */
     private Integer recurrence;
 
     /** the remaining number of times the event should repeat */
-    private Integer occurrences;
+    private Integer count;
+
+    /** the date of the first occurrence of the event*/
+    private ZonedDateTime startDate;
 
     /** the date to expire */
     private ZonedDateTime expire;
@@ -60,28 +63,32 @@ public class EventRecurrence
     // empty constructor
     public EventRecurrence()
     {
-        recurrence  = 0;
-        occurrences = null;
-        expire      = null;
+        this.recurrence  = 0;
+        this.count       = null;
+        this.startDate   = null;
+        this.expire      = null;
     }
 
     public EventRecurrence(int recurrence)
     {
         this.recurrence  = recurrence;
-        this.occurrences = null;
+        this.count       = null;
+        this.startDate   = null;
         this.expire      = null;
     }
 
     /**
      * parses a recurrence string that is formatted in accordance
      * with the RFC5545 specifications for calendar event recurrence
+     * NOTE: this follows Google Calendar's implementation of the ruleset
      * @param rfc5545 string containing required information
      */
     public EventRecurrence(List<String> rfc5545)
     {
-        this.recurrence  = 0;     //
-        this.occurrences = null;  //
-        this.expire      = null;  //
+        this.recurrence  = 0;
+        this.count       = null;
+        this.startDate   = null;
+        this.expire      = null;
 
         // attempt to parse the ruleset
         int mode = 0, data = 0;
@@ -111,17 +118,11 @@ public class EventRecurrence
                             data |= 1;
                         break;
                     case "MONTHLY":
-                        if (rule.contains("BYMONTHDAY"))
-                        {
-                            mode = 6;
-                            data |= Integer.valueOf(rule.split("BYMONTHDAY=")[1].split(";")[0]);
-                            if (rule.contains("INTERVAL"))
-                                data |= Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]) << 5;
-                        }
-                        else if (rule.contains("BYDAY") && rule.contains("BYSETPOS"))
+                        if (rule.contains("BYDAY"))
                         {
                             mode = 5;
-                            switch (rule.split("BYDAY=")[1].split(";")[0])
+                            tmp  = rule.split("BYDAY=")[1].split(";")[0];
+                            switch (tmp.replaceAll("[\\d]",""))
                             {
                                 case "MO": data |= 1; break;
                                 case "TU": data |= 2; break;
@@ -131,11 +132,19 @@ public class EventRecurrence
                                 case "SA": data |= 6; break;
                                 case "SU": data |= 7; break;
                             }
-                            data |= Integer.valueOf(rule.split("BYSETPOS=")[1].split(";")[0]) << 3;
+                            data |= Integer.valueOf(tmp.replaceAll("[^\\d]","")) << 3;
                             if (rule.contains("INTERVAL"))
                                 data |= Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]) << 6;
                             else
                                 data |= 1 << 6;
+                        }
+                        else
+                        {
+                            mode = 6;
+                            if (rule.contains("INTERVAL"))
+                                data |= Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]) << 5;
+                            else
+                                data |= 1 << 5;
                         }
                         break;
                     case "YEARLY":
@@ -160,7 +169,7 @@ public class EventRecurrence
                 // interpret occurrence count
                 else if(rule.contains("COUNT="))
                 {
-                    // TODO
+                    this.count = Integer.valueOf(rule.split("COUNT=")[1].split(";")[0]);
                 }
             }
         }
@@ -173,7 +182,35 @@ public class EventRecurrence
      */
     public EventRecurrence fromLegacy(Integer legacyRepeat)
     {
-        // todo
+        int mode, data;
+        // minute repeat (12th bit)
+        if ((legacyRepeat & (1<<11)) == 0b100000000000)
+        {
+            int minutes = legacyRepeat & 0b011111111111; // first 11 bits represent minute interval
+            mode = 2;
+            data = minutes;
+        }
+        // yearly repeat (9th bit)
+        else if ((legacyRepeat & (1<<8)) == 0b100000000)
+        {
+            mode = 3;
+            data = 1;                                    // old recurrence format did not support intervals
+        }                                                // other than 1
+        // repeat on daily interval (8th bit)
+        else if ((legacyRepeat & (1<<7)) == 0b10000000)
+        {
+            mode = 0;
+            data = legacyRepeat & 0b1111111;             //  first 7 bits represent day interval
+        }
+        // day-of-week repeat
+        else
+        {
+            int weekdays = legacyRepeat & 0b1111111;     // first 7 bits represent days of the week
+            int sunday   = weekdays & 0b1;               // first bit represents Sunday
+            mode = 4;
+            data = (weekdays>>1) | (sunday<<6);          // new recurrence format uses Monday as the start of the week
+        }                                                // so adjustments must be made
+        this.recurrence = mode | (data<<3);
         return this;
     }
 
@@ -185,7 +222,6 @@ public class EventRecurrence
     public static int parseInterval(String arg)
     {
         int mode = 0, data = 0;
-
         if(arg.matches("\\d+([ ]?m(in(utes)?)?)"))
         {
             mode = 2;
@@ -291,19 +327,20 @@ public class EventRecurrence
                 return "every day";
             // repeat on interval days
             if (mode == 0)
-                return "every " + (data>spellout.length ? data : spellout[data-1]) + " days";
+                return "every "+(data>spellout.length ? data : spellout[data-1])+" days";
 
             // repeat x minutes
             if (mode == 2)
             {
                 if (data%60 == 0)
                 {
+                    int hours = data/60;
                     if (data == 60) return "every hour";
-                    else return "every "+ data/60 +" hours";
+                    else return "every "+(hours<=spellout.length ? spellout[hours-1]:hours)+" hours";
                 }
                 else
                 {
-                    return "every " + data + " minutes";
+                    return "every "+data+" minutes";
                 }
             }
             // yearly repeat
@@ -343,21 +380,20 @@ public class EventRecurrence
                 return "repeats daily";
             // repeat on interval
             if (mode==0)
-                return "repeats every " + (data>spellout.length ? data : spellout[data-1]) + " days";
+                return "repeats every "+(data>spellout.length ? data : spellout[data-1])+" days";
 
             // repeat x minutes
             if (mode==2)
             {
                 if (data%60 == 0)
                 {
-                    if (data == 60)
-                        return "repeats hourly";
-                    else
-                        return "repeats every " + (data/60) + " hours";
+                    int hours = data/60;
+                    if (data == 60) return "repeats hourly";
+                    else return "repeats every "+(hours<=spellout.length ? spellout[hours-1]:hours)+" hours";
                 }
                 else
                 {
-                    return "repeats every " + data + " minutes";
+                    return "repeats every "+data+" minutes";
                 }
             }
             // yearly repeat
@@ -372,12 +408,12 @@ public class EventRecurrence
                 int monthInterval = data>>6;
                 if (monthInterval>1)
                 {
-                    return "repeats on the "+nth+prefixes[nth]+" "+dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())+
+                    return nth+prefixes[nth]+" "+dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())+
                             " of every "+monthInterval+prefixes[monthInterval]+" months";
                 }
                 else
                 {
-                    return "repeats on the "+nth+prefixes[nth]+" "+dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())+
+                    return nth+prefixes[nth]+" "+dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())+
                             " of every month";
                 }
             }
@@ -404,8 +440,8 @@ public class EventRecurrence
             data &= 0b1111111;
             if (weeks>1)
             {
-                if(isNarrow) str = new StringBuilder("every "+(weeks<10 ? weeks+"":spellout[weeks-1])+" weeks on ");
-                else str = new StringBuilder("repeats every "+(weeks<10 ? weeks+"":spellout[weeks-1])+" weeks on ");
+                if(isNarrow) str = new StringBuilder("every "+(weeks>spellout.length ? weeks+"":spellout[weeks-1])+" weeks on ");
+                else str = new StringBuilder("repeats every "+(weeks>spellout.length ? weeks+"":spellout[weeks-1])+" weeks on ");
             }
             else
             {
@@ -438,7 +474,7 @@ public class EventRecurrence
     public boolean repeat()
     {
         return this.recurrence != 0 &&
-                !(this.occurrences != null && this.occurrences <= 0) &&
+                !(this.count != null && this.count <= 0) &&
                 (this.expire==null || this.expire.isBefore(ZonedDateTime.now()));
     }
 
@@ -487,11 +523,10 @@ public class EventRecurrence
                 return date.plusDays(count);
 
             // repeat on nth week day every mth month
-            // todo untested
             case 5:
                 DayOfWeek dayOfWeek = DayOfWeek.of(data&0b111);
                 int nth = (data>>3)&0b111;
-                date = date.plusMonths(data>>6).with(firstDayOfMonth()).with(nextOrSame(dayOfWeek));
+                date = date.with(firstDayOfMonth()).plusMonths((data>>6)>1 ? (data>>6):1).with(nextOrSame(dayOfWeek));
                 while(nth>1)
                 {
                    date = date.plusDays(1).with(nextOrSame(dayOfWeek));
@@ -500,11 +535,11 @@ public class EventRecurrence
                 return date;
 
             // repeat on n day of every mth month
-            // todo untested
             case 6:
                 int dayOfMonth    = data&0b11111;
                 int monthInterval = data>>5;
-                return date.plusMonths(monthInterval).withDayOfMonth(dayOfMonth);
+                if (dayOfMonth > 0) return date.plusMonths(monthInterval).withDayOfMonth(dayOfMonth);
+                else return date.plusMonths(monthInterval);
 
             // something went wrong
             default:
@@ -513,8 +548,8 @@ public class EventRecurrence
     }
 
     /**
-     * generates a valid list of event recurrence rules
-     * as specified by RFC5545
+     * generates a valid list of event recurrence rules as specified by RFC5545
+     * NOTE: this follows Google Calendar's implementation of the ruleset
      * @return singleton list containing the RRULE
      */
     public List<String> toRFC5545()
@@ -553,7 +588,7 @@ public class EventRecurrence
             case 5:
                 DayOfWeek dayOfWeek = DayOfWeek.of(data&0b111);
                 int nth = (data>>3)&0b111;
-                rule += "FREQ=MONTHLY;BYDAY="+dayOfWeek+";BYSETPOS="+nth+";INTERVAL="+(data>>6==0 ? 1:data>>6)+";";
+                rule += "FREQ=MONTHLY;BYDAY="+nth+dayOfWeek+";INTERVAL="+(data>>6==0 ? 1:data>>6)+";";
                 break;
             // repeat on n day of every mth month
             case 6:
@@ -563,13 +598,13 @@ public class EventRecurrence
         }
         if (expire != null)
         {
-            rule += "UNTIL=" +
+            rule += "UNTIL="+
                     String.format("%04d%02d%02d",expire.getYear(),expire.getMonthValue(),expire.getDayOfMonth()) +
                     "T000000Z;";
         }
-        else if (occurrences != null)
+        else if (count != null)
         {
-            // todo
+            rule += "COUNT="+this.count+";";
         }
         rules.add(rule);
         return rules;
@@ -585,9 +620,9 @@ public class EventRecurrence
         return this.recurrence;
     }
 
-    public Integer getOccurrences()
+    public Integer getCount()
     {
-        return this.occurrences;
+        return this.count;
     }
 
     public EventRecurrence setExpire(ZonedDateTime expire)
@@ -602,9 +637,9 @@ public class EventRecurrence
         return this;
     }
 
-    public EventRecurrence setOccurrences(Integer occurrences)
+    public EventRecurrence setCount(Integer count)
     {
-        this.occurrences = occurrences;
+        this.count = count;
         return this;
     }
 }
