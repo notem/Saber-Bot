@@ -108,7 +108,7 @@ public class EventRecurrence
                     case "WEEKLY":
                         mode = 4;
                         if (rule.contains("BYDAY"))
-                            data |= EventRecurrence.parseRepeat(rule.split("BYDAY=")[1].split(";")[0]);
+                            data |= EventRecurrence.parseRepeat(rule.split("BYDAY=")[1].split(";")[0])>>3;
                         if (rule.contains("INTERVAL"))
                             data |= Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]) << 7;
                         else
