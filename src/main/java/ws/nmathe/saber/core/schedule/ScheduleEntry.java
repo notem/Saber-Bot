@@ -621,8 +621,8 @@ public class ScheduleEntry
     private ScheduleEntry setNextOccurrence()
     {
         long dif = this.entryEnd.toInstant().toEpochMilli()-this.entryStart.toInstant().toEpochMilli();
-        this.entryStart = recurrence.next(this.entryStart);
-        this.entryEnd   = this.entryStart.plusNanos(1000 * dif);    // could this overflow?
+        this.entryStart = this.recurrence.next(this.entryStart);
+        this.entryEnd   = this.entryStart.plus(dif, ChronoUnit.MILLIS);
         return this;
     }
 
