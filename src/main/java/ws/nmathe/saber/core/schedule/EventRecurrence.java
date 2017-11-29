@@ -112,7 +112,7 @@ public class EventRecurrence
                         if (rule.contains("INTERVAL"))
                             data |= Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]) << 7;
                         else
-                            data |= 1;
+                            data |= 1 << 7;
                         break;
                     case "MONTHLY":
                         if (rule.contains("BYDAY"))
