@@ -40,7 +40,7 @@ public class EditCommand implements Command
                 " new configuration." +
                 "\n\n```diff\n+ Options ```\n" +
                 "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment``, ``date``, " +
-                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``, ``deadline``," +
+                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``, ``deadline``, ``count``," +
                 " and ``limit``.\n\n" +
                 "Most of the options listed above accept the same arguments as the ``create`` command.\n" +
                 "Reference the ``help`` information for the ``create`` command for more information.\n" +
@@ -298,6 +298,13 @@ public class EditCommand implements Command
                     index++;
                     break;
 
+                case "co":
+                case "count":
+                    verify = VerifyUtilities.verifyCount(args, index, head);
+                    if (!verify.isEmpty()) return verify;
+                    index++;
+                    break;
+
                 case "an":
                 case "announce":
                 case "announcement":
@@ -399,7 +406,7 @@ public class EditCommand implements Command
     {
         int index = 0;
 
-        Integer entryId = ParsingUtilities.encodeIDToInt(args[index]);
+        Integer entryId  = ParsingUtilities.encodeIDToInt(args[index]);
         ScheduleEntry se = Main.getEntryManager().getEntry( entryId );
 
         Message msg = se.getMessageObject();
@@ -616,6 +623,12 @@ public class EditCommand implements Command
                     case "deadline":
                     case "dl":
                         se.setRsvpDeadline(ParsingUtilities.parseNullableDate(args[index], zone));
+                        index++;
+                        break;
+
+                    case "count":
+                    case "co":
+                        se.setCount(Integer.parseInt(args[index]));
                         index++;
                         break;
 

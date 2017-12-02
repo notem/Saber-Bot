@@ -3,6 +3,7 @@ package ws.nmathe.saber.core.schedule;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -24,6 +25,7 @@ public class EventRecurrence
      *  weekly by day       - mode = 4
      *  monthly by weekday  - mode = 5
      *  monthly by date     - mode = 6
+     *  unused              - mode = 7
      *
      * The recurrence int should be interpreted in it's binary representation:
      *
@@ -49,7 +51,7 @@ public class EventRecurrence
      */
     private Integer recurrence;
 
-    /** the remaining number of times the event should repeat */
+    /** the remaining number of times the event should shouldRepeat */
     private Integer count;
 
     /** the date of the first occurrence of the event*/
@@ -59,20 +61,20 @@ public class EventRecurrence
     private ZonedDateTime expire;
 
     // empty constructor
-    public EventRecurrence()
+    public EventRecurrence(ZonedDateTime dtStart)
     {
         this.recurrence  = 0;
-        this.count       = null;
-        this.startDate   = null;
         this.expire      = null;
+        this.count       = null;
+        this.startDate   = dtStart;
     }
 
-    public EventRecurrence(int recurrence)
+    public EventRecurrence(int recurrence, ZonedDateTime dtStart)
     {
         this.recurrence  = recurrence;
-        this.count       = null;
-        this.startDate   = null;
         this.expire      = null;
+        this.count       = null;
+        this.startDate   = dtStart;
     }
 
     /**
@@ -81,12 +83,12 @@ public class EventRecurrence
      * NOTE: this follows Google Calendar's implementation of the ruleset
      * @param rfc5545 string containing required information
      */
-    public EventRecurrence(List<String> rfc5545)
+    public EventRecurrence(List<String> rfc5545, ZonedDateTime dtstart)
     {
         this.recurrence  = 0;
-        this.count       = null;
-        this.startDate   = null;
         this.expire      = null;
+        this.count       = null;
+        this.startDate   = dtstart;
 
         // attempt to parse the ruleset
         int mode = 0, data = 0;
@@ -173,8 +175,8 @@ public class EventRecurrence
     }
 
     /**
-     * convert an old repeat Integer representation to the new format
-     * @param legacyRepeat old repeat representation
+     * convert an old shouldRepeat Integer representation to the new format
+     * @param legacyRepeat old shouldRepeat representation
      * @return the updated event recurrence object
      */
     public EventRecurrence fromLegacy(Integer legacyRepeat)
@@ -185,26 +187,26 @@ public class EventRecurrence
             mode = 0;
             data = 0;
         }
-        // minute repeat (12th bit)
+        // minute shouldRepeat (12th bit)
         else if ((legacyRepeat & (1<<11)) == 0b100000000000)
         {
             int minutes = legacyRepeat & 0b011111111111; // first 11 bits represent minute interval
             mode = 2;
             data = minutes;
         }
-        // yearly repeat (9th bit)
+        // yearly shouldRepeat (9th bit)
         else if ((legacyRepeat & (1<<8)) == 0b100000000)
         {
             mode = 3;
             data = 1;                                    // old recurrence format did not support intervals
         }                                                // other than 1
-        // repeat on daily interval (8th bit)
+        // shouldRepeat on daily interval (8th bit)
         else if ((legacyRepeat & (1<<7)) == 0b10000000)
         {
             mode = 0;
             data = legacyRepeat & 0b1111111;             //  first 7 bits represent day interval
         }
-        // day-of-week repeat
+        // day-of-week shouldRepeat
         else
         {
             int weekdays = legacyRepeat & 0b1111111;     // first 7 bits represent days of the week
@@ -217,9 +219,9 @@ public class EventRecurrence
     }
 
     /**
-     * parses out repeat information for the 'interval' edit/create option
+     * parses out shouldRepeat information for the 'interval' edit/create option
      * @param arg interval user-input
-     * @return repeat bitset
+     * @return shouldRepeat bitset
      */
     public static int parseInterval(String arg)
     {
@@ -253,9 +255,9 @@ public class EventRecurrence
     }
 
     /**
-     * Parses out the intended event repeat information from user input
+     * Parses out the intended event shouldRepeat information from user input
      * @param input (String) the user input
-     * @return (int) an integer representing the repeat information (stored in binary)
+     * @return (int) an integer representing the shouldRepeat information (stored in binary)
      */
     public static int parseRepeat(String input)
     {
@@ -305,7 +307,7 @@ public class EventRecurrence
     }
 
     /**
-     * Generated a string describing the repeat settings of an event
+     * Generated a string describing the shouldRepeat settings of an event
      * @param isNarrow (boolean) for use with narrow style events
      * @return string
      */
@@ -320,17 +322,17 @@ public class EventRecurrence
         int data = recurrence >> 3;
         if(isNarrow)
         {
-            // not repeat
+            // not shouldRepeat
             if (recurrence == 0)
                 return "once";
-            // repeat daily
+            // shouldRepeat daily
             if (mode == 4 && data == 0b1111111)
                 return "every day";
-            // repeat on interval days
+            // shouldRepeat on interval days
             if (mode == 0)
                 return "every "+(data>spellout.length ? data : spellout[data-1])+" days";
 
-            // repeat x minutes
+            // shouldRepeat x minutes
             if (mode == 2)
             {
                 if (data%60 == 0)
@@ -344,7 +346,7 @@ public class EventRecurrence
                     return "every "+data+" minutes";
                 }
             }
-            // yearly repeat
+            // yearly shouldRepeat
             if (mode == 3 && data == 1)
                 return "every year";
 
@@ -373,17 +375,17 @@ public class EventRecurrence
         }
         else
         {
-            // no repeat
+            // no shouldRepeat
             if (recurrence == 0)
-                return "does not repeat";
-            // repeat daily
+                return "does not shouldRepeat";
+            // shouldRepeat daily
             if (mode==4 && data == 0b1111111)
                 return "repeats daily";
-            // repeat on interval
+            // shouldRepeat on interval
             if (mode==0)
                 return "repeats every "+(data>spellout.length ? data : spellout[data-1])+" days";
 
-            // repeat x minutes
+            // shouldRepeat x minutes
             if (mode==2)
             {
                 if (data%60 == 0)
@@ -397,7 +399,7 @@ public class EventRecurrence
                     return "repeats every "+data+" minutes";
                 }
             }
-            // yearly repeat
+            // yearly shouldRepeat
             if (mode==3 && data==1)
                 return "repeats yearly";
 
@@ -434,7 +436,7 @@ public class EventRecurrence
             }
         }
 
-        // weekday repeat
+        // weekday shouldRepeat
         if (mode==4)
         {
             int weeks = data>>7;
@@ -470,13 +472,22 @@ public class EventRecurrence
 
     /**
      * determine if the event should recur
-     * @return true if the event should repeat
+     * @return true if the event should shouldRepeat
      */
-    public boolean repeat()
+    public boolean shouldRepeat()
     {
-        return this.recurrence != 0 &&
-                !(this.count != null && this.count <= 0) &&
-                (this.expire==null || this.expire.isBefore(ZonedDateTime.now()));
+        if (this.recurrence == 0)
+        {
+            return false;
+        }
+        else
+        {
+            if (this.count!=null && this.startDate!=null)
+                return this.countRemaining()>0;
+            else if (this.expire!=null)
+                return this.expire.isBefore(ZonedDateTime.now());
+            return true;
+        }
     }
 
     /**
@@ -493,7 +504,7 @@ public class EventRecurrence
         int data  = this.recurrence >>3;       // shift off mode bits
         switch(mode)
         {
-            // interval repeat
+            // interval shouldRepeat
             case 0:
                 return date.plusDays(data);
             case 2:
@@ -501,10 +512,10 @@ public class EventRecurrence
             case 3:
                 return date.plusYears(data);
 
-            // repeat weekly by day of week
+            // shouldRepeat weekly by day of week
             case 4:
                 int day   = 1<<(date.getDayOfWeek().getValue()-1);  // represent current day of week as int
-                int weeks = (data>>7)==0 ? 1:data>>7;               // number of weeks to repeat
+                int weeks = (data>>7)==0 ? 1:data>>7;               // number of weeks to shouldRepeat
                 data = data & 0b1111111;                            // integer representing weekdays
 
                 if (data == 0)
@@ -523,7 +534,7 @@ public class EventRecurrence
                 }
                 return date.plusDays(count);
 
-            // repeat on nth week day every mth month
+            // shouldRepeat on nth week day every mth month
             case 5:
                 DayOfWeek dayOfWeek = DayOfWeek.of(data&0b111);
                 int nth = (data>>3)&0b111;
@@ -535,7 +546,7 @@ public class EventRecurrence
                 }
                 return date;
 
-            // repeat on n day of every mth month
+            // shouldRepeat on n day of every mth month
             case 6:
                 int dayOfMonth    = data&0b11111;
                 int monthInterval = data>>5;
@@ -559,19 +570,19 @@ public class EventRecurrence
         if (this.recurrence == 0) return rules;
 
         String rule = "RRULE:";
-        int mode    = this.recurrence & 0b111;
+        int mode = this.recurrence & 0b111;
         int data = this.recurrence >> 3;
         switch (mode)
         {
-            // daily interval repeat
+            // daily interval shouldRepeat
             case 0:
                 rule += "FREQ=DAILY;INTERVAL="+data+";";
                 break;
-            // yearly repeat
+            // yearly shouldRepeat
             case 3:
                 rule += "FREQ=YEARLY;INTERVAL="+data+";";
                 break;
-            // repeat by weekday
+            // shouldRepeat by weekday
             case 4:
                 rule += "FREQ=WEEKLY;BYDAY=";
                 List<String> days = new ArrayList<>();
@@ -585,15 +596,15 @@ public class EventRecurrence
                 rule += String.join(",",days) + ";";
                 rule += "INTERVAL="+(data>>7)+";";
                 break;
-            // repeat on nth week day every mth month
+            // shouldRepeat on nth week day every mth month
             case 5:
                 DayOfWeek dayOfWeek = DayOfWeek.of(data&0b111);
                 int nth = (data>>3)&0b111;
                 rule += "FREQ=MONTHLY;BYDAY="+nth+dayOfWeek+";INTERVAL="+(data>>6==0 ? 1:data>>6)+";";
                 break;
-            // repeat on n day of every mth month
+            // shouldRepeat on n day of every mth month
             case 6:
-                int dayOfMonth    = data&0b11111;
+                int dayOfMonth = data&0b11111;
                 rule += "FREQ=MONTHLY;BYMONTHDAY="+dayOfMonth+";INTERVAL="+(data>>5==0 ? 1:data>>5)+";";
                 break;
         }
@@ -611,6 +622,58 @@ public class EventRecurrence
         return rules;
     }
 
+    /**
+     * uses the count, startDate, and current time to determine how many more occurrences the event
+     * has until it expires
+     * @return null if count not set, else remaining count
+     */
+    public Integer countRemaining()
+    {
+        if (count==null || startDate==null) return -1; // error
+
+        ZonedDateTime now = ZonedDateTime.now();
+        if (now.isBefore(startDate)) return count;  // no events have occurred yet
+
+        // determine remaining event occurrences
+        int mode = this.recurrence & 0b111;
+        int data = this.recurrence >> 3;
+        switch (mode)
+        {
+            case 0:     // daily
+                long days = startDate.until(now, ChronoUnit.DAYS);
+                return count - ((int) days/data);
+            case 2:     // minutely
+                long minutes = startDate.until(now, ChronoUnit.MINUTES);
+                return count - ((int) minutes/data);
+            case 3:     // yearly
+                long years = startDate.until(now, ChronoUnit.YEARS);
+                return count - ((int) years/data);
+            case 4:     // weekly
+                int weeks = (int) (startDate.until(now, ChronoUnit.WEEKS)/(data>>7));
+
+                // calculate the number of days of the week the event repeats on
+                int c = 0;                      // count of weekdays event repeats on
+                for (int tmp=(data&0b1111111); tmp>0; tmp>>=1) { c++; }
+                int rem = count - c*weeks;      // how many events have past
+
+                // process the remaining portion of the week
+                ZonedDateTime cur = startDate.plusWeeks(weeks);
+                for (int j=cur.getDayOfWeek().getValue(); j<=7 && now.isAfter(cur); j++)
+                {   // for each day of last remaining week
+                    // if day of week is set, decrement rem count
+                    if (((data&0b1111111) & (1<<(j-1))) == 1) rem--;
+                    cur = cur.plusDays(1);
+                }
+                return rem;
+            case 5:     // mo by day
+            case 6:     // mo by date
+                long months = startDate.until(now, ChronoUnit.MONTHS);
+                return count - ((int) months/data);
+            default:    // something went wrong!
+                return null;
+        }
+    }
+
     public ZonedDateTime getExpire()
     {
         return this.expire;
@@ -624,6 +687,11 @@ public class EventRecurrence
     public Integer getCount()
     {
         return this.count;
+    }
+
+    public ZonedDateTime getOriginalStart()
+    {
+        return this.startDate;
     }
 
     public EventRecurrence setExpire(ZonedDateTime expire)

@@ -198,6 +198,13 @@ public class CreateCommand implements Command
                         index++;
                         break;
 
+                    case "co":
+                    case "count":
+                        verify = VerifyUtilities.verifyCount(args, index, head);
+                        if (!verify.isEmpty()) return verify;
+                        index++;
+                        break;
+
                     case "today":
                         if(startTime.isBefore(ZonedDateTime.now()))
                         {
@@ -235,16 +242,18 @@ public class CreateCommand implements Command
         // Initialize variables
         String title;
         LocalTime startTime;
-        LocalTime endTime = null;
-        ArrayList<String> comments = new ArrayList<>();
-        int repeat = 0;
+        // init optional variables with values;
+        LocalTime endTime       = null;
+        int repeat              = 0;
         ZonedDateTime startDate = ZonedDateTime.now(zone).plusDays(1);
-        ZonedDateTime endDate = null;
-        String url = null;
-        String image = null;
-        String thumbnail = null;
-        ZonedDateTime expire = null;
-        ZonedDateTime deadline = null;
+        ZonedDateTime endDate   = null;
+        String url              = null;
+        String image            = null;
+        String thumbnail        = null;
+        ZonedDateTime expire    = null;
+        ZonedDateTime deadline  = null;
+        Integer count           = null;
+        ArrayList<String> comments = new ArrayList<>();
 
         // process title
         title = args[index];
@@ -267,7 +276,7 @@ public class CreateCommand implements Command
             // check remaining args
             if(args.length > index)
             {
-                args = Arrays.copyOfRange(args, index, args.length);
+                args  = Arrays.copyOfRange(args, index, args.length);
                 index = 0;
                 while(index < args.length)
                 {
@@ -337,6 +346,12 @@ public class CreateCommand implements Command
                             index++;
                             break;
 
+                        case "c":
+                        case "count":
+                            count = Integer.parseInt(args[index]);
+                            index++;
+                            break;
+
                         case "today":
                             startDate = ZonedDateTime.now(zone);
                             endDate = ZonedDateTime.now(zone);
@@ -385,7 +400,7 @@ public class CreateCommand implements Command
 
         // create the zoned date time using the schedule's timezone
         ZonedDateTime start = ZonedDateTime.of(startDate.toLocalDate(), startTime, zone);
-        ZonedDateTime end = ZonedDateTime.of(endDate.toLocalDate(), endTime, zone);
+        ZonedDateTime end   = ZonedDateTime.of(endDate.toLocalDate(), endTime, zone);
 
         // add a year to the date if the provided date is past current time
         Instant now = Instant.now();
@@ -417,6 +432,7 @@ public class CreateCommand implements Command
                 .setExpire(expire)
                 .setImageUrl(image)
                 .setThumbnailUrl(thumbnail)
+                .setCount(count)
                 .setRsvpDeadline(deadline);
 
         // finalize the schedule entry

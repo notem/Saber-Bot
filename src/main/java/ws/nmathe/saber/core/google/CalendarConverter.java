@@ -22,6 +22,8 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.*;
 
@@ -125,6 +127,9 @@ public class CalendarConverter
             EventDateTime end = new EventDateTime()
                     .setDateTime(new DateTime(Date.from(se.getEnd().toInstant())))
                     .setTimeZone(zone.getId());
+            EventDateTime origStart = new EventDateTime()
+                    .setDateTime(new DateTime(Date.from(se.getRecurrence().getOriginalStart().toInstant())))
+                    .setTimeZone(zone.getId());
 
             // create the event
             Event event = new Event();
@@ -132,13 +137,14 @@ public class CalendarConverter
                     .setSummary(se.getTitle())
                     .setRecurrence(se.getRecurrence().toRFC5545())
                     .setStart(start)
-                    .setEnd(end);
+                    .setEnd(end)
+                    .setOriginalStartTime(origStart);
 
             try // interface with google calendar api
             {
                 boolean differentCalendars = false;
-                if(Main.getScheduleManager().getAddress(channel.getId()).equalsIgnoreCase(address)) differentCalendars = true;
-                if(se.getGoogleId() != null && differentCalendars)
+                if (Main.getScheduleManager().getAddress(channel.getId()).equalsIgnoreCase(address)) differentCalendars = true;
+                if (se.getGoogleId() != null && differentCalendars)
                 {
                     event.setId(se.getGoogleId());
                     service.events().update(address, se.getGoogleId(), event).execute();
@@ -235,6 +241,7 @@ public class CalendarConverter
                     String titleUrl                 = null;
                     Map<String, Integer> rsvpLimits = new HashMap<>();
 
+
                     if(event.getStart().getDateTime() == null)
                     {   /* parse start and end dates for all day events */
                         start = ZonedDateTime.of(
@@ -268,7 +275,7 @@ public class CalendarConverter
                             String lowerCase = comment.toLowerCase();
 
                             // image
-                            if(lowerCase.startsWith("image:"))
+                            if (lowerCase.startsWith("image:"))
                             {
                                 String[] tmp = comment.split(":",2); // split to limit:
                                 if(tmp.length > 1)
@@ -278,7 +285,7 @@ public class CalendarConverter
                                 }
                             }
                             // thumbnail
-                            else if(lowerCase.startsWith("thumbnail:"))
+                            else if (lowerCase.startsWith("thumbnail:"))
                             {
                                 String[] tmp = comment.split(":",2);
                                 if(tmp.length > 1)
@@ -288,7 +295,7 @@ public class CalendarConverter
                                 }
                             }
                             // limit
-                            else if(lowerCase.startsWith("limit:"))
+                            else if (lowerCase.startsWith("limit:"))
                             {
                                 String[] tmp = comment.split(":",2); // split to limit:
                                 if(tmp.length > 1)
@@ -315,22 +322,23 @@ public class CalendarConverter
 
                             }
                             // title url
-                            else if(lowerCase.startsWith("url:"))
+                            else if (lowerCase.startsWith("url:"))
                             {
                                 String[] tmp = comment.split(":",2);
                                 if(tmp.length > 1 && VerifyUtilities.verifyUrl(tmp[1]))
                                     titleUrl = tmp[1];
                             }
                             // deadline
-                            else if(lowerCase.startsWith("deadline:"))
+                            else if (lowerCase.startsWith("deadline:"))
                             {
                                 String tmp = lowerCase.replace("deadline:","").trim();
                                 if(VerifyUtilities.verifyDate(tmp))
                                     rsvpDeadline = ParsingUtilities.parseDate(tmp, zone);
                             }
+                            // plaintext comment
                             else if(!comment.trim().isEmpty())
                             {
-                                comments.add( comment );
+                                comments.add(comment);
                             }
                         }
                     }
@@ -343,7 +351,12 @@ public class CalendarConverter
                     // parse the event recurrence information
                     if(recurrence != null)
                     {
-                        EventRecurrence eventRecurrence = new EventRecurrence(recurrence);
+                        // determine the start date
+                        ZonedDateTime dtStart = event.getOriginalStartTime()==null ? start :
+                                ZonedDateTime.parse(event.getOriginalStartTime()
+                                        .getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
+                                .withZoneSameInstant(zone);
+                        EventRecurrence eventRecurrence = new EventRecurrence(recurrence, dtStart);
                         expire = eventRecurrence.getExpire();
                         repeat = eventRecurrence.getRepeat();
                     }
@@ -383,6 +396,7 @@ public class CalendarConverter
                         if (rsvpLimits.keySet().size()>0)
                             se.setRsvpLimits(rsvpLimits);
 
+                        // update event reminders using schedule default settings
                         se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
                                 .reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()))
                                 .regenerateAnnouncementOverrides();

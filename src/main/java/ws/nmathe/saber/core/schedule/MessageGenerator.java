@@ -147,13 +147,17 @@ public class MessageGenerator
     {
         String msg = "";
 
-        // create the upper code block containing the event start/end/repeat/expire info
+        // create the upper code block containing the event start/end/shouldRepeat/expire info
         String timeLine = genTimeLine(se);
         String repeatLine = "> " + se.getRecurrence().toString(false) + "\n";
         if(se.getExpire() != null)
-        {
+        {   // expire information on separate line
             repeatLine += "> expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
                     " " + se.getExpire().getDayOfMonth() + ", " + se.getExpire().getYear() + "\n";
+        }
+        else if(se.getRecurrence().getCount() != null)
+        {   // remaining event occurrences on separate line
+            repeatLine += "> occurs " + se.getRecurrence().countRemaining() + " more times";
         }
         msg += "```Markdown\n\n" + timeLine + repeatLine +
                 (se.getLocation()==null ? "":"<Location: "+se.getLocation()+">\n")+"```\n";

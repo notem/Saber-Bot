@@ -404,14 +404,14 @@ public class VerifyUtilities
     }
 
     /**
-     *  Returns error message (or empty string) for repeat keyword verification
+     *  Returns error message (or empty string) for shouldRepeat keyword verification
      */
     public static String verifyRepeat(String[] args, int index, String head)
     {
         if (args.length - index < 1)
         {
             return "That's not the right number of arguments for **" + args[index - 1] + "**! " +
-                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [repeat]``";
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [shouldRepeat]``";
         }
         return "";
     }
@@ -534,6 +534,27 @@ public class VerifyUtilities
             {
                 return "The comment number must be above 0!";
             }
+        }
+        return "";
+    }
+
+    /**
+     * Returns error message (or empty string) for event count verification
+     */
+    public static String verifyCount(String[] args, int index, String head)
+    {
+        if (args.length-index < 1)
+        {
+            return "That's not enough arguments for *count*!\n" +
+                    "Use ``"+head+" "+args[0]+" "+args[index-1]+" "+" [number]``";
+        }
+        else if (!args[index].matches("[\\d]+"))
+        {
+            return "**" + args[index-1] + "** does not look like a valid number!";
+        }
+        else if (Integer.parseInt(args[index])<=0)
+        {
+            return "The *count* must be non-zero!";
         }
         return "";
     }

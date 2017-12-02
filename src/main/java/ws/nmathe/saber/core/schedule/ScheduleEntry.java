@@ -93,7 +93,7 @@ public class ScheduleEntry
         this.entryTitle    = title;
         this.entryStart    = start;
         this.entryEnd      = end;
-        this.recurrence    = new EventRecurrence();
+        this.recurrence    = new EventRecurrence(start);
         this.entryComments = new ArrayList<>();
 
         // rsvp
@@ -149,21 +149,23 @@ public class ScheduleEntry
         this.hasStarted    = (boolean) entryDocument.get("hasStarted");
 
         // construct the recurrence object
+        ZonedDateTime dtStart = entryDocument.get("orig_start")==null ?
+                this.entryStart : ZonedDateTime.ofInstant((entryDocument.getDate("orig_start")).toInstant(), zone);
         if (entryDocument.getInteger("recurrence") != null)
-        {
-            this.recurrence = new EventRecurrence(entryDocument.getInteger("recurrence"));
+        {   // new recurrence design
+            this.recurrence = new EventRecurrence(entryDocument.getInteger("recurrence"), dtStart);
         }
         else
         {   // if recurrence is not set, use legacy support
-            this.recurrence = new EventRecurrence().fromLegacy(entryDocument.getInteger("repeat"));
+            this.recurrence = new EventRecurrence(dtStart).fromLegacy(entryDocument.getInteger("shouldRepeat"));
         }
         if (entryDocument.get("expire") != null)
-        {
+        {   // if event has an expire date
             this.recurrence.setExpire(ZonedDateTime.ofInstant(entryDocument.getDate("expire").toInstant(), zone));
         }
-        else if (entryDocument.get("occurrences") != null)
-        {
-            //todo
+        else if (entryDocument.get("count") != null)
+        {   // else if event has a count limit
+            this.recurrence.setCount(entryDocument.getInteger("count"));
         }
 
         // reminders
@@ -405,7 +407,7 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if( msg==null ) return;
 
-        if(this.recurrence.repeat()) // find next repeat date and edit the message
+        if(this.recurrence.shouldRepeat()) // find next shouldRepeat date and edit the message
         {
             this.setNextOccurrence().setStarted(false);
 
@@ -689,7 +691,7 @@ public class ScheduleEntry
     }
 
     /**
-     * retrieves the event's repeat settings
+     * retrieves the event's shouldRepeat settings
      */
     public Integer getRepeat()
     {
@@ -968,7 +970,7 @@ public class ScheduleEntry
     }
 
     /**
-     * sets the entry object's repeat settings
+     * sets the entry object's shouldRepeat settings
      */
     public ScheduleEntry setRepeat(Integer repeat)
     {
@@ -1036,6 +1038,17 @@ public class ScheduleEntry
     public ScheduleEntry setExpire(ZonedDateTime expire)
     {
         this.recurrence.setExpire(expire);
+        this.recurrence.setCount(null);
+        return this;
+    }
+
+    /**
+     * set's the entry's event occurrence count
+     */
+    public ScheduleEntry setCount(Integer count)
+    {
+        this.recurrence.setCount(count);
+        this.recurrence.setExpire(null);
         return this;
     }
 
@@ -1212,7 +1225,6 @@ public class ScheduleEntry
         this.announcementTimes.put(id.toString(), timeString);
         this.announcementTargets.put(id.toString(), channelId);
         this.announcementMessages.put(id.toString(), message);
-
         return this;
     }
 
