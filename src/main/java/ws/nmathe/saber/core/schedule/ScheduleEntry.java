@@ -151,13 +151,13 @@ public class ScheduleEntry
         // construct the recurrence object
         ZonedDateTime dtStart = entryDocument.get("orig_start")==null ?
                 this.entryStart : ZonedDateTime.ofInstant((entryDocument.getDate("orig_start")).toInstant(), zone);
-        if (entryDocument.getInteger("recurrence") != null)
+        if (entryDocument.get("recurrence") != null)
         {   // new recurrence design
             this.recurrence = new EventRecurrence(entryDocument.getInteger("recurrence"), dtStart);
         }
         else
         {   // if recurrence is not set, use legacy support
-            this.recurrence = new EventRecurrence(dtStart).fromLegacy(entryDocument.getInteger("shouldRepeat"));
+            this.recurrence = new EventRecurrence(dtStart).fromLegacy(entryDocument.getInteger("repeat"));
         }
         if (entryDocument.get("expire") != null)
         {   // if event has an expire date
@@ -407,7 +407,7 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if( msg==null ) return;
 
-        if(this.recurrence.shouldRepeat()) // find next shouldRepeat date and edit the message
+        if(this.recurrence.shouldRepeat()) // find next repeat date and edit the message
         {
             this.setNextOccurrence().setStarted(false);
 
@@ -691,7 +691,7 @@ public class ScheduleEntry
     }
 
     /**
-     * retrieves the event's shouldRepeat settings
+     * retrieves the event's repeat settings
      */
     public Integer getRepeat()
     {
