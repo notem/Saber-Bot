@@ -229,7 +229,7 @@ public class EntryManager
                                 .append("end_disabled", se.isQuietEnd())
                                 .append("reminders_disabled", se.isQuietRemind())
                                 .append("expire", finalExpire)
-                                .append("orig_start", se.getRecurrence().getOriginalStart())
+                                .append("orig_start", Date.from(se.getRecurrence().getOriginalStart().toInstant()))
                                 .append("count", se.getRecurrence().getCount())
                                 .append("image", se.getImageUrl())
                                 .append("thumbnail", se.getThumbnailUrl())
