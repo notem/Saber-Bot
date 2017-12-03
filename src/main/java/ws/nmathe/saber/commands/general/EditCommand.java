@@ -629,6 +629,7 @@ public class EditCommand implements Command
                     case "count":
                     case "co":
                         se.setCount(Integer.parseInt(args[index]));
+                        se.setOriginalStart(se.getStart());    // set the original start to the current start
                         index++;
                         break;
 

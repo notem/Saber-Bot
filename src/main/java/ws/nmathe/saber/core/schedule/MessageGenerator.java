@@ -157,7 +157,7 @@ public class MessageGenerator
         }
         else if(se.getRecurrence().getCount() != null)
         {   // remaining event occurrences on separate line
-            repeatLine += "> occurs " + se.getRecurrence().countRemaining() + " more times";
+            repeatLine += "> occurs " + se.getRecurrence().countRemaining(se.getStart()) + " more times\n";
         }
         msg += "```Markdown\n\n" + timeLine + repeatLine +
                 (se.getLocation()==null ? "":"<Location: "+se.getLocation()+">\n")+"```\n";

@@ -1,5 +1,7 @@
 package ws.nmathe.saber.core.schedule;
 
+import ws.nmathe.saber.utils.Logging;
+
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -474,7 +476,7 @@ public class EventRecurrence
      * determine if the event should recur
      * @return true if the event should shouldRepeat
      */
-    public boolean shouldRepeat()
+    public boolean shouldRepeat(ZonedDateTime now)
     {
         if (this.recurrence == 0)
         {
@@ -483,9 +485,9 @@ public class EventRecurrence
         else
         {
             if (this.count!=null && this.startDate!=null)
-                return this.countRemaining()>0;
+                return this.countRemaining(now)>1;
             else if (this.expire!=null)
-                return this.expire.isBefore(ZonedDateTime.now());
+                return this.expire.isBefore(now);
             return true;
         }
     }
@@ -627,12 +629,10 @@ public class EventRecurrence
      * has until it expires
      * @return null if count not set, else remaining count
      */
-    public Integer countRemaining()
+    public Integer countRemaining(ZonedDateTime now)
     {
         if (count==null || startDate==null) return -1; // error
-
-        ZonedDateTime now = ZonedDateTime.now();
-        if (now.isBefore(startDate)) return count;  // no events have occurred yet
+        if (now.isBefore(startDate) || now.equals(startDate)) return count;  // no events have occurred yet
 
         // determine remaining event occurrences
         int mode = this.recurrence & 0b111;
@@ -641,20 +641,22 @@ public class EventRecurrence
         {
             case 0:     // daily
                 long days = startDate.until(now, ChronoUnit.DAYS);
-                return count - ((int) days/data);
+                return count - ((int) days/(data==0?1:data));
             case 2:     // minutely
                 long minutes = startDate.until(now, ChronoUnit.MINUTES);
-                return count - ((int) minutes/data);
+                return count - ((int) minutes/(data==0?1:data));
             case 3:     // yearly
                 long years = startDate.until(now, ChronoUnit.YEARS);
-                return count - ((int) years/data);
+                return count - ((int) years/(data==0?1:data));
             case 4:     // weekly
-                int weeks = (int) (startDate.until(now, ChronoUnit.WEEKS)/(data>>7));
+                int weeks = (int) (startDate.until(now, ChronoUnit.WEEKS)/((data>>7)==0?1:(data>>7)));
 
                 // calculate the number of days of the week the event repeats on
                 int c = 0;                      // count of weekdays event repeats on
-                for (int tmp=(data&0b1111111); tmp>0; tmp>>=1) { c++; }
+                for (int tmp=(data&0b1111111); tmp>0; tmp>>=1) { if ((tmp&0b1)==1) c++; }
+                Logging.info(this.getClass(), "c="+c);
                 int rem = count - c*weeks;      // how many events have past
+                Logging.info(this.getClass(), "rem="+c);
 
                 // process the remaining portion of the week
                 ZonedDateTime cur = startDate.plusWeeks(weeks);
@@ -666,9 +668,11 @@ public class EventRecurrence
                 }
                 return rem;
             case 5:     // mo by day
-            case 6:     // mo by date
                 long months = startDate.until(now, ChronoUnit.MONTHS);
-                return count - ((int) months/data);
+                return count - ((int) months/((data>>6)==0?1:(data>>5)));
+            case 6:     // mo by date
+                months = startDate.until(now, ChronoUnit.MONTHS);
+                return count - ((int) months/((data>>5)==0?1:(data>>5)));
             default:    // something went wrong!
                 return null;
         }
@@ -709,6 +713,12 @@ public class EventRecurrence
     public EventRecurrence setCount(Integer count)
     {
         this.count = count;
+        return this;
+    }
+
+    public EventRecurrence setOriginalStart(ZonedDateTime original)
+    {
+        this.startDate = original;
         return this;
     }
 }

@@ -115,7 +115,7 @@ public class EventListener extends ListenerAdapter
 
         // command processing
         GuildSettingsManager.GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-        prefix = content.startsWith("<@"+event.getJDA().getSelfUser().getId()+"> ") ?
+        prefix = content.startsWith("<@"+event.getJDA().getSelfUser().getId()+">") ?
                 "<@"+event.getJDA().getSelfUser().getId()+">( +)?" : guildSettings.getPrefix();
         if(content.startsWith(prefix))
         {

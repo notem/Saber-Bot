@@ -407,7 +407,7 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if( msg==null ) return;
 
-        if(this.recurrence.shouldRepeat()) // find next repeat date and edit the message
+        if(this.recurrence.shouldRepeat(this.entryStart)) // find next repeat date and edit the message
         {
             this.setNextOccurrence().setStarted(false);
 
@@ -1177,11 +1177,20 @@ public class ScheduleEntry
     }
 
     /**
-     * retrieves the location string for an event, may be null
+     * set the location string for an event, may be null
      */
     public ScheduleEntry setLocation(String location)
     {
         this.location = location;
+        return this;
+    }
+
+    /**
+     * Set the original start datetime for an event, must not be null
+     */
+    public ScheduleEntry setOriginalStart(ZonedDateTime original)
+    {
+        this.recurrence.setOriginalStart(original);
         return this;
     }
 
@@ -1370,52 +1379,45 @@ public class ScheduleEntry
 
         // expire
         if(this.getExpire() != null)
-        {
             body += "Expire: \"" + this.getExpire().toLocalDate() + "\"\n";
-        }
+
+        // count
+        if(this.getRecurrence().getCount() != null)
+            body += "Count: \"" + this.getRecurrence().getCount() + "\"\n";
+
+        // location
+        if(this.getLocation() != null)
+            body += "Location: \"" + this.getLocation() + "\"\n";
 
         // title url
         if(this.getTitleUrl()!=null)
-        {
             body += "Url: \n\"" + this.getTitleUrl() + "\"\n";
-        }
 
         // image
         if(this.getImageUrl() != null)
-        {
             body += "Image: \n\"" + this.getImageUrl() + "\"\n";
-        }
 
         // thumbnail
         if(this.getThumbnailUrl() != null)
-        {
             body += "Thumbnail: \n\"" + this.getThumbnailUrl() + "\"\n";
-        }
 
         // rsvp limits
         if(Main.getScheduleManager().isRSVPEnabled(this.getChannelId()))
         {
             if(this.getDeadline() != null)
-            {
                 body += "Deadline: " + this.getDeadline().format(dtf) + "\n";
-            }
             if(!this.getRsvpLimits().isEmpty())
-            {
                 body += "``````js\n" + this.limitsToString();
-            }
         }
 
         // comments
         if(!this.getComments().isEmpty())
-        {
             body += "``````js\n" + this.commentsToString();
-        }
 
         // announcement overrides
         if(!this.announcementTimes.isEmpty())
-        {
             body += "``````js\n" + this.announcementsToString();
-        }
+
         return body + "\n```";
     }
 }

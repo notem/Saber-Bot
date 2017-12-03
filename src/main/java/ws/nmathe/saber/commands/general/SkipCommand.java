@@ -79,19 +79,20 @@ public class SkipCommand implements Command
         int index = 0;
         Integer entryId = ParsingUtilities.encodeIDToInt(args[index++]);
         ScheduleEntry se = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
-        se.repeat();
 
         // send a confirmation to the channel
         String content;
-        if(se.getExpire() != null && se.getExpire().isBefore(se.getStart()) || se.getRepeat()==0)
+        if(se.getRecurrence().shouldRepeat(se.getStart()))
         {
-            content = "The event has been cancelled, and is not scheduled to repeat any longer.";
-        }
-        else
-        {
+            se.repeat();
             content = "The event has been cancelled.\n" +
                     "The event is next scheduled for " +
                     se.getStart().format(DateTimeFormatter.ofPattern("MMM d, hh:mm a"));
+        }
+        else
+        {
+            se.repeat();
+            content = "The event has been cancelled.";
         }
         MessageUtilities.sendMsg(content, event.getTextChannel(), null);
     }
