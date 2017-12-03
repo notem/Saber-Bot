@@ -146,7 +146,7 @@ public class EntryManager
                                 .append("rsvp_limits", se.getRsvpLimits())
                                 .append("image", se.getImageUrl())
                                 .append("thumbnail", se.getThumbnailUrl())
-                                .append("orig_start", se.getRecurrence().getOriginalStart())
+                                .append("orig_start", Date.from(se.getRecurrence().getOriginalStart().toInstant()))
                                 .append("count", se.getRecurrence().getCount())
                                 .append("start_disabled", false)
                                 .append("end_disabled", false)
