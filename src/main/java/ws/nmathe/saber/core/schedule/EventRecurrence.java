@@ -53,7 +53,7 @@ public class EventRecurrence
      */
     private Integer recurrence;
 
-    /** the remaining number of times the event should shouldRepeat */
+    /** the remaining number of times the event should repeat */
     private Integer count;
 
     /** the date of the first occurrence of the event*/
@@ -177,7 +177,7 @@ public class EventRecurrence
     }
 
     /**
-     * convert an old shouldRepeat Integer representation to the new format
+     * convert an old repeat Integer representation to the new format
      * @param legacyRepeat old shouldRepeat representation
      * @return the updated event recurrence object
      */
@@ -189,14 +189,14 @@ public class EventRecurrence
             mode = 0;
             data = 0;
         }
-        // minute shouldRepeat (12th bit)
+        // minute repeat (12th bit)
         else if ((legacyRepeat & (1<<11)) == 0b100000000000)
         {
             int minutes = legacyRepeat & 0b011111111111; // first 11 bits represent minute interval
             mode = 2;
             data = minutes;
         }
-        // yearly shouldRepeat (9th bit)
+        // yearly repeat (9th bit)
         else if ((legacyRepeat & (1<<8)) == 0b100000000)
         {
             mode = 3;
@@ -379,7 +379,7 @@ public class EventRecurrence
         {
             // no shouldRepeat
             if (recurrence == 0)
-                return "does not shouldRepeat";
+                return "does not repeat";
             // shouldRepeat daily
             if (mode==4 && data == 0b1111111)
                 return "repeats daily";
