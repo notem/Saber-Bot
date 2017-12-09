@@ -98,6 +98,7 @@ public class EventRecurrence
         {
             if(rule.startsWith("RRULE") && rule.contains("FREQ"))
             {
+                Logging.info(this.getClass(), rule);
                 // parse out the frequency of recurrence
                 String tmp = rule.split("FREQ=")[1].split(";")[0];
                 switch (tmp)
@@ -107,7 +108,7 @@ public class EventRecurrence
                         if (rule.contains("INTERVAL"))
                             data = Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]);
                         else
-                            data = 0b1111111;
+                            data = 0b1;
                         break;
                     case "WEEKLY":
                         mode = 4;
@@ -320,7 +321,7 @@ public class EventRecurrence
         String[] prefixes = {"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"};
 
         StringBuilder str = new StringBuilder();
-        int mode = recurrence&0b111;
+        int mode = recurrence & 0b111;
         int data = recurrence >> 3;
         if(isNarrow)
         {
@@ -328,7 +329,7 @@ public class EventRecurrence
             if (recurrence == 0)
                 return "once";
             // shouldRepeat daily
-            if (mode == 4 && data == 0b1111111)
+            if ((mode == 4 && data == 0b1111111) || (mode==0 && data==1))
                 return "every day";
             // shouldRepeat on interval days
             if (mode == 0)
@@ -381,7 +382,7 @@ public class EventRecurrence
             if (recurrence == 0)
                 return "does not repeat";
             // shouldRepeat daily
-            if (mode==4 && data == 0b1111111)
+            if ((mode == 4 && data == 0b1111111) || (mode==0 && data==1))
                 return "repeats daily";
             // shouldRepeat on interval
             if (mode==0)

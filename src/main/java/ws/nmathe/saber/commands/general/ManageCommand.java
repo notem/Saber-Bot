@@ -109,6 +109,7 @@ public class ManageCommand implements Command
         int index = 0;
         Integer entryId = ParsingUtilities.encodeIDToInt(args[index++]);
         ScheduleEntry se = Main.getEntryManager().getEntryFromGuild(entryId, event.getGuild().getId());
+        String logging = Main.getScheduleManager().getRSVPLogging(se.getChannelId());
 
         String content="", group, user;
         List<String> members;
@@ -122,6 +123,17 @@ public class ManageCommand implements Command
                 members.add(user);
                 se.setRsvpMembers(group, members);
                 content = "I have added *" + args[index] + "* to *" + group + "* on event :id:" + ParsingUtilities.intToEncodedID(se.getId());
+
+                // log the rsvp action
+                if (!logging.isEmpty())
+                {
+                    String msg = "";
+                    if(user.matches("[\\d]")) msg += "<@" + user + ">";
+                    else msg += user;
+                    msg += " has been added to the RSVP group *"+group+"* for **" +
+                            se.getTitle() + "** - :id: **" + ParsingUtilities.intToEncodedID(se.getId()) + "**";
+                    MessageUtilities.sendMsg(msg, event.getJDA().getTextChannelById(logging), null);
+                }
                 break;
 
             case "k":
@@ -132,6 +144,17 @@ public class ManageCommand implements Command
                 members.remove(user);
                 se.setRsvpMembers(group, members);
                 content = "I have removed *" + args[index] + "* from *" + group + "* on event :id:" + ParsingUtilities.intToEncodedID(se.getId());
+
+                // log the rsvp action
+                if (!logging.isEmpty())
+                {
+                    String msg = "";
+                    if(user.matches("[\\d]")) msg += "<@" + user + ">";
+                    else msg += user;
+                    msg += " has been kicked from the RSVP group *"+group+"* for **" +
+                            se.getTitle() + "** - :id: **" + ParsingUtilities.intToEncodedID(se.getId()) + "**";
+                    MessageUtilities.sendMsg(msg, event.getJDA().getTextChannelById(logging), null);
+                }
                 break;
         }
 

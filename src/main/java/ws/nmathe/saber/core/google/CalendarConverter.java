@@ -352,13 +352,8 @@ public class CalendarConverter
                     if(recurrence != null)
                     {
                         // determine the start date
-                        // TODO this is completely unreadable
-                        ZonedDateTime dtStart = event.getOriginalStartTime()==null ? start :     // if orig is null, use start
-                                    (event.getOriginalStartTime().getDateTime()==null ?          // if orig.datetime is null, use orig.date
-                                        (event.getOriginalStartTime().getDate()==null ? start :  // if orig.date is null, use start
-                                                ZonedDateTime.parse(event.getOriginalStartTime()
-                                                        .getDate().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
-                                                        .withZoneSameInstant(zone)) :
+                        ZonedDateTime dtStart = event.getOriginalStartTime() == null ? start :     // if orig is null, use start
+                                    (event.getOriginalStartTime().getDateTime() == null ? start :
                                         ZonedDateTime.parse(event.getOriginalStartTime()
                                                 .getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
                                                 .withZoneSameInstant(zone));
