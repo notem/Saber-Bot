@@ -488,7 +488,7 @@ public class EventRecurrence
             if (this.count!=null && this.startDate!=null)
                 return this.countRemaining(now)>1;
             else if (this.expire!=null)
-                return this.expire.isBefore(now);
+                return this.expire.isAfter(now);
             return true;
         }
     }
