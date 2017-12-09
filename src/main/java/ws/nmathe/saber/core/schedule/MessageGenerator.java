@@ -214,29 +214,35 @@ public class MessageGenerator
     {
         // create the first line of the body
         String timeLine = genTimeLine(se);
-
-        // create the second line of the body
-        String lineTwo = "[" + se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
+        // timezone and repeat information
+        String expireAndRepeat = "[" + se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
                 "](" + se.getRecurrence().toString(true) + ")";
-
+        // include event expiration information (if configured)
+        if (se.getRecurrence().getCount() != null)
+        {   // if event has a count limit, include that information in the display
+            expireAndRepeat += "\n+ Expires after <"+se.getRecurrence().countRemaining(se.getStart())+" more times>";
+        }
+        else if (se.getExpire() != null)
+        {   // event expiration date
+            expireAndRepeat += "\n+ Expires on <"+se.getExpire().toLocalDate().format(DateTimeFormatter.ofPattern("MMM d"))+">\n";
+        }
         // if rsvp is enabled, show the number of rsvps
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
-            String rsvpLine = "";
+            StringBuilder rsvpLine = new StringBuilder();
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
-            for(String key : options.keySet())  // I iterate over the keys rather than the values to keep a order consistent with reactions
+            // iterate over the keys rather than the values to keep
+            // the order consistent with the order reactions are displayed
+            for(String key : options.keySet())
             {
                 String type = options.get(key);
-                rsvpLine += "<" + type.charAt(0) + " " + se.getRsvpMembersOfType(type).size() +
-                        (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
+                rsvpLine.append("<").append(type.charAt(0)).append(" ")
+                        .append(se.getRsvpMembersOfType(type).size())
+                        .append(se.getRsvpLimit(type) >= 0 ? "/" + se.getRsvpLimit(type) + "> " : "> ");
             }
-            lineTwo += "\n"+rsvpLine;
+            expireAndRepeat += "\n"+rsvpLine;
         }
-        else
-        {
-            lineTwo += "\n";
-        }
-        return "```Markdown\n\n" + timeLine + lineTwo + "```\n";
+        return "```Markdown\n\n" + timeLine + expireAndRepeat + "```\n";
     }
 
 

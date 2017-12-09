@@ -37,22 +37,19 @@ public class HttpUtilities
         {
             JSONObject json;
             if (Main.getShardManager().isSharding() && shardId != null)
-            {
-                // if the bot is sharding send shard information
+            {   // if the bot is sharding send shard information
                 int count = Main.getShardManager().getShard(shardId).getGuilds().size();
                 int total = Main.getBotSettingsManager().getShardTotal();
                 json = new JSONObject().put("shard_count", total).put("shard_id", shardId).put("server_count", count);
             }
             else
-            {
-                // otherwise send only the server count
+            {   // otherwise send only the server count
                 int count = Main.getShardManager().getGuilds().size();
                 json = new JSONObject().put("server_count", count);
             }
 
             try
-            {
-                // send the API request
+            {   // send the API request
                 Unirest.post("https://bots.discord.pw/api/bots/" + Main.getShardManager().getJDA().getSelfUser().getId() + "/stats")
                         .header("Authorization", auth)
                         .header("Content-Type", "application/json")
