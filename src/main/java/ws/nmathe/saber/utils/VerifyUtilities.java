@@ -456,7 +456,7 @@ public class VerifyUtilities
                     "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [number]``";
         }
         Integer i = Integer.parseInt(args[index]);
-        if (i > se.getAnnouncementTimes().size() || i < 1)
+        if (!se.getAnnouncementTimes().keySet().contains((i-1)+"") || i < 1)
         {
             return "There does not exist an announcement with number *" + args[index] + "*!\n" +
                     "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [number]``";
