@@ -14,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * utilities which do some sort of string parsing
@@ -247,12 +248,10 @@ public class ParsingUtilities
                         break;
                     case 'f' :
                         if(displayComments)
-                        {
-                            for(String comment : entry.getComments())
-                            {
-                                String parsedComment = ParsingUtilities.parseMessageFormat(comment, entry, false);
-                                announceMsg.append(parsedComment).append("\n");
-                            }
+                        {   // if this call of the parser is nested, don't insert comments
+                            announceMsg.append(String.join("\n", entry.getComments().stream()
+                                    .map(comment -> ParsingUtilities.parseMessageFormat(comment, entry, false))
+                                    .collect(Collectors.toList())));
                         }
                         break;
                     case 'a' :
