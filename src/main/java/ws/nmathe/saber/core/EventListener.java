@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -114,14 +116,20 @@ public class EventListener extends ListenerAdapter
         /* command processing */
         // set prefix to local guild prefix or bot @mention
         GuildSettingsManager.GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-        prefix = content.matches("<@"+event.getJDA().getSelfUser().getId()+">([ ]*)(.)*") ?
-                "<@"+event.getJDA().getSelfUser().getId()+">" : guildSettings.getPrefix();
+        if (content.matches("<@"+event.getJDA().getSelfUser().getId()+">([ ]*)(.)*"))
+        {   // use @mention as prefix
+            prefix = "<@"+event.getJDA().getSelfUser().getId()+">";
+        }
+        else
+        {   // use local guild prefix
+            prefix = guildSettings.getPrefix();
+        }
 
         // operate on the command if the string starts with the prefix
-        if(content.matches(prefix+"(.)*"))
+        if(content.startsWith(prefix))
         {
             // remove the prefix from the command string
-            String trimmedContent = StringUtils.replaceFirst(content, prefix, "");
+            String trimmedContent = StringUtils.replaceOnce(content, prefix, "");
 
             // check if command is restricted on the guild
             Boolean isRestricted = true;

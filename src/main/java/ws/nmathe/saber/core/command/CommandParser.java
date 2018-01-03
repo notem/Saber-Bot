@@ -28,7 +28,7 @@ class CommandParser
     {
         /// trim off the prefix
         String raw = e.getMessage().getRawContent();
-        String trimmed = StringUtils.replaceFirst(raw,prefix, "").trim();
+        String trimmed = StringUtils.replaceOnce(raw,prefix, "").trim();
 
         // split at white spaces (non newlines) or quotation captures
         Matcher matcher = Pattern.compile("[\"\\u201C\\u201D][\\S\\s]*?[\\u201C\\u201D\"]|[^ \"\\u201C\\u201D]+").matcher(trimmed);
