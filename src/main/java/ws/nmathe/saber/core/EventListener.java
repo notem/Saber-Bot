@@ -50,8 +50,6 @@ public class EventListener extends ListenerAdapter
         String userId = event.getAuthor().getId();             // the ID of the user
 
         // ignore messages sent by itself
-        // originally I didn't want to do this, however with inclusion of custom command prefix
-        // infinite loops are easy to cause when using a prefix that triggers on the error message
         if(userId.equals(event.getJDA().getSelfUser().getId())) return;
 
         // leave the guild if the message author is blacklisted
@@ -113,14 +111,19 @@ public class EventListener extends ListenerAdapter
             }
         }
 
-        // command processing
+        /* command processing */
+        // set prefix to local guild prefix or bot @mention
         GuildSettingsManager.GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-        prefix = content.startsWith("<@"+event.getJDA().getSelfUser().getId()+">") ?
-                "<@"+event.getJDA().getSelfUser().getId()+">( +)?" : guildSettings.getPrefix();
-        if(content.startsWith(prefix))
+        prefix = content.matches("<@"+event.getJDA().getSelfUser().getId()+">([ ]*)(.)*") ?
+                "<@"+event.getJDA().getSelfUser().getId()+">" : guildSettings.getPrefix();
+
+        // operate on the command if the string starts with the prefix
+        if(content.matches(prefix+"(.)*"))
         {
+            // remove the prefix from the command string
+            String trimmedContent = StringUtils.replaceFirst(content, prefix, "");
+
             // check if command is restricted on the guild
-            String trimmedContent = StringUtils.replaceOnce(content,prefix, "").trim();
             Boolean isRestricted = true;
             for(String command : guildSettings.getUnrestrictedCommands())
             {
@@ -137,7 +140,6 @@ public class EventListener extends ListenerAdapter
             if(isRestricted)
             {
                 String controlChannelName = Main.getBotSettingsManager().getControlChan();
-
                 if(guildSettings.getCommandChannelId() != null &&
                         guildSettings.getCommandChannelId().equals(event.getChannel().getId()))
                 {
@@ -287,20 +289,22 @@ public class EventListener extends ListenerAdapter
             Document doc = Main.getDBDriver().getEventCollection()
                     .find(eq("messageId", event.getMessageId())).first();
 
-            if(doc == null) return;
-            ScheduleEntry se = new ScheduleEntry(doc);
-            boolean removeReaction = se.handleRSVPReaction(event);
-            if (removeReaction)
+            if(doc != null)
             {
-                // attempt to remove the reaction
-                Consumer<Throwable> errorProcessor = e ->
+                ScheduleEntry se = new ScheduleEntry(doc);
+                boolean removeReaction = se.handleRSVPReaction(event);
+                if (removeReaction)
                 {
-                    if(!(e instanceof PermissionException))
+                    // attempt to remove the reaction
+                    Consumer<Throwable> errorProcessor = e ->
                     {
-                        Logging.exception(this.getClass(), e);
-                    }
-                };
-                event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
+                        if(!(e instanceof PermissionException))
+                        {
+                            Logging.exception(this.getClass(), e);
+                        }
+                    };
+                    event.getReaction().removeReaction(event.getUser()).queue(null, errorProcessor);
+                }
             }
         }
         catch(PermissionException ignored) { }

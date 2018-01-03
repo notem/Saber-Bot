@@ -84,11 +84,11 @@ public class CommandHandler
         {
             String msg = "I have not yet finished booting up! Please try again in a moment.";
             if(event.isFromType(ChannelType.PRIVATE))
-            {
+            {   // send message to DM channel
                 MessageUtilities.sendPrivateMsg(msg, event.getAuthor(), null);
             }
             else
-            {
+            {   // send message to channel the message was received on
                 MessageUtilities.sendMsg(msg, event.getTextChannel(), null);
             }
             return;
@@ -96,12 +96,12 @@ public class CommandHandler
 
         // otherwise handle the received command
         CommandParser.CommandContainer cc = commandParser.parse(event, prefix);
-        if( type == 0 )
+        if (type == 0)
         {
-            if(rateLimiter.isOnCooldown(event.getAuthor().getId()))
+            if (rateLimiter.isOnCooldown(event.getAuthor().getId()))
             {
                 String alert;
-                if(event.getChannelType().equals(ChannelType.PRIVATE))
+                if (event.getChannelType().equals(ChannelType.PRIVATE))
                 {
                     alert = "@" + event.getAuthor().getName() +
                             " [" + event.getAuthor().getId() + "] was rate limited using the '" +
@@ -145,7 +145,6 @@ public class CommandHandler
             try // catch any errors which occur while parsing user input
             {
                 String err = commands.get(cc.invoke).verify(cc.prefix, cc.args, cc.event);
-
                 // do command action if valid arguments
                 if(err.isEmpty())
                 {
@@ -171,7 +170,7 @@ public class CommandHandler
                 else
                 {
                     String msg = "**Error** : " + err;
-                    MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
+                    MessageUtilities.sendMsg(msg, cc.event.getChannel(), null);
                 }
             }
             catch(Exception e)
@@ -184,11 +183,10 @@ public class CommandHandler
                 Logging.exception(this.getClass(), e);
             }
         }
-        // else the invoking command is invalid
         else
-        {
+        {   // command is not a valid command
             String msg = "**" + cc.invoke + "** is not a command!";
-            MessageUtilities.sendMsg( msg, cc.event.getChannel(), null );
+            MessageUtilities.sendMsg(msg, cc.event.getChannel(), null);
         }
     }
 

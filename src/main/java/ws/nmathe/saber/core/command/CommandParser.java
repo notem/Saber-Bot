@@ -26,15 +26,14 @@ class CommandParser
      */
     CommandContainer parse(MessageReceivedEvent e, String prefix)
     {
-        String raw = e.getMessage().getRawContent();
-
         /// trim off the prefix
-        String trimmed = StringUtils.replaceOnce(raw,prefix, "").trim();
+        String raw = e.getMessage().getRawContent();
+        String trimmed = StringUtils.replaceFirst(raw,prefix, "").trim();
 
         // split at white spaces (non newlines) or quotation captures
         Matcher matcher = Pattern.compile("[\"\\u201C\\u201D][\\S\\s]*?[\\u201C\\u201D\"]|[^ \"\\u201C\\u201D]+").matcher(trimmed);
         List<String> list = new ArrayList<>();
-        while(matcher.find())
+        while (matcher.find())
         {
             String group = matcher.group();
             if(!group.isEmpty()) list.add(group.replaceAll("[\"\\u201C\\u201D]",""));

@@ -98,7 +98,6 @@ public class EventRecurrence
         {
             if(rule.startsWith("RRULE") && rule.contains("FREQ"))
             {
-                Logging.info(this.getClass(), rule);
                 // parse out the frequency of recurrence
                 String tmp = rule.split("FREQ=")[1].split(";")[0];
                 switch (tmp)
@@ -655,9 +654,7 @@ public class EventRecurrence
                 // calculate the number of days of the week the event repeats on
                 int c = 0;                      // count of weekdays event repeats on
                 for (int tmp=(data&0b1111111); tmp>0; tmp>>=1) { if ((tmp&0b1)==1) c++; }
-                Logging.info(this.getClass(), "c="+c);
                 int rem = count - c*weeks;      // how many events have past
-                Logging.info(this.getClass(), "rem="+c);
 
                 // process the remaining portion of the week
                 ZonedDateTime cur = startDate.plusWeeks(weeks);

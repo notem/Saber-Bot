@@ -324,7 +324,7 @@ public class ListCommand implements Command
             {
                 skip = true;
             }
-            else if(!roleFilters.isEmpty())
+            if(!roleFilters.isEmpty())
             {
                 skip = true;
                 for(String role : roleFilters)
