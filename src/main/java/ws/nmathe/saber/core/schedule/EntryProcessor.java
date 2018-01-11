@@ -10,10 +10,7 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.*;
@@ -65,11 +62,15 @@ class EntryProcessor implements Runnable
                 processAndQueueEvents(queue.START_QUEUE, query);
 
                 // process entries with reminders
-                query = and(eq("hasStarted",false), lte("reminders", new Date()));
+                query = and(
+                            and(eq("hasStarted",false), lte("reminders", new Date())),
+                            gte("start", new Date()));
                 processAndQueueEvents(queue.REMIND_QUEUE, query);
 
                 // process entries with end reminders
-                query = and(eq("hasStarted",true), lte("end_reminders", new Date()));
+                query = and(
+                            and(eq("hasStarted",true), lte("end_reminders", new Date())),
+                            gte("end", new Date()));
                 processAndQueueEvents(queue.REMIND_QUEUE, query);
 
                 // process entries with announcement overrides
