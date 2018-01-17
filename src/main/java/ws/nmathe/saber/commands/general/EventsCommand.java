@@ -106,7 +106,7 @@ public class EventsCommand implements Command
                     }
                     entries.remove(top);
 
-                    long timeTil = top.getStart().until(ZonedDateTime.now(), ChronoUnit.MINUTES);
+                    long timeTil = ZonedDateTime.now().until(top.getStart(), ChronoUnit.MINUTES);
 
                     // create entry in the message for the event
                     content.append(":id:``").append(ParsingUtilities.intToEncodedID(top.getId()))
