@@ -14,8 +14,11 @@ import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -103,13 +106,17 @@ public class EventsCommand implements Command
                     }
                     entries.remove(top);
 
+                    long timeTil = top.getStart().until(ZonedDateTime.now(), ChronoUnit.MINUTES);
+
                     // create entry in the message for the event
                     content.append(":id:``").append(ParsingUtilities.intToEncodedID(top.getId()))
-                            .append("`` ~ **").append(top.getTitle()).append("** at *")
-                            .append(top.getStart().format(DateTimeFormatter.ofPattern("h:mm a, MMM d")))
-                            .append("* ``[")
-                            .append(top.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.getDefault()))
-                            .append("]``\n");
+                            .append("`` ~ **").append(top.getTitle()).append("** in *");
+                    if(timeTil < 120)
+                        content.append(timeTil).append(" minutes*\n");
+                    else if(timeTil < 24*60)
+                        content.append(timeTil / 60).append(" hours and ").append(timeTil % 60).append(" minutes*\n");
+                    else
+                        content.append(timeTil / (60 * 24)).append(" days*\n");
                     count++;     // iterate event counter
                 }
                 content.append("\n"); // end a schedule list

@@ -411,7 +411,7 @@ public class VerifyUtilities
         if (args.length - index < 1)
         {
             return "That's not the right number of arguments for **" + args[index - 1] + "**! " +
-                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [shouldRepeat]``";
+                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [repeat]``";
         }
         return "";
     }
@@ -423,8 +423,8 @@ public class VerifyUtilities
     {
         if (args.length - index < 3)
         {
-            return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
-                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [#target] [time] [message]``";
+            return "That's not the right number of arguments for **" + args[index - 2] +" "+ args[index - 1] + "**!\n" +
+                    "Use ``" + head + " " + args[0] + " " + args[index - 2] + " " + args[index - 1] + " [#target] [time] [message]``";
         }
         JDA jda = Main.getShardManager().getJDA(event.getGuild().getId());
         String channelId = args[index].replaceAll("[^\\d]", "");
@@ -447,19 +447,19 @@ public class VerifyUtilities
     {
         if (args.length - index < 1)
         {
-            return "That's not the right number of arguments for **" + args[index - 1] + "**!\n" +
-                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + "  [number]``";
+            return "That's not the right number of arguments for **" + args[index - 2] +" "+ args[index - 1] + "**!\n" +
+                    "Use ``" + head + " " + args[0] + " " + args[index - 2] + " " + args[index - 1] + "  [number]``";
         }
         if (!verifyInteger(args[index]))
         {
             return "*" + args[index] + "* is not a number!\n" +
-                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [number]``";
+                    "Use ``" + head + " " + args[0] + " " +  args[index - 2] + " " + args[index - 1] + " [number]``";
         }
         Integer i = Integer.parseInt(args[index]);
         if (!se.getAnnouncementTimes().keySet().contains((i-1)+"") || i < 1)
         {
             return "There does not exist an announcement with number *" + args[index] + "*!\n" +
-                    "Use ``" + head + " " + args[0] + " " + args[index - 1] + " [number]``";
+                    "Use ``" + head + " " + args[0] + " " + args[index - 2] + " " + args[index - 1] + " [number]``";
         }
         return "";
     }

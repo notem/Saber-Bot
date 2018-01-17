@@ -1,6 +1,8 @@
 package ws.nmathe.saber.utils;
 
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.core.entities.User;
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -174,16 +176,34 @@ public class ParsingUtilities
                     List<String> members = entry.getRsvpMembers().get(name);
                     if(members != null)
                     {
-                        /*
-                        Role role = entry.spawnRole(name);
-                        sub += messageFormatHelper("<@&"+role.getId()+">", matcher2);
-                        */
                         StringBuilder userMentions = new StringBuilder();
                         List<String> users = entry.getRsvpMembersOfType(name);
                         for(int i=0; i<users.size(); i++)
                         {
                             if (users.get(i).matches("\\d+"))
                                 userMentions.append("<@").append(users.get(i)).append(">");
+                            if (!(i+1<users.size()))
+                                userMentions.append(" ");
+                        }
+                        sub.append(messageFormatHelper(userMentions.toString(), matcher2));
+                    }
+                }
+                else if(trimmed.matches("(\\[.*?])?mentionm .+(\\[.*?])?")) // rsvp mentions
+                {
+                    String name = trimmed.replaceAll("mentionm ","").replaceAll("\\[.*?]","");
+                    List<String> members = entry.getRsvpMembers().get(name);
+                    if(members != null)
+                    {
+                        StringBuilder userMentions = new StringBuilder();
+                        List<String> users = entry.getRsvpMembersOfType(name);
+                        for(int i=0; i<users.size(); i++)
+                        {
+                            if (users.get(i).matches("\\d+"))
+                            {
+                                Member member = Main.getShardManager().getJDA(entry.getGuildId())
+                                        .getGuildById(entry.getGuildId()).getMemberById(users.get(i));
+                                userMentions.append(member.getEffectiveName());
+                            }
                             if (!(i+1<users.size()))
                                 userMentions.append(" ");
                         }
