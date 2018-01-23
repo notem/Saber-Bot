@@ -8,8 +8,9 @@ import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
@@ -24,19 +25,17 @@ import static com.mongodb.client.model.Filters.*;
 class EntryProcessor implements Runnable
 {
     // thread pool used to reload displays of events
-    private static ExecutorService executor = Executors.newCachedThreadPool();
+    private static ExecutorService timerExecutor = Executors.newCachedThreadPool();
 
-    // future and executor used exclusively when emptying the queue
-    private static Future future = null;
-    private static ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
+    // thread pool used to process events when emptying the queues
+    private static ExecutorService queueExecutor = Executors.newFixedThreadPool(10);
 
     private enum queue { END_QUEUE, START_QUEUE, REMIND_QUEUE, ANNOUNCEMENT_QUEUE }
-
     private EntryManager.type type;
-    private static Queue<Integer> endQueue = new ConcurrentLinkedQueue<>();
-    private static Queue<Integer> startQueue = new ConcurrentLinkedQueue<>();
-    private static Queue<Integer> remindQueue = new ConcurrentLinkedQueue<>();
-    private static Queue<Integer> announcementQueue = new ConcurrentLinkedQueue<>();
+    private static Set<Integer> endQueue          = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static Set<Integer> startQueue        = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static Set<Integer> remindQueue       = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static Set<Integer> announcementQueue = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /** construct the entry processor with type */
     EntryProcessor(EntryManager.type type)
@@ -81,34 +80,32 @@ class EntryProcessor implements Runnable
             }
             else if(type == EntryManager.type.EMPTY) // process and empty the queues
             {
-                // execute new thread to empty queues
-                // the future/executor system is used to insure that event.getMessage() issues
-                // will not indefinitely hang up processing while maintaining serial execution of events
-                if (future!=null && !future.isDone())
-                    if (!future.cancel(true))       // cancel thread; log warning if future fails to be cancelled
-                        Logging.warn(this.getClass(), "Failed to cancel Queue Emptying thread's future!");
-
-                future = singleExecutor.submit(() ->
-                {
-                    Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
-                    while(endQueue.peek() != null)
-                    {
-                        Main.getEntryManager().getEntry(endQueue.poll()).end();
-                    }
-                    while(startQueue.peek() != null)
-                    {
-                        Main.getEntryManager().getEntry(startQueue.poll()).start();
-                    }
-                    while(remindQueue.peek() != null)
-                    {
-                        Main.getEntryManager().getEntry(remindQueue.poll()).remind();
-                    }
-                    while(announcementQueue.peek() != null)
-                    {
-                        Main.getEntryManager().getEntry(announcementQueue.poll()).announce();
-                    }
-                    Logging.info(this.getClass(), "Finished emptying queues.");
+                Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
+                endQueue.forEach(entryId -> {
+                    queueExecutor.submit(() -> {
+                        Main.getEntryManager().getEntry(entryId).end();
+                        endQueue.remove(entryId);
+                    });
                 });
+                startQueue.forEach(entryId -> {
+                    queueExecutor.submit(() -> {
+                        Main.getEntryManager().getEntry(entryId).start();
+                        startQueue.remove(entryId);
+                    });
+                });
+                remindQueue.forEach(entryId -> {
+                    queueExecutor.submit(() -> {
+                        Main.getEntryManager().getEntry(entryId).remind();
+                        remindQueue.remove(entryId);
+                    });
+                });
+                announcementQueue.forEach(entryId -> {
+                    queueExecutor.submit(() -> {
+                        Main.getEntryManager().getEntry(entryId).announce();
+                        announcementQueue.remove(entryId);
+                    });
+                });
+                //Logging.info(this.getClass(), "Finished emptying queues.");
             }
             else
             {
@@ -190,7 +187,7 @@ class EntryProcessor implements Runnable
                             if(jda == null) return;
                             if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
-                            executor.execute(() ->
+                            timerExecutor.execute(() ->
                             {
                                 try
                                 {   // convert to scheduleEntry object and start
