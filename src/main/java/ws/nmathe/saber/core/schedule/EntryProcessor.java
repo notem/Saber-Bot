@@ -28,7 +28,7 @@ class EntryProcessor implements Runnable
     private static ExecutorService timerExecutor = Executors.newCachedThreadPool();
 
     // thread pool used to process events when emptying the queues
-    private static ExecutorService queueExecutor = Executors.newFixedThreadPool(10);
+    private static ExecutorService queueExecutor = Executors.newCachedThreadPool();
 
     private enum queue { END_QUEUE, START_QUEUE, REMIND_QUEUE, ANNOUNCEMENT_QUEUE }
     private EntryManager.type type;
@@ -236,32 +236,32 @@ class EntryProcessor implements Runnable
                                 if(!endQueue.contains(se.getId()))
                                 {
                                     endQueue.add(se.getId());
-                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    // "\" ["+se.getId()+"] to the end queue");
+                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() +
+                                    "\" ["+se.getId()+"] to the end queue");
                                 }
                                 break;
                             case REMIND_QUEUE:
                                 if(!remindQueue.contains(se.getId()))
                                 {
                                     remindQueue.add(se.getId());
-                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    // "\" ["+se.getId()+"] to the remind queue");
+                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() +
+                                    "\" ["+se.getId()+"] to the remind queue");
                                 }
                                 break;
                             case START_QUEUE:
                                 if(!startQueue.contains(se.getId()))
                                 {
                                     startQueue.add(se.getId());
-                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    // "\" ["+se.getId()+"] to the start queue");
+                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() +
+                                    "\" ["+se.getId()+"] to the start queue");
                                 }
                                 break;
                             case ANNOUNCEMENT_QUEUE:
                                 if(!announcementQueue.contains(se.getId()))
                                 {
                                     announcementQueue.add(se.getId());
-                                    //Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    // "\" ["+se.getId()+"] to the announce queue");
+                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() +
+                                    "\" ["+se.getId()+"] to the announce queue");
                                 }
                                 break;
                         }

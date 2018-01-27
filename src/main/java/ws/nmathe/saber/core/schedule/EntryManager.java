@@ -43,7 +43,7 @@ public class EntryManager
     public void init()
     {
         /* thread to fill announcement queues and thread to empty announcement queues,
-         share the same scheduler to avoid collisions */
+         share the same scheduler to avoid collisions (as only one thread can be running at any given time) */
         ScheduledExecutorService announcementScheduler = Executors.newSingleThreadScheduledExecutor();
         // fill
         announcementScheduler.scheduleWithFixedDelay(
