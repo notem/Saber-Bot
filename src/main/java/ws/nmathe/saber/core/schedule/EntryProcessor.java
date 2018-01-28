@@ -27,15 +27,19 @@ class EntryProcessor implements Runnable
     // thread pool used to reload displays of events
     private static ExecutorService timerExecutor = Executors.newCachedThreadPool();
 
-    // thread pool used to process events when emptying the queues
-    private static ExecutorService queueExecutor = Executors.newCachedThreadPool();
+    // thread pool used to process events when emptying the announcement sets
+    private static ExecutorService setExecutor = Executors.newCachedThreadPool();
 
     private enum queue { END_QUEUE, START_QUEUE, REMIND_QUEUE, ANNOUNCEMENT_QUEUE }
     private EntryManager.type type;
-    private static Set<Integer> endQueue          = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private static Set<Integer> startQueue        = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private static Set<Integer> remindQueue       = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private static Set<Integer> announcementQueue = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static Set<Integer> endSet      = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-end announcements
+    private static Set<Integer> startSet    = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-start announcements
+    private static Set<Integer> remindSet   = Collections.newSetFromMap(new ConcurrentHashMap<>()); // reminders
+    private static Set<Integer> specialSet  = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-specific announcements
+
+    // this set is used to track which events are currently being processed and should be ignored
+    // if they appear in later database queries
+    private static Set<Integer> processing  = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /** construct the entry processor with type */
     EntryProcessor(EntryManager.type type)
@@ -48,7 +52,8 @@ class EntryProcessor implements Runnable
     {
         try
         {
-            if(type == EntryManager.type.FILL)    // fill the queues
+            /* Fills the sets which events which have announcements that should be processed */
+            if(type == EntryManager.type.FILL)
             {
                 Logging.info(this.getClass(), "Processing entries: Filling queues. . .");
 
@@ -78,43 +83,73 @@ class EntryProcessor implements Runnable
 
                 Logging.info(this.getClass(), "Finished filling queues.");
             }
-            else if(type == EntryManager.type.EMPTY) // process and empty the queues
+            /* Processes the events in each set */
+            else if(type == EntryManager.type.EMPTY)
             {
                 Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
-                endQueue.forEach(entryId -> {
-                    queueExecutor.submit(() -> {
-                        Main.getEntryManager().getEntry(entryId).end();
-                        endQueue.remove(entryId);
-                    });
+                endSet.forEach(entryId ->
+                {
+                    if (!processing.contains(entryId))
+                    {
+                        setExecutor.submit(() ->
+                        {
+                            processing.add(entryId);
+                            Main.getEntryManager().getEntry(entryId).end();
+                            endSet.remove(entryId);
+                            processing.remove(entryId);
+                        });
+                    }
                 });
-                startQueue.forEach(entryId -> {
-                    queueExecutor.submit(() -> {
-                        Main.getEntryManager().getEntry(entryId).start();
-                        startQueue.remove(entryId);
-                    });
+                startSet.forEach(entryId ->
+                {
+                    if (!processing.contains(entryId))
+                    {
+                        setExecutor.submit(() ->
+                        {
+                            processing.add(entryId);
+                            Main.getEntryManager().getEntry(entryId).start();
+                            startSet.remove(entryId);
+                            processing.remove(entryId);
+                        });
+                    }
                 });
-                remindQueue.forEach(entryId -> {
-                    queueExecutor.submit(() -> {
-                        Main.getEntryManager().getEntry(entryId).remind();
-                        remindQueue.remove(entryId);
-                    });
+                remindSet.forEach(entryId ->
+                {
+                    if (!processing.contains(entryId))
+                    {
+                        setExecutor.submit(() ->
+                        {
+                            processing.add(entryId);
+                            Main.getEntryManager().getEntry(entryId).remind();
+                            remindSet.remove(entryId);
+                            processing.remove(entryId);
+                        });
+                    }
                 });
-                announcementQueue.forEach(entryId -> {
-                    queueExecutor.submit(() -> {
-                        Main.getEntryManager().getEntry(entryId).announce();
-                        announcementQueue.remove(entryId);
-                    });
+                specialSet.forEach(entryId ->
+                {
+                    if (!processing.contains(entryId))
+                    {
+                        setExecutor.submit(() ->
+                        {
+                            processing.add(entryId);
+                            Main.getEntryManager().getEntry(entryId).announce();
+                            specialSet.remove(entryId);
+                            processing.remove(entryId);
+                        });
+                    }
                 });
                 //Logging.info(this.getClass(), "Finished emptying queues.");
             }
-            else
+            else /* Updates the 'starts in x minutes' timer on events */
             {
-                Bson query = new Document(); // should an invalid level ever be passed in, all entries will be reloaded!
+                // dummy document query will filter all events
+                // should an invalid level ever be passed in, all entries will be reloaded!
+                Bson query = new Document();
 
                 Logging.info(this.getClass(), "Processing entries: updating timers. . .");
                 if(type == EntryManager.type.UPDATE1)
-                {
-                    // adjust timers for entries starting/ending within the next hour
+                {   // adjust timers for entries starting/ending within the next hour
                     query = or(
                             and(
                                     eq("hasStarted",false),
@@ -134,8 +169,7 @@ class EntryProcessor implements Runnable
 
                 }
                 if(type == EntryManager.type.UPDATE2)
-                {
-                    // purge expiring events
+                {   // purge expiring events
                     query = lte("expire", Date.from(ZonedDateTime.now().plusDays(1).toInstant()));
 
                     //delete message objects
@@ -163,8 +197,7 @@ class EntryProcessor implements Runnable
 
                 }
                 if(type == EntryManager.type.UPDATE3)
-                {
-                    // adjust timers for entries that aren't starting/ending within the next day
+                {   // adjust timers for entries that aren't starting/ending within the next day
                     query = or(
                             and(
                                     eq("hasStarted", false),
@@ -233,33 +266,33 @@ class EntryProcessor implements Runnable
                         switch(queueIdentifier)
                         {
                             case END_QUEUE:
-                                if(!endQueue.contains(se.getId()))
+                                if(!endSet.contains(se.getId()))
                                 {
-                                    endQueue.add(se.getId());
+                                    endSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
                                     "\" ["+se.getId()+"] to the end queue");
                                 }
                                 break;
                             case REMIND_QUEUE:
-                                if(!remindQueue.contains(se.getId()))
+                                if(!remindSet.contains(se.getId()))
                                 {
-                                    remindQueue.add(se.getId());
+                                    remindSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
                                     "\" ["+se.getId()+"] to the remind queue");
                                 }
                                 break;
                             case START_QUEUE:
-                                if(!startQueue.contains(se.getId()))
+                                if(!startSet.contains(se.getId()))
                                 {
-                                    startQueue.add(se.getId());
+                                    startSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
                                     "\" ["+se.getId()+"] to the start queue");
                                 }
                                 break;
                             case ANNOUNCEMENT_QUEUE:
-                                if(!announcementQueue.contains(se.getId()))
+                                if(!specialSet.contains(se.getId()))
                                 {
-                                    announcementQueue.add(se.getId());
+                                    specialSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
                                     "\" ["+se.getId()+"] to the announce queue");
                                 }
