@@ -182,8 +182,8 @@ public class ParsingUtilities
                         {
                             if (users.get(i).matches("\\d+"))
                                 userMentions.append("<@").append(users.get(i)).append(">");
-                            if (!(i+1<users.size()))
-                                userMentions.append(" ");
+                            if (i+1<users.size())
+                                userMentions.append(", ");
                         }
                         sub.append(messageFormatHelper(userMentions.toString(), matcher2));
                     }
@@ -203,7 +203,7 @@ public class ParsingUtilities
                                         .getGuildById(entry.getGuildId()).getMemberById(users.get(i));
                                 userMentions.append(member.getEffectiveName());
                             }
-                            if (!(i+1<users.size()))
+                            if (i+1<users.size())
                                 userMentions.append(", ");
                         }
                         sub.append(messageFormatHelper(userMentions.toString(), matcher2));
