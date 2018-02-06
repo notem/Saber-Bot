@@ -1,9 +1,8 @@
 package ws.nmathe.saber.utils;
 
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.*;
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -422,8 +421,12 @@ public class ParsingUtilities
             {
                 rsvped.addAll(entry.getRsvpMembersOfType(key));
             }
-            Guild guild = Main.getShardManager().getJDA(entry.getGuildId()).getGuildById(entry.getGuildId());
-            users = guild.getMembers().stream().map(member -> member.getUser().getId())
+            JDA shard = Main.getShardManager().getJDA(entry.getGuildId());
+            Guild guild = shard.getGuildById(entry.getGuildId());
+            Channel channel = shard.getTextChannelById(entry.getChannelId());
+            users = guild.getMembers().stream()
+                    .filter(member -> member.getPermissions(channel).contains(Permission.MESSAGE_READ))
+                    .map(member -> member.getUser().getId())
                     .filter(memberId -> !rsvped.contains(memberId)).collect(Collectors.toList());
         } else
         {
