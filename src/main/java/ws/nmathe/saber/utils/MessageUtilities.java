@@ -182,8 +182,8 @@ public class MessageUtilities
                 }
             });
         }
-        catch( PermissionException ignored) { }
-        catch( Exception e)
+        catch (PermissionException ignored) { }
+        catch (Exception e)
         {
             Logging.exception(MessageUtilities.class, e);
         }

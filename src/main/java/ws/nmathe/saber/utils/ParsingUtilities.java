@@ -1,5 +1,6 @@
 package ws.nmathe.saber.utils;
 
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.User;
@@ -173,11 +174,10 @@ public class ParsingUtilities
                 else if(trimmed.matches("(\\[.*?])?mention .+(\\[.*?])?")) // rsvp mentions
                 {
                     String name = trimmed.replaceAll("mention ","").replaceAll("\\[.*?]","");
-                    List<String> members = entry.getRsvpMembers().get(name);
-                    if(members != null)
+                    List<String> users = compileUserList(entry, name);
+                    if (users != null)  // a valid mention option was used
                     {
                         StringBuilder userMentions = new StringBuilder();
-                        List<String> users = entry.getRsvpMembersOfType(name);
                         for(int i=0; i<users.size(); i++)
                         {
                             if (users.get(i).matches("\\d+"))
@@ -191,11 +191,10 @@ public class ParsingUtilities
                 else if(trimmed.matches("(\\[.*?])?mentionm .+(\\[.*?])?")) // rsvp mentions
                 {
                     String name = trimmed.replaceAll("mentionm ","").replaceAll("\\[.*?]","");
-                    List<String> members = entry.getRsvpMembers().get(name);
-                    if(members != null)
+                    List<String> users = compileUserList(entry, name);
+                    if (users != null)
                     {
                         StringBuilder userMentions = new StringBuilder();
-                        List<String> users = entry.getRsvpMembersOfType(name);
                         for(int i=0; i<users.size(); i++)
                         {
                             if (users.get(i).matches("\\d+"))
@@ -205,7 +204,7 @@ public class ParsingUtilities
                                 userMentions.append(member.getEffectiveName());
                             }
                             if (!(i+1<users.size()))
-                                userMentions.append(" ");
+                                userMentions.append(", ");
                         }
                         sub.append(messageFormatHelper(userMentions.toString(), matcher2));
                     }
@@ -286,8 +285,7 @@ public class ParsingUtilities
                                 else
                                     announceMsg.append(" in ").append(minutes + 1).append(" minutes");
                             }
-                        }
-                        else
+                        } else
                         {
                             announceMsg.append("ends");
                             long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
@@ -404,6 +402,35 @@ public class ParsingUtilities
         if(matcher.find())
             str += matcher.group().replaceAll("[\\[\\]]", "");
         return str;
+    }
+
+
+    /**
+     * generates a list of user IDs for a given RSVP category of an event
+     * @param entry ScheduleEntry object
+     * @param name name of RSVP category
+     * @return List of Stings or null if category is invalid
+     */
+    private static List<String> compileUserList(ScheduleEntry entry, String name)
+    {
+        List<String> users = null;
+        if (name.toLowerCase().equals("no-input"))
+        {
+            List<String> rsvped = new ArrayList<>();
+            Set<String> keys = entry.getRsvpMembers().keySet();
+            for(String key : keys)
+            {
+                rsvped.addAll(entry.getRsvpMembersOfType(key));
+            }
+            Guild guild = Main.getShardManager().getJDA(entry.getGuildId()).getGuildById(entry.getGuildId());
+            users = guild.getMembers().stream().map(member -> member.getUser().getId())
+                    .filter(memberId -> !rsvped.contains(memberId)).collect(Collectors.toList());
+        } else
+        {
+            List<String> members = entry.getRsvpMembers().get(name);
+            if(members != null) users = entry.getRsvpMembersOfType(name);
+        }
+        return users;
     }
 
 
