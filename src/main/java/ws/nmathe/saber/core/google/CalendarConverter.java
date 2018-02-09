@@ -280,7 +280,7 @@ public class CalendarConverter
                                 String[] tmp = comment.split(":",2); // split to limit:
                                 if(tmp.length > 1)
                                 {
-                                    imageUrl = tmp[1].trim();
+                                    imageUrl = tmp[1].trim().replaceAll(" ","");
                                     if (!VerifyUtilities.verifyUrl(imageUrl)) imageUrl = null;
                                 }
                             }
@@ -290,7 +290,7 @@ public class CalendarConverter
                                 String[] tmp = comment.split(":",2);
                                 if(tmp.length > 1)
                                 {
-                                    thumbnailUrl = tmp[1].trim();
+                                    thumbnailUrl = tmp[1].trim().trim().replaceAll(" ","");
                                     if(!VerifyUtilities.verifyUrl(thumbnailUrl)) thumbnailUrl = null;
                                 }
                             }
@@ -325,13 +325,13 @@ public class CalendarConverter
                             else if (lowerCase.startsWith("url:"))
                             {
                                 String[] tmp = comment.split(":",2);
-                                if(tmp.length > 1 && VerifyUtilities.verifyUrl(tmp[1]))
-                                    titleUrl = tmp[1];
+                                if(tmp.length > 1 && VerifyUtilities.verifyUrl(tmp[1].trim().replaceAll(" ","")))
+                                    titleUrl = tmp[1].trim().replaceAll(" ","");
                             }
                             // deadline
                             else if (lowerCase.startsWith("deadline:"))
                             {
-                                String tmp = lowerCase.replace("deadline:","").trim();
+                                String tmp = lowerCase.replace("deadline:","").trim().replaceAll(" ","");
                                 if(VerifyUtilities.verifyDate(tmp))
                                     rsvpDeadline = ParsingUtilities.parseDate(tmp, zone);
                             }
