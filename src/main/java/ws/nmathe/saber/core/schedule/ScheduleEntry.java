@@ -1242,19 +1242,16 @@ public class ScheduleEntry
      */
     public ScheduleEntry removeAnnouncementOverride(Integer id)
     {
-        Date date = this.announcementDates.get(id.toString());
-        if (date != null)
-        {
-            this.announcementDates.remove(id.toString());
-            this.announcementMessages.remove(id.toString());
-            this.announcementTimes.remove(id.toString());
-            this.announcementTargets.remove(id.toString());
+        this.announcementDates.remove(id.toString());
+        this.announcementMessages.remove(id.toString());
+        this.announcementTimes.remove(id.toString());
+        this.announcementTargets.remove(id.toString());
 
-            // only remove from the announcements list if there are no other announcements scheduled for that time
-            if(!this.announcementDates.containsValue(date))
-            {
-                this.announcements.remove(date);
-            }
+        // only remove from the announcements list if there are no other announcements scheduled for that time
+        Date date = this.announcementDates.get(id.toString());
+        if ((date != null) && !this.announcementDates.containsValue(date))
+        {
+            this.announcements.remove(date);
         }
         return this;
     }
