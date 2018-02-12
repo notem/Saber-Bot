@@ -17,6 +17,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.HttpUtilities;
 import ws.nmathe.saber.utils.Logging;
 
+import javax.security.auth.login.LoginException;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -296,12 +297,12 @@ public class ShardManager
             }
             this.jdaShards.put(shardId, shardBuilder.buildAsync());
         }
-        catch(RateLimitedException e)
+        catch (LoginException e)
         {
-            Logging.warn(this.getClass(), e.getMessage() + " : " + e.getRateLimitedRoute());
+            Logging.warn(this.getClass(), e.getMessage());
             this.restartShard(shardId);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Logging.exception(this.getClass(), e);
         }
@@ -331,7 +332,7 @@ public class ShardManager
                         if(name.contains("%shardTotal"))
                             name = name.replaceAll("%shardTotal", shard.getShardInfo().getShardTotal() + "");
                     }
-                    shard.getPresence().setGame(Game.of(name, "https://nmathe.ws/bots/saber"));
+                    shard.getPresence().setGame(Game.of(Game.GameType.DEFAULT, name, "https://nmathe.ws/bots/saber"));
                 };
 
                 if(isSharding())

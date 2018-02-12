@@ -58,6 +58,7 @@ public class CommandHandler
         commands.put((new SchedulesCommand()).name(), new SchedulesCommand());
         commands.put((new AnnouncementsCommand()).name(), new AnnouncementsCommand());
         commands.put((new ManageCommand()).name(), new ManageCommand());
+        commands.put((new PurgeCommand().name()), new PurgeCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put((new GlobalMsgCommand()).name(), new GlobalMsgCommand());
@@ -154,7 +155,7 @@ public class CommandHandler
                         {
                             commands.get(cc.invoke).action(cc.prefix, cc.args, cc.event);
 
-                            String info = "Executed command [" + cc.event.getMessage().getRawContent() +
+                            String info = "Executed command [" + cc.event.getMessage().getContentRaw() +
                                     "] by " + cc.event.getAuthor().getName() + " [" + cc.event.getMessage().getAuthor().getId()+ "]";
                             if(cc.event.getGuild() != null)
                                 info += " on " + cc.event.getGuild().getName()+ " [" + cc.event.getGuild().getId() + "]";

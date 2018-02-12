@@ -48,7 +48,7 @@ public class EventListener extends ListenerAdapter
     public void onMessageReceived(MessageReceivedEvent event)
     {
         // store some properties of the message for use later
-        String content = event.getMessage().getRawContent();   // the raw string the user sent
+        String content = event.getMessage().getContentRaw();   // the raw string the user sent
         String userId = event.getAuthor().getId();             // the ID of the user
 
         // ignore messages sent by itself

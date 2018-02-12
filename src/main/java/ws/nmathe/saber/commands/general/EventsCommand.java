@@ -106,11 +106,18 @@ public class EventsCommand implements Command
                     }
                     entries.remove(top);
 
+                    // determine time until the event begins/ends
                     long timeTil = ZonedDateTime.now().until(top.getStart(), ChronoUnit.MINUTES);
+                    String status = "begins";
+                    if (timeTil < 0)    // adjust if event is ending
+                    {
+                        timeTil = ZonedDateTime.now().until(top.getEnd(), ChronoUnit.MINUTES);
+                        status = "ends";
+                    }
 
-                    // create entry in the message for the event
+                    // add the event as a single line in the content
                     content.append(":id:``").append(ParsingUtilities.intToEncodedID(top.getId()))
-                            .append("`` ~ **").append(top.getTitle()).append("** in *");
+                            .append("`` ~ **").append(top.getTitle()).append("** ").append(status).append(" in *");
                     if(timeTil < 120)
                         content.append(timeTil).append(" minutes*\n");
                     else if(timeTil < 24*60)

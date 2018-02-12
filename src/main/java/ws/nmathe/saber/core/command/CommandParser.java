@@ -27,7 +27,7 @@ class CommandParser
     CommandContainer parse(MessageReceivedEvent e, String prefix)
     {
         /// trim off the prefix
-        String raw = e.getMessage().getRawContent();
+        String raw = e.getMessage().getContentRaw();
         String trimmed = StringUtils.replaceOnce(raw,prefix, "").trim();
 
         // split at white spaces (non newlines) or quotation captures

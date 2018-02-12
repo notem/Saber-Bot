@@ -187,9 +187,10 @@ public class ParsingUtilities
                         sub.append(messageFormatHelper(userMentions.toString(), matcher2));
                     }
                 }
-                else if(trimmed.matches("(\\[.*?])?mentionm .+(\\[.*?])?")) // rsvp mentions
+                else if(trimmed.matches("(\\[.*?])?mentionm .+(\\[.*?])?")
+                        || trimmed.matches("(\\[.*?])?list .+(\\[.*?])?")) // rsvp mentions
                 {
-                    String name = trimmed.replaceAll("mentionm ","").replaceAll("\\[.*?]","");
+                    String name = trimmed.replace("mentionm ","").replace("list","").replaceAll("\\[.*?]","");
                     List<String> users = compileUserList(entry, name);
                     if (users != null)
                     {

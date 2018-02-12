@@ -84,8 +84,11 @@ public class ConfigCommand implements Command
                 "When removing an rsvp group, simply provide the group name as an argument.\n" +
                 "Custom discord emoticons are allowed." +
                 "\n\n" +
+                "\nIf you would like to allow users to RSVP for multiple categories, turn exclusivity off by using the ``exclude`` option." +
+                "\nWhen ``logging`` is configured with a channel, all rsvp join/leave actions will get logged to the channel" +
+                "\nThe ``confirm`` rsvp setting may be enabled to have the bot direct message users upon joining/leaving an rsvp group." +
                 "\nThe emoji used to clear a user from all rsvp groups can be set using the ``clear`` option." +
-                "\nIf you would like to allow users to RSVP for multiple categories, turn exclusivity off by using the ``exclusivity`` option.";
+                "When ``clear`` is configured with a discord reaction, the emoji will get added to events and when clicked will remove the user from the rsvp categories on the event.";
         info.addUsageCategory(cat4, cont4);
 
         info.addUsageExample(cmd + " #guild_events");

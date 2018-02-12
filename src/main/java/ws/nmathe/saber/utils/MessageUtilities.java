@@ -46,7 +46,7 @@ public class MessageUtilities
     /// version which takes a message rather than a string
     public static void sendMsg(Message message, MessageChannel chan, Consumer<Message> action )
     {
-        if(message.getContent().isEmpty() && message.getEmbeds().isEmpty()) return;
+        if (message.getContentRaw().isEmpty() && message.getEmbeds().isEmpty()) return;
 
         try
         {
@@ -68,7 +68,7 @@ public class MessageUtilities
     /// customizable error handling (used by list command temporarily)
     public static void sendMsg(Message message, MessageChannel chan, Consumer<Message> action, Consumer<Throwable> error )
     {
-        if(message.getContent().isEmpty() && message.getEmbeds().isEmpty()) return;
+        if (message.getContentRaw().isEmpty() && message.getEmbeds().isEmpty()) return;
 
         try
         {
@@ -83,7 +83,7 @@ public class MessageUtilities
     /// blocking version
     public static Message sendMsg(Message message, MessageChannel chan)
     {
-        if(message.getContent().isEmpty() && message.getEmbeds().isEmpty()) return null;
+        if (message.getContentRaw().isEmpty() && message.getEmbeds().isEmpty()) return null;
 
         try
         {
@@ -129,7 +129,7 @@ public class MessageUtilities
      */
     public static void editMsg(Message newMsg, Message msg, Consumer<Message> action )
     {
-        if (newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return;
+        if (newMsg.getContentRaw().isEmpty() && newMsg.getEmbeds().isEmpty()) return;
 
         try
         {
@@ -151,14 +151,14 @@ public class MessageUtilities
     // blocking
     public static Message editMsg(Message newMsg, Message msg)
     {
-        if(newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return null;
+        if (newMsg.getContentRaw().isEmpty() && newMsg.getEmbeds().isEmpty()) return null;
 
         try
         {
             return msg.editMessage(newMsg).complete();
         }
-        catch( PermissionException e) { return null; }
-        catch( Exception e)
+        catch (PermissionException e) { return null; }
+        catch (Exception e)
         {
             Logging.exception( MessageUtilities.class, e );
             return null;
