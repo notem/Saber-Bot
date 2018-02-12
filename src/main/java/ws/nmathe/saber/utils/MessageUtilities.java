@@ -188,4 +188,18 @@ public class MessageUtilities
             Logging.exception(MessageUtilities.class, e);
         }
     }
+
+    public static Void deleteMsg(Message msg)
+    {
+        try
+        {
+            return msg.delete().complete();
+        }
+        catch (PermissionException ignored) { }
+        catch (Exception e)
+        {
+            Logging.exception(MessageUtilities.class, e);
+        }
+        return null;
+    }
 }

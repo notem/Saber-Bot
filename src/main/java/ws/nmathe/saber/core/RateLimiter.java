@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RateLimiter
 {
-    private long threshold;
+    private long threshold; // milliseconds
     private Map<String, Long> timestampMap;
 
     public RateLimiter()

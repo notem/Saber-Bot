@@ -7,12 +7,23 @@ import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.RateLimiter;
 import ws.nmathe.saber.utils.MessageUtilities;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.mongodb.client.model.Filters.eq;
 
 public class PurgeCommand implements Command
 {
+
+    // rate limiter with a threshold of 1 minute
+    private static RateLimiter limiter = new RateLimiter(60*1000);
+
+    // set of guilds which have an ongoing purge
+    private static Map<String, String> processing = new ConcurrentHashMap<>();
+
     @Override
     public String name()
     {
@@ -64,6 +75,19 @@ public class PurgeCommand implements Command
             return "I could not find " + args[index] + " on your guild!";
         }
 
+        // basic protection against misuse
+        if (limiter.isOnCooldown(event.getGuild().getId()))
+        {
+            return "The purge command has been used on your guild recently.\n" +
+                    "Please wait at least one minute before reusing the command!";
+        }
+
+        if (processing.keySet().contains(event.getGuild().getId()))
+        {
+            return "I am still purging messages from <#" + processing.getOrDefault(event.getGuild().getId(), "0") + ">.\n" +
+                    "You may not issue another purge command until this finishes.";
+        }
+
         return "";
     }
 
@@ -73,10 +97,14 @@ public class PurgeCommand implements Command
         TextChannel channel = event.getGuild().getJDA().getTextChannelById(args[0].replaceAll("[^\\d]", ""));
         Integer[] count = {100};                                // number of messages to remove
         String botId = event.getJDA().getSelfUser().getId();    // ID of bot to check messages against
+
+        processing.put(event.getGuild().getId(), channel.getId());
         channel.getIterableHistory().stream()
                 .filter(message -> message.getAuthor().getId().equals(botId) && (count[0]-- > 0))
                 .forEach((message ->
                 {
+                    message.getChannel().sendTyping().queue();
+
                     // sleep for half a second before continuing
                     try { Thread.sleep(500); }
                     catch (InterruptedException ignored) {}
@@ -84,9 +112,10 @@ public class PurgeCommand implements Command
                     Bson query = eq("messageId", message.getId());
                     if (Main.getDBDriver().getEventCollection().count(query) == 0)
                     {
-                        MessageUtilities.deleteMsg(message, null);
+                        MessageUtilities.deleteMsg(message);
                     }
                 }));
+        processing.put(event.getGuild().getId(), channel.getId());
 
         // send success message
         String content = "Finished purging old message.";
