@@ -115,7 +115,7 @@ public class PurgeCommand implements Command
                         MessageUtilities.deleteMsg(message);
                     }
                 }));
-        processing.put(event.getGuild().getId(), channel.getId());
+        processing.remove(event.getGuild().getId(), channel.getId());
 
         // send success message
         String content = "Finished purging old message.";

@@ -140,7 +140,7 @@ public class ConfigCommand implements Command
             }
 
             Set<Integer> list = null;
-            switch( args[index++] )
+            switch (args[index++].toLowerCase())
             {
                 case "m":
                 case "msg":
@@ -577,7 +577,7 @@ public class ConfigCommand implements Command
 
         if (args.length > 1)
         {
-            switch (args[index++])
+            switch (args[index++].toLowerCase())
             {
                 case "m":
                 case "msg":

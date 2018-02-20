@@ -80,7 +80,7 @@ public class TestCommand implements Command
 
         if(args.length == 2)
         {
-            switch(args[index])
+            switch(args[index].toLowerCase())
             {
                 case "start":
                 case "end":
@@ -118,7 +118,7 @@ public class TestCommand implements Command
         String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getChannelId());
         if(args.length == 2)
         {
-            switch(args[index])
+            switch(args[index].toLowerCase())
             {
                 case "e":
                 case "end":

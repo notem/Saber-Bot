@@ -145,7 +145,7 @@ public class CreateCommand implements Command
             while (index < args.length)
             {
                 String verify;
-                switch (args[index++].toLowerCase())
+                switch (args[index++].toLowerCase().toLowerCase())
                 {
                     case "d":
                     case "date":
@@ -280,7 +280,7 @@ public class CreateCommand implements Command
                 index = 0;
                 while(index < args.length)
                 {
-                    switch(args[index++].toLowerCase())
+                    switch(args[index++].toLowerCase().toLowerCase())
                     {
                         case "d":
                         case "date":

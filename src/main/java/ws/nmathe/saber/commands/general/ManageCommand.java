@@ -80,7 +80,7 @@ public class ManageCommand implements Command
 
         // verify valid action argument
         index++;
-        switch (args[index])
+        switch (args[index].toLowerCase())
         {
             case "a":
             case "add":
@@ -113,7 +113,7 @@ public class ManageCommand implements Command
 
         String content="", group, user;
         List<String> members;
-        switch(args[index++])
+        switch(args[index++].toLowerCase())
         {
             case "a":
             case "add":

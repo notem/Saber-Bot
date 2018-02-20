@@ -134,7 +134,7 @@ public class AnnouncementsCommand implements Command
         if(args.length > 2)
         {
             // if additional args have been provided. . .
-            switch(args[index++])
+            switch(args[index++].toLowerCase())
             {
                 case "a":
                 case "add":

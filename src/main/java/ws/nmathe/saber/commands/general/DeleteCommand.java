@@ -60,7 +60,7 @@ public class DeleteCommand implements Command
         }
 
         // pass if "all"
-        if (args[0].equals("all"))
+        if (args[0].toLowerCase().equals("all"))
         {
             return "";
         }
@@ -89,7 +89,7 @@ public class DeleteCommand implements Command
     @Override
     public void action(String prefix, String[] args, MessageReceivedEvent event)
     {
-        if(args[0].equals("all"))
+        if(args[0].toLowerCase().equals("all"))
         {
             // delete all schedule
             Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId())

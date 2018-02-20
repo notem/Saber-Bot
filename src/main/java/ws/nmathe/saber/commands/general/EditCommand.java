@@ -410,7 +410,7 @@ public class EditCommand implements Command
         ScheduleEntry se = Main.getEntryManager().getEntry( entryId );
 
         Message msg = se.getMessageObject();
-        if( msg==null ) return;
+        if (msg==null) return;
 
         //
         // edit the event if command contains more arguments than the event ID,
@@ -422,7 +422,7 @@ public class EditCommand implements Command
             {
                 ZoneId zone = Main.getScheduleManager().getTimeZone(se.getChannelId());
                 ArrayList<String> comments;
-                switch( args[index++] )
+                switch (args[index++].toLowerCase())
                 {
                     case "c":
                     case "comment":

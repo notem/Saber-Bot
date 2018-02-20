@@ -128,7 +128,7 @@ public class ListCommand implements Command
 
             String filterType = filter[0].toLowerCase().trim();
             String filterValue = filter[1].trim();
-            switch(filterType)
+            switch(filterType.toLowerCase())
             {
                 case "r":
                 case "role":
@@ -193,7 +193,7 @@ public class ListCommand implements Command
 
             String filterType = args[index].split(":")[0].toLowerCase().trim();
             String filterValue = args[index].split(":")[1].trim();
-            switch(filterType)
+            switch(filterType.toLowerCase())
             {
                 case "r":
                 case "role":

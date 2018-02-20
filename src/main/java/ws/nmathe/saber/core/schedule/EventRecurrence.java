@@ -1,7 +1,5 @@
 package ws.nmathe.saber.core.schedule;
 
-import ws.nmathe.saber.utils.Logging;
-
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;

@@ -74,10 +74,14 @@ public class SortCommand implements Command
         // check for optional arguments
         if(args.length == 2)
         {
-            switch(args[1])
+            switch(args[1].toLowerCase())
             {
                 case "asc":
+                case "ascend":
+                case "ascending":
                 case "desc":
+                case "descend":
+                case "descending":
                     break;
 
                 default:
@@ -94,11 +98,11 @@ public class SortCommand implements Command
         int index = 0;
         String cId = args[index].replaceAll("[^\\d]","");
 
-        if(args.length <= 1 || args[1].equalsIgnoreCase("asc"))
+        if(args.length <= 1 || args[1].toLowerCase().startsWith("asc"))
         {
             Main.getScheduleManager().sortSchedule(cId, false);
         }
-        else if(args.length > 1 && args[1].equalsIgnoreCase("desc"))
+        else if(args.length > 1 && args[1].toLowerCase().startsWith("desc"))
         {
             Main.getScheduleManager().sortSchedule(cId, true);
         }
