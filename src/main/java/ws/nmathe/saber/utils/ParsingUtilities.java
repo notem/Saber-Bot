@@ -125,7 +125,9 @@ public class ParsingUtilities
                 }
                 else if(trimmed.matches("(\\[.*?])?start .+(\\[.*?])?")) // advanced end
                 {
-                    String formatter = trimmed.replaceAll("start ","").replaceAll("\\[.*?]","");
+                    String formatter = trimmed.replaceAll("start ","")
+                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}]","-")
+                            .replaceAll("\\[.*?]","");
                     String startString = "";
                     try {
                         startString = entry.getStart().format(DateTimeFormatter.ofPattern(formatter));
@@ -134,7 +136,9 @@ public class ParsingUtilities
                 }
                 else if(trimmed.matches("(\\[.*?])?end .+(\\[.*?])?")) // advanced end
                 {
-                    String formatter = trimmed.replaceAll("end ","").replaceAll("\\[.*?]","");
+                    String formatter = trimmed.replaceAll("end ","")
+                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}]","-")
+                            .replaceAll("\\[.*?]","");
                     String endString = "";
                     try {
                         endString = entry.getEnd().format(DateTimeFormatter.ofPattern(formatter));
