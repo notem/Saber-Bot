@@ -548,6 +548,10 @@ public class VerifyUtilities
             return "That's not enough arguments for *count*!\n" +
                     "Use ``"+head+" "+args[0]+" "+args[index-1]+" "+" [number]``";
         }
+        else if(args[index].equalsIgnoreCase("off"))
+        {
+            return "";
+        }
         else if (!args[index].matches("[\\d]+"))
         {
             return "**" + args[index-1] + "** does not look like a valid number!";
