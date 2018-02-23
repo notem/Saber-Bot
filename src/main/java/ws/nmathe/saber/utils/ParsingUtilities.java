@@ -126,7 +126,7 @@ public class ParsingUtilities
                 else if(trimmed.matches("(\\[.*?])?start .+(\\[.*?])?")) // advanced end
                 {
                     String formatter = trimmed.replaceAll("start ","")
-                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}- ]","-")
+                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}.,\\- ]"," ")
                             .replaceAll("\\[.*?]","");
                     String startString = "";
                     try {
@@ -137,7 +137,7 @@ public class ParsingUtilities
                 else if(trimmed.matches("(\\[.*?])?end .+(\\[.*?])?")) // advanced end
                 {
                     String formatter = trimmed.replaceAll("end ","")
-                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}]- ","-")
+                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}.,\\- ]"," ")
                             .replaceAll("\\[.*?]","");
                     String endString = "";
                     try {
