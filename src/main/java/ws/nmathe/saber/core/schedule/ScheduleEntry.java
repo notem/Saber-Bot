@@ -650,89 +650,91 @@ public class ScheduleEntry
         return (limit > -1) && (size >= limit);
     }
 
-    /**
-     * retrieves the event's title
-     */
     public String getTitle()
     {
         return this.entryTitle;
     }
 
-    /**
-     * retrieves the event's start datetime
-     */
     public ZonedDateTime getStart()
     {
         return this.entryStart;
     }
 
-    /**
-     * retrieves the event's end datetime
-     */
     public ZonedDateTime getEnd()
     {
         return this.entryEnd;
     }
 
-    /**
-     * retrieves the event's comments
-     */
     public ArrayList<String> getComments()
     {
         return this.entryComments;
     }
 
-    /**
-     * retrieves the event's unique ID
-     */
     public Integer getId()
     {
         return this.entryId;
     }
 
-    /**
-     * retrieves the event's repeat settings
-     */
     public Integer getRepeat()
     {
         return this.recurrence.getRepeat();
     }
 
-    /**
-     * retrieves the event's full EventRecurrence object
-     */
     public EventRecurrence getRecurrence()
     {
         return this.recurrence;
     }
 
-    /**
-     * retrieves the event's title url
-     */
     public String getTitleUrl()
     {
         return this.titleUrl;
     }
 
-    /**
-     * retrieves the event's reminders
-     */
     public List<Date> getReminders()
     {
         return this.reminders;
     }
 
-    /**
-     * retrieves the event's end reminders
-     */
     public List<Date> getEndReminders()
     {
         return this.endReminders;
     }
 
-    /**
-     * retrieves the event's google ID
-     */
+    public ZonedDateTime getExpire()
+    {
+        return this.recurrence.getExpire();
+    }
+
+    public String getImageUrl()
+    {
+        return this.imageUrl;
+    }
+
+    public String getThumbnailUrl()
+    {
+        return this.thumbnailUrl;
+    }
+
+    public String getGuildId()
+    {
+        return this.guildId;
+    }
+
+    public String getChannelId()
+    {
+        return this.chanId;
+    }
+
+    public ZonedDateTime getDeadline()
+    {
+        return this.rsvpDeadline;
+    }
+
+    public String getLocation()
+    {
+        return this.location;
+    }
+
     public String getGoogleId()
     {
         return this.googleId;
@@ -781,15 +783,6 @@ public class ScheduleEntry
     }
 
     /**
-     * retrieves the datetime the event is set to expire or null
-     */
-    public ZonedDateTime getExpire()
-    {
-        return this.recurrence.getExpire();
-    }
-
-
-    /**
      * should the event send start announcements?
      */
     public boolean isQuietStart()
@@ -811,46 +804,6 @@ public class ScheduleEntry
     public boolean isQuietRemind()
     {
         return this.quietRemind;
-    }
-
-    /**
-     * retrieves the event's image url
-     */
-    public String getImageUrl()
-    {
-        return this.imageUrl;
-    }
-
-    /**
-     * retrieves the event's thumbnail url
-     */
-    public String getThumbnailUrl()
-    {
-        return this.thumbnailUrl;
-    }
-
-    /**
-     * retrieves the event's guild ID url
-     */
-    public String getGuildId()
-    {
-        return this.guildId;
-    }
-
-    /**
-     * retrieves the event's channel ID url
-     */
-    public String getChannelId()
-    {
-        return this.chanId;
-    }
-
-    /**
-     * retrieves the event's rsvp deadline
-     */
-    public ZonedDateTime getDeadline()
-    {
-        return this.rsvpDeadline;
     }
 
     /**
@@ -891,14 +844,6 @@ public class ScheduleEntry
     public Set<Date> getAnnouncements()
     {
         return this.announcements;
-    }
-
-    /**
-     * retrieves the location string for an event, may be null
-     */
-    public String getLocation()
-    {
-        return this.location;
     }
 
     /**
@@ -1203,7 +1148,7 @@ public class ScheduleEntry
         Integer id = null;
         for (int i=0; i<Integer.MAX_VALUE; i++)
         {
-            if (!this.announcementDates.keySet().contains(i+""))
+            if (!this.announcementTimes.keySet().contains(i+""))
             {
                 id = i;
                 break;
