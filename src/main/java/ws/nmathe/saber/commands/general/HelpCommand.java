@@ -24,10 +24,10 @@ public class HelpCommand implements Command
     public CommandInfo info(String prefix)
     {
         String head = prefix + this.name();
-        String usage = "``" + head + "`` - receive info message";
+        String usage = "``" + head + "`` - receive info messages";
         CommandInfo info = new CommandInfo(usage, CommandInfo.CommandType.USER);
 
-        String cat1 = "";
+        String cat1 = "- Usage\n"+head+" [<command name>]";
         String cont1 = "This commands provides access to the command help documentation.\n" +
                 "To get detailed information concerning the usage of any particular" +
                 " commands use the command ``" + head + " <command>`` where the prefix for <command> is stripped off.\n\n";

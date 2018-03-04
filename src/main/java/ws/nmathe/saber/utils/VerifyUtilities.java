@@ -562,4 +562,22 @@ public class VerifyUtilities
         }
         return "";
     }
+
+    /**
+     * Evaluates correctness of a location string
+     */
+    public static String verifyLocation(String[] args, int index, String head)
+    {
+        if (args.length-index < 1)
+        {
+            return "That is not enough arguments for *location*!\n" +
+                    "Use ``"+head+" .. "+args[index-1]+" [location]``";
+        }
+        else if (args[index].length() > 100)
+        {
+            return "Your location name is to many characters long!\n" +
+                    "Please keep the name length to under 100 characters.";
+        }
+        return "";
+    }
 }

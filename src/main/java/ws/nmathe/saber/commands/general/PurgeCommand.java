@@ -65,7 +65,7 @@ public class PurgeCommand implements Command
         // verify argument 1 is properly formed
         if (!args[index].matches("<#[\\d]+>"))
         {
-            return "The argument supplied with the command does not look like a valid channel!";
+            return "Your channel name, *"+args[index]+"*, looks malformed!";
         }
 
         // verify that argument is a proper link to a channel

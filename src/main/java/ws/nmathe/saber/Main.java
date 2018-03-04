@@ -18,13 +18,13 @@ import ws.nmathe.saber.utils.Logging;
 public class Main
 {
     private static ShardManager shardManager;
-    private static BotSettingsManager botSettingsManager = new BotSettingsManager();
-    private static EntryManager entryManager = new EntryManager();
-    private static ScheduleManager scheduleManager = new ScheduleManager();
-    private static CommandHandler commandHandler = new CommandHandler();
-    private static CalendarConverter calendarConverter = new CalendarConverter();
+    private static BotSettingsManager botSettingsManager     = new BotSettingsManager();
+    private static EntryManager entryManager                 = new EntryManager();
+    private static ScheduleManager scheduleManager           = new ScheduleManager();
+    private static CommandHandler commandHandler             = new CommandHandler();
+    private static CalendarConverter calendarConverter       = new CalendarConverter();
     private static GuildSettingsManager guildSettingsManager = new GuildSettingsManager();
-    private static Driver mongoDriver = new Driver();
+    private static Driver mongoDriver                        = new Driver();
 
     /**
      * initialize the bot

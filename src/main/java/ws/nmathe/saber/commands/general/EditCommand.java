@@ -305,6 +305,13 @@ public class EditCommand implements Command
                     index++;
                     break;
 
+                case "lo":
+                case "location":
+                    verify = VerifyUtilities.verifyLocation(args, index, head);
+                    if (!verify.isEmpty()) return verify;
+                    index++;
+                    break;
+
                 case "an":
                 case "announce":
                 case "announcement":
@@ -672,6 +679,15 @@ public class EditCommand implements Command
                         }
                         se.setRsvpLimit(args[index], lim);
                         index += 2;
+                        break;
+
+                    case "lo":
+                    case "location":
+                        if (args[index].equalsIgnoreCase("off"))
+                            se.setLocation(null);
+                        else
+                            se.setLocation(args[index]);
+                        index++;
                         break;
 
                     case "an":

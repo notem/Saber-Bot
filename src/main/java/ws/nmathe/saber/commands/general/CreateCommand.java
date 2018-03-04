@@ -205,6 +205,13 @@ public class CreateCommand implements Command
                         index++;
                         break;
 
+                    case "lo":
+                    case "location":
+                        verify = VerifyUtilities.verifyLocation(args, index, head);
+                        if (!verify.isEmpty()) return verify;
+                        index++;
+                        break;
+
                     case "today":
                         if(startTime.isBefore(ZonedDateTime.now()))
                         {
@@ -253,6 +260,7 @@ public class CreateCommand implements Command
         ZonedDateTime expire    = null;
         ZonedDateTime deadline  = null;
         Integer count           = null;
+        String location         = null;
         ArrayList<String> comments = new ArrayList<>();
 
         // process title
@@ -352,6 +360,15 @@ public class CreateCommand implements Command
                             index++;
                             break;
 
+                        case "lo":
+                        case "location":
+                            if (args[index].equalsIgnoreCase("off"))
+                                location = null;
+                            else
+                                location = args[index];
+                            index++;
+                            break;
+
                         case "today":
                             startDate = ZonedDateTime.now(zone);
                             endDate = ZonedDateTime.now(zone);
@@ -433,7 +450,8 @@ public class CreateCommand implements Command
                 .setImageUrl(image)
                 .setThumbnailUrl(thumbnail)
                 .setCount(count)
-                .setRsvpDeadline(deadline);
+                .setRsvpDeadline(deadline)
+                .setLocation(location);
 
         // finalize the schedule entry
         Integer entryId = Main.getEntryManager().newEntry(se, true);

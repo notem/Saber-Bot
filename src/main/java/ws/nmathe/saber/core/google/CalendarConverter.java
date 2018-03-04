@@ -350,8 +350,7 @@ public class CalendarConverter
 
                     // parse the event recurrence information
                     if(recurrence != null)
-                    {
-                        // determine the start date
+                    {   // determine the start date
                         ZonedDateTime dtStart = event.getOriginalStartTime() == null ? start :     // if orig is null, use start
                                     (event.getOriginalStartTime().getDateTime() == null ? start :
                                         ZonedDateTime.parse(event.getOriginalStartTime()

@@ -520,16 +520,16 @@ public class ConfigCommand implements Command
                                 "Use ``" + cmd + " [chan] length <new config>``, " +
                                 "where ``<new config>`` is the length of time (in days) to which the linked google " +
                                 "calendar should be synced.\nFor example, \"7\" will sync a weeks worth events to " +
-                                "the schedule and \"30\" will have the schedule display the full month of events.";
+                                "the schedule and \"365\" will have the schedule display the full month of events.";
                     }
                     if(!VerifyUtilities.verifyInteger(args[index]))
                     {
                         return "*" + args[index] + "*" + " is not an integer!\n This option takes a ";
                     }
                     Integer len = Integer.parseInt(args[index]);
-                    if(len>30 || len<1)
+                    if(len>365 || len<1)
                     {
-                        return "The sync length must be number between 1 and 30!";
+                        return "The sync length must be number between 1 and 365!";
                     }
                     break;
 
@@ -846,13 +846,11 @@ public class ConfigCommand implements Command
                     }
                     // otherwise, if the rsvp setting was changes
                     else if(enabled != new_enabled)
-                    {
-                        // set schedule settings
+                    {   // set schedule settings
                         Main.getScheduleManager().setRSVPEnable(cId, new_enabled);
 
                         if(new_enabled)
-                        {
-                            // for each entry on the schedule
+                        {   // for each entry on the schedule
                             Main.getDBDriver().getEventCollection()
                                     .find(eq("channelId", scheduleChan.getId()))
                                     .forEach((Consumer<? super Document>) document ->
@@ -870,8 +868,7 @@ public class ConfigCommand implements Command
                                     });
                         }
                         else
-                        {
-                            // for each entry on the schedule
+                        {   // for each entry on the schedule
                             Main.getDBDriver().getEventCollection()
                                     .find(eq("channelId", scheduleChan.getId()))
                                     .forEach((Consumer<? super Document>) document ->
