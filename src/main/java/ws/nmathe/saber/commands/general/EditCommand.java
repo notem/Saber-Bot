@@ -345,6 +345,11 @@ public class EditCommand implements Command
 
                 case "a":
                 case "add":
+                    if (args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments!\n" +
+                                "Use ``" + head + " " + args[0] + " " + args[index-1] + " [announcement|comment] [args]";
+                    }
                     switch(args[index++].toLowerCase())
                     {
                         case "a":
@@ -373,6 +378,11 @@ public class EditCommand implements Command
 
                 case "re":
                 case "remove":
+                    if (args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments!\n" +
+                                "Use ``" + head + " " + args[0] + " " + args[index-1] + " [announcement|comment] [args]";
+                    }
                     switch(args[index++].toLowerCase())
                     {
                         case "a":
