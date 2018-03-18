@@ -433,7 +433,7 @@ public class CreateCommand implements Command
         // add a day to end if end is after start
         if(start.isAfter(end))
         {
-            end = start.plusDays(1);
+            end = end.plusDays(1);
         }
 
         /*
