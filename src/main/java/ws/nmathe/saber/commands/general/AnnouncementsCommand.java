@@ -188,30 +188,36 @@ public class AnnouncementsCommand implements Command
         if(!entry.isQuietStart())
         {
             String format = Main.getScheduleManager().getStartAnnounceFormat(entry.getChannelId());
-            String target = Main.getScheduleManager().getStartAnnounceChan(entry.getChannelId());
-            if(target.matches("\\d+"))
+            if (!format.isEmpty())
             {
-                JDA jda = Main.getShardManager().getJDA(entry.getGuildId());
-                try
-                { target = jda.getTextChannelById(target).getName(); }
-                catch(Exception ignored)
-                {}
+                String target = Main.getScheduleManager().getStartAnnounceChan(entry.getChannelId());
+                if(target.matches("\\d+"))
+                {
+                    JDA jda = Main.getShardManager().getJDA(entry.getGuildId());
+                    try
+                    { target = jda.getTextChannelById(target).getName(); }
+                    catch(Exception ignored)
+                    {}
+                }
+                content += "[s] \"" + format + "\" at \"START\" on \"#" + target + "\"\n";
             }
-            content += "[s] \"" + format + "\" at \"START\" on \"#" + target + "\"\n";
         }
         if(!entry.isQuietEnd())
         {
             String format = Main.getScheduleManager().getEndAnnounceFormat(entry.getChannelId());
-            String target = Main.getScheduleManager().getEndAnnounceChan(entry.getChannelId());
-            if(target.matches("\\d+"))
+            if (!format.isEmpty())
             {
-                JDA jda = Main.getShardManager().getJDA(entry.getGuildId());
-                try
-                { target = jda.getTextChannelById(target).getName(); }
-                catch(Exception ignored)
-                {}
+                String target = Main.getScheduleManager().getEndAnnounceChan(entry.getChannelId());
+                if(target.matches("\\d+"))
+                {
+                    JDA jda = Main.getShardManager().getJDA(entry.getGuildId());
+                    try
+                    { target = jda.getTextChannelById(target).getName(); }
+                    catch(Exception ignored)
+                    {}
+                }
+                content += "[e] \"" + format + "\" at \"END\" on \"#" + target + "\"\n";
             }
-            content += "[e] \"" + format + "\" at \"END\" on \"#" + target + "\"\n";
         }
         if(!entry.isQuietRemind())
         {
