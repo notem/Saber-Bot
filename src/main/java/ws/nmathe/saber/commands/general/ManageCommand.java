@@ -11,6 +11,7 @@ import ws.nmathe.saber.utils.VerifyUtilities;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * used for generating the list of valid timezone strings
@@ -95,7 +96,8 @@ public class ManageCommand implements Command
 
         // verify the group is a valid group
         index++;
-        if (!entry.getRsvpMembers().keySet().contains(args[index]))
+        Map<String, String> options = Main.getScheduleManager().getRSVPOptions(entry.getChannelId());
+        if (!options.keySet().contains(args[index]))
         {
             return "There is no RSVP group called *" + args[index] + "* on the event!";
         }
