@@ -128,7 +128,7 @@ public class ManageCommand implements Command
                 if (!logging.isEmpty())
                 {
                     String msg = "";
-                    if(user.matches("[\\d]")) msg += "<@" + user + ">";
+                    if(user.matches("[\\d]+")) msg += "<@" + user + ">";
                     else msg += user;
                     msg += " has been added to the RSVP group *"+group+"* for **" +
                             se.getTitle() + "** - :id: **" + ParsingUtilities.intToEncodedID(se.getId()) + "**";
@@ -149,7 +149,7 @@ public class ManageCommand implements Command
                 if (!logging.isEmpty())
                 {
                     String msg = "";
-                    if(user.matches("[\\d]")) msg += "<@" + user + ">";
+                    if(user.matches("[\\d]+")) msg += "<@" + user + ">";
                     else msg += user;
                     msg += " has been kicked from the RSVP group *"+group+"* for **" +
                             se.getTitle() + "** - :id: **" + ParsingUtilities.intToEncodedID(se.getId()) + "**";
