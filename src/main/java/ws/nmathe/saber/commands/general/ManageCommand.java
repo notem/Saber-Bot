@@ -97,7 +97,7 @@ public class ManageCommand implements Command
         // verify the group is a valid group
         index++;
         Map<String, String> options = Main.getScheduleManager().getRSVPOptions(entry.getChannelId());
-        if (!options.keySet().contains(args[index]))
+        if (!options.values().contains(args[index]))
         {
             return "There is no RSVP group called *" + args[index] + "* on the event!";
         }
