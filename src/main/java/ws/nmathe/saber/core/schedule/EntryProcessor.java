@@ -93,10 +93,17 @@ class EntryProcessor implements Runnable
                     {
                         setExecutor.submit(() ->
                         {
-                            processing.add(entryId);
-                            Main.getEntryManager().getEntry(entryId).end();
-                            endSet.remove(entryId);
-                            processing.remove(entryId);
+                            try
+                            {
+                                processing.add(entryId);
+                                Main.getEntryManager().getEntry(entryId).end();
+                                endSet.remove(entryId);
+                                processing.remove(entryId);
+                            }
+                            catch (Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
                         });
                     }
                 });
@@ -106,10 +113,17 @@ class EntryProcessor implements Runnable
                     {
                         setExecutor.submit(() ->
                         {
-                            processing.add(entryId);
-                            Main.getEntryManager().getEntry(entryId).start();
-                            startSet.remove(entryId);
-                            processing.remove(entryId);
+                            try
+                            {
+                                processing.add(entryId);
+                                Main.getEntryManager().getEntry(entryId).start();
+                                startSet.remove(entryId);
+                                processing.remove(entryId);
+                            }
+                            catch (Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
                         });
                     }
                 });
@@ -119,10 +133,17 @@ class EntryProcessor implements Runnable
                     {
                         setExecutor.submit(() ->
                         {
-                            processing.add(entryId);
-                            Main.getEntryManager().getEntry(entryId).remind();
-                            remindSet.remove(entryId);
-                            processing.remove(entryId);
+                            try
+                            {
+                                processing.add(entryId);
+                                Main.getEntryManager().getEntry(entryId).remind();
+                                remindSet.remove(entryId);
+                                processing.remove(entryId);
+                            }
+                            catch (Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
                         });
                     }
                 });
@@ -132,10 +153,17 @@ class EntryProcessor implements Runnable
                     {
                         setExecutor.submit(() ->
                         {
-                            processing.add(entryId);
-                            Main.getEntryManager().getEntry(entryId).announce();
-                            specialSet.remove(entryId);
-                            processing.remove(entryId);
+                            try
+                            {
+                                processing.add(entryId);
+                                Main.getEntryManager().getEntry(entryId).announce();
+                                specialSet.remove(entryId);
+                                processing.remove(entryId);
+                            }
+                            catch (Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
                         });
                     }
                 });

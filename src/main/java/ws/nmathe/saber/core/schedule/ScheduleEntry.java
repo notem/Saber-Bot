@@ -17,9 +17,6 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Updates.set;
-
 /**
  * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
  * start and end functions are to be triggered upon the scheduled starting time and ending time.
@@ -220,36 +217,18 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if(msg == null) return;         // if msg object is bad
 
-        // collection of announcement IDs to be removed below enumeration
-        Collection<String> removeQueue = new ArrayList<>();
-
         // enumerate over all dates in the past
+        Collection<String> expired = new ArrayList<>();
         this.announcements.stream().filter(date-> date.before(new Date())).forEach(date->
         {
             for(String key : this.announcementTimes.keySet())
             {
-                // for each announcement ID that scheduled for the date, send announcement
-                if(this.announcementDates.get(key).equals(date))
-                {
-                    String message = ParsingUtilities.parseMessageFormat(this.announcementMessages.get(key), this, true);
-                    String target = this.announcementTargets.get(key);
-                    try
-                    {
-                        announcementHelper(msg, message, target);
-                        Logging.event(this.getClass(), "Sent special announcement for event " +
-                                this.getTitle() + " [" + this.getId() + "]");
-                    }
-                    catch(Exception e)
-                    {
-                        Logging.exception(this.getClass(), e);
-                    }
-                    removeQueue.add(key);
-                }
+                if(this.announcementDates.get(key).equals(date)) expired.add(key);
             }
         });
 
         // remove all the processed announcements and update event
-        removeQueue.forEach(key->
+        expired.forEach(key->
         {
             Date date = this.announcementDates.get(key);
             this.announcements.remove(date);
@@ -258,7 +237,28 @@ public class ScheduleEntry
                 this.announcements.remove(date);
             }
         });
-        Main.getEntryManager().updateEntry(this, false);
+        // update db entry
+        int count = 12;
+        while (!Main.getEntryManager().updateEntry(this, false)
+                && (count > 0)) { count--; }
+        if (count==0) return; // don't send reminder if db couldn't update
+
+        // send announcements
+        expired.forEach(key->
+        {
+            String message = ParsingUtilities.parseMessageFormat(this.announcementMessages.get(key), this, true);
+            String target = this.announcementTargets.get(key);
+            try
+            {
+                announcementHelper(msg, message, target);
+                Logging.event(this.getClass(), "Sent special announcement for event " +
+                        this.getTitle() + " [" + this.getId() + "]");
+            }
+            catch(Exception e)
+            {
+                Logging.exception(this.getClass(), e);
+            }
+        });
     }
 
     /**
@@ -269,6 +269,17 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if(msg == null) return;         // if msg object is bad
 
+        // remove expired reminders
+        this.reminders.removeIf(date -> date.before(new Date()));
+        this.endReminders.removeIf(date -> date.before(new Date()));
+
+        // attempt to update the db record
+        int count = 12;
+        while (!Main.getEntryManager().updateEntry(this, false)
+                && (count > 0)) { count--; }
+        if (count==0) return; // don't send reminder if db couldn't update
+
+        // send reminder
         if(!this.quietRemind)
         {
             // parse message and get the target channels
@@ -280,11 +291,6 @@ public class ScheduleEntry
                 Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
             }
         }
-
-        // remove expired reminders
-        this.reminders.removeIf(date -> date.before(new Date()));
-        this.endReminders.removeIf(date -> date.before(new Date()));
-        Main.getEntryManager().updateEntry(this, false);
     }
 
     /**
@@ -295,6 +301,13 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if( msg == null ) return;
 
+        // try to update db
+        int count = 12;
+        while (!Main.getEntryManager().startEvent(this)
+                && (count>0)) { count--; }
+        if (count==0) return;
+
+        // send start announcement
         if(!this.quietStart)
         {
             // dont send start announcements if 15 minutes late
@@ -318,16 +331,11 @@ public class ScheduleEntry
 
         // if the entry's start time is the same as it's end
         // skip to end
+        this.hasStarted = true;
         if(this.entryStart.isEqual(this.entryEnd))
-        {
             this.repeat();
-        }
         else
-        {
             this.reloadDisplay();
-            this.hasStarted = true;
-            Main.getDBDriver().getEventCollection().updateOne(eq("_id", this.entryId), set("hasStarted", true));
-        }
     }
 
     /**
@@ -338,6 +346,10 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if(msg == null) return;
 
+        // attempt to adjust the database entry per repeat settings
+        if (!this.repeat()) return; // don't send announcement if failure
+
+        // send announcement
         if(!this.quietEnd)
         {
             // dont send end announcement if 15 minutes late
@@ -354,14 +366,58 @@ public class ScheduleEntry
                                     .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
                 }
             }
+            else
+            {
+                Logging.warn(this.getClass(), "Late event end: "+this.entryTitle+" ["+this.entryId+"] "+this.entryEnd);
+            }
         }
-        else
-        {
-            Logging.warn(this.getClass(), "Late event end: "+this.entryTitle+" ["+this.entryId+"] "+this.entryEnd);
-        }
-
-        this.repeat();
     }
+
+
+    /**
+     * Determines what needs to be done to an event when an event ends
+     */
+    public boolean repeat()
+    {
+        Message msg = this.getMessageObject();
+        if( msg==null ) return false;
+
+        if(this.recurrence.shouldRepeat(this.entryStart)) // find next repeat date and edit the message
+        {
+            this.setNextOccurrence().setStarted(false);
+
+            // if the next time an event repeats is after the event's expire, delete the event
+            ZonedDateTime expire = this.recurrence.getExpire();
+            if(expire != null && expire.isBefore(this.getStart()))
+            {
+                Main.getEntryManager().removeEntry(this.entryId);
+                MessageUtilities.deleteMsg(msg, null);
+                return true;
+            }
+
+            // recreate the announcement overrides
+            this.regenerateAnnouncementOverrides();
+
+            // clear rsvp members list and reload reminders
+            this.rsvpMembers = new HashMap<>();
+            this.reloadReminders(Main.getScheduleManager().getReminders(this.chanId))
+                    .reloadEndReminders(Main.getScheduleManager().getEndReminders(this.chanId));
+
+            int count = 12;
+            while (!Main.getEntryManager().updateEntry(this, true)
+                    && (count > 0)) { count--; }
+            if (count==0) return false;
+        }
+        else // otherwise remove entry and delete the message
+        {
+            MessageUtilities.deleteMsg(msg, null);
+            int count = 15;
+            while (!Main.getEntryManager().removeEntry(this.entryId)
+                    && (count>0)) {count--;}
+        }
+        return true;
+    }
+
 
     /**
      * processes a channel identifier (either a channel name or snowflake ID) into a valid channel
@@ -395,44 +451,6 @@ public class ScheduleEntry
             {
                 MessageUtilities.sendMsg(content, chan, null);
             }
-        }
-    }
-
-
-    /**
-     * Determines what needs to be done to an event when an event ends
-     */
-    public void repeat()
-    {
-        Message msg = this.getMessageObject();
-        if( msg==null ) return;
-
-        if(this.recurrence.shouldRepeat(this.entryStart)) // find next repeat date and edit the message
-        {
-            this.setNextOccurrence().setStarted(false);
-
-            // if the next time an event repeats is after the event's expire, delete the event
-            ZonedDateTime expire = this.recurrence.getExpire();
-            if(expire != null && expire.isBefore(this.getStart()))
-            {
-                Main.getEntryManager().removeEntry(this.entryId);
-                MessageUtilities.deleteMsg(msg, null);
-                return;
-            }
-
-            // recreate the announcement overrides
-            this.regenerateAnnouncementOverrides();
-
-            // clear rsvp members list and reload reminders
-            this.rsvpMembers = new HashMap<>();
-            this.reloadReminders(Main.getScheduleManager().getReminders(this.chanId))
-                    .reloadEndReminders(Main.getScheduleManager().getEndReminders(this.chanId));
-            Main.getEntryManager().updateEntry(this, true);
-        }
-        else // otherwise remove entry and delete the message
-        {
-            Main.getEntryManager().removeEntry(this.entryId);
-            MessageUtilities.deleteMsg( msg, null );
         }
     }
 

@@ -1,6 +1,9 @@
 package ws.nmathe.saber.core.schedule;
 
+import com.mongodb.MongoException;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Emote;
@@ -17,6 +20,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Updates.set;
 
 
 /**
@@ -175,11 +179,12 @@ public class EntryManager
      * All schedule entry parameters should be filled.
      * The ID of the ScheduleEntry must not have been changed.
      * @param se (ScheduleEntry) the new schedule entry object
+     * @return true if successful, otherwise false
      */
-    public void updateEntry(ScheduleEntry se, boolean sort)
+    public boolean updateEntry(ScheduleEntry se, boolean sort)
     {
         Message origMessage = se.getMessageObject();
-        if(origMessage == null) return;
+        if(origMessage == null) return false;
 
         // process expiration date
         Date expire = null;
@@ -201,59 +206,82 @@ public class EntryManager
         // update message display
         Date finalExpire = expire;
         Date finalDeadline = deadline;
-        MessageUtilities.editMsg(message, origMessage, msg ->
+
+        Message msg = MessageUtilities.editMsg(message, origMessage);
+        if (msg == null) return false;
+        try
         {
-            try
-            {
-                String guildId = msg.getGuild().getId();
-                String channelId = msg.getChannel().getId();
+            String guildId = msg.getGuild().getId();
+            String channelId = msg.getChannel().getId();
 
-                // replace whole document
-                Document entryDocument =
-                        new Document("_id", se.getId())
-                                .append("title", se.getTitle())
-                                .append("start", Date.from(se.getStart().toInstant()))
-                                .append("end", Date.from(se.getEnd().toInstant()))
-                                .append("comments", se.getComments())
-                                .append("recurrence", se.getRepeat())
-                                .append("reminders", se.getReminders())
-                                .append("end_reminders", se.getEndReminders())
-                                .append("url", se.getTitleUrl())
-                                .append("hasStarted", se.hasStarted())
-                                .append("messageId", msg.getId())
-                                .append("channelId", channelId)
-                                .append("googleId", se.getGoogleId())
-                                .append("rsvp_members", se.getRsvpMembers())
-                                .append("rsvp_limits", se.getRsvpLimits())
-                                .append("start_disabled", se.isQuietStart())
-                                .append("end_disabled", se.isQuietEnd())
-                                .append("reminders_disabled", se.isQuietRemind())
-                                .append("expire", finalExpire)
-                                .append("orig_start", Date.from(se.getRecurrence().getOriginalStart().toInstant()))
-                                .append("count", se.getRecurrence().getCount())
-                                .append("image", se.getImageUrl())
-                                .append("thumbnail", se.getThumbnailUrl())
-                                .append("deadline", finalDeadline)
-                                .append("guildId", guildId)
-                                .append("announcements", new ArrayList<>(se.getAnnouncements()))
-                                .append("announcement_dates", se.getAnnouncementDates())
-                                .append("announcement_times", se.getAnnouncementTimes())
-                                .append("announcement_messages", se.getAnnouncementMessages())
-                                .append("announcement_targets", se.getAnnouncementTargets())
-                                .append("location", se.getLocation());
+            // replace whole document
+            Document entryDocument =
+                    new Document("_id", se.getId())
+                            .append("title", se.getTitle())
+                            .append("start", Date.from(se.getStart().toInstant()))
+                            .append("end", Date.from(se.getEnd().toInstant()))
+                            .append("comments", se.getComments())
+                            .append("recurrence", se.getRepeat())
+                            .append("reminders", se.getReminders())
+                            .append("end_reminders", se.getEndReminders())
+                            .append("url", se.getTitleUrl())
+                            .append("hasStarted", se.hasStarted())
+                            .append("messageId", msg.getId())
+                            .append("channelId", channelId)
+                            .append("googleId", se.getGoogleId())
+                            .append("rsvp_members", se.getRsvpMembers())
+                            .append("rsvp_limits", se.getRsvpLimits())
+                            .append("start_disabled", se.isQuietStart())
+                            .append("end_disabled", se.isQuietEnd())
+                            .append("reminders_disabled", se.isQuietRemind())
+                            .append("expire", finalExpire)
+                            .append("orig_start", Date.from(se.getRecurrence().getOriginalStart().toInstant()))
+                            .append("count", se.getRecurrence().getCount())
+                            .append("image", se.getImageUrl())
+                            .append("thumbnail", se.getThumbnailUrl())
+                            .append("deadline", finalDeadline)
+                            .append("guildId", guildId)
+                            .append("announcements", new ArrayList<>(se.getAnnouncements()))
+                            .append("announcement_dates", se.getAnnouncementDates())
+                            .append("announcement_times", se.getAnnouncementTimes())
+                            .append("announcement_messages", se.getAnnouncementMessages())
+                            .append("announcement_targets", se.getAnnouncementTargets())
+                            .append("location", se.getLocation());
 
-                Main.getDBDriver().getEventCollection().replaceOne(eq("_id", se.getId()), entryDocument);
+            UpdateResult res = Main.getDBDriver().getEventCollection()
+                    .replaceOne(eq("_id", se.getId()), entryDocument);
+            if (!res.wasAcknowledged()) return false; // return false, might result in skipped announcement or other issues
 
-                // auto-sort
-                autoSort(sort, channelId);
-            }
-            catch(Exception e)
-            {
-                Logging.exception(EntryManager.class, e);
-            }
-        });
+            // auto-sort
+            autoSort(sort, channelId);
+            return true;
+        }
+        catch(Exception e)
+        {
+            Logging.exception(EntryManager.class, e);
+            return false;
+        }
     }
 
+    /**
+     * update the event's database entry's hasStarted flag to true
+     * @param se schedule entry which has started
+     * @return true if successful, otherwise false
+     */
+    public boolean startEvent(ScheduleEntry se)
+    {
+        try
+        {
+            UpdateResult res = Main.getDBDriver().getEventCollection()
+                    .updateOne(eq("_id", se.getId()), set("hasStarted", true));
+            return res.wasAcknowledged(); // might result in skipped announcements or other issues
+        }
+        catch(MongoException e)
+        {
+            Logging.exception(this.getClass(), e);
+            return false;
+        }
+    }
 
     /**
      * adds rsvp reactions to a message
@@ -323,10 +351,12 @@ public class EntryManager
     /**
      * removes an entry by id from the db
      * @param entryId (Integer) ID of event entry
+     * @return true if the remove was acknowledged (safe), otherwise false
      */
-    public void removeEntry( Integer entryId )
+    public boolean removeEntry( Integer entryId )
     {
-        Main.getDBDriver().getEventCollection().findOneAndDelete(eq("_id", entryId));
+        DeleteResult res = Main.getDBDriver().getEventCollection().deleteOne(eq("_id", entryId));
+        return res.wasAcknowledged();
     }
 
     /**

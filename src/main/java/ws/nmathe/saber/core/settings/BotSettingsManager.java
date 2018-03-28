@@ -155,7 +155,7 @@ public class BotSettingsManager
             web_token = null;
             google_service_key = "./saber-g-id.json";
             google_oauth_secret = "./oath2-secret";
-            mongodb = "mongodb://localhost:27017";
+            mongodb = "mongodb://localhost:27017/?w=majority";
             log_level = 4;
 
             shards = new ArrayList<>();
