@@ -116,8 +116,7 @@ public class EventsCommand implements Command
                         footer="(events list continued on next page)";
                     }
                     content.append("<#").append(sId).append("> ...\n");  // start a new schedule list
-                    int limit=6;
-                    while(!entries.isEmpty() && limit>0)
+                    while(!entries.isEmpty())
                     {
                         // find and remove the next earliest occurring event
                         ScheduleEntry top = entries.toArray(new ScheduleEntry[entries.size()])[0];
@@ -146,9 +145,7 @@ public class EventsCommand implements Command
                         else
                             content.append(timeTil / (60 * 24)).append(" days*\n");
                         count++;     // iterate event counter
-                        limit--;     // approach limit
                     }
-                    if (!entries.isEmpty()) content.append("(and ").append(entries.size()).append(" more events not shown)");
                     content.append("\n"); // end a schedule list
                 }
             }
