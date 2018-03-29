@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -658,20 +659,21 @@ public class ParsingUtilities
     }
 
     /**
-     * @param input user-supplied encoded string (Character.RADIX_MAX)
+     * @param input user-supplied encoded string
      * @return int representation of the base64 string
      */
     public static int encodeIDToInt(String input)
     {
-        return Integer.parseInt(input, Character.MAX_RADIX);
+        return ByteBuffer.wrap(Base64.getDecoder().decode(input)).getInt();
     }
 
     /**
      * @param input integer representing an event's ID
-     * @return Character.RADIX_MAX encoded representation of the integer
+     * @return Base64 encoded ID string
      */
     public static String intToEncodedID(int input)
     {
-        return Integer.toString(input, Character.MAX_RADIX);
+        return Base64.getEncoder().withoutPadding()
+                .encodeToString(ByteBuffer.allocate(4).putInt(input).array());
     }
 }
