@@ -30,7 +30,7 @@ class EntryProcessor implements Runnable
     // thread pool used to process events when emptying the announcement sets
     private static ExecutorService setExecutor = Executors.newCachedThreadPool();
 
-    private enum queue { END_QUEUE, START_QUEUE, REMIND_QUEUE, ANNOUNCEMENT_QUEUE }
+    private enum SetType {END_SET, START_SET, REMIND_SET, SPECIAL_SET}
     private EntryManager.type type;
     private static Set<Integer> endSet      = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-end announcements
     private static Set<Integer> startSet    = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-start announcements
@@ -59,27 +59,27 @@ class EntryProcessor implements Runnable
 
                 // process entries which are ending
                 Bson query = and(eq("hasStarted",true), lte("end", new Date()));
-                processAndQueueEvents(queue.END_QUEUE, query);
+                processAndQueueEvents(SetType.END_SET, query);
 
                 // process entries which are starting
                 query = and(eq("hasStarted",false), lte("start", new Date()));
-                processAndQueueEvents(queue.START_QUEUE, query);
+                processAndQueueEvents(SetType.START_SET, query);
 
                 // process entries with reminders
                 query = and(
                             and(eq("hasStarted",false), lte("reminders", new Date())),
                             gte("start", new Date()));
-                processAndQueueEvents(queue.REMIND_QUEUE, query);
+                processAndQueueEvents(SetType.REMIND_SET, query);
 
                 // process entries with end reminders
                 query = and(
                             and(eq("hasStarted",true), lte("end_reminders", new Date())),
                             gte("end", new Date()));
-                processAndQueueEvents(queue.REMIND_QUEUE, query);
+                processAndQueueEvents(SetType.REMIND_SET, query);
 
                 // process entries with announcement overrides
                 query = lte("announcements", new Date());
-                processAndQueueEvents(queue.ANNOUNCEMENT_QUEUE, query);
+                processAndQueueEvents(SetType.SPECIAL_SET, query);
 
                 Logging.info(this.getClass(), "Finished filling queues.");
             }
@@ -271,11 +271,11 @@ class EntryProcessor implements Runnable
     }
 
     /**
-     * fills a queue given a proper query, helper function to run()
-     * @param queueIdentifier which queue to queue the event for
+     * fills a SetType given a proper query, helper function to run()
+     * @param setIdentifier which SetType to SetType the event for
      * @param query the database query to use
      */
-    private void processAndQueueEvents(queue queueIdentifier, Bson query)
+    private void processAndQueueEvents(SetType setIdentifier, Bson query)
     {
         Main.getDBDriver().getEventCollection().find(query)
                 .forEach((Consumer<? super Document>) document ->
@@ -291,38 +291,39 @@ class EntryProcessor implements Runnable
                     try
                     {
                         ScheduleEntry se = (new ScheduleEntry(document));
-                        switch(queueIdentifier)
+                        if (se.getMessageObject() == null) return; // don't add to sets
+                        switch(setIdentifier)
                         {
-                            case END_QUEUE:
+                            case END_SET:
                                 if(!endSet.contains(se.getId()))
                                 {
                                     endSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the end queue");
+                                    "\" ["+se.getId()+"] to the end SetType");
                                 }
                                 break;
-                            case REMIND_QUEUE:
+                            case REMIND_SET:
                                 if(!remindSet.contains(se.getId()))
                                 {
                                     remindSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the remind queue");
+                                    "\" ["+se.getId()+"] to the remind SetType");
                                 }
                                 break;
-                            case START_QUEUE:
+                            case START_SET:
                                 if(!startSet.contains(se.getId()))
                                 {
                                     startSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the start queue");
+                                    "\" ["+se.getId()+"] to the start SetType");
                                 }
                                 break;
-                            case ANNOUNCEMENT_QUEUE:
+                            case SPECIAL_SET:
                                 if(!specialSet.contains(se.getId()))
                                 {
                                     specialSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the announce queue");
+                                    "\" ["+se.getId()+"] to the announce SetType");
                                 }
                                 break;
                         }
