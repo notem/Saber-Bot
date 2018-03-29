@@ -251,7 +251,7 @@ class EntryProcessor implements Runnable
                             timerExecutor.execute(() ->
                             {
                                 try
-                                {   // convert to scheduleEntry object and start
+                                {   // convert to scheduleEntry object and update display
                                     (new ScheduleEntry(document)).reloadDisplay();
                                 }
                                 catch(Exception e)
@@ -299,7 +299,7 @@ class EntryProcessor implements Runnable
                                 {
                                     endSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the end SetType");
+                                    "\" ["+se.getId()+"] to the end set");
                                 }
                                 break;
                             case REMIND_SET:
@@ -307,7 +307,7 @@ class EntryProcessor implements Runnable
                                 {
                                     remindSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the remind SetType");
+                                    "\" ["+se.getId()+"] to the remind set");
                                 }
                                 break;
                             case START_SET:
@@ -315,7 +315,7 @@ class EntryProcessor implements Runnable
                                 {
                                     startSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the start SetType");
+                                    "\" ["+se.getId()+"] to the start set");
                                 }
                                 break;
                             case SPECIAL_SET:
@@ -323,7 +323,7 @@ class EntryProcessor implements Runnable
                                 {
                                     specialSet.add(se.getId());
                                     Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the announce SetType");
+                                    "\" ["+se.getId()+"] to the announce set");
                                 }
                                 break;
                         }

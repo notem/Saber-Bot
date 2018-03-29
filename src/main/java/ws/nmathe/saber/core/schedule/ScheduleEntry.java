@@ -64,7 +64,7 @@ public class ScheduleEntry
     // announcement overrides
     // these hold temporary values
     private Set<Date> announcements;        // used by DB for queries
-    private Map<String, Date> aDates;     // maps ID to Date in announcements
+    private Map<String, Date> aDates;       // maps ID to Date in announcements
     // these are constant across events in a series
     private Map<String, String> aTimes;     // maps ID to rel-time string
     private Map<String, String> aTargets;   // maps ID to channel target
@@ -222,7 +222,8 @@ public class ScheduleEntry
         Collection<String> expired = new ArrayList<>();
         for(String ID : announcementIDs)
         {
-            if(this.aDates.get(ID).before(new Date())) expired.add(ID);
+            Date date = this.aDates.get(ID);
+            if(date!=null && date.before(new Date())) expired.add(ID);
         }
 
         // remove all the processed announcements and update event
@@ -409,16 +410,16 @@ public class ScheduleEntry
      * processes a channel identifier (either a channel name or snowflake ID) into a valid channel
      * and sends an event announcement
      */
-    private void announcementHelper(Message message, String content, String channelIdentifier)
+    private void announcementHelper(Message message, String content, String targetIdentifier)
     {
         boolean success = false;
 
         // if the identifier is all digits, attempt to treat the identifier as a snowflake ID
-        if(channelIdentifier.matches("\\d+"))
+        if(targetIdentifier.matches("\\d+"))
         {
             try
             {
-                TextChannel channel = message.getGuild().getTextChannelById(channelIdentifier);
+                TextChannel channel = message.getGuild().getTextChannelById(targetIdentifier);
                 if(channel != null)
                 {
                     MessageUtilities.sendMsg(content, channel, null);
@@ -430,9 +431,9 @@ public class ScheduleEntry
         }
         // if the announcement has not sent using the identifier as a snowflake,
         // treat the identifier as a channel name
-        if(!success)
+        if(!success && !targetIdentifier.isEmpty())
         {
-            List<TextChannel> channels = message.getGuild().getTextChannelsByName(channelIdentifier, true);
+            List<TextChannel> channels = message.getGuild().getTextChannelsByName(targetIdentifier, true);
             for( TextChannel chan : channels )
             {
                 MessageUtilities.sendMsg(content, chan, null);
