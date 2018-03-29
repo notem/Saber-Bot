@@ -63,12 +63,12 @@ public class ScheduleEntry
 
     // announcement overrides
     // these hold temporary values
-    private Set<Date> announcements;                   // used by DB for queries
-    private Map<String, Date> announcementDates;       // maps Date to IDs
+    private Set<Date> announcements;        // used by DB for queries
+    private Map<String, Date> aDates;     // maps ID to Date in announcements
     // these are constant across events in a series
-    private Map<String, String> announcementTimes;     // maps ID to rel-time string
-    private Map<String, String> announcementTargets;   // maps ID to channel target
-    private Map<String, String> announcementMessages;  // maps ID to announcement message
+    private Map<String, String> aTimes;     // maps ID to rel-time string
+    private Map<String, String> aTargets;   // maps ID to channel target
+    private Map<String, String> aMessages;  // maps ID to announcement message
 
 
     /**
@@ -110,14 +110,14 @@ public class ScheduleEntry
 
         // misc
         this.hasStarted = false;
-        this.location = null;
+        this.location   = null;
 
         // announcement overrides
-        this.announcements        = new HashSet<>();
-        this.announcementDates    = new HashMap<>();
-        this.announcementTimes    = new HashMap<>();
-        this.announcementTargets  = new HashMap<>();
-        this.announcementMessages = new HashMap<>();
+        this.announcements = new HashSet<>();
+        this.aDates = new HashMap<>();
+        this.aTimes        = new HashMap<>();
+        this.aTargets      = new HashMap<>();
+        this.aMessages     = new HashMap<>();
     }
 
 
@@ -195,13 +195,13 @@ public class ScheduleEntry
         // announcement overrides
         this.announcements = entryDocument.get("announcements") == null ?
                 new HashSet<>() : new HashSet<>(((List<Date>) entryDocument.get("announcements")));
-        this.announcementDates = entryDocument.get("announcement_dates") == null ?
+        this.aDates = entryDocument.get("announcement_dates") == null ?
                 new HashMap<>() : (Map<String, Date>) entryDocument.get("announcement_dates");
-        this.announcementTimes = entryDocument.get("announcement_times") == null ?
+        this.aTimes = entryDocument.get("announcement_times") == null ?
                 new HashMap<>() : (Map<String,String>) entryDocument.get("announcement_times");
-        this.announcementTargets = entryDocument.get("announcement_targets") == null ?
+        this.aTargets = entryDocument.get("announcement_targets") == null ?
                 new HashMap<>() : (Map<String,String>) entryDocument.get("announcement_targets");
-        this.announcementMessages = entryDocument.get("announcement_messages") == null ?
+        this.aMessages = entryDocument.get("announcement_messages") == null ?
                 new HashMap<>() : (Map<String,String>) entryDocument.get("announcement_messages");
 
         // misc
@@ -215,28 +215,20 @@ public class ScheduleEntry
     public void announce()
     {
         Message msg = this.getMessageObject();
-        if(msg == null) return;         // if msg object is bad
+        if(msg == null) return; // if msg object is bad
 
-        // enumerate over all dates in the past
+        Set<String> announcementIDs = this.aTimes.keySet();
+        // find all expired Dates' announcement IDs
         Collection<String> expired = new ArrayList<>();
-        this.announcements.stream().filter(date-> date.before(new Date())).forEach(date->
+        for(String ID : announcementIDs)
         {
-            for(String key : this.announcementTimes.keySet())
-            {
-                if(this.announcementDates.get(key).equals(date)) expired.add(key);
-            }
-        });
+            if(this.aDates.get(ID).before(new Date())) expired.add(ID);
+        }
 
         // remove all the processed announcements and update event
-        expired.forEach(key->
-        {
-            Date date = this.announcementDates.get(key);
-            this.announcements.remove(date);
-            if(!this.announcementDates.containsValue(date))
-            {
-                this.announcements.remove(date);
-            }
-        });
+        this.announcements.removeIf(date->date.before(new Date())); // remove from announcement set
+        expired.forEach(key-> this.aDates.remove(key));           // remove from ID mapping to announcement set
+
         // update db entry
         int count = 12;
         while (!Main.getEntryManager().updateEntry(this, false)
@@ -246,18 +238,11 @@ public class ScheduleEntry
         // send announcements
         expired.forEach(key->
         {
-            String message = ParsingUtilities.parseMessageFormat(this.announcementMessages.get(key), this, true);
-            String target = this.announcementTargets.get(key);
-            try
-            {
-                announcementHelper(msg, message, target);
-                Logging.event(this.getClass(), "Sent special announcement for event " +
-                        this.getTitle() + " [" + this.getId() + "]");
-            }
-            catch(Exception e)
-            {
-                Logging.exception(this.getClass(), e);
-            }
+            String message = ParsingUtilities.parseMessageFormat(this.aMessages.get(key), this, true);
+            String target = this.aTargets.get(key);
+            announcementHelper(msg, message, target);
+            Logging.event(this.getClass(), "Sent special announcement for event " +
+                    this.getTitle() + " [" + this.getId() + "]");
         });
     }
 
@@ -356,14 +341,15 @@ public class ScheduleEntry
             if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
                 // send the end announcement
-                String endMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getEndAnnounceFormat(this.chanId), this, true);
+                String endMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager()
+                        .getEndAnnounceFormat(this.chanId), this, true);
                 String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
                 if(identifier != null)
                 {
                     announcementHelper(msg, endMsg, identifier);
-                    Logging.event(this.getClass(), "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
-                            this.getEnd().withZoneSameInstant(ZoneId.systemDefault())
-                                    .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+                    String logStr = "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
+                            this.getEnd().withZoneSameInstant(ZoneId.systemDefault()).truncatedTo(ChronoUnit.MINUTES).toLocalTime();
+                    Logging.event(this.getClass(), logStr);
                 }
             }
             else
@@ -462,7 +448,7 @@ public class ScheduleEntry
     void reloadDisplay()
     {
         Message msg = this.getMessageObject();
-        if( msg == null ) return;
+        if (msg == null) return;
         MessageUtilities.editMsg(MessageGenerator.generate(this), msg, null);
     }
 
@@ -829,7 +815,7 @@ public class ScheduleEntry
      */
     public Map<String, String> getAnnouncementTimes()
     {
-        return this.announcementTimes;
+        return this.aTimes;
     }
 
     /**
@@ -837,7 +823,7 @@ public class ScheduleEntry
      */
     public Map<String, String> getAnnouncementTargets()
     {
-        return this.announcementTargets;
+        return this.aTargets;
     }
 
     /**
@@ -845,15 +831,15 @@ public class ScheduleEntry
      */
     public Map<String, String> getAnnouncementMessages()
     {
-        return this.announcementMessages;
+        return this.aMessages;
     }
 
     /**
      * retrieves the full map of announcement override active date object
      */
-    public Map<String, Date> getAnnouncementDates()
+    public Map<String, Date> getaDates()
     {
-        return this.announcementDates;
+        return this.aDates;
     }
 
     /**
@@ -874,13 +860,14 @@ public class ScheduleEntry
         Message msg;
         try
         {
-            JDA jda = Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
+            JDA jda = Main.getShardManager().isSharding() ?
+                    Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
 
             msg = jda.getTextChannelById(this.chanId)
                     .getMessageById(this.msgId)
                     .complete();
         }
-        catch( Exception e )
+        catch (Exception e)
         {
             msg = null;
         }
@@ -1166,7 +1153,7 @@ public class ScheduleEntry
         Integer id = null;
         for (int i=0; i<Integer.MAX_VALUE; i++)
         {
-            if (!this.announcementTimes.keySet().contains(i+""))
+            if (!this.aTimes.keySet().contains(i+""))
             {
                 id = i;
                 break;
@@ -1190,13 +1177,13 @@ public class ScheduleEntry
         {
             // add to active announcement list
             this.announcements.add(Date.from(datetime.toInstant()));
-            this.announcementDates.put(id.toString(), Date.from(datetime.toInstant()));
+            this.aDates.put(id.toString(), Date.from(datetime.toInstant()));
         }
 
         // create mappings
-        this.announcementTimes.put(id.toString(), timeString);
-        this.announcementTargets.put(id.toString(), channelId);
-        this.announcementMessages.put(id.toString(), message);
+        this.aTimes.put(id.toString(), timeString);
+        this.aTargets.put(id.toString(), channelId);
+        this.aMessages.put(id.toString(), message);
         return this;
     }
 
@@ -1205,14 +1192,14 @@ public class ScheduleEntry
      */
     public ScheduleEntry removeAnnouncementOverride(Integer id)
     {
-        this.announcementDates.remove(id.toString());
-        this.announcementMessages.remove(id.toString());
-        this.announcementTimes.remove(id.toString());
-        this.announcementTargets.remove(id.toString());
+        this.aDates.remove(id.toString());
+        this.aMessages.remove(id.toString());
+        this.aTimes.remove(id.toString());
+        this.aTargets.remove(id.toString());
 
         // only remove from the announcements list if there are no other announcements scheduled for that time
-        Date date = this.announcementDates.get(id.toString());
-        if ((date != null) && !this.announcementDates.containsValue(date))
+        Date date = this.aDates.get(id.toString());
+        if ((date != null) && !this.aDates.containsValue(date))
         {
             this.announcements.remove(date);
         }
@@ -1220,15 +1207,15 @@ public class ScheduleEntry
     }
 
     /**
-     * repopulates the announcements set and announcementDates
-     * based on values in announcementTimes, announcementMessages, and announcementTargets
+     * repopulates the announcements set and aDates
+     * based on values in aTimes, aMessages, and aTargets
      */
     public ScheduleEntry regenerateAnnouncementOverrides()
     {
-        for(String key : this.announcementTimes.keySet())
+        for(String key : this.aTimes.keySet())
         {
             // create hard date time object
-            ZonedDateTime datetime = ParsingUtilities.parseTimeString(this.announcementTimes.get(key), this);
+            ZonedDateTime datetime = ParsingUtilities.parseTimeString(this.aTimes.get(key), this);
             if (datetime == null)
             {
                 Logging.warn(this.getClass(), "Unable to generate the time");
@@ -1237,7 +1224,7 @@ public class ScheduleEntry
             {
                 // add to lists
                 this.announcements.add(Date.from(datetime.toInstant()));
-                this.announcementDates.put(key, Date.from(datetime.toInstant()));
+                this.aDates.put(key, Date.from(datetime.toInstant()));
             }
         }
         return this;
@@ -1248,12 +1235,12 @@ public class ScheduleEntry
      */
     public String commentsToString()
     {
-        String body = "// Comments\n";
+        StringBuilder body = new StringBuilder("// Comments\n");
         for(int i=1; i<this.getComments().size()+1; i++)
         {
-            body += "[" + i + "] \"" + this.getComments().get(i-1) + "\"\n";
+            body.append("[").append(i).append("] \"").append(this.getComments().get(i - 1)).append("\"\n");
         }
-        return body;
+        return body.toString();
     }
 
     /**
@@ -1261,30 +1248,31 @@ public class ScheduleEntry
      */
     public String limitsToString()
     {
-        String body = "// Limits\n";
+        StringBuilder body = new StringBuilder("// Limits\n");
         for(String key : this.getRsvpLimits().keySet())
         {
-            body += key + " - " + this.getRsvpLimits().get(key) + "\n";
+            body.append(key).append(" - ").append(this.getRsvpLimits().get(key)).append("\n");
         }
-        return body;
+        return body.toString();
     }
 
     /**
      * creates string display for event announcements
-     * @return
      */
     public String announcementsToString()
     {
-        String body = "// Event Announcements\n";
+        StringBuilder body = new StringBuilder("// Event Announcements\n");
         JDA jda = Main.getShardManager().getJDA(this.guildId);
-        for (String id : this.announcementTimes.keySet())
+        for (String id : this.aTimes.keySet())
         {
-            TextChannel channel = jda.getTextChannelById(this.announcementTargets.get(id));
-            body += "(" + (Integer.parseInt(id)+1) + ") \"" + this.announcementMessages.get(id)+ "\"" +
-                    " at \"" + this.announcementTimes.get(id) + "\"" +
-                    " to \"#" + (channel==null ? "unknown_channel" : channel.getName())+"\"\n";
+            TextChannel channel = jda.getTextChannelById(this.aTargets.get(id));
+            body.append("(").append(Integer.parseInt(id) + 1).append(") \"")
+                    .append(this.aMessages.get(id)).append("\"").append(" at \"")
+                    .append(this.aTimes.get(id)).append("\"").append(" to \"#")
+                    .append(channel == null ? "unknown_channel" : channel.getName())
+                    .append("\"\n");
         }
-        return body;
+        return body.toString();
     }
 
     @Override
@@ -1375,7 +1363,7 @@ public class ScheduleEntry
             body += "``````js\n" + this.commentsToString();
 
         // announcement overrides
-        if(!this.announcementTimes.isEmpty())
+        if(!this.aTimes.isEmpty())
             body += "``````js\n" + this.announcementsToString();
 
         return body + "\n```";
