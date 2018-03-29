@@ -664,7 +664,10 @@ public class ParsingUtilities
      */
     public static int encodeIDToInt(String input)
     {
-        return ByteBuffer.wrap(Base64.getDecoder().decode(input)).getInt();
+        int base = 36; // use base36 encoding (0-z)
+        if (Character.MAX_RADIX < base) // just in case there are platforms with unusual MAX_RADIX
+            base = 16; // revert to hex (0-F)
+        return Integer.parseInt(input, base);
     }
 
     /**
@@ -673,7 +676,9 @@ public class ParsingUtilities
      */
     public static String intToEncodedID(int input)
     {
-        return Base64.getEncoder().withoutPadding()
-                .encodeToString(ByteBuffer.allocate(4).putInt(input).array());
+        int base = 36; // use base36 encoding (0-z)
+        if (Character.MAX_RADIX < base) // just in case there are platforms with unusual MAX_RADIX
+            base = 16; // revert to hex (0-F)
+        return Integer.toString(input, base);
     }
 }

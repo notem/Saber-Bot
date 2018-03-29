@@ -148,7 +148,7 @@ public class EventsCommand implements Command
                         count++;     // iterate event counter
                         limit--;     // approach limit
                     }
-                    if (!entries.isEmpty()) content.append("(and ").append(entries.size()).append(") more events not shown");
+                    if (!entries.isEmpty()) content.append("(and ").append(entries.size()).append(" more events not shown)");
                     content.append("\n"); // end a schedule list
                 }
             }
