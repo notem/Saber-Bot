@@ -683,7 +683,7 @@ public class EditCommand implements Command
                     case "limit":
                     case "l":
                         Integer lim = null;
-                        if(!args[index].equalsIgnoreCase("off"))
+                        if(!args[index+1].equalsIgnoreCase("off"))
                         {
                             lim = Integer.parseInt(args[index+1]);
                         }
