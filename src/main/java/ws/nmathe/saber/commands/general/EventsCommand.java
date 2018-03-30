@@ -94,7 +94,8 @@ public class EventsCommand implements Command
         {
             // only show users events that are on schedules they can view
             TextChannel sChannel = event.getGuild().getTextChannelById(sId);
-            if (sChannel!=null && caller.getPermissions(sChannel).contains(Permission.MESSAGE_READ))
+            List<Permission> permissions = sChannel!=null ? caller.getPermissions(sChannel) : new ArrayList();
+            if (sChannel!=null && permissions!=null && permissions.contains(Permission.MESSAGE_READ))
             {
                 // for each schedule, generate a list of events scheduled
                 Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromChannel(sId);
