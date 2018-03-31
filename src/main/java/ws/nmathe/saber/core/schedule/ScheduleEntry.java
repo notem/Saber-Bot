@@ -287,6 +287,10 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if( msg == null ) return;
 
+        // create start message and grab identifier before modifying entry
+        String startMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
+        String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
+
         // try to update db
         int count = 12;
         while (!Main.getEntryManager().startEvent(this)
@@ -299,8 +303,6 @@ public class ScheduleEntry
             // dont send start announcements if 15 minutes late
             if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
-                String startMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
-                String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
                 if(identifier != null)
                 {
                     announcementHelper(msg, startMsg, identifier);
@@ -332,6 +334,11 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if(msg == null) return;
 
+        // create the announcement message before modifying event
+        String endMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager()
+                .getEndAnnounceFormat(this.chanId), this, true);
+        String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
+
         // attempt to adjust the database entry per repeat settings
         if (!this.repeat()) return; // don't send announcement if failure
 
@@ -342,9 +349,6 @@ public class ScheduleEntry
             if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
                 // send the end announcement
-                String endMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager()
-                        .getEndAnnounceFormat(this.chanId), this, true);
-                String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
                 if(identifier != null)
                 {
                     announcementHelper(msg, endMsg, identifier);
