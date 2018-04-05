@@ -32,10 +32,11 @@ public class ScheduleEntry
     private String googleId;
 
     // entry parameters
-    private String entryTitle;                    // the title/name of the event
-    private ZonedDateTime entryStart;             // the time when the event starts
-    private ZonedDateTime entryEnd;               // the ending time
-    private ArrayList<String> entryComments;      // ArrayList of strings that make up the desc
+    private String title;                    // the title/name of the event
+    private ZonedDateTime start;             // the time when the event starts
+    private ZonedDateTime end;               // the ending time
+    private ArrayList<String> comments;      // list of comment strings
+    private String description;              // description composition
     private EventRecurrence recurrence;
 
     //private Integer entryRepeat;
@@ -87,11 +88,12 @@ public class ScheduleEntry
         this.guildId = channel.getGuild().getId();
 
         // entry parameters
-        this.entryTitle    = title;
-        this.entryStart    = start;
-        this.entryEnd      = end;
-        this.recurrence    = new EventRecurrence(start);
-        this.entryComments = new ArrayList<>();
+        this.title       = title;
+        this.start       = start;
+        this.end         = end;
+        this.recurrence  = new EventRecurrence(start);
+        this.comments    = new ArrayList<>();
+        this.description = "%g";
 
         // rsvp
         this.rsvpMembers  = new LinkedHashMap<>();
@@ -114,7 +116,7 @@ public class ScheduleEntry
 
         // announcement overrides
         this.announcements = new HashSet<>();
-        this.aDates = new HashMap<>();
+        this.aDates        = new HashMap<>();
         this.aTimes        = new HashMap<>();
         this.aTargets      = new HashMap<>();
         this.aMessages     = new HashMap<>();
@@ -139,15 +141,17 @@ public class ScheduleEntry
         ZoneId zone = Main.getScheduleManager().getTimeZone(this.chanId);
 
         // main parameters
-        this.entryTitle    = entryDocument.getString("title");
-        this.entryStart    = ZonedDateTime.ofInstant((entryDocument.getDate("start")).toInstant(), zone);
-        this.entryEnd      = ZonedDateTime.ofInstant((entryDocument.getDate("end")).toInstant(), zone);
-        this.entryComments = (ArrayList<String>) entryDocument.get("comments");
-        this.hasStarted    = (boolean) entryDocument.get("hasStarted");
+        this.title       = entryDocument.getString("title");
+        this.start       = ZonedDateTime.ofInstant((entryDocument.getDate("start")).toInstant(), zone);
+        this.end         = ZonedDateTime.ofInstant((entryDocument.getDate("end")).toInstant(), zone);
+        this.comments    = (ArrayList<String>) entryDocument.get("comments");
+        this.hasStarted  = (boolean) entryDocument.get("hasStarted");
+        this.description = entryDocument.get("description")==null ?
+                "%g" : entryDocument.getString("description");
 
         // construct the recurrence object
         ZonedDateTime dtStart = entryDocument.get("orig_start")==null ?
-                this.entryStart : ZonedDateTime.ofInstant((entryDocument.getDate("orig_start")).toInstant(), zone);
+                this.start : ZonedDateTime.ofInstant((entryDocument.getDate("orig_start")).toInstant(), zone);
         if (entryDocument.get("recurrence") != null)
         {   // new recurrence design
             this.recurrence = new EventRecurrence(entryDocument.getInteger("recurrence"), dtStart);
@@ -239,7 +243,7 @@ public class ScheduleEntry
         // send announcements
         expired.forEach(key->
         {
-            String message = ParsingUtilities.parseMessageFormat(this.aMessages.get(key), this, true);
+            String message = ParsingUtilities.processText(this.aMessages.get(key), this, true);
             String target = this.aTargets.get(key);
             announcementHelper(msg, message, target);
             Logging.event(this.getClass(), "Sent special announcement for event " +
@@ -269,7 +273,7 @@ public class ScheduleEntry
         if(!this.quietRemind)
         {
             // parse message and get the target channels
-            String remindMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getReminderFormat(this.chanId), this, true);
+            String remindMsg = ParsingUtilities.processText(Main.getScheduleManager().getReminderFormat(this.chanId), this, true);
             String identifier = Main.getScheduleManager().getReminderChan(this.chanId);
             if(identifier != null)
             {
@@ -288,7 +292,7 @@ public class ScheduleEntry
         if( msg == null ) return;
 
         // create start message and grab identifier before modifying entry
-        String startMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
+        String startMsg = ParsingUtilities.processText(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
 
         // try to update db
@@ -301,7 +305,7 @@ public class ScheduleEntry
         if(!this.quietStart)
         {
             // dont send start announcements if 15 minutes late
-            if(this.entryStart.isAfter(ZonedDateTime.now().minusMinutes(15)))
+            if(this.start.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
                 if(identifier != null)
                 {
@@ -313,14 +317,14 @@ public class ScheduleEntry
             }
             else
             {
-                Logging.warn(this.getClass(), "Late event start: "+this.entryTitle+" ["+this.entryId+"] "+this.entryStart);
+                Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
             }
         }
 
         // if the entry's start time is the same as it's end
         // skip to end
         this.hasStarted = true;
-        if(this.entryStart.isEqual(this.entryEnd))
+        if(this.start.isEqual(this.end))
             this.repeat();
         else
             this.reloadDisplay();
@@ -335,7 +339,7 @@ public class ScheduleEntry
         if(msg == null) return;
 
         // create the announcement message before modifying event
-        String endMsg = ParsingUtilities.parseMessageFormat(Main.getScheduleManager()
+        String endMsg = ParsingUtilities.processText(Main.getScheduleManager()
                 .getEndAnnounceFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
 
@@ -346,7 +350,7 @@ public class ScheduleEntry
         if(!this.quietEnd)
         {
             // dont send end announcement if 15 minutes late
-            if(this.entryEnd.isAfter(ZonedDateTime.now().minusMinutes(15)))
+            if(this.end.isAfter(ZonedDateTime.now().minusMinutes(15)))
             {
                 // send the end announcement
                 if(identifier != null)
@@ -359,7 +363,7 @@ public class ScheduleEntry
             }
             else
             {
-                Logging.warn(this.getClass(), "Late event end: "+this.entryTitle+" ["+this.entryId+"] "+this.entryEnd);
+                Logging.warn(this.getClass(), "Late event end: "+this.title +" ["+this.entryId+"] "+this.end);
             }
         }
     }
@@ -373,7 +377,7 @@ public class ScheduleEntry
         Message msg = this.getMessageObject();
         if( msg==null ) return false;
 
-        if(this.recurrence.shouldRepeat(this.entryStart)) // find next repeat date and edit the message
+        if(this.recurrence.shouldRepeat(this.start)) // find next repeat date and edit the message
         {
             this.setNextOccurrence().setStarted(false);
 
@@ -631,9 +635,9 @@ public class ScheduleEntry
      */
     private ScheduleEntry setNextOccurrence()
     {
-        long dif = this.entryEnd.toInstant().toEpochMilli()-this.entryStart.toInstant().toEpochMilli();
-        this.entryStart = this.recurrence.next(this.entryStart);
-        this.entryEnd   = this.entryStart.plus(dif, ChronoUnit.MILLIS);
+        long dif = this.end.toInstant().toEpochMilli()-this.start.toInstant().toEpochMilli();
+        this.start = this.recurrence.next(this.start);
+        this.end = this.start.plus(dif, ChronoUnit.MILLIS);
         return this;
     }
 
@@ -661,22 +665,22 @@ public class ScheduleEntry
 
     public String getTitle()
     {
-        return this.entryTitle;
+        return this.title;
     }
 
     public ZonedDateTime getStart()
     {
-        return this.entryStart;
+        return this.start;
     }
 
     public ZonedDateTime getEnd()
     {
-        return this.entryEnd;
+        return this.end;
     }
 
     public ArrayList<String> getComments()
     {
-        return this.entryComments;
+        return this.comments;
     }
 
     public Integer getId()
@@ -792,6 +796,14 @@ public class ScheduleEntry
     }
 
     /**
+     * retrieves the event's raw description (unprocessed)
+     */
+    public String getDescription()
+    {
+        return this.description;
+    }
+
+    /**
      * should the event send start announcements?
      */
     public boolean isQuietStart()
@@ -888,7 +900,7 @@ public class ScheduleEntry
      */
     public ScheduleEntry setTitle(String title)
     {
-        this.entryTitle = title;
+        this.title = title;
         return this;
     }
 
@@ -897,12 +909,12 @@ public class ScheduleEntry
      */
     public ScheduleEntry setStart(ZonedDateTime start)
     {
-        if(this.entryStart.equals(this.entryEnd))
+        if(this.start.equals(this.end))
         {
             // if the event's end is 'off', update the end to match start
-            this.entryEnd = start;
+            this.end = start;
         }
-        this.entryStart = start;
+        this.start = start;
         return this;
     }
 
@@ -911,7 +923,7 @@ public class ScheduleEntry
      */
     public ScheduleEntry setEnd(ZonedDateTime end)
     {
-        this.entryEnd = end;
+        this.end = end;
         return this;
     }
 
@@ -920,7 +932,7 @@ public class ScheduleEntry
      */
     public ScheduleEntry setComments(ArrayList<String> comments)
     {
-        this.entryComments = comments;
+        this.comments = comments;
         return this;
     }
 
@@ -1067,6 +1079,12 @@ public class ScheduleEntry
     public ScheduleEntry setId(Integer id)
     {
         this.entryId = id;
+        return this;
+    }
+
+    public ScheduleEntry setDescription(String desc)
+    {
+        this.description = desc;
         return this;
     }
 
@@ -1297,7 +1315,8 @@ public class ScheduleEntry
                 "Title:  \"" + this.getTitle() + "\"\n" +
                 "Start:  " + this.getStart().format(dtf) + "\n" +
                 "End:    " + (this.getEnd().equals(this.getStart()) ? "\"off\"" : this.getEnd().format(dtf)) + "\n" +
-                "Repeat: \"" + this.recurrence.toString(true) + "\"\n";
+                "Repeat: \"" + this.recurrence.toString(true) + "\"\n" +
+                "Description: " + (this.getDescription().equals("%g") ? "(default)" : "\""+this.getDescription()+"\"")+"\n";
 
         // quiet settings
         if(this.isQuietRemind() | this.isQuietEnd() | this.isQuietStart())
@@ -1362,6 +1381,7 @@ public class ScheduleEntry
             if(!this.getRsvpLimits().isEmpty())
                 body += "``````js\n" + this.limitsToString();
         }
+
 
         // comments
         if(!this.getComments().isEmpty())

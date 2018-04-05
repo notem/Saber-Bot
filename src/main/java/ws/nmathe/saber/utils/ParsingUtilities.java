@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
-import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -15,6 +14,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -68,11 +69,13 @@ public class ParsingUtilities
     }
 
     /**
-     * @param format the base string to parse into a message
+     * TODO: further revise
+     * @param raw the base string to parse into a message
      * @param entry the entry associated with the message
+     * @param firstPass boolean used to prevent message parsing loops
      * @return a new message which has entry specific information inserted into the format string
      */
-    public static String parseMessageFormat(String format, ScheduleEntry entry, boolean displayComments)
+    public static String processText(String raw, ScheduleEntry entry, boolean firstPass)
     {
         // determine time formatter from schedule settings
         String clock = Main.getScheduleManager().getClockFormat(entry.getChannelId());
@@ -82,26 +85,39 @@ public class ParsingUtilities
         else
              timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
+        /*
+         * function handles the insertion of the '[..]' text for advanced substitution
+         */
+        BiFunction<String, Matcher, String> helper = (String insert, Matcher matcher) -> {
+            String str = "";
+            if(matcher.find())
+                str += matcher.group().replaceAll("[\\[\\]]", "");
+            str += insert;
+            if(matcher.find())
+                str += matcher.group().replaceAll("[\\[\\]]", "");
+            return str;
+        };
+
         // advanced parsing
         /*
          * parses the format string using regex grouping
          * allows for an 'if element exists, print string + element + string' type of insertion
          */
-        Matcher matcher = Pattern.compile("%\\{(.*?)}").matcher(format);
+        Matcher matcher = Pattern.compile("%\\{(.*?)}").matcher(raw);
         while(matcher.find())
         {
             String group = matcher.group();
             String trimmed = group.substring(2, group.length()-1);
             StringBuilder sub = new StringBuilder();
+            Matcher matcher2 = Pattern.compile("\\[.*?]").matcher(trimmed);
             if(!trimmed.isEmpty())
             {
-                Matcher matcher2 = Pattern.compile("\\[.*?]").matcher(trimmed);
-                if(trimmed.matches("(\\[.*?])?c\\d+(\\[.*?])?") && displayComments) // advanced comment
+                if(trimmed.matches("(\\[.*?])?comment \\d+(\\[.*?])?") && firstPass)
                 {
-                    int i = Integer.parseInt(trimmed.replaceAll("(\\[.*?])?c|\\[.*?]", ""));
+                    int i = Integer.parseInt(trimmed.replaceAll("(\\[.*?])?comment |\\[.*?]", ""));
                     if(entry.getComments().size() >= i && i > 0)
                     {
-                        sub.append(messageFormatHelper(entry.getComments().get(i - 1), matcher2));
+                        sub.append(processText(helper.apply(entry.getComments().get(i - 1), matcher2), entry, false));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?s(\\[.*?])?")) // advanced start
@@ -153,7 +169,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub.append(messageFormatHelper("" + (minutes + 1), matcher2));
+                            sub.append(helper.apply("" + (minutes + 1), matcher2));
                         }
                     }
                     else
@@ -161,7 +177,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub.append(messageFormatHelper(""+(minutes+1), matcher2));
+                            sub.append(helper.apply(""+(minutes+1), matcher2));
                         }
                     }
                 }
@@ -172,7 +188,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub.append(messageFormatHelper(""+(minutes+1)/60, matcher2));
+                            sub.append(helper.apply(""+(minutes+1)/60, matcher2));
                         }
                     }
                     else
@@ -180,7 +196,7 @@ public class ParsingUtilities
                         long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
                         if(minutes>0)
                         {
-                            sub.append(messageFormatHelper(""+(minutes+1)/60, matcher2));
+                            sub.append(helper.apply(""+(minutes+1)/60, matcher2));
                         }
                     }
                 }
@@ -190,7 +206,7 @@ public class ParsingUtilities
                     List<String> members = entry.getRsvpMembers().get(name);
                     if(members != null)
                     {
-                        sub.append(messageFormatHelper(""+members.size(), matcher2));
+                        sub.append(helper.apply(""+members.size(), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?mention .+(\\[.*?])?")) // rsvp mentions
@@ -207,13 +223,14 @@ public class ParsingUtilities
                             if (i+1<users.size())
                                 userMentions.append(", ");
                         }
-                        sub.append(messageFormatHelper(userMentions.toString(), matcher2));
+                        sub.append(helper.apply(userMentions.toString(), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?mentionm .+(\\[.*?])?")
                         || trimmed.matches("(\\[.*?])?list .+(\\[.*?])?")) // rsvp mentions
                 {
-                    String name = trimmed.replace("mentionm ","").replace("list","").replaceAll("\\[.*?]","");
+                    String name = trimmed.replace("mentionm ","")
+                            .replace("list","").replaceAll("\\[.*?]","");
                     List<String> users = compileUserList(entry, name);
                     if (users != null)
                     {
@@ -229,32 +246,32 @@ public class ParsingUtilities
                             if (i+1<users.size())
                                 userMentions.append(", ");
                         }
-                        sub.append(messageFormatHelper(userMentions.toString(), matcher2));
+                        sub.append(helper.apply(userMentions.toString(), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?u(\\[.*?])?")) // advanced title url
                 {
                     if(entry.getTitleUrl() != null)
                     {
-                        sub.append(messageFormatHelper(entry.getTitleUrl(), matcher2));
+                        sub.append(helper.apply(entry.getTitleUrl(), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?v(\\[.*?])?")) // advanced image url
                 {
                     if(entry.getImageUrl() != null)
                     {
-                        sub.append(messageFormatHelper(entry.getImageUrl(), matcher2));
+                        sub.append(helper.apply(entry.getImageUrl(), matcher2));
                     }
                 }
                 else if(trimmed.matches("(\\[.*?])?w(\\[.*?])?")) // advanced thumbnail url
                 {
                     if(entry.getThumbnailUrl() != null)
                     {
-                        sub.append(messageFormatHelper(entry.getThumbnailUrl(), matcher2));
+                        sub.append(helper.apply(entry.getThumbnailUrl(), matcher2));
                     }
                 }
             }
-            format = format.replace(group, sub.toString());
+            raw = raw.replace(group, sub.toString());
         }
 
         // legacy parsing
@@ -262,169 +279,205 @@ public class ParsingUtilities
          * parses the format string character by character looking for % characters
          * a token is one % character followed by a key character
          */
-        StringBuilder announceMsg = new StringBuilder();
-        for( int i = 0; i < format.length(); i++ )
+        // function to create string displaying time remaining
+        Function<Long, String> timeTil = (Long minutes) -> {
+            if (minutes>0)
+            {
+                if (minutes > 36*60)
+                    return " in " + (((minutes+1)/60)/24) + " day(s)";
+                else if (minutes > 120)
+                    return " in " + (((minutes + 1) / 60) + " hour(s)");
+                else
+                    return " in " + (minutes + 1) + " minutes";
+            }
+            return "";
+        };
+        StringBuilder processed = new StringBuilder();
+        for( int i = 0; i < raw.length(); i++ )
         {
-            char ch = format.charAt(i);
-            if(ch == '%' && i+1 < format.length())
+            char ch = raw.charAt(i);
+            if(ch == '%' && i+1 < raw.length())
             {
                 i++;
-                ch = format.charAt(i);
+                ch = raw.charAt(i);
                 switch(ch)
                 {
+                    // comments 1-9
                     case 'c' :
-                        if(i+1 < format.length() && displayComments)
+                        if(i+1 < raw.length() && firstPass)
                         {
-                            ch = format.charAt(i+1);
+                            ch = raw.charAt(i+1);
                             if( Character.isDigit( ch ) )
                             {
                                 i++;
                                 int x = Integer.parseInt("" + ch);
                                 if(entry.getComments().size()>=x && x!=0)
                                 {
-                                    String parsedComment = ParsingUtilities.parseMessageFormat(entry.getComments().get(x - 1), entry, false);
-                                    announceMsg.append(parsedComment);
+                                    String parsedComment =
+                                            ParsingUtilities.processText(entry.getComments().get(x - 1), entry, false);
+                                    processed.append(parsedComment);
                                 }
                             }
                         }
                         break;
+
+                    // full list of comments, no line padding
                     case 'f' :
-                        if(displayComments)
+                        if(firstPass)
                         {   // if this call of the parser is nested, don't insert comments
-                            announceMsg.append(String.join("\n", entry.getComments().stream()
-                                    .map(comment -> ParsingUtilities.parseMessageFormat(comment, entry, false))
+                            processed.append(String.join("\n", entry.getComments().stream()
+                                    .map(comment -> ParsingUtilities.processText(comment, entry, false))
                                     .collect(Collectors.toList())));
                         }
                         break;
-                    case 'a' :
-                        if(!entry.hasStarted())
+
+                    // full list of comments, each comment padded by newline
+                    // used as the default description string
+                    case 'g':
+                        if (firstPass)
                         {
-                            announceMsg.append("begins");
-                            long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
-                            if(minutes>0)
+                            StringBuilder stringBuilder = new StringBuilder();
+                            for (int j=0; j<entry.getComments().size(); j++)
                             {
-                                if(minutes > 120)
-                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hours");
-                                else
-                                    announceMsg.append(" in ").append(minutes + 1).append(" minutes");
+                                if (j>0) stringBuilder.append("\n"); // newline pad between comment lines
+                                stringBuilder.append(processText(entry.getComments().get(j), entry, false))
+                                        .append("\n"); // trailing newline
                             }
-                        } else
-                        {
-                            announceMsg.append("ends");
-                            long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
-                            if(minutes>0)
-                            {
-                                if(minutes > 120)
-                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hours");
-                                else
-                                    announceMsg.append(" in ").append(minutes + 1).append(" minutes");
-                            }
+                            processed.append(stringBuilder.toString());
                         }
                         break;
-                    case 'b' :
-                        if( !entry.hasStarted() )
-                            announceMsg.append("begins");
-                        else
-                            announceMsg.append("ends");
+
+                    // dynamic 'begins|ends in [x] minutes|hours|days' text
+                    case 'a' :
+                        if (!entry.hasStarted())
+                        {
+                            processed.append("begins");
+                            long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
+                            processed.append(timeTil.apply(minutes));
+                        } else
+                        {
+                            processed.append("ends");
+                            long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
+                            processed.append(timeTil.apply(minutes));
+                        }
                         break;
+
+                    // contextual 'begins' or 'ends'
+                    case 'b' :
+                        if (!entry.hasStarted())
+                            processed.append("begins");
+                        else
+                            processed.append("ends");
+                        break;
+
+                    // dynamic 'in [x] minutes|hours|days' text
                     case 'x' :
                         if(!entry.hasStarted())
                         {
                             long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
-                            if(minutes>0)
-                            {
-                                if(minutes > 120)
-                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hours");
-                                else
-                                    announceMsg.append(" in ").append(minutes + 1).append(" minutes");
-                            }
+                            processed.append(timeTil.apply(minutes));
                         }
                         else
                         {
                             long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
-                            if(minutes>0)
-                            {
-                                if(minutes > 120)
-                                    announceMsg.append(" in ").append((minutes + 1) / 60).append(" hours");
-                                else
-                                    announceMsg.append(" in ").append(minutes + 1).append(" minutes");
-                            }
+                            processed.append(timeTil.apply(minutes));
                         }
                         break;
+
+                    // simple start date time
                     case 's':
-                        announceMsg.append(entry.getStart().format(timeFormatter));
+                        processed.append(entry.getStart().format(timeFormatter));
                         break;
+
+                    // simple end date time
                     case 'e':
-                        announceMsg.append(entry.getEnd().format(timeFormatter));
+                        processed.append(entry.getEnd().format(timeFormatter));
                         break;
+
+                    // event title
                     case 't' :
-                        announceMsg.append(entry.getTitle());
+                        processed.append(entry.getTitle());
                         break;
+
+                    // start day of month, padded numeric
                     case 'd' :
-                        announceMsg.append(String.format("%02d",entry.getStart().getDayOfMonth()));
+                        processed.append(String.format("%02d",entry.getStart().getDayOfMonth()));
                         break;
+
+                    // start day of week
                     case 'D' :
-                        announceMsg.append(StringUtils.capitalize(entry.getStart().getDayOfWeek().toString()));
+                        processed.append(StringUtils.capitalize(entry.getStart().getDayOfWeek().toString()));
                         break;
+
+                    // start month, numeric
                     case 'm' :
-                        announceMsg.append(String.format("%02d",entry.getStart().getMonthValue()));
+                        processed.append(String.format("%02d",entry.getStart().getMonthValue()));
                         break;
+
+                    // start month, name
                     case 'M' :
-                        announceMsg.append(StringUtils.capitalize(entry.getStart().getMonth().toString()));
+                        processed.append(StringUtils.capitalize(entry.getStart().getMonth().toString()));
                         break;
+
+                    // start year
                     case 'y' :
-                        announceMsg.append(entry.getStart().getYear());
+                        processed.append(entry.getStart().getYear());
                         break;
+
+                    // encoded event ID
                     case 'i':
-                        announceMsg.append(ParsingUtilities.intToEncodedID(entry.getId()));
+                        processed.append(ParsingUtilities.intToEncodedID(entry.getId()));
                         break;
+
+                    // '%' character
                     case '%' :
-                        announceMsg.append('%');
+                        processed.append('%');
                         break;
+
+                    // entry title url, if one exists
                     case 'u' :
-                        announceMsg.append(entry.getTitleUrl() == null ? "" : entry.getTitleUrl());
+                        processed.append(entry.getTitleUrl() == null ? "" : entry.getTitleUrl());
                         break;
+
+                    // entry image url, if one exists
                     case 'v' :
-                        announceMsg.append(entry.getImageUrl() == null ? "" : entry.getImageUrl());
+                        processed.append(entry.getImageUrl() == null ? "" : entry.getImageUrl());
                         break;
+
+                    // entry thumbnail url, if one exists
                     case 'w':
-                        announceMsg.append(entry.getThumbnailUrl() == null ? "" : entry.getThumbnailUrl());
+                        processed.append(entry.getThumbnailUrl() == null ? "" : entry.getThumbnailUrl());
                         break;
+
+                    // newline
                     case 'n':
-                        announceMsg.append("\n");
+                        processed.append("\n");
                         break;
+
+                    // start hour, padded numeric
                     case 'h':
-                        announceMsg.append(String.format("%02d",entry.getStart().getHour()));
+                        processed.append(String.format("%02d",entry.getStart().getHour()));
                         break;
+
+                    // start minute, padded numeric
                     case 'k':
-                        announceMsg.append(String.format("%02d",entry.getStart().getMinute()));
+                        processed.append(String.format("%02d",entry.getStart().getMinute()));
                         break;
+
+                    // event location information
                     case 'l':
-                        announceMsg.append(entry.getLocation());
+                        processed.append(entry.getLocation());
                         break;
                 }
             }
             else
-            {
-                announceMsg.append(ch);
+            {   // append the current character
+                processed.append(ch);
             }
         }
 
-        return announceMsg.toString();
-    }
-
-    /**
-     * aids parseMessageFormat() in parsing strings for advanced substitution
-     */
-    private static String messageFormatHelper(String insert, Matcher matcher)
-    {
-        String str = "";
-        if(matcher.find())
-            str += matcher.group().replaceAll("[\\[\\]]", "");
-        str += insert;
-        if(matcher.find())
-            str += matcher.group().replaceAll("[\\[\\]]", "");
-        return str;
+        // build the string and return
+        return processed.toString();
     }
 
 

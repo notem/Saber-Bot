@@ -6,7 +6,6 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
-import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
@@ -131,7 +130,7 @@ public class TestCommand implements Command
             }
         }
 
-        String remindMsg = ParsingUtilities.parseMessageFormat(format, entry, true);
+        String remindMsg = ParsingUtilities.processText(format, entry, true);
         MessageUtilities.sendMsg(remindMsg, event.getChannel(), null);
     }
 }

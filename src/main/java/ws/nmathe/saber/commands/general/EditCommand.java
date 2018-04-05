@@ -161,6 +161,16 @@ public class EditCommand implements Command
                     }
                     break;
 
+                case "desc":
+                case "description":
+                    if (args.length-index < 1)
+                    {
+                        return "That's not the right number of arguments for **"+args[index-1]+"**!\n"+
+                                "Use ``" + head + " " + args[index-2] + " " + args[index-1] + " [description]``";
+                    }
+                    index++;
+                    break;
+
                 case "s":
                 case "starts":
                 case "start":
@@ -477,6 +487,14 @@ public class EditCommand implements Command
                                 index += 2;
                                 break;
                         }
+                        break;
+
+                    case "desc":
+                    case "description":
+                        String description =
+                                args[index].toLowerCase().matches("(off)|(default)") ? "%g" : args[index];
+                        se.setDescription(description);
+                        index++;
                         break;
 
                     case "s":

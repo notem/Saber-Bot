@@ -162,17 +162,8 @@ public class MessageGenerator
         msg += "```Markdown\n\n" + timeLine + repeatLine +
                 (se.getLocation()==null ? "":"<Location: "+se.getLocation()+">\n")+"```\n";
 
-        // insert each comment line with a gap line
-        for( String comment : se.getComments() )
-        {
-            // don't break the maximum length of messages
-            if(msg.length() > 1800) break;
-
-            // code blocks in comments must be closed
-            int code = StringUtils.countMatches("```", comment);
-            if((code%2) == 1) msg += ParsingUtilities.parseMessageFormat(comment, se, false) + " ```" + "\n";
-            else msg += ParsingUtilities.parseMessageFormat(comment, se, false) + "\n\n";
-        }
+        // insert the event description
+        msg += ParsingUtilities.processText(se.getDescription(), se, true)+"\n";
 
         // generate the lower code block
         String zoneLine = "[" + se.getStart().getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "]" +
