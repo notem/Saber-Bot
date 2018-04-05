@@ -85,69 +85,76 @@ public class EventsCommand implements Command
         }
 
         // build the embed body content
-        Member caller = event.getGuild().getMember(event.getAuthor());
         StringBuilder content = new StringBuilder();
-        String title="Events on "+guild.getName(), footer="(events list continued on next page)";
+        String title="Events on "+guild.getName(),
+                footer="(events list continued on next page)";
         MessageEmbed embed;
         int count = 0; // total number of events
-        for(String sId : scheduleIds)
+
+        // get the caller's guild member information
+        Member caller = event.getGuild().getMember(event.getAuthor());
+        if (caller != null) // hide all events if null
         {
-            // only show users events that are on schedules they can view
-            TextChannel sChannel = event.getGuild().getTextChannelById(sId);
-            List<Permission> permissions = sChannel!=null ? caller.getPermissions(sChannel) : new ArrayList();
-            if (sChannel!=null && permissions!=null && permissions.contains(Permission.MESSAGE_READ))
+            // list events by their schedule
+            for(String sId : scheduleIds)
             {
-                // for each schedule, generate a list of events scheduled
-                Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromChannel(sId);
-                if(!entries.isEmpty())
+                // only show users events that are on schedules they can view
+                TextChannel sChannel = event.getGuild().getTextChannelById(sId);
+                List<Permission> permissions = sChannel!=null ? caller.getPermissions(sChannel) : new ArrayList();
+                if (sChannel!=null && permissions!=null && permissions.contains(Permission.MESSAGE_READ))
                 {
-                    if (content.length() > 1700)
+                    // for each schedule, generate a list of events scheduled
+                    Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromChannel(sId);
+                    if(!entries.isEmpty())
                     {
-                        // build embed and message
-                        embed = new EmbedBuilder()
-                                .setFooter(footer, null)
-                                .setTitle(title)
-                                .setDescription(content.toString()).build();
-
-                        Message message = new MessageBuilder().setEmbed(embed).build();            // build message
-                        MessageUtilities.sendMsg(message, event.getTextChannel(), null);     // send message
-
-                        // adjust title and footer to reflect future messages are a continuation
-                        title = "Events on " + guild.getName() + " (continued)";
-                        footer="(events list continued on next page)";
-                    }
-                    content.append("<#").append(sId).append("> ...\n");  // start a new schedule list
-                    while(!entries.isEmpty())
-                    {
-                        // find and remove the next earliest occurring event
-                        ScheduleEntry top = entries.toArray(new ScheduleEntry[entries.size()])[0];
-                        for(ScheduleEntry se : entries)
+                        if (content.length() > 1700)
                         {
-                            if(se.getStart().isBefore(top.getStart())) top = se;
-                        }
-                        entries.remove(top);
+                            // build embed and message
+                            embed = new EmbedBuilder()
+                                    .setFooter(footer, null)
+                                    .setTitle(title)
+                                    .setDescription(content.toString()).build();
 
-                        // determine time until the event begins/ends
-                        long timeTil = ZonedDateTime.now().until(top.getStart(), ChronoUnit.MINUTES);
-                        String status = "begins";
-                        if (timeTil < 0)    // adjust if event is ending
+                            Message message = new MessageBuilder().setEmbed(embed).build();            // build message
+                            MessageUtilities.sendMsg(message, event.getTextChannel(), null);     // send message
+
+                            // adjust title and footer to reflect future messages are a continuation
+                            title = "Events on " + guild.getName() + " (continued)";
+                            footer="(events list continued on next page)";
+                        }
+                        content.append("<#").append(sId).append("> ...\n");  // start a new schedule list
+                        while(!entries.isEmpty())
                         {
-                            timeTil = ZonedDateTime.now().until(top.getEnd(), ChronoUnit.MINUTES);
-                            status = "ends";
-                        }
+                            // find and remove the next earliest occurring event
+                            ScheduleEntry top = entries.toArray(new ScheduleEntry[entries.size()])[0];
+                            for(ScheduleEntry se : entries)
+                            {
+                                if(se.getStart().isBefore(top.getStart())) top = se;
+                            }
+                            entries.remove(top);
 
-                        // add the event as a single line in the content
-                        content.append(":id:``").append(ParsingUtilities.intToEncodedID(top.getId()))
-                                .append("`` ~ **").append(top.getTitle()).append("** ").append(status).append(" in *");
-                        if(timeTil < 120)
-                            content.append(timeTil).append(" minutes*\n");
-                        else if(timeTil < 24*60)
-                            content.append(timeTil / 60).append(" hours and ").append(timeTil % 60).append(" minutes*\n");
-                        else
-                            content.append(timeTil / (60 * 24)).append(" days*\n");
-                        count++;     // iterate event counter
+                            // determine time until the event begins/ends
+                            long timeTil = ZonedDateTime.now().until(top.getStart(), ChronoUnit.MINUTES);
+                            String status = "begins";
+                            if (timeTil < 0)    // adjust if event is ending
+                            {
+                                timeTil = ZonedDateTime.now().until(top.getEnd(), ChronoUnit.MINUTES);
+                                status = "ends";
+                            }
+
+                            // add the event as a single line in the content
+                            content.append(":id:``").append(ParsingUtilities.intToEncodedID(top.getId()))
+                                    .append("`` ~ **").append(top.getTitle()).append("** ").append(status).append(" in *");
+                            if(timeTil < 120)
+                                content.append(timeTil).append(" minutes*\n");
+                            else if(timeTil < 24*60)
+                                content.append(timeTil / 60).append(" hours and ").append(timeTil % 60).append(" minutes*\n");
+                            else
+                                content.append(timeTil / (60 * 24)).append(" days*\n");
+                            count++;     // iterate event counter
+                        }
+                        content.append("\n"); // end a schedule list
                     }
-                    content.append("\n"); // end a schedule list
                 }
             }
         }
