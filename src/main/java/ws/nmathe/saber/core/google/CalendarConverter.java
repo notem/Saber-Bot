@@ -432,10 +432,10 @@ public class CalendarConverter
                 }
             }
 
+            /* (!!experimental!!) don't delete old entries
             // purge channel of all entries on schedule that aren't in uniqueEvents
             Bson query = and(   eq("channelId", channel.getId()),
                                 nin("googleId", uniqueEvents));
-
             Main.getDBDriver().getEventCollection().find(query)
                     .forEach((Consumer<? super Document>) document ->
                     {
@@ -446,6 +446,7 @@ public class CalendarConverter
                         Main.getEntryManager().removeEntry((Integer) document.get("_id"));
                         MessageUtilities.deleteMsg(msg, null);
                     });
+            */
 
             // set channel topic
             JDA jda = Main.getShardManager().getJDA(channel.getGuild().getId());
