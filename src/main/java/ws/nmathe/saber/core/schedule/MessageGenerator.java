@@ -184,14 +184,17 @@ public class MessageGenerator
         {
             StringBuilder rsvpLine = new StringBuilder("- ");
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
-            for(String key : options.keySet()) // I iterate over the keys rather than the values to keep a order consistent with reactions
+            for(String emoji : options.keySet()) // I iterate over the keys rather than the values to keep a order consistent with reactions
             {
-                String type = options.get(key);
-                rsvpLine.append("<")
-                        .append(type)
-                        .append(" ")
-                        .append(se.getRsvpMembersOfType(type).size())
-                        .append(se.getRsvpLimit(type) >= 0 ? "/" + se.getRsvpLimit(type) + "> " : "> ");
+                String type = options.get(emoji);
+                if (se.getRsvpLimit(type) != 0) // don't list the rsvp options on the event
+                {
+                    rsvpLine.append("<")
+                            .append(type)
+                            .append(" ")
+                            .append(se.getRsvpMembersOfType(type).size())
+                            .append(se.getRsvpLimit(type) >= 0 ? "/" + se.getRsvpLimit(type) + "> " : "> ");
+                }
             }
             if(se.getDeadline() != null)
             {
@@ -247,7 +250,7 @@ public class MessageGenerator
             for(String emoji : options.keySet())
             {
                 String type = options.get(emoji);
-                if (se.getRsvpLimit(type) == 0) // don't list the rsvp options on the event
+                if (se.getRsvpLimit(type) != 0) // don't list the rsvp options on the event
                 {
                     rsvpLine.append("<").append(type.charAt(0)).append(" ")
                             .append(se.getRsvpMembersOfType(type).size())

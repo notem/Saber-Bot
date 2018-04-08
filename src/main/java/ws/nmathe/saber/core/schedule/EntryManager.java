@@ -298,7 +298,7 @@ public class EntryManager
         for(String emoji : options.keySet())
         {
             // don't add the reaction for categories with 0 limit
-            if (se.getRsvpLimit(options.get(emoji)) == 0)
+            if (se.getRsvpLimit(options.get(emoji)) != 0)
                 addRSVPReaction(emoji, message);
         }
         if(!clearEmoji.isEmpty())
