@@ -833,12 +833,13 @@ public class ConfigCommand implements Command
                                     {
                                         Map<String, String> map = Main.getScheduleManager()
                                                 .getRSVPOptions(document.getString("channelId"));
+                                        ScheduleEntry se = new ScheduleEntry(document);
 
                                         // add reaction options
                                         event.getGuild()
                                                 .getTextChannelById(document.getString("channelId"))
                                                 .getMessageById(document.getString("messageId"))
-                                                .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg));
+                                                .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg, se));
                                     });
 
                                     Main.getEntryManager().reloadEntry(document.getInteger("_id"));
@@ -857,12 +858,13 @@ public class ConfigCommand implements Command
                                     {
                                         Map<String, String> map = Main.getScheduleManager()
                                                 .getRSVPOptions(document.getString("channelId"));
+                                        ScheduleEntry se = new ScheduleEntry(document);
 
                                         // add reaction options
                                         event.getGuild()
                                                 .getTextChannelById(document.getString("channelId"))
                                                 .getMessageById(document.getString("messageId"))
-                                                .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg));
+                                                .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg, se));
 
                                         Main.getEntryManager().reloadEntry(document.getInteger("_id"));
                                     });
@@ -882,7 +884,6 @@ public class ConfigCommand implements Command
                                     });
                         }
                     }
-
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
                     break;
 
@@ -904,7 +905,7 @@ public class ConfigCommand implements Command
                     Main.getEntryManager().getEntriesFromChannel(cId).forEach(se->
                     {
                         Message message = se.getMessageObject();
-                        message.clearReactions().queue(ignored-> EntryManager.addRSVPReactions(rsvpOptions, finalEmoji, message));
+                        message.clearReactions().queue(ignored-> EntryManager.addRSVPReactions(rsvpOptions, finalEmoji, message, se));
                     });
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
                     break;

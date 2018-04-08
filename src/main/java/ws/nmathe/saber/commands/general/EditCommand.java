@@ -4,9 +4,11 @@ import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.schedule.EntryManager;
 import ws.nmathe.saber.core.schedule.EventRecurrence;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
@@ -14,6 +16,7 @@ import ws.nmathe.saber.utils.VerifyUtilities;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * used to edit currently active events
@@ -243,11 +246,16 @@ public class EditCommand implements Command
                 case "date":
                 case "sd":
                 case "start-date":
-                case "ed":
-                case "end-date":
-                    verify = VerifyUtilities.verifyDate(args, index, head, entry, zone);
+                    verify = VerifyUtilities.verifyDate(args, index, head, entry, zone, true);
                     if(!verify.isEmpty()) return verify;
                     index++;
+                    break;
+
+
+                case "ed":
+                case "end-date":
+                    verify = VerifyUtilities.verifyDate(args, index, head, entry, zone, false);
+                    if(!verify.isEmpty()) return verify;
                     index++;
                     break;
 
@@ -445,6 +453,7 @@ public class EditCommand implements Command
         if(args.length > 1)
         {
             index++;    // 1
+            boolean limitsChanged = false;
             while(index < args.length)
             {
                 ZoneId zone = Main.getScheduleManager().getTimeZone(se.getChannelId());
@@ -706,6 +715,7 @@ public class EditCommand implements Command
                             lim = Integer.parseInt(args[index+1]);
                         }
                         se.setRsvpLimit(args[index], lim);
+                        limitsChanged = true;
                         index += 2;
                         break;
 
@@ -803,7 +813,17 @@ public class EditCommand implements Command
                 }
             }
             Main.getEntryManager().updateEntry(se, true);
+            if (limitsChanged) // if the limits on the event was changed, reload the reactions
+            {
+                se.getMessageObject().clearReactions().queue(message->
+                {
+                    Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
+                    String clearEmoji = Main.getScheduleManager().getRSVPClear(se.getChannelId());
+                    EntryManager.addRSVPReactions(options, clearEmoji, se.getMessageObject(), se);
+                }, failure-> Logging.exception(this.getClass(), failure));
+            }
         }
+
 
         //
         // send the event summary to the command channel

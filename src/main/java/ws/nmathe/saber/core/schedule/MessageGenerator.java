@@ -35,14 +35,14 @@ public class MessageGenerator
         String titleUrl = (se.getTitleUrl() != null && VerifyUtilities.verifyUrl(se.getTitleUrl())) ?
                 se.getTitleUrl() : "https://nmathe.ws/bots/saber";
         String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
-        String footerStr = "ID: " + ParsingUtilities.intToEncodedID(se.getId());
+        StringBuilder footerStr = new StringBuilder("ID: " + ParsingUtilities.intToEncodedID(se.getId()));
 
         if(se.isQuietEnd() || se.isQuietStart() || se.isQuietRemind())
         {
-            footerStr += " |";
-            if(se.isQuietStart()) footerStr += " quiet-start";
-            if(se.isQuietEnd()) footerStr += " quiet-end";
-            if(se.isQuietRemind()) footerStr += " quiet-remind";
+            footerStr.append(" |");
+            if(se.isQuietStart()) footerStr.append(" quiet-start");
+            if(se.isQuietEnd()) footerStr.append(" quiet-end");
+            if(se.isQuietRemind()) footerStr.append(" quiet-remind");
         }
 
         // generate reminder footer
@@ -51,39 +51,49 @@ public class MessageGenerator
         reminders.addAll(se.getEndReminders());
         if (!reminders.isEmpty())
         {
-            footerStr += " | remind in ";
+            footerStr.append(" | remind in ");
             long minutes = Instant.now().until(reminders.get(0).toInstant(), ChronoUnit.MINUTES);
             if(minutes<=120)
             {
-                footerStr += " " + minutes + "m";
+                footerStr.append(" ")
+                        .append(minutes)
+                        .append("m");
             }
             else
             {
-                footerStr += " " + (int) Math.ceil(minutes/60) + "h";
+                footerStr.append(" ")
+                        .append((int) Math.ceil(minutes / 60))
+                        .append("h");
             }
             for (int i=1; i<reminders.size()-1; i++)
             {
                 minutes = Instant.now().until(reminders.get(i).toInstant(), ChronoUnit.MINUTES);
                 if(minutes<=120)
                 {
-                    footerStr += ", " + minutes + "m";
+                    footerStr.append(", ")
+                            .append(minutes)
+                            .append("m");
                 }
                 else
                 {
-                    footerStr += ", " + (int) Math.ceil(minutes/60) + "h";
+                    footerStr.append(", ")
+                            .append((int) Math.ceil(minutes / 60))
+                            .append("h");
                 }
             }
             if (reminders.size()>1)
             {
                 minutes = Instant.now().until(reminders.get(reminders.size()-1).toInstant(), ChronoUnit.MINUTES);
-                footerStr += " and ";
+                footerStr.append(" and ");
                 if(minutes<=120)
                 {
-                    footerStr += minutes + "m";
+                    footerStr.append(minutes)
+                            .append("m");
                 }
                 else
                 {
-                    footerStr += (int) Math.ceil(minutes/60) + "h";
+                    footerStr.append((int) Math.ceil(minutes / 60))
+                            .append("h");
                 }
             }
         }
@@ -123,7 +133,7 @@ public class MessageGenerator
         builder.setDescription(bodyContent)
                 .setColor(color)
                 .setAuthor(se.getTitle(), titleUrl, titleImage)
-                .setFooter(footerStr, null);
+                .setFooter(footerStr.toString(), null);
 
         if(se.getImageUrl() != null && VerifyUtilities.verifyUrl(se.getImageUrl()))
         {
@@ -172,18 +182,25 @@ public class MessageGenerator
         // if rsvp is enabled, show the number of rsvp
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
-            String rsvpLine = "- ";
+            StringBuilder rsvpLine = new StringBuilder("- ");
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
             for(String key : options.keySet()) // I iterate over the keys rather than the values to keep a order consistent with reactions
             {
                 String type = options.get(key);
-                rsvpLine += "<" + type + " " + se.getRsvpMembersOfType(type).size() +
-                        (se.getRsvpLimit(type)>=0 ? "/"+se.getRsvpLimit(type)+"> " : "> ");
+                rsvpLine.append("<")
+                        .append(type)
+                        .append(" ")
+                        .append(se.getRsvpMembersOfType(type).size())
+                        .append(se.getRsvpLimit(type) >= 0 ? "/" + se.getRsvpLimit(type) + "> " : "> ");
             }
             if(se.getDeadline() != null)
             {
-                rsvpLine += "\n+ RSVP closes " + se.getDeadline().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
-                    " " + se.getDeadline().getDayOfMonth() + ", " + se.getDeadline().getYear() + ".";
+                rsvpLine.append("\n+ RSVP closes ")
+                        .append(se.getDeadline().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH))
+                        .append(" ").append(se.getDeadline().getDayOfMonth())
+                        .append(", ")
+                        .append(se.getDeadline().getYear())
+                        .append(".");
             }
             msg += "```Markdown\n\n" + zoneLine + rsvpLine + "```";
         }
@@ -205,9 +222,11 @@ public class MessageGenerator
     {
         // create the first line of the body
         String timeLine = genTimeLine(se);
+
         // timezone and repeat information
         String expireAndRepeat = "[" + se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
                 "](" + se.getRecurrence().toString(true) + ")";
+
         // include event expiration information (if configured)
         if (se.getRecurrence().getCount() != null)
         {   // if event has a count limit, include that information in the display
@@ -217,6 +236,7 @@ public class MessageGenerator
         {   // event expiration date
             expireAndRepeat += "\n+ Expires on <"+se.getExpire().toLocalDate().format(DateTimeFormatter.ofPattern("MMM d"))+">\n";
         }
+
         // if rsvp is enabled, show the number of rsvps
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
@@ -224,12 +244,15 @@ public class MessageGenerator
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
             // iterate over the keys rather than the values to keep
             // the order consistent with the order reactions are displayed
-            for(String key : options.keySet())
+            for(String emoji : options.keySet())
             {
-                String type = options.get(key);
-                rsvpLine.append("<").append(type.charAt(0)).append(" ")
-                        .append(se.getRsvpMembersOfType(type).size())
-                        .append(se.getRsvpLimit(type) >= 0 ? "/" + se.getRsvpLimit(type) + "> " : "> ");
+                String type = options.get(emoji);
+                if (se.getRsvpLimit(type) == 0) // don't list the rsvp options on the event
+                {
+                    rsvpLine.append("<").append(type.charAt(0)).append(" ")
+                            .append(se.getRsvpMembersOfType(type).size())
+                            .append(se.getRsvpLimit(type) > 0 ? "/" + se.getRsvpLimit(type) + "> " : "> ");
+                }
             }
             expireAndRepeat += "\n"+rsvpLine;
         }
@@ -251,20 +274,20 @@ public class MessageGenerator
         else
             timeFormatter = "h:mm a";
 
-
         String dash = "\u2014";
         String timeLine = "< " + se.getStart().format(DateTimeFormatter.ofPattern("MMM d"));
 
         // event starts and ends at the same time
-        if( se.getStart().until(se.getEnd(), ChronoUnit.SECONDS)==0 )
+        if (se.getStart().until(se.getEnd(), ChronoUnit.SECONDS)==0)
         {
             timeLine += ", " + se.getStart().format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
         }
         // time span is greater than 1 day
-        else if( se.getStart().until(se.getEnd(), ChronoUnit.DAYS)>=1 )
+        else if (se.getStart().until(se.getEnd(), ChronoUnit.DAYS)>=1)
         {
             // all day events
-            if( se.getStart().toLocalTime().equals(LocalTime.MIN) && se.getStart().toLocalTime().equals(LocalTime.MIN) )
+            if (se.getStart().toLocalTime().equals(LocalTime.MIN) &&
+                    se.getStart().toLocalTime().equals(LocalTime.MIN))
             {
                 timeLine += " " + dash + " " + se.getEnd().format(DateTimeFormatter.ofPattern("MMM d")) + " >\n";
             }

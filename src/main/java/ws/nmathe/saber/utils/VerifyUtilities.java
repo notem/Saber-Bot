@@ -339,7 +339,7 @@ public class VerifyUtilities
     /**
      *  Returns error message (or empty string) for several date-based keywords
      */
-    public static String verifyDate(String[] args, int index, String head, ScheduleEntry entry, ZoneId zone)
+    public static String verifyDate(String[] args, int index, String head, ScheduleEntry entry, ZoneId zone, boolean checkStarted)
     {
         if(args.length-index < 1)
         {
@@ -355,7 +355,7 @@ public class VerifyUtilities
         {
             return "That date is in the past!";
         }
-        if(entry!=null && entry.hasStarted())
+        if(checkStarted && entry!=null && entry.hasStarted())
         {
             return "You cannot modify the date of events which have already started!";
         }
@@ -377,8 +377,15 @@ public class VerifyUtilities
         {
             return "*" + args[index] + "* is not an rsvp group for that event's schedule!";
         }
-        index++;
-        if(!args[index].equalsIgnoreCase("off") && !VerifyUtilities.verifyInteger(args[index]))
+        index++;    // move to [limit] argument
+        if (VerifyUtilities.verifyInteger(args[index]))
+        {
+            if (Integer.parseInt(args[index]) < 0)
+            {
+                return "Your limit cannot be a negative value!";
+            }
+        }
+        else if(!args[index].equalsIgnoreCase("off"))
         {
             return "*" + args[index] + "* is not a number!\nTo disable the rsvp group's limit use \"off\".";
         }

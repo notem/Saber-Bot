@@ -153,7 +153,7 @@ public class CreateCommand implements Command
                     case "start-date":
                     case "ed":
                     case "end-date":
-                        verify = VerifyUtilities.verifyDate(args, index, head, null, zone);
+                        verify = VerifyUtilities.verifyDate(args, index, head, null, zone, false);
                         if (!verify.isEmpty()) return verify;
                         index++;
                         break;

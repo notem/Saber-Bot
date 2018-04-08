@@ -632,6 +632,8 @@ public class ScheduleEntry
 
 
     /**
+     * updates the schedule entry's start and end date-times to the next
+     * scheduled occurrence for the event
      */
     private ScheduleEntry setNextOccurrence()
     {
@@ -1261,7 +1263,11 @@ public class ScheduleEntry
         StringBuilder body = new StringBuilder("// Comments\n");
         for(int i=1; i<this.getComments().size()+1; i++)
         {
-            body.append("[").append(i).append("] \"").append(this.getComments().get(i - 1)).append("\"\n");
+            body.append("[")
+                    .append(i)
+                    .append("] \"")
+                    .append(this.getComments().get(i - 1))
+                    .append("\"\n");
         }
         return body.toString();
     }
@@ -1274,7 +1280,13 @@ public class ScheduleEntry
         StringBuilder body = new StringBuilder("// Limits\n");
         for(String key : this.getRsvpLimits().keySet())
         {
-            body.append(key).append(" - ").append(this.getRsvpLimits().get(key)).append("\n");
+            Integer limit = this.getRsvpLimits().get(key);
+            if (limit != null && limit > 0)
+            {
+                body.append(key).append(" - ")
+                        .append(this.getRsvpLimits().get(key))
+                        .append("\n");
+            }
         }
         return body.toString();
     }
@@ -1289,9 +1301,15 @@ public class ScheduleEntry
         for (String id : this.aTimes.keySet())
         {
             TextChannel channel = jda.getTextChannelById(this.aTargets.get(id));
-            body.append("(").append(Integer.parseInt(id) + 1).append(") \"")
-                    .append(this.aMessages.get(id)).append("\"").append(" at \"")
-                    .append(this.aTimes.get(id)).append("\"").append(" to \"#")
+            body.append("(")
+                    .append(Integer.parseInt(id) + 1)
+                    .append(") \"")
+                    .append(this.aMessages.get(id))
+                    .append("\"")
+                    .append(" at \"")
+                    .append(this.aTimes.get(id))
+                    .append("\"")
+                    .append(" to \"#")
                     .append(channel == null ? "unknown_channel" : channel.getName())
                     .append("\"\n");
         }

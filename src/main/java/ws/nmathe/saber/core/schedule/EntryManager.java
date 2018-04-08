@@ -128,7 +128,7 @@ public class EntryManager
                 if( Main.getScheduleManager().isRSVPEnabled(channelId) )
                 {
                     Map<String, String> map = Main.getScheduleManager().getRSVPOptions(channelId);
-                    addRSVPReactions(map, Main.getScheduleManager().getRSVPClear(channelId), msg);
+                    addRSVPReactions(map, Main.getScheduleManager().getRSVPClear(channelId), msg, se);
                 }
 
                 // add new document
@@ -288,13 +288,18 @@ public class EntryManager
     /**
      * adds rsvp reactions to a message
      * @param options (Map) mapping of rsvp emojis to rsvp names
+     * @param clearEmoji unicode emoji to use for the clear action (empty if clear is disabled)
      * @param message (Message) discord message object
+     * @param se the schedule entry object
      */
-    public static void addRSVPReactions(Map<String, String> options, String clearEmoji, Message message)
+    public static void addRSVPReactions
+    (Map<String, String> options, String clearEmoji, Message message, ScheduleEntry se)
     {
         for(String emoji : options.keySet())
         {
-            addRSVPReaction(emoji, message);
+            // don't add the reaction for categories with 0 limit
+            if (se.getRsvpLimit(options.get(emoji)) == 0)
+                addRSVPReaction(emoji, message);
         }
         if(!clearEmoji.isEmpty())
         {
