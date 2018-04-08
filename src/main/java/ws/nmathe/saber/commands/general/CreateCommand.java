@@ -430,11 +430,8 @@ public class CreateCommand implements Command
             end = end.plusYears(1);
         }
 
-        // add a day to end if end is after start
-        if(start.isAfter(end))
-        {
-            end = end.plusDays(1);
-        }
+        // never allow the end to be before the start
+        if(start.isAfter(end)) end = start;
 
         /*
          * Create a dummy schedule entry with all processed variables
