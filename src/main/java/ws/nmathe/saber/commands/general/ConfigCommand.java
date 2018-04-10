@@ -411,7 +411,7 @@ public class ConfigCommand implements Command
                         {
                             return "Argument *" + args[index] + "* is not an appropriate argument!\n" +
                                     "Use ``" + cmd + " [#channel] rsvp [on|off]`` to enable/disable rsvp on the schedule.\n" +
-                                    "Use ``" + cmd + " [#channel] rsvp add [emoji]-[name]`` to add a new rsvp option.\n" +
+                                    "Use ``" + cmd + " [#channel] rsvp add [name] [emoji]`` to add a new rsvp option.\n" +
                                     "Use ``" + cmd + " [#channel] rsvp remove [emoji|name]`` to remove an rsvp option.";
                         }
                     }

@@ -201,7 +201,8 @@ public class VerifyUtilities
     {
         if(!EmojiManager.isEmoji(emoji))
         {
-            String emoteId = emoji.replaceAll("[^\\d]", "");
+            String[] split = emoji.split(":"); // split on colons to isolate the reaction name from it's ID
+            String emoteId = split[split.length].replaceAll("[^\\d]", ""); // trim to include only the ID
             Emote emote = null;
             try
             {

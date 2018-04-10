@@ -323,19 +323,19 @@ public class MessageGenerator
         long timeTilStart = ZonedDateTime.now().until(start, ChronoUnit.SECONDS);
         long timeTilEnd = ZonedDateTime.now().until(end, ChronoUnit.SECONDS);
 
-        if(start.isAfter(ZonedDateTime.now()))
+        if (start.isAfter(ZonedDateTime.now()))
         {
             timer = "(begins ";
-            if( timeTilStart < 60 * 60 )
+            if (timeTilStart < 60 * 60 )
             {
                 int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
-                if( minutesTil <= 1)
+                if (minutesTil <= 1)
                     timer += "in a minute)";
                 else
                     timer += "in " + minutesTil + " minutes)";
                 //timer += "within the hour.)";
             }
-            else if( timeTilStart < 24 * 60 * 60 )
+            else if (timeTilStart < 24 * 60 * 60 )
             {
                 int hoursTil = (int)Math.ceil((double)timeTilStart/(60*60));
                 if( hoursTil <= 1)
@@ -347,7 +347,7 @@ public class MessageGenerator
             {
                 int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS),
                         start.truncatedTo(ChronoUnit.DAYS));
-                if( daysTil <= 1)
+                if (daysTil <= 1)
                     timer += "tomorrow)";
                 else
                     timer += "in " + daysTil + " days)";
@@ -356,20 +356,20 @@ public class MessageGenerator
         else // if the event has started
         {
             timer = "(ends ";
-            if( timeTilEnd < 60*60 )
+            if (timeTilEnd < 60*60 )
             {
                 int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
-                if( minutesTil <= 1)
+                if (minutesTil <= 1)
                     timer += "in a minute)";
                 else
                     timer += "in " + minutesTil + " minutes)";
                 //timer += "within one hour.)";
             }
 
-            else if( timeTilEnd < 24 * 60 * 60 )
+            else if (timeTilEnd < 24 * 60 * 60 )
             {
                 int hoursTil = (int)Math.ceil((double)timeTilEnd/(60*60));
-                if( hoursTil <= 1)
+                if (hoursTil <= 1)
                     timer += "in one hour)";
                 else
                     timer += "in " + hoursTil + " hours)";
@@ -378,7 +378,7 @@ public class MessageGenerator
             {
                 int daysTil = (int) ChronoUnit.DAYS
                         .between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS), end.truncatedTo(ChronoUnit.DAYS));
-                if( daysTil <= 1)
+                if (daysTil <= 1)
                     timer += "tomorrow)";
                 else
                     timer += "in " + daysTil + " days)";

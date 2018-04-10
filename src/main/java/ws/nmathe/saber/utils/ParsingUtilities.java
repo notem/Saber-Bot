@@ -218,8 +218,15 @@ public class ParsingUtilities
                         StringBuilder userMentions = new StringBuilder();
                         for(int i=0; i<users.size(); i++)
                         {
-                            if (users.get(i).matches("\\d+"))
-                                userMentions.append("<@").append(users.get(i)).append(">");
+                            String user = users.get(i);
+                            if (user.matches("\\d+"))
+                            { // append @mention to user
+                                userMentions.append("<@").append(user).append(">");
+                            }
+                            else
+                            { // append the user's raw name
+                                userMentions.append(user);
+                            }
                             if (i+1<users.size())
                                 userMentions.append(", ");
                         }
@@ -229,22 +236,29 @@ public class ParsingUtilities
                 else if(trimmed.matches("(\\[.*?])?mentionm .+(\\[.*?])?")
                         || trimmed.matches("(\\[.*?])?list .+(\\[.*?])?")) // rsvp mentions
                 {
-                    String name = trimmed.replace("mentionm ","")
-                            .replace("list","").replaceAll("\\[.*?]","");
+                    String name = trimmed
+                            .replace("mentionm ","")
+                            .replace("list ","")
+                            .replaceAll("\\[.*?]","");
                     List<String> users = compileUserList(entry, name);
                     if (users != null)
                     {
                         StringBuilder userMentions = new StringBuilder();
                         for(int i=0; i<users.size(); i++)
                         {
-                            if (users.get(i).matches("\\d+"))
-                            {
+                            String user = users.get(i);
+                            if (user.matches("\\d+"))
+                            {   // is a user's ID, find user's effective name
                                 Member member = Main.getShardManager().getJDA(entry.getGuildId())
-                                        .getGuildById(entry.getGuildId()).getMemberById(users.get(i));
+                                        .getGuildById(entry.getGuildId()).getMemberById(user);
                                 userMentions.append(member.getEffectiveName());
                             }
+                            else
+                            {   // user is plaintext (added by !manage)
+                                userMentions.append(user);
+                            }
                             if (i+1<users.size())
-                                userMentions.append(", ");
+                                userMentions.append(", "); // don't add comma if last element
                         }
                         sub.append(helper.apply(userMentions.toString(), matcher2));
                     }
@@ -484,13 +498,13 @@ public class ParsingUtilities
     /**
      * generates a list of user IDs for a given RSVP category of an event
      * @param entry ScheduleEntry object
-     * @param name name of RSVP category
+     * @param category name of RSVP category
      * @return List of Stings or null if category is invalid
      */
-    private static List<String> compileUserList(ScheduleEntry entry, String name)
+    private static List<String> compileUserList(ScheduleEntry entry, String category)
     {
         List<String> users = null;
-        if (name.toLowerCase().equals("no-input"))
+        if (category.toLowerCase().equals("no-input"))
         {
             List<String> rsvped = new ArrayList<>();
             Set<String> keys = entry.getRsvpMembers().keySet();
@@ -507,8 +521,9 @@ public class ParsingUtilities
                     .filter(memberId -> !rsvped.contains(memberId)).collect(Collectors.toList());
         } else
         {
-            List<String> members = entry.getRsvpMembers().get(name);
-            if(members != null) users = entry.getRsvpMembersOfType(name);
+            List<String> members = entry.getRsvpMembers().get(category);
+            if(members != null)
+                users = entry.getRsvpMembersOfType(category);
         }
         return users;
     }
