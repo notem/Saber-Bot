@@ -787,7 +787,8 @@ public class ConfigCommand implements Command
                             String emoji = args[index+1].trim();
                             if(!EmojiManager.isEmoji(emoji))
                             {
-                                emoji = emoji.replaceAll("[^\\d]","");
+                                String[] split = emoji.split(":"); // split on colons to isolate the reaction name from it's ID
+                                emoji = split[split.length-1].replaceAll("[^\\d]", ""); // trim to include only the ID
                             }
                             options.put(emoji, args[index].trim());
                             Main.getScheduleManager().setRSVPOptions(cId, options);
