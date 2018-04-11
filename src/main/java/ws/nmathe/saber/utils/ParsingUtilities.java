@@ -225,7 +225,7 @@ public class ParsingUtilities
                                 if (Main.getShardManager().getJDA(entry.getGuildId())
                                         .getGuildById(entry.getGuildId()).getMemberById(user) != null)
                                 {   // if member does not exist, ommit the user
-                                    userMentions.append("<@").append(isId).append(">");
+                                    userMentions.append("<@").append(user).append(">");
                                 }
                             }
                             catch (Exception e)
