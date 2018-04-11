@@ -202,7 +202,7 @@ public class VerifyUtilities
         if(!EmojiManager.isEmoji(emoji))
         {
             String[] split = emoji.split(":"); // split on colons to isolate the reaction name from it's ID
-            String emoteId = split[split.length].replaceAll("[^\\d]", ""); // trim to include only the ID
+            String emoteId = split[split.length-1].replaceAll("[^\\d]", ""); // trim to include only the ID
             Emote emote = null;
             try
             {
@@ -587,5 +587,15 @@ public class VerifyUtilities
                     "Please keep the name length to under 100 characters.";
         }
         return "";
+    }
+
+    /**
+     *
+     * @param text text of unknown format
+     * @return true if is of proper <@\\d+> format
+     */
+    public static boolean verifyUserMention(String text)
+    {
+        return text.matches("<@(!)?\\d+>");
     }
 }

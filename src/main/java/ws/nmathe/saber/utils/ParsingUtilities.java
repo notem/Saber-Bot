@@ -219,12 +219,21 @@ public class ParsingUtilities
                         for(int i=0; i<users.size(); i++)
                         {
                             String user = users.get(i);
-                            if (user.matches("\\d+"))
-                            { // append @mention to user
-                                userMentions.append("<@").append(user).append(">");
+                            boolean isId = user.matches("\\d+"); // is probably an ID
+                            try
+                            {
+                                if (Main.getShardManager().getJDA(entry.getGuildId())
+                                        .getGuildById(entry.getGuildId()).getMemberById(user) != null)
+                                {   // if member does not exist, ommit the user
+                                    userMentions.append("<@").append(isId).append(">");
+                                }
                             }
-                            else
-                            { // append the user's raw name
+                            catch (Exception e)
+                            {   // if the ID was invalid, flag to be appended as plaintext
+                                isId = false;
+                            }
+                            if (!isId)
+                            {   // user is plaintext (added by !manage)
                                 userMentions.append(user);
                             }
                             if (i+1<users.size())
@@ -247,13 +256,24 @@ public class ParsingUtilities
                         for(int i=0; i<users.size(); i++)
                         {
                             String user = users.get(i);
-                            if (user.matches("\\d+"))
+                            boolean isId = user.matches("\\d+"); // looks like an ID
+                            if (isId)
                             {   // is a user's ID, find user's effective name
-                                Member member = Main.getShardManager().getJDA(entry.getGuildId())
-                                        .getGuildById(entry.getGuildId()).getMemberById(user);
-                                userMentions.append(member.getEffectiveName());
+                                try
+                                {
+                                    Member member = Main.getShardManager().getJDA(entry.getGuildId())
+                                            .getGuildById(entry.getGuildId()).getMemberById(user);
+                                    if (member != null)
+                                    {   // if member does not exist, ommit the user
+                                        userMentions.append(member.getEffectiveName());
+                                    }
+                                }
+                                catch (Exception e)
+                                {   // if the ID was invalid, flag to be appended as plaintext
+                                   isId = false;
+                                }
                             }
-                            else
+                            if (!isId)
                             {   // user is plaintext (added by !manage)
                                 userMentions.append(user);
                             }
