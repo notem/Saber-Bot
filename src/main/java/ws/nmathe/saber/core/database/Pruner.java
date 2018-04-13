@@ -1,17 +1,21 @@
 package ws.nmathe.saber.core.database;
 
 import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
-import java.util.function.Consumer;
 
-import static com.mongodb.client.model.Filters.and;
+import java.util.Collection;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.where;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 
@@ -56,7 +60,7 @@ public class Pruner implements Runnable
                     }
                 });
 
-        // purge schedule entries that the bot cannot connect to
+        // purge schedules that the bot cannot connect to
         query = new Document();
         Main.getDBDriver().getScheduleCollection().find(query)
                 .projection(fields(include("_id", "guildId")))
@@ -116,29 +120,44 @@ public class Pruner implements Runnable
 
                         // validate channel id
                         String channelId = document.getString("channelId");
-                        MessageChannel channel = jda.getTextChannelById(channelId);
+                        TextChannel channel = jda.getTextChannelById(channelId);
                         if(channel==null)
-                        {
-                            Main.getDBDriver().getEventCollection().deleteOne(eq("_id", eventId));
-                            Logging.info(this.getClass(), "Pruned event with ID: " + eventId);
+                        {   // clean house
+                            Main.getDBDriver().getEventCollection().deleteMany(eq("channeldId", channelId));
+                            Main.getDBDriver().getScheduleCollection().deleteMany(eq("_id", channelId));
+                            Logging.info(this.getClass(), "Pruned schedule with channel ID: " + channelId);
                             return;
                         }
 
-                        // validate message is accessible
-                        channel.getMessageById(messageId).queue(
-                                message ->
-                                {
-                                    if(message == null)
+                        // verify that the bot can access the schedule channel
+                        Collection<Permission> permissions =
+                                Stream.of(Permission.MESSAGE_READ, Permission.MESSAGE_HISTORY)
+                                .collect(Collectors.toList());
+                        if (jda.getGuildById(guildId).getMember(jda.getSelfUser())
+                                .hasPermission(permissions))
+                        {
+                            // validate message is accessible
+                            channel.getMessageById(messageId).queue(
+                                    message ->
+                                    {
+                                        if(message == null)
+                                        {
+                                            Main.getDBDriver().getEventCollection().deleteOne(eq("_id", eventId));
+                                            Logging.info(this.getClass(), "Pruned event with ID: " + eventId + " on channel with ID: " + channelId);
+                                        }
+                                    },
+                                    throwable ->
                                     {
                                         Main.getDBDriver().getEventCollection().deleteOne(eq("_id", eventId));
                                         Logging.info(this.getClass(), "Pruned event with ID: " + eventId + " on channel with ID: " + channelId);
-                                    }
-                                },
-                                throwable ->
-                                {
-                                    Main.getDBDriver().getEventCollection().deleteOne(eq("_id", eventId));
-                                    Logging.info(this.getClass(), "Pruned event with ID: " + eventId + " on channel with ID: " + channelId);
-                                });
+                                    });
+                        }
+                        else // if the message's channel cannot be read by the bot
+                        {   // clean house
+                            Main.getDBDriver().getEventCollection().deleteMany(eq("channeldId", channelId));
+                            Main.getDBDriver().getScheduleCollection().deleteMany(eq("_id", channelId));
+                            Logging.info(this.getClass(), "Pruned schedule with channel ID: " + channelId);
+                        }
                     }
                     catch(Exception e)
                     {
