@@ -33,7 +33,7 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public class EventListener extends ListenerAdapter
 {
-    private final RateLimiter reactionLimiter = new RateLimiter(500);
+    private final RateLimiter reactionLimiter = new RateLimiter(0);
 
     @Override
     public void onReady(ReadyEvent event)
