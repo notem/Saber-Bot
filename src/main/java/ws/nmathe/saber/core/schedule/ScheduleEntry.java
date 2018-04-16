@@ -637,9 +637,12 @@ public class ScheduleEntry
      */
     private ScheduleEntry setNextOccurrence()
     {
-        long dif = this.end.toInstant().toEpochMilli()-this.start.toInstant().toEpochMilli();
-        this.start = this.recurrence.next(this.start);
-        this.end = this.start.plus(dif, ChronoUnit.MILLIS);
+        ZonedDateTime now = ZonedDateTime.now();
+        while (this.start.isBefore(now))
+        {
+            this.start = this.recurrence.next(this.start);
+            this.end   = this.recurrence.next(this.end);
+        }
         return this;
     }
 

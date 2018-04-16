@@ -491,8 +491,8 @@ public class EventRecurrence
     }
 
     /**
-     * determine the next start time for the event
-     * @param date the date of the (last) start of the event
+     * determine the next time for the event
+     * @param date the date of the previous start/end of the event
      * @return the new start of the event (based on the recurrence rule)
      */
     public ZonedDateTime next(ZonedDateTime date)
@@ -500,11 +500,11 @@ public class EventRecurrence
         if (this.recurrence == 0) return date;
 
         /// determine mode
-        int mode = this.recurrence & 0b111;   // separate out mode
-        int data  = this.recurrence >>3;       // shift off mode bits
+        int mode = this.recurrence & 0b111; // separate out mode
+        int data = this.recurrence >>3;     // shift off mode bits
         switch(mode)
         {
-            // interval shouldRepeat
+            // interval repeat
             case 0:
                 return date.plusDays(data);
             case 2:
@@ -512,7 +512,7 @@ public class EventRecurrence
             case 3:
                 return date.plusYears(data);
 
-            // shouldRepeat weekly by day of week
+            // repeat weekly by day of week
             case 4:
                 int day   = 1<<(date.getDayOfWeek().getValue()-1);  // represent current day of week as int
                 int weeks = (data>>7)==0 ? 1:data>>7;               // number of weeks to shouldRepeat
@@ -534,7 +534,7 @@ public class EventRecurrence
                 }
                 return date.plusDays(count);
 
-            // shouldRepeat on nth week day every mth month
+            // repeat on nth week day every mth month
             case 5:
                 DayOfWeek dayOfWeek = DayOfWeek.of(data&0b111);
                 int nth = (data>>3)&0b111;
@@ -546,7 +546,7 @@ public class EventRecurrence
                 }
                 return date;
 
-            // shouldRepeat on n day of every mth month
+            // repeat on n day of every mth month
             case 6:
                 int dayOfMonth    = data&0b11111;
                 int monthInterval = data>>5;
