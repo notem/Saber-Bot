@@ -122,42 +122,25 @@ public class Pruner implements Runnable
                         String channelId = document.getString("channelId");
                         TextChannel channel = jda.getTextChannelById(channelId);
                         if(channel==null)
-                        {   // clean house
-                            Main.getDBDriver().getEventCollection().deleteMany(eq("channeldId", channelId));
-                            Main.getDBDriver().getScheduleCollection().deleteMany(eq("_id", channelId));
-                            Logging.info(this.getClass(), "Pruned schedule with channel ID: " + channelId);
+                        {   // only do event pruning in this loop
                             return;
                         }
 
-                        // verify that the bot can access the schedule channel
-                        Collection<Permission> permissions =
-                                Stream.of(Permission.MESSAGE_READ, Permission.MESSAGE_HISTORY)
-                                .collect(Collectors.toList());
-                        if (jda.getGuildById(guildId).getMember(jda.getSelfUser())
-                                .hasPermission(permissions))
-                        {
-                            // validate message is accessible
-                            channel.getMessageById(messageId).queue(
-                                    message ->
-                                    {
-                                        if(message == null)
-                                        {
-                                            Main.getDBDriver().getEventCollection().deleteOne(eq("_id", eventId));
-                                            Logging.info(this.getClass(), "Pruned event with ID: " + eventId + " on channel with ID: " + channelId);
-                                        }
-                                    },
-                                    throwable ->
+                        // attempt to retrieve the message so as to verify it's existence
+                        channel.getMessageById(messageId).queue(
+                                message ->
+                                {
+                                    if(message == null)
                                     {
                                         Main.getDBDriver().getEventCollection().deleteOne(eq("_id", eventId));
                                         Logging.info(this.getClass(), "Pruned event with ID: " + eventId + " on channel with ID: " + channelId);
-                                    });
-                        }
-                        else // if the message's channel cannot be read by the bot
-                        {   // clean house
-                            Main.getDBDriver().getEventCollection().deleteMany(eq("channeldId", channelId));
-                            Main.getDBDriver().getScheduleCollection().deleteMany(eq("_id", channelId));
-                            Logging.info(this.getClass(), "Pruned schedule with channel ID: " + channelId);
-                        }
+                                    }
+                                },
+                                throwable ->
+                                {
+                                    Main.getDBDriver().getEventCollection().deleteOne(eq("_id", eventId));
+                                    Logging.info(this.getClass(), "Pruned event with ID: " + eventId + " on channel with ID: " + channelId);
+                                });
                     }
                     catch(Exception e)
                     {
