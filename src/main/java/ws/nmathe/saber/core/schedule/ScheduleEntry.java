@@ -638,6 +638,13 @@ public class ScheduleEntry
     private ScheduleEntry setNextOccurrence()
     {
         ZonedDateTime now = ZonedDateTime.now();
+
+        // update to next occurrence
+        this.start = this.recurrence.next(this.start);
+        this.end   = this.recurrence.next(this.end);
+
+        // keep updating the date times until the next
+        // occurrence is in the future
         while (this.start.isBefore(now))
         {
             this.start = this.recurrence.next(this.start);
