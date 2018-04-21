@@ -4,6 +4,9 @@ import ws.nmathe.saber.Main;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Simple class which maintains a list of timestamps of the last command
@@ -11,46 +14,78 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RateLimiter
 {
-    private long threshold; // milliseconds
-    private Map<String, Long> timestampMap;
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private long startThreshold = Main.getBotSettingsManager().getCooldownThreshold();
+    private long maxThreshold   = 10*60*1000; // 10 minute default
+    private int scaleFactor     = 2; // doubles
+    private Map<String, Long> timestampMap = new ConcurrentHashMap<>();
+    private Map<String, Long> thresholdMap = new ConcurrentHashMap<>();
 
     public RateLimiter()
     {
-        this.threshold = 0;
-        this.timestampMap = new ConcurrentHashMap<>();
+        this.init();
     }
 
-    public RateLimiter(long threshold)
+    public RateLimiter(long startThreshold)
     {
-        this.threshold = threshold;
-        this.timestampMap = new ConcurrentHashMap<>();
+        this.startThreshold = startThreshold;
+        this.init();
     }
 
     /**
-     * determine if a command should be ignored due to exceeded rate limit
-     * @param userId (String) ID of the user
-     * @return (boolean) true if last command was sent within the threshold
+     * schedule a thread to remove unnecessary map entries so as to avoid accumulation
+     * of many unnecessary entries (exhausting memory)
      */
-    public boolean isOnCooldown(String userId)
+    private void init()
     {
-        // if rate limiter is constructed without a threshold, use bot settings.
-        long threshold = this.threshold==0 ? Main.getBotSettingsManager().getCooldownThreshold() : this.threshold;
-        if(timestampMap.containsKey(userId))
-        {
-            long time = timestampMap.get(userId);
-            if(System.currentTimeMillis() - time <= threshold)
+        this.executor.scheduleWithFixedDelay(()-> {
+
+            // remove entity's whose most recent timestamp needs to no
+            // longer be tracked for rate-limiting purposes
+            long now = System.currentTimeMillis();
+            for (String key : this.timestampMap.keySet())
             {
+                long time = this.timestampMap.get(key);
+                long threshold = this.thresholdMap.get(key);
+                if (time + threshold <= now)
+                {
+                    this.timestampMap.remove(key);
+                    this.thresholdMap.remove(key);
+                }
+            }
+        }, 0, this.maxThreshold, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * determine if an action should be ignored due to exceeded rate limit
+     * @param entityId unique identifier for entity to monitor
+     * @return true if last command was sent within the cool-down threshold
+     */
+    public boolean check(String entityId)
+    {
+        long now = System.currentTimeMillis(); // current time
+        if(timestampMap.containsKey(entityId))
+        {
+            long time = timestampMap.get(entityId); // time entity was last seen
+            timestampMap.replace(entityId, now);    // update last seen value
+            if (now - time <= startThreshold)
+            {   // increase the entity's cool-down threshold & return true (is on cool-down)
+                long newThreshold = this.scaleFactor * this.thresholdMap.get(entityId);
+                if (newThreshold <= maxThreshold)
+                    thresholdMap.replace(entityId, newThreshold);
                 return true;
             }
             else
-            {
-                timestampMap.put(userId, System.currentTimeMillis());
+            {   // reset the entity's cool-down threshold & return false (not on cool-down)
+                thresholdMap.replace(entityId, this.startThreshold);
                 return false;
             }
         }
         else
-        {
-            timestampMap.put(userId, System.currentTimeMillis());
+        {   // add new entity to the timestamp map, set the starting threshold,
+            // & return false (not on cool-down)
+            timestampMap.put(entityId, now);
+            thresholdMap.put(entityId, this.startThreshold);
             return false;
         }
     }

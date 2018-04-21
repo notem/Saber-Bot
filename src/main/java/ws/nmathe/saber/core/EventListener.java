@@ -18,13 +18,9 @@ import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import java.time.ZonedDateTime;
+
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -33,7 +29,7 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public class EventListener extends ListenerAdapter
 {
-    private final RateLimiter reactionLimiter = new RateLimiter(0);
+    private final RateLimiter reactionLimiter = new RateLimiter(50);
 
     @Override
     public void onReady(ReadyEvent event)
@@ -288,7 +284,7 @@ public class EventListener extends ListenerAdapter
         // don't process reactions added by the bot
         if(event.getUser().getId().equals(event.getJDA().getSelfUser().getId())) return;
 
-        if(reactionLimiter.isOnCooldown(event.getUser().getId())) return;
+        if(reactionLimiter.check(event.getUser().getId())) return;
 
         // if the schedule is rsvp enabled and the user added an rsvp emoji to the event
         // add the user to the appropriate rsvp list and remove the emoji

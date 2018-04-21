@@ -60,10 +60,14 @@ public class SchedulesCommand implements Command
         List<String> scheduleIds = Main.getScheduleManager().getSchedulesForGuild(guild.getId());
 
         // build output main body
-        String content = "";
+        StringBuilder content = new StringBuilder();
         for(String sId : scheduleIds)
         {
-            content += "<#" + sId + "> - has " + Main.getEntryManager().getEntriesFromChannel(sId).size() + " events\n";
+            content.append("<#")
+                    .append(sId)
+                    .append("> - has ")
+                    .append(Main.getEntryManager().getEntriesFromChannel(sId).size())
+                    .append(" events\n");
         }
 
         String title = "Schedules on " + guild.getName();           // title for embed
@@ -71,7 +75,7 @@ public class SchedulesCommand implements Command
 
         // build embed
         MessageEmbed embed = new EmbedBuilder()
-                                .setDescription(content)
+                                .setDescription(content.toString())
                                 .setTitle(title)
                                 .setFooter(footer, null).build();
 

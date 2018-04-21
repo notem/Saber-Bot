@@ -76,7 +76,7 @@ public class PurgeCommand implements Command
         }
 
         // basic protection against misuse
-        if (limiter.isOnCooldown(event.getGuild().getId()))
+        if (limiter.check(event.getGuild().getId()))
         {
             return "The purge command has been used on your guild recently.\n" +
                     "Please wait at least one minute before reusing the command!";

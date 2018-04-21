@@ -43,7 +43,8 @@ public class EditCommand implements Command
                 " new configuration." +
                 "\n\n```diff\n+ Options ```\n" +
                 "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment``, ``date``, " +
-                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, ``quiet-remind``, ``expire``, ``deadline``, ``count``," +
+                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, " +
+                "``quiet-remind``, ``expire``, ``deadline``, ``count``," +
                 " and ``limit``.\n\n" +
                 "Most of the options listed above accept the same arguments as the ``create`` command.\n" +
                 "Reference the ``help`` information for the ``create`` command for more information.\n" +
@@ -159,8 +160,31 @@ public class EditCommand implements Command
                             if(!verify.isEmpty()) return verify;
                             index += 2;
                             break;
+                        case "m":
+                        case "modify":
+                        case "replace":
+                        case "set":
+                            if (args.length-index < 2)
+                            {
+                                return "That's not the right number of arguments for **" + args[index-1] +"**!\n" +
+                                        "Use ``" + head + " " + args[index-2] + " " + args[index-1] + " [num] [new_comment]``!";
+                            }
+                            if (!VerifyUtilities.verifyInteger(args[index]))
+                            {
+                                return "The argument **"+args[index]+"** is not right!\n" +
+                                        "This needs to be a number representing the comment number" +
+                                        " you wish to replace!";
+                            }
+                            int num = Integer.parseInt(args[index]);
+                            if (entry.getComments().size() > num || num < 0)
+                            {
+                                return "The provided comment number must be between 1 and " +
+                                        entry.getComments().size() + "!";
+                            }
+                            index += 2;
+                            break;
                         default:
-                            return "The only valid options for ``comment`` are **add**, **remove**, or **swap**!";
+                            return "The only valid options for ``comment`` are **add**, **remove**, **modify**, or **swap**!";
                     }
                     break;
 
@@ -202,7 +226,7 @@ public class EditCommand implements Command
                 case "e":
                 case "ends":
                 case "end":
-                    if(args.length-index < 1)
+                    if (args.length-index < 1)
                     {
                         return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                                 "Use ``" + head + " "+args[0]+" "+args[index-1]+" [end time]``";
@@ -214,7 +238,7 @@ public class EditCommand implements Command
                                 "Please use the format hh:mm[am|pm].";
                     }
                     // if time is not "off" do additional check
-                    if(!args[index].equalsIgnoreCase("off"))
+                    if (!args[index].equalsIgnoreCase("off"))
                     {
                         ZonedDateTime end = ZonedDateTime.of(entry.getEnd().toLocalDate(),
                                 ParsingUtilities.parseTime(args[index]),
@@ -230,12 +254,12 @@ public class EditCommand implements Command
 
                 case "t":
                 case "title":
-                    if(args.length-index < 1)
+                    if (args.length-index < 1)
                     {
                         return "That's not the right number of arguments for **"+args[index-1]+"**! " +
                                 "Use ``"+head+" "+args[0]+" "+args[index-1]+" [\"title\"]``";
                     }
-                    if( args[index].length() > 255 )
+                    if (args[index].length() > 255)
                     {
                         return "Your title can be at most 255 characters!";
                     }
@@ -491,6 +515,16 @@ public class EditCommand implements Command
                                 String b = comments.get(Integer.parseInt(args[index+1])-1);
                                 comments.set(Integer.parseInt(args[index])-1, b);
                                 comments.set(Integer.parseInt(args[index+1])-1, a);
+
+                                se.setComments(comments);
+                                index += 2;
+                                break;
+                            case "m":
+                            case "modify":
+                            case "replace":
+                            case "set":
+                                int no = Integer.parseInt(args[index])-1;
+                                comments.set(no, args[index+1]);
 
                                 se.setComments(comments);
                                 index += 2;
