@@ -5,6 +5,7 @@ import com.google.api.services.calendar.Calendar;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -17,9 +18,11 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 import java.time.*;
+import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
@@ -203,6 +206,30 @@ public class ConfigCommand implements Command
                     }
                     break;
 
+                case "zones":
+                    if (args.length < 4)
+                    {
+                        return "That's not enough arguments!\n" +
+                                "Use ``" + cmd + " [#channel] zones <add|remove> <time_zone>``!\n";
+                    }
+                    switch(args[index++].toLowerCase())
+                    {
+                        case "a":
+                        case "add":
+                        case "r":
+                        case "remove":
+                            if (!VerifyUtilities.verifyZone(args[index]))
+                            {
+                                return "**" + args[index] +  "** is not a valid timezone! Use the ``zones`` command to learn " +
+                                        "what options are available.";
+                            }
+                            break;
+                        default:
+                            return "*"+args[index-1]+"* is not a valid option!\n" +
+                                    "Use ``" + cmd + " [#channel] zones <add|remove> <time_zone>``!\n";
+                    }
+                    break;
+
                 case "cl":
                 case "clock":
                     if (args.length < 3)
@@ -217,6 +244,7 @@ public class ConfigCommand implements Command
                                 "or **12**";
                     }
                     break;
+
                 case "sy":
                 case "sync":
                     // get user Google credentials (if they exist)
@@ -590,7 +618,7 @@ public class ConfigCommand implements Command
                 case "ch":
                 case "chan":
                 case "channel":
-                    String chanIdentifier = chanHelper(args[index], event);
+                    String chanIdentifier = args[index].replaceAll("^[\\d]","");
                     Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanIdentifier);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.ANN, event.getJDA()), event.getChannel(), null);
                     break;
@@ -618,7 +646,7 @@ public class ConfigCommand implements Command
                             break;
 
                         default:
-                            endChanIdentifier = chanHelper(args[index], event);
+                            endChanIdentifier = args[index].replaceAll("^[\\d]","");
                     }
                     Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanIdentifier);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.ANN, event.getJDA()), event.getChannel(), null);
@@ -654,6 +682,25 @@ public class ConfigCommand implements Command
                     Main.getDBDriver().getScheduleCollection()
                             .updateOne(eq("_id", scheduleChan.getId()), set("timezone_sync", false));
 
+                    MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
+                    break;
+
+                case "zones":
+                    HashSet<ZoneId> altZones = new HashSet<>();
+                    altZones.addAll(Main.getScheduleManager().getAltZones(scheduleChan.getId()));
+                    switch (args[index++].toLowerCase())
+                    {
+                        case "a":
+                        case "add":
+                            altZones.add(ZoneId.of(args[index]));
+                            break;
+
+                        case "r":
+                        case "remove":
+                            altZones.remove(ZoneId.of(args[index]));
+                            break;
+                    }
+                    Main.getScheduleManager().setAltZones(scheduleChan.getId(), new ArrayList<>(altZones));
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
                     break;
 
@@ -769,7 +816,7 @@ public class ConfigCommand implements Command
                             break;
 
                         default:
-                            remindChanIdentifier = chanHelper(args[index], event);
+                            remindChanIdentifier = args[index].replaceAll("^[\\d]","");
                             break;
                     }
                     Main.getScheduleManager().setReminderChan(scheduleChan.getId(), remindChanIdentifier);
@@ -1038,13 +1085,6 @@ public class ConfigCommand implements Command
         }
     }
 
-    /**
-     * used to reduce code repetition
-     */
-    private String chanHelper(String arg, MessageReceivedEvent event)
-    {
-        return arg.replace("<#","").replace(">","");
-    }
 
     /**
      * used when parsing reminders strings
@@ -1088,9 +1128,8 @@ public class ConfigCommand implements Command
      */
     private String genMsgStr(String cId, Mode mode, JDA jda)
     {
-        ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
+        // message body contents
         String content = "**Configuration for** <#" + cId + ">\n";
-
         switch(mode)
         {
             default:
@@ -1164,10 +1203,18 @@ public class ConfigCommand implements Command
                         break;
                 }
 
+                // create list of zones
+                List<ZoneId> zones = Collections.singletonList(Main.getScheduleManager().getTimeZone(cId));
+                zones.addAll(Main.getScheduleManager().getAltZones(cId));
+                List<String> zoneList = zones.stream()
+                        .map(zoneId -> zoneId.getDisplayName(TextStyle.FULL, Locale.getDefault()))
+                        .collect(Collectors.toList());
+                String zoneNames = String.join(", ", zoneList);
+
                 content += "```js\n" +
                         "// Misc. Settings" +
                         "\n[zone]   " +
-                        "\"" + zone + "\"" +
+                        "\"" + zoneNames + "\"" +
                         "\n[clock]  " +
                         "\"" + Main.getScheduleManager().getClockFormat(cId) + "\"" +
                         "\n[style]  " +
@@ -1195,10 +1242,11 @@ public class ConfigCommand implements Command
                             (user!=null?" (authorized by "+user.getName()+")":"");
 
                 // display full body only if sync is on
+                ZoneId mainZone = Main.getScheduleManager().getTimeZone(cId);
                 if(!Main.getScheduleManager().getAddress(cId).equalsIgnoreCase("off"))
                 {
                     Date syncTime = Main.getScheduleManager().getSyncTime(cId);
-                    OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), zone)
+                    OffsetTime sync_time_display = ZonedDateTime.ofInstant(syncTime.toInstant(), mainZone)
                             .toOffsetDateTime().toOffsetTime().truncatedTo(ChronoUnit.MINUTES);
 
                     content += "\n[time]   " +

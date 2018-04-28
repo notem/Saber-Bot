@@ -88,26 +88,20 @@ public class MessageGenerator
     {
         StringBuilder msg = new StringBuilder();
 
-        String timeLine = genTimeLine(se);
-        String repeatLine = "> " + se.getRecurrence().toString(false) + "\n";
-
         //
         // create the upper code block
         //
-        if(se.getExpire() != null)
-        {   // expire information on separate line
-            repeatLine += "> expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
-                    " " + se.getExpire().getDayOfMonth() + ", " + se.getExpire().getYear() + "\n";
-        }
-        else if(se.getRecurrence().getCount() != null)
-        {   // remaining event occurrences on separate line
-            repeatLine += "> occurs " + se.getRecurrence().countRemaining(se.getStart()) + " more times\n";
-        }
+        String timeLines = generateTimeLines(se);
+        String repeatLine = "> " + se.getRecurrence().toString(false) + "\n";
+        String expirationLine = generateExpirationLine(se);
+        String locationLine = se.getLocation() == null ? "" : "<Location: " + se.getLocation() + ">\n";
+
         // append block lines
         msg.append("```Markdown\n\n")
-                .append(timeLine)
+                .append(timeLines)
                 .append(repeatLine)
-                .append(se.getLocation() == null ? "" : "<Location: " + se.getLocation() + ">\n")
+                .append(expirationLine)
+                .append(locationLine)
                 .append("```\n");
 
         //
@@ -119,11 +113,10 @@ public class MessageGenerator
         //
         // generate the lower code block
         //
-        String zoneLine = "[" + se.getStart().getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "]" +
-                MessageGenerator.genTimer(se.getStart(), se.getEnd()) + "\n";
+        String timerLine = generateTimerLine(se);
 
         // if rsvp is enabled, show the number of rsvp
-        StringBuilder rsvpLine = new StringBuilder("");
+        StringBuilder rsvpLine = new StringBuilder();
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
             rsvpLine.append("- ");
@@ -153,7 +146,7 @@ public class MessageGenerator
         }
         // append block lines
         msg.append("```Markdown\n\n")
-                .append(zoneLine)
+                .append(timerLine)
                 .append(rsvpLine)
                 .append("```");
 
@@ -171,26 +164,23 @@ public class MessageGenerator
     private static String generateBodyNarrow(ScheduleEntry se)
     {
         // create the first line of the body
-        String timeLine = genTimeLine(se);
+        String timeLines = generateTimeLines(se);
 
         // timezone and repeat information
-        String expireAndRepeat = "[" + se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
-                "](" + se.getRecurrence().toString(true) + ")";
+        StringBuilder repeatLine = new StringBuilder()
+                .append("[")
+                .append(se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH))
+                .append("](")
+                .append(se.getRecurrence().toString(true))
+                .append(")\n");
 
-        // include event expiration information (if configured)
-        if (se.getRecurrence().getCount() != null)
-        {   // if event has a count limit, include that information in the display
-            expireAndRepeat += "\n+ Expires after <"+se.getRecurrence().countRemaining(se.getStart())+" more times>";
-        }
-        else if (se.getExpire() != null)
-        {   // event expiration date
-            expireAndRepeat += "\n+ Expires on <"+se.getExpire().toLocalDate().format(DateTimeFormatter.ofPattern("MMM d"))+">\n";
-        }
+        // expiration information
+        String expirationLine = generateExpirationLine(se);
 
         // if rsvp is enabled, show the number of rsvps
+        StringBuilder rsvpLine = new StringBuilder();
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
-            StringBuilder rsvpLine = new StringBuilder();
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
             // iterate over the keys rather than the values to keep
             // the order consistent with the order reactions are displayed
@@ -204,11 +194,62 @@ public class MessageGenerator
                             .append(se.getRsvpLimit(type) > 0 ? "/" + se.getRsvpLimit(type) + "> " : "> ");
                 }
             }
-            expireAndRepeat += "\n"+rsvpLine;
         }
-        return "```Markdown\n\n" + timeLine + expireAndRepeat + "```\n";
+        return "```Markdown\n\n" + timeLines + repeatLine + expirationLine + rsvpLine + "```\n";
     }
 
+
+    /**
+     *
+     * @param se
+     * @return
+     */
+    private static String generateExpirationLine(ScheduleEntry se)
+    {
+        StringBuilder repeatLine = new StringBuilder();
+        if(se.getExpire() != null)
+        {   // expire information
+            repeatLine.append("> expires ")
+                    .append(se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH))
+                    .append(" ")
+                    .append(se.getExpire().getDayOfMonth())
+                    .append(", ")
+                    .append(se.getExpire().getYear())
+                    .append("\n");
+        }
+        else if(se.getRecurrence().getCount() != null)
+        {   // remaining event occurrences
+            repeatLine.append("> occurs ")
+                    .append(se.getRecurrence().countRemaining(se.getStart()))
+                    .append(" more times\n");
+        }
+        return repeatLine.toString();
+    }
+
+
+    /**
+     *
+     * @param se
+     * @return
+     */
+    private static String generateTimeLines(ScheduleEntry se)
+    {
+        StringBuilder timeLines = new StringBuilder();
+        List<ZoneId> altZones = Main.getScheduleManager().getAltZones(se.getChannelId());
+        if (!altZones.isEmpty())
+        {
+            timeLines.append(generateTimeLine(se, se.getStart().getZone()));
+            for (ZoneId zone : altZones)
+            {
+                timeLines.append(generateTimeLine(se, zone));
+            }
+        }
+        else
+        {
+            timeLines.append(generateTimeLine(se, null));
+        }
+        return timeLines.toString();
+    }
 
     /**
      * Generates the line of text which indicates the time the event begins and ends
@@ -216,7 +257,7 @@ public class MessageGenerator
      * @param se the ScheduleEntry Object represented by the display
      * @return the body content as a string
      */
-    private static String genTimeLine(ScheduleEntry se)
+    private static String generateTimeLine(ScheduleEntry se, ZoneId zone)
     {
         String timeFormatter;
         if(Main.getScheduleManager().getClockFormat(se.getChannelId()).equals("24"))
@@ -224,114 +265,163 @@ public class MessageGenerator
         else
             timeFormatter = "h:mm a";
 
+        // adjust start and end if necessary
+        ZonedDateTime start = (zone == null) ? se.getStart() : se.getStart().withZoneSameInstant(zone);
+        ZonedDateTime end   = (zone == null) ? se.getEnd() : se.getEnd().withZoneSameInstant(zone);
+
         String dash = "\u2014";
-        String timeLine = "< " + se.getStart().format(DateTimeFormatter.ofPattern("MMM d"));
+        StringBuilder timeLine = new StringBuilder("< " + start.format(DateTimeFormatter.ofPattern("MMM d")));
 
         // event starts and ends at the same time
-        if (se.getStart().until(se.getEnd(), ChronoUnit.SECONDS)==0)
+        if (start.until(end, ChronoUnit.SECONDS)==0)
         {
-            timeLine += ", " + se.getStart().format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+            timeLine.append(", ")
+                    .append(start.format(DateTimeFormatter.ofPattern(timeFormatter)));
         }
         // time span is greater than 1 day
-        else if (se.getStart().until(se.getEnd(), ChronoUnit.DAYS)>=1)
+        else if (start.until(end, ChronoUnit.DAYS)>=1)
         {
             // all day events
-            if (se.getStart().toLocalTime().equals(LocalTime.MIN) &&
-                    se.getStart().toLocalTime().equals(LocalTime.MIN))
+            if (start.toLocalTime().equals(LocalTime.MIN) && start.toLocalTime().equals(LocalTime.MIN))
             {
-                timeLine += " " + dash + " " + se.getEnd().format(DateTimeFormatter.ofPattern("MMM d")) + " >\n";
+                timeLine.append(" ")
+                        .append(dash)
+                        .append(" ")
+                        .append(end.format(DateTimeFormatter.ofPattern("MMM d")));
             }
             else // all other events
             {
-                timeLine += ", " + se.getStart().format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                        " " + dash + " " + se.getEnd().format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
-                        se.getEnd().format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+                timeLine.append(", ")
+                        .append(start.format(DateTimeFormatter.ofPattern(timeFormatter)))
+                        .append(" ")
+                        .append(dash)
+                        .append(" ")
+                        .append(end.format(DateTimeFormatter.ofPattern("MMM d")))
+                        .append(", ")
+                        .append(end.format(DateTimeFormatter.ofPattern(timeFormatter)));
             }
         }
         // time span is within 1 day
         else
         {
-            timeLine += ", " + se.getStart().format(DateTimeFormatter.ofPattern(timeFormatter)) +
-                    " " + dash + " " + se.getEnd().format(DateTimeFormatter.ofPattern(timeFormatter)) + " >\n";
+            timeLine.append(", ")
+                    .append(start.format(DateTimeFormatter.ofPattern(timeFormatter)))
+                    .append(" ")
+                    .append(dash)
+                    .append(" ")
+                    .append(end.format(DateTimeFormatter.ofPattern(timeFormatter)));
         }
-        return timeLine;
+        // add zone information
+        if (zone != null)
+        {
+            timeLine.append("<")
+                    .append(zone.getDisplayName(TextStyle.NARROW, Locale.getDefault()))
+                    .append(">");
+        }
+        // append newline character & return full string
+        timeLine.append("\n");
+        return timeLine.toString();
     }
 
 
     /**
-     * Generated a string describing the current time left before an event begins or ends
-     * @param start the start time of event
-     * @param end the end time of event
-     * @return String
+     *
+     * @param se
+     * @return
      */
-    private static String genTimer(ZonedDateTime start, ZonedDateTime end)
+    private static String generateTimerLine(ScheduleEntry se)
     {
-        String timer;
-        long timeTilStart = ZonedDateTime.now().until(start, ChronoUnit.SECONDS);
-        long timeTilEnd = ZonedDateTime.now().until(end, ChronoUnit.SECONDS);
-
-        if (start.isAfter(ZonedDateTime.now()))
+        StringBuilder line = new StringBuilder();
+        List<ZoneId> altZones = Main.getScheduleManager().getAltZones(se.getChannelId());
+        if (altZones.isEmpty())
         {
-            timer = "(begins ";
-            if (timeTilStart < 60 * 60 )
+            line.append("[")
+                    .append(se.getStart().getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH))
+                    .append("]");
+            if (se.hasStarted())
             {
-                int minutesTil = (int)Math.ceil((double)timeTilStart/(60));
-                if (minutesTil <= 1)
-                    timer += "in a minute)";
-                else
-                    timer += "in " + minutesTil + " minutes)";
-                //timer += "within the hour.)";
-            }
-            else if (timeTilStart < 24 * 60 * 60 )
-            {
-                int hoursTil = (int)Math.ceil((double)timeTilStart/(60*60));
-                if( hoursTil <= 1)
-                    timer += "in the hour)";
-                else
-                    timer += "in " + hoursTil + " hours)";
+                line.append("(begins ");
+                genTimerHelper(se.getStart(), line);
+                line.append(")");
             }
             else
             {
-                int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS),
-                        start.truncatedTo(ChronoUnit.DAYS));
-                if (daysTil <= 1)
-                    timer += "in one day)";
-                else
-                    timer += "in " + daysTil + " days)";
+                line.append("(ends ");
+                genTimerHelper(se.getStart(), line);
+                line.append(")");
             }
         }
-        else // if the event has started
+        else
         {
-            timer = "(ends ";
-            if (timeTilEnd < 60*60 )
+            line.append("[");
+            if (!se.hasStarted())
             {
-                int minutesTil = (int)Math.ceil((double)timeTilEnd/(60));
-                if (minutesTil <= 1)
-                    timer += "in a minute)";
-                else
-                    timer += "in " + minutesTil + " minutes)";
-                //timer += "within one hour.)";
-            }
-
-            else if (timeTilEnd < 24 * 60 * 60 )
-            {
-                int hoursTil = (int)Math.ceil((double)timeTilEnd/(60*60));
-                if (hoursTil <= 1)
-                    timer += "in one hour)";
-                else
-                    timer += "in " + hoursTil + " hours)";
+                line.append("begins ");
+                genTimerHelper(se.getStart(), line);
             }
             else
             {
-                int daysTil = (int) ChronoUnit.DAYS
-                        .between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS), end.truncatedTo(ChronoUnit.DAYS));
-                if (daysTil <= 1)
-                    timer += "in one day)";
-                else
-                    timer += "in " + daysTil + " days)";
+                line.append("in-progress");
+            }
+            line.append("](ends ");
+            genTimerHelper(se.getStart(), line);
+            line.append(")");
+        }
+        line.append("\n");
+        return line.toString();
+    }
+
+
+    /**
+     *
+     * @param time
+     * @param timer
+     */
+    private static void genTimerHelper(ZonedDateTime time, StringBuilder timer)
+    {
+        long timeTil = ZonedDateTime.now().until(time, ChronoUnit.SECONDS);
+        if (timeTil < 60 * 60)
+        {
+            int minutesTil = (int)Math.ceil((double)timeTil/(60));
+            if (minutesTil <= 1)
+            {
+                timer.append("in a minute");
+            }
+            else
+            {
+                timer.append("in ")
+                        .append(minutesTil)
+                        .append(" minutes");
             }
         }
-        return timer;
+        else if (timeTil < 24 * 60 * 60)
+        {
+            int hoursTil = (int)Math.ceil((double)timeTil/(60*60));
+            if (hoursTil <= 1)
+            {
+                timer.append("in the hour");
+            }
+            else
+            {
+                timer.append("in ")
+                        .append(hoursTil)
+                        .append(" hours");
+            }
+        }
+        else
+        {
+            int daysTil = (int) ChronoUnit.DAYS.between(
+                    ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS),
+                    time.truncatedTo(ChronoUnit.DAYS));
+            if (daysTil <= 1)
+            {
+                timer.append("in one day");
+            }
+            else
+            {
+                timer.append("in ").append(daysTil).append(" days");
+            }
+        }
     }
 
 

@@ -545,6 +545,21 @@ public class ScheduleManager
         return zone;
     }
 
+    public List<ZoneId> getAltZones(String cId)
+    {
+        Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
+        if(settings == null)
+        {
+            return new ArrayList<>();
+        }
+        List<String> zones = (List<String>) settings.get("alt_zones");
+        if(zones == null)
+        {
+            return new ArrayList<>();
+        }
+        return zones.stream().map((zone)->ZoneId.of(zone)).collect(Collectors.toList());
+    }
+
     public String getAddress(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
@@ -754,7 +769,7 @@ public class ScheduleManager
         {
             return new ArrayList<>();
         }
-        return reminders ;
+        return reminders;
     }
 
     /*
@@ -807,6 +822,23 @@ public class ScheduleManager
     public void setTimeZone(String cId, ZoneId zone)
     {
         Main.getDBDriver().getScheduleCollection().updateOne(eq("_id",cId), set("timezone", zone.toString()));
+    }
+
+    /**
+     * sets alternative zones
+     */
+    public void setAltZones(String cId, List<ZoneId> zoneIds)
+    {
+        List<String> zones = zoneIds.stream().map(zoneId -> zoneId.toString()).collect(Collectors.toList());
+        Document doc = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
+        if(!doc.containsKey("alt_zones"))
+        {
+            doc.append("alt_zones", zones);
+            Main.getDBDriver().getScheduleCollection().replaceOne(eq("_id", cId), doc);
+        } else
+        {
+            Main.getDBDriver().getScheduleCollection().updateOne(eq("_id", cId), set("alt_zones", zones));
+        }
     }
 
     /**
