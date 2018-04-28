@@ -7,6 +7,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
+import java.awt.*;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -597,9 +598,21 @@ public class VerifyUtilities
         if (args.length-index < 1)
         {
             return "That's not the right number of arguments!\n" +
-                    "Use ``" + head + " " + args[0] + " " + args[index-1] + " [color]";
+                    "Use ``" + head + " " + args[0] + " " + args[index-1] + " [color_code]";
         }
-        // TODO better validation of supplied color name/value
+        if (!args[index].matches("0x.+"))
+        {
+            return "The color you wish to use should be in a hexadecimal form!\n" +
+                    "It should look something like \"0xF4442E\".";
+        }
+        try
+        {
+            Color.decode(args[index]);
+        }
+        catch(Exception e)
+        {
+            return "I was unable to decode your color code value!";
+        }
         return "";
     }
 

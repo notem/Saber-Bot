@@ -238,7 +238,12 @@ public class MessageGenerator
         List<ZoneId> altZones = Main.getScheduleManager().getAltZones(se.getChannelId());
         if (!altZones.isEmpty())
         {
-            timeLines.append(generateTimeLine(se, se.getStart().getZone()));
+            altZones.add(se.getStart().getZone());  // add primary zone to list
+            altZones.sort((zoneId, t1) -> {         // sort list by zone offset
+                Instant now = Instant.now();
+                return zoneId.getRules().getOffset(now)
+                        .compareTo(t1.getRules().getOffset(now));
+            });
             for (ZoneId zone : altZones)
             {
                 timeLines.append(generateTimeLine(se, zone));

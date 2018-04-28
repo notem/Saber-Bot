@@ -700,6 +700,9 @@ public class ConfigCommand implements Command
                             altZones.remove(ZoneId.of(args[index]));
                             break;
                     }
+                    // reload each entry on the schedule
+                    Main.getEntryManager().getEntriesFromChannel(scheduleChan.getId())
+                            .forEach(se -> Main.getEntryManager().reloadEntry(se.getId()));
                     Main.getScheduleManager().setAltZones(scheduleChan.getId(), new ArrayList<>(altZones));
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
                     break;
