@@ -311,11 +311,12 @@ public class MessageGenerator
                     .append(" ")
                     .append(end.format(DateTimeFormatter.ofPattern(timeFormatter)));
         }
+        timeLine.append("> ");
         // add zone information
         if (zone != null)
         {
             timeLine.append("<")
-                    .append(zone.getDisplayName(TextStyle.NARROW, Locale.getDefault()))
+                    .append(zone.getDisplayName(TextStyle.SHORT, Locale.getDefault()))
                     .append(">");
         }
         // append newline character & return full string
@@ -338,7 +339,7 @@ public class MessageGenerator
             line.append("[")
                     .append(se.getStart().getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH))
                     .append("]");
-            if (se.hasStarted())
+            if (!se.hasStarted())
             {
                 line.append("(begins ");
                 genTimerHelper(se.getStart(), line);

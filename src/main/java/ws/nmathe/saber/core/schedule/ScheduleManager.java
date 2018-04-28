@@ -557,7 +557,7 @@ public class ScheduleManager
         {
             return new ArrayList<>();
         }
-        return zones.stream().map((zone)->ZoneId.of(zone)).collect(Collectors.toList());
+        return zones.stream().map(ZoneId::of).collect(Collectors.toList());
     }
 
     public String getAddress(String cId)

@@ -1203,13 +1203,12 @@ public class ConfigCommand implements Command
                         break;
                 }
 
-                // create list of zones
-                List<ZoneId> zones = Collections.singletonList(Main.getScheduleManager().getTimeZone(cId));
+                // create list of zones & convert to string for printout
+                List<ZoneId> zones = new ArrayList<>();
+                zones.add(Main.getScheduleManager().getTimeZone(cId));
                 zones.addAll(Main.getScheduleManager().getAltZones(cId));
-                List<String> zoneList = zones.stream()
-                        .map(zoneId -> zoneId.getDisplayName(TextStyle.FULL, Locale.getDefault()))
-                        .collect(Collectors.toList());
-                String zoneNames = String.join(", ", zoneList);
+                String zoneNames = String.join(", ", zones.stream().
+                        map(ZoneId::toString).collect(Collectors.toList()));
 
                 content += "```js\n" +
                         "// Misc. Settings" +
@@ -1320,23 +1319,27 @@ public class ConfigCommand implements Command
      */
     private String makeReminderString(List<Integer> reminders)
     {
-        String reminderStr = "";
+        StringBuilder reminderStr = new StringBuilder();
         if(reminders.isEmpty())
         {
-            reminderStr = "off";
+            reminderStr = new StringBuilder("off");
         }
         else
         {
-            reminderStr += reminders.get(0);
+            reminderStr.append(reminders.get(0));
             for (int i=1; i<reminders.size()-1; i++)
             {
-                reminderStr += ", " + reminders.get(i);
+                reminderStr.append(", ")
+                        .append(reminders.get(i));
             }
             if(reminders.size() > 1)
-                reminderStr += " and " + reminders.get(reminders.size()-1);
-            reminderStr += " minutes";
+            {
+                reminderStr.append(" and ")
+                        .append(reminders.get(reminders.size() - 1));
+            }
+            reminderStr.append(" minutes");
         }
-        return reminderStr;
+        return reminderStr.toString();
     }
 
     /**
