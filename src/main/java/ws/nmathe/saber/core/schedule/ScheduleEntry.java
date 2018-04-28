@@ -61,6 +61,7 @@ public class ScheduleEntry
     // misc
     private boolean hasStarted;
     private String location;
+    private String colorCode;
 
     // announcement overrides
     // these hold temporary values
@@ -113,6 +114,7 @@ public class ScheduleEntry
         // misc
         this.hasStarted = false;
         this.location   = null;
+        this.colorCode  = null;
 
         // announcement overrides
         this.announcements = new HashSet<>();
@@ -211,6 +213,8 @@ public class ScheduleEntry
         // misc
         this.location = entryDocument.get("location") == null ?
                 null : entryDocument.getString("location");
+        this.colorCode = entryDocument.get("color") == null ?
+                null : entryDocument.getString("color");
     }
 
     /**
@@ -760,6 +764,11 @@ public class ScheduleEntry
         return this.location;
     }
 
+    public String getColor()
+    {
+        return this.colorCode;
+    }
+
     public String getGoogleId()
     {
         return this.googleId;
@@ -1170,6 +1179,12 @@ public class ScheduleEntry
         return this;
     }
 
+    public ScheduleEntry setColor(String colorCode)
+    {
+        this.colorCode = colorCode;
+        return this;
+    }
+
     /**
      * Set the original start datetime for an event, must not be null
      */
@@ -1388,6 +1403,10 @@ public class ScheduleEntry
         // location
         if(this.getLocation() != null)
             body += "Location: \"" + this.getLocation() + "\"\n";
+
+        // color
+        if(this.getColor() != null)
+            body += "Color: \"" + this.getColor() + "\"\n";
 
         // title url
         if(this.getTitleUrl()!=null)

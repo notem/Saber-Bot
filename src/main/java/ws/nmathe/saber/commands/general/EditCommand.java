@@ -434,7 +434,7 @@ public class EditCommand implements Command
                         case "announcements":
                             verify = VerifyUtilities.verifyAnnouncementRemove(args, index, head, entry);
                             if(!verify.isEmpty()) return verify;
-                            index ++;
+                            index++;
                             break;
 
                         case "c":
@@ -449,6 +449,12 @@ public class EditCommand implements Command
                             return "*" + args[index-1] + "* is not a valid option!\n" +
                                     "Please use either *comment* or **announcement*!";
                     }
+                    break;
+
+                case "color":
+                    verify = VerifyUtilities.verifyColor(args, index, head);
+                    if(!verify.isEmpty()) return verify;
+                    index++;
                     break;
 
                 default:
@@ -843,6 +849,14 @@ public class EditCommand implements Command
                                 index++;
                                 break;
                         }
+                        break;
+
+                    case "color":
+                        if (args[index].toLowerCase().matches("off||null||none"))
+                            se.setColor(null);
+                        else
+                            se.setColor(args[index]);
+                        index++;
                         break;
                 }
             }

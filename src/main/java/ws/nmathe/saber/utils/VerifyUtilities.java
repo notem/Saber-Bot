@@ -590,6 +590,20 @@ public class VerifyUtilities
     }
 
     /**
+     * determines if the arguments provided for the ``color`` keyword are valid
+     */
+    public static String verifyColor(String[] args, int index, String head)
+    {
+        if (args.length-index < 1)
+        {
+            return "That's not the right number of arguments!\n" +
+                    "Use ``" + head + " " + args[0] + " " + args[index-1] + " [color]";
+        }
+        // TODO better validation of supplied color name/value
+        return "";
+    }
+
+    /**
      *
      * @param text text of unknown format
      * @return true if is of proper <@\\d+> format

@@ -8,6 +8,7 @@ import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
+import java.awt.*;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -219,6 +220,12 @@ public class CreateCommand implements Command
                         }
                         break;
 
+                    case "color":
+                        verify = VerifyUtilities.verifyColor(args, index, head);
+                        if(!verify.isEmpty()) return verify;
+                        index++;
+                        break;
+
                     default:
                         if(args[index-1].length() > 1024) return "Comments should not be larger than 1024 characters!";
                         break;
@@ -261,6 +268,7 @@ public class CreateCommand implements Command
         ZonedDateTime deadline  = null;
         Integer count           = null;
         String location         = null;
+        String color            = null;
         ArrayList<String> comments = new ArrayList<>();
 
         // process title
@@ -384,6 +392,11 @@ public class CreateCommand implements Command
                             endDate = ZonedDateTime.now(zone).plusDays(2);
                             break;
 
+                        case "color":
+                            color = args[index];
+                            index++;
+                            break;
+
                         default:
                             comments.add(args[index-1]);
                             break;
@@ -448,7 +461,8 @@ public class CreateCommand implements Command
                 .setThumbnailUrl(thumbnail)
                 .setCount(count)
                 .setRsvpDeadline(deadline)
-                .setLocation(location);
+                .setLocation(location)
+                .setColor(color);
 
         // finalize the schedule entry
         Integer entryId = Main.getEntryManager().newEntry(se, true);

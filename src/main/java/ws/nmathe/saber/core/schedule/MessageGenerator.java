@@ -4,7 +4,6 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Role;
-import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.utils.ParsingUtilities;
@@ -18,11 +17,15 @@ import java.util.*;
 import java.time.*;
 import java.util.List;
 
+
 /**
  * This class is responsible for generating the event's message for display in the Discord client
  */
 public class MessageGenerator
 {
+    private static String DEFAULT_URL = "https://nmathe.ws/bots/saber";
+    private static String ICON_URL = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
+
     /**
      * Primary method which generates a complete Discord message object for the event
      * @param se (ScheduleEntry) to generate a message display
@@ -30,96 +33,21 @@ public class MessageGenerator
      */
     public static Message generate(ScheduleEntry se)
     {
-        JDA jda = Main.getShardManager().getJDA(se.getGuildId());
-
+        // prepare title
         String titleUrl = (se.getTitleUrl() != null && VerifyUtilities.verifyUrl(se.getTitleUrl())) ?
-                se.getTitleUrl() : "https://nmathe.ws/bots/saber";
-        String titleImage = "https://upload.wikimedia.org/wikipedia/en/8/8d/Calendar_Icon.png";
-        StringBuilder footerStr = new StringBuilder("ID: " + ParsingUtilities.intToEncodedID(se.getId()));
+                se.getTitleUrl() : DEFAULT_URL;
+        String titleImage = ICON_URL;
 
-        if(se.isQuietEnd() || se.isQuietStart() || se.isQuietRemind())
-        {
-            footerStr.append(" |");
-            if(se.isQuietStart()) footerStr.append(" quiet-start");
-            if(se.isQuietEnd()) footerStr.append(" quiet-end");
-            if(se.isQuietRemind()) footerStr.append(" quiet-remind");
-        }
+        // generate the footer
+        String footerStr = generateFooter(se);
 
-        // generate reminder footer
-        List<Date> reminders = new ArrayList<>();
-        reminders.addAll(se.getReminders());
-        reminders.addAll(se.getEndReminders());
-        if (!reminders.isEmpty())
-        {
-            footerStr.append(" | remind in ");
-            long minutes = Instant.now().until(reminders.get(0).toInstant(), ChronoUnit.MINUTES);
-            if(minutes<=120)
-            {
-                footerStr.append(" ")
-                        .append(minutes)
-                        .append("m");
-            }
-            else
-            {
-                footerStr.append(" ")
-                        .append((int) Math.ceil(minutes / 60))
-                        .append("h");
-            }
-            for (int i=1; i<reminders.size()-1; i++)
-            {
-                minutes = Instant.now().until(reminders.get(i).toInstant(), ChronoUnit.MINUTES);
-                if(minutes<=120)
-                {
-                    footerStr.append(", ")
-                            .append(minutes)
-                            .append("m");
-                }
-                else
-                {
-                    footerStr.append(", ")
-                            .append((int) Math.ceil(minutes / 60))
-                            .append("h");
-                }
-            }
-            if (reminders.size()>1)
-            {
-                minutes = Instant.now().until(reminders.get(reminders.size()-1).toInstant(), ChronoUnit.MINUTES);
-                footerStr.append(" and ");
-                if(minutes<=120)
-                {
-                    footerStr.append(minutes)
-                            .append("m");
-                }
-                else
-                {
-                    footerStr.append((int) Math.ceil(minutes / 60))
-                            .append("h");
-                }
-            }
-        }
-
-        // get embed color from first hoisted bot role
-        Color color = Color.DARK_GRAY;
-        List<Role> roles = new ArrayList<>(
-                        jda.getGuildById(se.getGuildId())
-                                .getMember(jda.getSelfUser())
-                                .getRoles());
-        while(!roles.isEmpty())
-        {
-            if(roles.get(0).isHoisted())
-            {
-                color = roles.get(0).getColor();
-                break;
-            }
-            else
-            {
-                roles.remove(0);
-            }
-        }
+        // determine the embed color
+        Color embedColor = generateColor(se);
 
         // generate the body of the embed
         String bodyContent;
-        if(Main.getScheduleManager().getStyle(se.getChannelId()).toLowerCase().equals("narrow"))
+        String style = Main.getScheduleManager().getStyle(se.getChannelId());
+        if(style.equalsIgnoreCase("narrow"))
         {
             bodyContent = generateBodyNarrow(se);
         }
@@ -128,13 +56,14 @@ public class MessageGenerator
             bodyContent = generateBodyFull(se);
         }
 
-        // build the embed
+        // prepare the embed
         EmbedBuilder builder = new EmbedBuilder();
-        builder.setDescription(bodyContent)
-                .setColor(color)
+        builder.setDescription(bodyContent.substring(0,Math.min(bodyContent.length(), 2048)))
+                .setColor(embedColor)
                 .setAuthor(se.getTitle(), titleUrl, titleImage)
-                .setFooter(footerStr.toString(), null);
+                .setFooter(footerStr.substring(0,Math.min(footerStr.length(), 2048)), null);
 
+        // add the image and thumbnail url links (if valid)
         if(se.getImageUrl() != null && VerifyUtilities.verifyUrl(se.getImageUrl()))
         {
             builder.setImage(se.getImageUrl());
@@ -143,6 +72,8 @@ public class MessageGenerator
         {
             builder.setThumbnail(se.getThumbnailUrl());
         }
+
+        // return the fully constructed message
         return new MessageBuilder().setEmbed(builder.build()).build();
     }
 
@@ -155,11 +86,14 @@ public class MessageGenerator
      */
     private static String generateBodyFull(ScheduleEntry se)
     {
-        String msg = "";
+        StringBuilder msg = new StringBuilder();
 
-        // create the upper code block containing the event start/end/shouldRepeat/expire info
         String timeLine = genTimeLine(se);
         String repeatLine = "> " + se.getRecurrence().toString(false) + "\n";
+
+        //
+        // create the upper code block
+        //
         if(se.getExpire() != null)
         {   // expire information on separate line
             repeatLine += "> expires " + se.getExpire().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) +
@@ -169,20 +103,30 @@ public class MessageGenerator
         {   // remaining event occurrences on separate line
             repeatLine += "> occurs " + se.getRecurrence().countRemaining(se.getStart()) + " more times\n";
         }
-        msg += "```Markdown\n\n" + timeLine + repeatLine +
-                (se.getLocation()==null ? "":"<Location: "+se.getLocation()+">\n")+"```\n";
+        // append block lines
+        msg.append("```Markdown\n\n")
+                .append(timeLine)
+                .append(repeatLine)
+                .append(se.getLocation() == null ? "" : "<Location: " + se.getLocation() + ">\n")
+                .append("```\n");
 
+        //
         // insert the event description
-        msg += ParsingUtilities.processText(se.getDescription(), se, true)+"\n";
+        //
+        msg.append(ParsingUtilities.processText(se.getDescription(), se, true))
+                .append("\n");
 
+        //
         // generate the lower code block
+        //
         String zoneLine = "[" + se.getStart().getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "]" +
                 MessageGenerator.genTimer(se.getStart(), se.getEnd()) + "\n";
 
         // if rsvp is enabled, show the number of rsvp
+        StringBuilder rsvpLine = new StringBuilder("");
         if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
-            StringBuilder rsvpLine = new StringBuilder("- ");
+            rsvpLine.append("- ");
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
             for(String emoji : options.keySet()) // I iterate over the keys rather than the values to keep a order consistent with reactions
             {
@@ -205,13 +149,16 @@ public class MessageGenerator
                         .append(se.getDeadline().getYear())
                         .append(".");
             }
-            msg += "```Markdown\n\n" + zoneLine + rsvpLine + "```";
+
         }
-        else
-        {
-            msg += "```Markdown\n\n" + zoneLine + "```";
-        }
-        return msg;
+        // append block lines
+        msg.append("```Markdown\n\n")
+                .append(zoneLine)
+                .append(rsvpLine)
+                .append("```");
+
+        // return full body string contents
+        return msg.toString();
     }
 
 
@@ -348,7 +295,7 @@ public class MessageGenerator
                 int daysTil = (int) ChronoUnit.DAYS.between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS),
                         start.truncatedTo(ChronoUnit.DAYS));
                 if (daysTil <= 1)
-                    timer += "tomorrow)";
+                    timer += "in one day)";
                 else
                     timer += "in " + daysTil + " days)";
             }
@@ -379,11 +326,145 @@ public class MessageGenerator
                 int daysTil = (int) ChronoUnit.DAYS
                         .between(ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS), end.truncatedTo(ChronoUnit.DAYS));
                 if (daysTil <= 1)
-                    timer += "tomorrow)";
+                    timer += "in one day)";
                 else
                     timer += "in " + daysTil + " days)";
             }
         }
         return timer;
+    }
+
+
+    /**
+     * creates the footer text to be added to the message embed
+     * @param se ScheduleEntry object
+     * @return fully generated footer String
+     */
+    private static String generateFooter(ScheduleEntry se)
+    {
+        // initialize footer with ID information
+        StringBuilder footerStr = new StringBuilder("ID: " + ParsingUtilities.intToEncodedID(se.getId()));
+
+        // append quiet information to footer
+        if(se.isQuietEnd() || se.isQuietStart() || se.isQuietRemind())
+        {
+            footerStr.append(" |");
+            if(se.isQuietStart()) footerStr.append(" quiet-start");
+            if(se.isQuietEnd()) footerStr.append(" quiet-end");
+            if(se.isQuietRemind()) footerStr.append(" quiet-remind");
+        }
+
+        // generate reminder footer
+        List<Date> reminders = new ArrayList<>();
+        reminders.addAll(se.getReminders());
+        reminders.addAll(se.getEndReminders());
+        if (!reminders.isEmpty())
+        {
+            footerStr.append(" | remind in ");
+            long minutes = Instant.now().until(reminders.get(0).toInstant(), ChronoUnit.MINUTES);
+            if(minutes<=120)
+            {
+                footerStr.append(" ")
+                        .append(minutes)
+                        .append("m");
+            }
+            else
+            {
+                footerStr.append(" ")
+                        .append((int) Math.ceil(minutes / 60))
+                        .append("h");
+            }
+            for (int i=1; i<reminders.size()-1; i++)
+            {
+                minutes = Instant.now().until(reminders.get(i).toInstant(), ChronoUnit.MINUTES);
+                if(minutes<=120)
+                {
+                    footerStr.append(", ")
+                            .append(minutes)
+                            .append("m");
+                }
+                else
+                {
+                    footerStr.append(", ")
+                            .append((int) Math.ceil(minutes / 60))
+                            .append("h");
+                }
+            }
+            if (reminders.size()>1)
+            {
+                minutes = Instant.now().until(reminders.get(reminders.size()-1).toInstant(), ChronoUnit.MINUTES);
+                footerStr.append(" and ");
+                if(minutes<=120)
+                {
+                    footerStr.append(minutes)
+                            .append("m");
+                }
+                else
+                {
+                    footerStr.append((int) Math.ceil(minutes / 60))
+                            .append("h");
+                }
+            }
+        }
+
+        // return completed footer
+        return footerStr.toString();
+    }
+
+    /**
+     * creates the color object to be used with the embed
+     * @param se ScheduleEntry object
+     * @return color
+     */
+    private static Color generateColor(ScheduleEntry se)
+    {
+        // attempt to use the ScheduleEntry's color attribute
+        Color color = null;
+        if (se.getColor() != null)
+        {
+            color = Color.getColor(se.getColor());
+            if (color == null)
+            {
+                try
+                {
+                    color = Color.decode(se.getColor());
+                }
+                catch (NumberFormatException ignored)
+                {
+                    color = null;
+                }
+            }
+        }
+
+        // if color not yet defined, use color from bot hoisted role
+        if(color == null)
+        {
+            // set default
+            color = Color.DARK_GRAY;
+
+            // find JDA shard instance for guild
+            JDA jda = Main.getShardManager().getJDA(se.getGuildId());
+
+            // get embed color from first hoisted bot role
+            List<Role> roles = new ArrayList<>(
+                    jda.getGuildById(se.getGuildId())
+                            .getMember(jda.getSelfUser())
+                            .getRoles());
+            while(!roles.isEmpty())
+            {
+                if(roles.get(0).isHoisted())
+                {
+                    color = roles.get(0).getColor();
+                    break;
+                }
+                else
+                {
+                    roles.remove(0);
+                }
+            }
+        }
+
+        // return the color (default DARK_GRAY)
+        return color;
     }
 }

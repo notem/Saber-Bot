@@ -159,7 +159,8 @@ public class EntryManager
                                 .append("deadline", finalDeadline)
                                 .append("guildId", se.getGuildId())
                                 .append("location", se.getLocation())
-                                .append("description", se.getDescription());
+                                .append("description", se.getDescription())
+                                .append("color", se.getColor());
 
                 Main.getDBDriver().getEventCollection().insertOne(entryDocument);
 
@@ -248,7 +249,8 @@ public class EntryManager
                             .append("announcement_messages", se.getAnnouncementMessages())
                             .append("announcement_targets", se.getAnnouncementTargets())
                             .append("location", se.getLocation())
-                            .append("description", se.getDescription());
+                            .append("description", se.getDescription())
+                            .append("color", se.getColor());
 
             UpdateResult res = Main.getDBDriver().getEventCollection()
                     .replaceOne(eq("_id", se.getId()), entryDocument);
