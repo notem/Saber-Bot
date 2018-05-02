@@ -200,9 +200,8 @@ public class MessageGenerator
 
 
     /**
-     *
-     * @param se
-     * @return
+     * @param se the ScheduleEntry
+     * @return display line containing the expiration information
      */
     private static String generateExpirationLine(ScheduleEntry se)
     {
@@ -228,9 +227,8 @@ public class MessageGenerator
 
 
     /**
-     *
-     * @param se
-     * @return
+     * @param se the ScheduleEntry
+     * @return display lines containing the start/end information
      */
     private static String generateTimeLines(ScheduleEntry se)
     {
@@ -241,8 +239,8 @@ public class MessageGenerator
             altZones.add(se.getStart().getZone());  // add primary zone to list
             altZones.sort((zoneId, t1) -> {         // sort list by zone offset
                 Instant now = Instant.now();
-                return zoneId.getRules().getOffset(now)
-                        .compareTo(t1.getRules().getOffset(now));
+                return t1.getRules().getOffset(now)
+                        .compareTo(zoneId.getRules().getOffset(now));
             });
             for (ZoneId zone : altZones)
             {
@@ -287,7 +285,8 @@ public class MessageGenerator
         else if (start.until(end, ChronoUnit.DAYS)>=1)
         {
             // all day events
-            if (start.toLocalTime().equals(LocalTime.MIN) && start.toLocalTime().equals(LocalTime.MIN))
+            if (start.toLocalTime().equals(LocalTime.MIN)
+                    && end.toLocalTime().equals(LocalTime.MIN))
             {
                 timeLine.append(" ")
                         .append(dash)
@@ -331,9 +330,8 @@ public class MessageGenerator
 
 
     /**
-     *
-     * @param se
-     * @return
+     * @param se the ScheduleEntry object
+     * @return String representing the line containing the time until
      */
     private static String generateTimerLine(ScheduleEntry se)
     {
@@ -364,13 +362,13 @@ public class MessageGenerator
             {
                 line.append("begins ");
                 genTimerHelper(se.getStart(), line);
+                line.append("](---");
             }
             else
             {
-                line.append("in-progress");
+                line.append("in-progress](ends ");
+                genTimerHelper(se.getStart(), line);
             }
-            line.append("](ends ");
-            genTimerHelper(se.getStart(), line);
             line.append(")");
         }
         line.append("\n");
@@ -379,9 +377,9 @@ public class MessageGenerator
 
 
     /**
-     *
-     * @param time
-     * @param timer
+     * used by generateTimeLine() to reduce code repetition
+     * @param time the start or end time of the event
+     * @param timer the string that should be built onto
      */
     private static void genTimerHelper(ZonedDateTime time, StringBuilder timer)
     {
