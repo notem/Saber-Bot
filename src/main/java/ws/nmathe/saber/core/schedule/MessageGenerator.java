@@ -351,7 +351,7 @@ public class MessageGenerator
             else
             {
                 line.append("(ends ");
-                genTimerHelper(se.getStart(), line);
+                genTimerHelper(se.getEnd(), line);
                 line.append(")");
             }
         }
@@ -367,7 +367,7 @@ public class MessageGenerator
             else
             {
                 line.append("in-progress](ends ");
-                genTimerHelper(se.getStart(), line);
+                genTimerHelper(se.getEnd(), line);
             }
             line.append(")");
         }
