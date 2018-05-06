@@ -279,8 +279,8 @@ public class EventRecurrence
         }
         else if(input.matches("month(ly)?"))
         {
-            mode = 3;
-            data = 1<<5;
+            mode = 6;
+            data = 0;
         }
         else if(input.matches("year(ly)?"))
         {
