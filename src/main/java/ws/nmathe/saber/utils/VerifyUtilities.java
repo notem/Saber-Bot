@@ -247,41 +247,6 @@ public class VerifyUtilities
 
 
     /**
-     *  Returns error message (or empty string) for interval keyword verification
-     */
-    public static String verifyInterval(String[] args, int index, String head)
-    {
-        if(args.length-index < 1)
-        {
-            return "That's not the right number of arguments for **"+args[index-1]+"**! " +
-                    "Use ``"+head+" "+args[0]+" "+args[index-1]+" [number]``";
-        }
-        if(!(args[index].matches("\\d+(([ ]?d(ay(s)?)?)?||([ ]?m(in(utes)?)?)||([ ]?h(our(s)?)?))")))
-        {
-            return "**" + args[index] + "** is not a correct interval format!\n" +
-                    "For days, use ``\"n days\"``. For hours, use ``\"n hours\"``. For minutes, use ``\"n minutes\"``.";
-        }
-        if(args[index].matches("\\d+([ ]?d(ay(s)?)?)?"))
-        {
-            Integer d = Integer.parseInt(args[index].replaceAll("[^\\d]", ""));
-            if(d < 0 || d > 9000) return "Invalid number of days!";
-        }
-        else if(args[index].matches("\\d+([ ]?m(in(utes)?)?)"))
-        {
-            Integer d = Integer.parseInt(args[index].replaceAll("[^\\d]", ""));
-            if(d > 100000) return "That's too many minutes!";
-            if(d < 10) return "Your minute interval must be greater than or equal to 10 minutes!";
-        }
-        else if(args[index].matches("\\d+([ ]?h(our(s)?)?)"))
-        {
-            Integer d = Integer.parseInt(args[index].replaceAll("[^\\d]", ""));
-            if(d < 0 || d > 1000) return "That's too many hours!";
-        }
-        return "";
-    }
-
-
-    /**
      *  Returns error message (or empty string) for interval url, image, and thumbnail verification
      */
     public static String verifyUrl(String[] args, int index, String head)

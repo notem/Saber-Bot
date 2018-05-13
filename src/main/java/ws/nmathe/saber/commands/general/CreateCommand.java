@@ -42,10 +42,12 @@ public class CreateCommand implements Command
                         "Optionally, events can be configured with comments, repeat settings, and a start/end dates.";
         info.addUsageCategory(cat1, cont1);
 
-        String cat2 = "+ Repeat on weekdays or interval";
+        String cat2 = "+ Repeat on weekdays or on an interval";
         String cont2 = "Repeat settings can be configured by adding ``repeat <daily|\"Su,Mo,Tu,We,Th,Fr,Sa\">`` to ``<extra>``" +
-                        " to cause the event to repeat on the given days.\n Default behavior is no repeat.\n An event can instead " +
-                        "be configured to repeat on a daily interval by adding ``interval <number>`` to ``<extra>``";
+                        " to cause the event to repeat on the given days.\n" +
+                        "Default behavior for an event is to not repeat.\n" +
+                        "An event can instead be configured to repeat on a daily, weekly, or minute interval by using ``repeat <interval>``." +
+                        "\nThe ``<interval>`` argument should be a number which ends letter or word denoting the interval type.";
 
         info.addUsageCategory(cat2, cont2);
 
@@ -163,13 +165,6 @@ public class CreateCommand implements Command
                     case "repeats":
                     case "repeat":
                         verify = VerifyUtilities.verifyRepeat(args, index, head);
-                        if (!verify.isEmpty()) return verify;
-                        index++;
-                        break;
-
-                    case "i":
-                    case "interval":
-                        verify = VerifyUtilities.verifyInterval(args, index, head);
                         if (!verify.isEmpty()) return verify;
                         index++;
                         break;
@@ -323,12 +318,6 @@ public class CreateCommand implements Command
                         case "repeats":
                         case "repeat":
                             repeat = EventRecurrence.parseRepeat(args[index].toLowerCase());
-                            index++;
-                            break;
-
-                        case "i":
-                        case "interval":
-                            repeat = EventRecurrence.parseInterval(args[index]);
                             index++;
                             break;
 

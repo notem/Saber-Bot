@@ -219,42 +219,6 @@ public class EventRecurrence
     }
 
     /**
-     * parses out shouldRepeat information for the 'interval' edit/create option
-     * @param arg interval user-input
-     * @return shouldRepeat bitset
-     */
-    public static int parseInterval(String arg)
-    {
-        int mode = 0, data = 0;
-        if(arg.matches("\\d+([ ]?m(in(utes)?)?)"))
-        {
-            mode = 2;
-            data = Integer.parseInt(arg.replaceAll("[^\\d]",""));
-        }
-        else if(arg.matches("\\d+([ ]?h(our(s)?)?)"))
-        {
-            mode = 2;
-            data = Integer.parseInt(arg.replaceAll("[^\\d]",""))*60;
-        }
-        else if(arg.matches("\\d+([ ]?d(ay(s)?)?)?"))
-        {
-            mode = 0;
-            data = Integer.parseInt(arg.replaceAll("[^\\d]",""));
-        }
-        else if(arg.matches("\\d+([ ]?m(onth(s)?)?)"))
-        {
-            mode = 6;
-            data = Integer.parseInt(arg.replaceAll("[^\\d]",""))<<5;
-        }
-        else if(arg.matches("\\d+([ ]?y(ear(s)?)?)"))
-        {
-            mode = 3;
-            data = Integer.parseInt(arg.replaceAll("[^\\d]",""));
-        }
-        return mode | (data<<3);
-    }
-
-    /**
      * Parses out the intended event shouldRepeat information from user input
      * @param input (String) the user input
      * @return (int) an integer representing the shouldRepeat information (stored in binary)
@@ -274,8 +238,8 @@ public class EventRecurrence
         }
         else if(input.matches("weekly"))
         {
-            mode = 4;
-            data = 1<<7;
+            mode = 0;
+            data = 7;
         }
         else if(input.matches("month(ly)?"))
         {
@@ -286,6 +250,31 @@ public class EventRecurrence
         {
             mode = 3;
             data = 1;
+        }
+        else if(input.matches("\\d+([ ]?m(in(utes)?)?)"))
+        {
+            mode = 2;
+            data = Integer.parseInt(input.replaceAll("[^\\d]",""));
+        }
+        else if(input.matches("\\d+([ ]?h(our(s)?)?)"))
+        {
+            mode = 2;
+            data = Integer.parseInt(input.replaceAll("[^\\d]",""))*60;
+        }
+        else if(input.matches("\\d+([ ]?d(ay(s)?)?)?"))
+        {
+            mode = 0;
+            data = Integer.parseInt(input.replaceAll("[^\\d]",""));
+        }
+        else if(input.matches("\\d+([ ]?m(onth(s)?)?)"))
+        {
+            mode = 6;
+            data = Integer.parseInt(input.replaceAll("[^\\d]",""))<<5;
+        }
+        else if(input.matches("\\d+([ ]?y(ear(s)?)?)"))
+        {
+            mode = 3;
+            data = Integer.parseInt(input.replaceAll("[^\\d]",""));
         }
         else
         {
@@ -322,17 +311,21 @@ public class EventRecurrence
         int data = recurrence >> 3;
         if(isNarrow)
         {
-            // not shouldRepeat
+            // no repeat
             if (recurrence == 0)
                 return "once";
-            // shouldRepeat daily
+            // daily
             if ((mode == 4 && data == 0b1111111) || (mode==0 && data==1))
                 return "every day";
-            // shouldRepeat on interval days
+            // on interval days
             if (mode == 0)
+            {
+                if (data == 7)
+                    return "every week";
                 return "every "+(data>spellout.length ? data : spellout[data-1])+" days";
+            }
 
-            // shouldRepeat x minutes
+            // minute repeat
             if (mode == 2)
             {
                 if (data%60 == 0)
@@ -346,7 +339,7 @@ public class EventRecurrence
                     return "every "+data+" minutes";
                 }
             }
-            // yearly shouldRepeat
+            // yearly
             if (mode == 3 && data == 1)
                 return "every year";
 
@@ -375,17 +368,21 @@ public class EventRecurrence
         }
         else
         {
-            // no shouldRepeat
+            // no repeat
             if (recurrence == 0)
                 return "does not repeat";
-            // shouldRepeat daily
+            // daily
             if ((mode == 4 && data == 0b1111111) || (mode==0 && data==1))
                 return "repeats daily";
-            // shouldRepeat on interval
-            if (mode==0)
-                return "repeats every "+(data>spellout.length ? data : spellout[data-1])+" days";
+            // on daily interval
+            if (mode == 0)
+            {
+                if (data == 7)
+                    return "repeats weekly";
+                return "repeats every " + (data > spellout.length ? data : spellout[data - 1]) + " days";
+            }
 
-            // shouldRepeat x minutes
+            // minute repeat
             if (mode==2)
             {
                 if (data%60 == 0)

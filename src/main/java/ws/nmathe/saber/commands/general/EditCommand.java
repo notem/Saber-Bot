@@ -43,7 +43,7 @@ public class EditCommand implements Command
                 " new configuration." +
                 "\n\n```diff\n+ Options ```\n" +
                 "List of ``<option>``s: ``start``, ``end``, ``title``, ``comment``, ``date``, " +
-                "``start-date``, ``end-date``, ``repeat``, ``interval``, ``url``, ``quiet-start``, ``quiet-end``, " +
+                "``start-date``, ``end-date``, ``repeat``, ``url``, ``quiet-start``, ``quiet-end``, " +
                 "``quiet-remind``, ``expire``, ``deadline``, ``count``," +
                 " and ``limit``.\n\n" +
                 "Most of the options listed above accept the same arguments as the ``create`` command.\n" +
@@ -98,13 +98,13 @@ public class EditCommand implements Command
         String head = prefix + this.name();
         int index = 0;
 
-        if( args.length < 1 )
+        if(args.length < 1)
         {
             return "That's not enough arguments! Use ``" + head + " <ID> [<option> <arg>]``";
         }
 
         // check first arg
-        if( !VerifyUtilities.verifyEntryID(args[index]) )
+        if(!VerifyUtilities.verifyEntryID(args[index]))
         {
             return "``" + args[index] + "`` is not a valid entry ID!";
         }
@@ -291,13 +291,6 @@ public class EditCommand implements Command
                     index++;
                     break;
 
-                case "i":
-                case "interval":
-                    verify = VerifyUtilities.verifyInterval(args, index, head);
-                    if(!verify.isEmpty()) return verify;
-                    index++;
-                    break;
-
                 case "im":
                 case "image":
                 case "th":
@@ -380,7 +373,7 @@ public class EditCommand implements Command
                             break;
 
                         default:
-                            return "**" + args[index] + "** is not a valid option!\n" +
+                            return "**" + args[index-1] + "** is not a valid option!\n" +
                                     "You should use either *add* or *remove*!";
                     }
                     break;
@@ -671,12 +664,6 @@ public class EditCommand implements Command
                     case "repeats":
                     case "repeat":
                         se.setRepeat(EventRecurrence.parseRepeat(args[index].toLowerCase()));
-                        index++;
-                        break;
-
-                    case "i":
-                    case "interval":
-                        se.setRepeat(EventRecurrence.parseInterval(args[index]));
                         index++;
                         break;
 
