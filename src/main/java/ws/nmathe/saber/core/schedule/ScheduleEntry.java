@@ -1358,7 +1358,7 @@ public class ScheduleEntry
                 "Title:  \"" + this.getTitle() + "\"\n" +
                 "Start:  " + this.getStart().format(dtf) + "\n" +
                 "End:    " + (this.getEnd().equals(this.getStart()) ? "\"off\"" : this.getEnd().format(dtf)) + "\n" +
-                "Repeat: \"" + this.recurrence.toString(true) + "\"\n" +
+                "Repeat: \"" + this.recurrence.toString() + "\"\n" +
                 "Description: " + (this.getDescription().equals("%g") ? "(default)" : "\""+this.getDescription()+"\"")+"\n";
 
         // quiet settings

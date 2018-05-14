@@ -92,7 +92,7 @@ public class MessageGenerator
         // create the upper code block
         //
         String timeLines = generateTimeLines(se);
-        String repeatLine = "> " + se.getRecurrence().toString(false) + "\n";
+        String repeatLine = "> repeats " + se.getRecurrence().toString() + "\n";
         String expirationLine = generateExpirationLine(se);
         String locationLine = se.getLocation() == null ? "" : "<Location: " + se.getLocation() + ">\n";
 
@@ -171,7 +171,7 @@ public class MessageGenerator
                 .append("[")
                 .append(se.getStart().getZone().getDisplayName(TextStyle.SHORT, Locale.ENGLISH))
                 .append("](")
-                .append(se.getRecurrence().toString(true))
+                .append(se.getRecurrence().toString())
                 .append(")\n");
 
         // expiration information

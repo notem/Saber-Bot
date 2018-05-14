@@ -17,7 +17,6 @@ public class EventRecurrence
     public static DateTimeFormatter RFC3339_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     /**
-     * The event recurrence is described as an int which represents on the following modes:
      *  daily interval      - mode = 0
      *  unused              - mode = 1
      *  minute interval     - mode = 2
@@ -26,7 +25,15 @@ public class EventRecurrence
      *  monthly by weekday  - mode = 5
      *  monthly by date     - mode = 6
      *  unused              - mode = 7
-     *
+     */
+    private static final int DAILY_MODE  = 0;
+    private static final int MINUTE_MODE = 2;
+    private static final int YEAR_MODE   = 3;
+    private static final int WEEK_MODE   = 4;
+    private static final int MONTH1_MODE = 5;
+    private static final int MONTH2_MODE = 6;
+
+    /**
      * The recurrence int should be interpreted in it's binary representation:
      *
      * ..0...1...2...3...4...5...6...7...8...9..10..11..12..13..14..15.
@@ -101,14 +108,14 @@ public class EventRecurrence
                 switch (tmp)
                 {
                     case "DAILY":
-                        mode = 0;
+                        mode = DAILY_MODE;
                         if (rule.contains("INTERVAL"))
                             data = Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]);
                         else
                             data = 0b1;
                         break;
                     case "WEEKLY":
-                        mode = 4;
+                        mode = WEEK_MODE;
                         if (rule.contains("BYDAY"))
                             data |= EventRecurrence.parseRepeat(rule.split("BYDAY=")[1].split(";")[0])>>3;
                         if (rule.contains("INTERVAL"))
@@ -119,7 +126,7 @@ public class EventRecurrence
                     case "MONTHLY":
                         if (rule.contains("BYDAY"))
                         {
-                            mode = 5;
+                            mode = MONTH1_MODE;
                             tmp  = rule.split("BYDAY=")[1].split(";")[0];
                             switch (tmp.replaceAll("[\\d]",""))
                             {
@@ -139,7 +146,7 @@ public class EventRecurrence
                         }
                         else
                         {
-                            mode = 6;
+                            mode = MONTH2_MODE;
                             if (rule.contains("INTERVAL"))
                                 data |= Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]) << 5;
                             else
@@ -147,7 +154,7 @@ public class EventRecurrence
                         }
                         break;
                     case "YEARLY":
-                        mode = 3;
+                        mode = YEAR_MODE;
                         if (rule.contains("INTERVAL"))
                             data |= Integer.valueOf(rule.split("INTERVAL=")[1].split(";")[0]);
                         else
@@ -233,52 +240,56 @@ public class EventRecurrence
         }
         else if(input.matches("daily"))
         {
-            mode = 4;
+            mode = WEEK_MODE;
             data = 0b1111111;
         }
         else if(input.matches("weekly"))
         {
-            mode = 0;
+            mode = DAILY_MODE;
             data = 7;
         }
         else if(input.matches("month(ly)?"))
         {
-            mode = 6;
+            mode = MONTH2_MODE;
             data = 0;
         }
         else if(input.matches("year(ly)?"))
         {
-            mode = 3;
+            mode = YEAR_MODE;
             data = 1;
         }
         else if(input.matches("\\d+([ ]?m(in(utes)?)?)"))
         {
-            mode = 2;
+            mode = MINUTE_MODE;
             data = Integer.parseInt(input.replaceAll("[^\\d]",""));
         }
         else if(input.matches("\\d+([ ]?h(our(s)?)?)"))
         {
-            mode = 2;
+            mode = MINUTE_MODE;
             data = Integer.parseInt(input.replaceAll("[^\\d]",""))*60;
         }
         else if(input.matches("\\d+([ ]?d(ay(s)?)?)?"))
         {
-            mode = 0;
+            mode = DAILY_MODE;
             data = Integer.parseInt(input.replaceAll("[^\\d]",""));
+        }
+        else if(input.matches("\\d+([ ]?w(eek(s)?)?)?"))
+        {
+            mode = DAILY_MODE;
+            data = Integer.parseInt(input.replaceAll("[^\\d]",""))*7;
         }
         else if(input.matches("\\d+([ ]?m(onth(s)?)?)"))
         {
-            mode = 6;
+            mode = MONTH2_MODE;
             data = Integer.parseInt(input.replaceAll("[^\\d]",""))<<5;
         }
         else if(input.matches("\\d+([ ]?y(ear(s)?)?)"))
         {
-            mode = 3;
+            mode = YEAR_MODE;
             data = Integer.parseInt(input.replaceAll("[^\\d]",""));
         }
         else
         {
-            mode = 4;
             String regex = "[,;:. ]([ ]+)?";
             String[] s = input.split(regex);
             for(String string : s)
@@ -291,16 +302,20 @@ public class EventRecurrence
                 if(string.matches("sa(t(urday)?)?"))  data |= 1<<5;
                 if(string.matches("su(n(day)?)?"))    data |= 1<<6;
             }
+            // change the mode to by weekday only if at least weekday string was found
+            if (data > 0)
+            {
+                mode = 4;
+            }
         }
         return mode | (data<<3);
     }
 
     /**
-     * Generated a string describing the shouldRepeat settings of an event
-     * @param isNarrow (boolean) for use with narrow style events
+     * Generated a string describing the recurrence settings of an event
      * @return string
      */
-    public String toString(boolean isNarrow)
+    public String toString()
     {
         // useful string constants
         String[] spellout = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
@@ -309,144 +324,91 @@ public class EventRecurrence
         StringBuilder str = new StringBuilder();
         int mode = recurrence & 0b111;
         int data = recurrence >> 3;
-        if(isNarrow)
+
+        // no repeat
+        if (recurrence == 0)
+            return "once";
+
+        // every day
+        if ((mode == WEEK_MODE && data == 0b1111111)
+                || (mode==DAILY_MODE && data==1))
+            return "every day";
+
+        // on interval days
+        if (mode == DAILY_MODE)
         {
-            // no repeat
-            if (recurrence == 0)
-                return "once";
-            // daily
-            if ((mode == 4 && data == 0b1111111) || (mode==0 && data==1))
-                return "every day";
-            // on interval days
-            if (mode == 0)
-            {
-                if (data == 7)
-                    return "every week";
-                return "every "+(data>spellout.length ? data : spellout[data-1])+" days";
-            }
-
-            // minute repeat
-            if (mode == 2)
-            {
-                if (data%60 == 0)
-                {
-                    int hours = data/60;
-                    if (data == 60) return "every hour";
-                    else return "every "+(hours<=spellout.length ? spellout[hours-1]:hours)+" hours";
-                }
-                else
-                {
-                    return "every "+data+" minutes";
-                }
-            }
-            // yearly
-            if (mode == 3 && data == 1)
-                return "every year";
-
-            // monthly on weekday
-            if (mode==5)
-            {
-                int monthInterval = data>>6;
-                if (monthInterval>1)
-                {
-                    return "every"+(monthInterval>spellout.length ? data : spellout[monthInterval]) + " months";
-                }
-                else
-                {
-                    return "every month";
-                }
-            }
-            // monthly on day of month
-            if (mode==6)
-            {
-                int monthInterval = data>>5;
-                if (monthInterval>1)
-                    return "every"+(monthInterval>spellout.length ? data : spellout[monthInterval]) + " months";
-                else
-                    return "every month";
-            }
+            if (data == 7)
+                return "every week";
+            return "every "+(data>spellout.length ? data : spellout[data-1])+" days";
         }
-        else
+
+        // minute repeat
+        if (mode == MINUTE_MODE)
         {
-            // no repeat
-            if (recurrence == 0)
-                return "does not repeat";
-            // daily
-            if ((mode == 4 && data == 0b1111111) || (mode==0 && data==1))
-                return "repeats daily";
-            // on daily interval
-            if (mode == 0)
+            if (data%60 == 0)
             {
-                if (data == 7)
-                    return "repeats weekly";
-                return "repeats every " + (data > spellout.length ? data : spellout[data - 1]) + " days";
+                int hours = data/60;
+                if (data == 60) return "every hour";
+                else return "every "+(hours<=spellout.length ? spellout[hours-1]:hours)+" hours";
             }
-
-            // minute repeat
-            if (mode==2)
+            else
             {
-                if (data%60 == 0)
-                {
-                    int hours = data/60;
-                    if (data == 60) return "repeats hourly";
-                    else return "repeats every "+(hours<=spellout.length ? spellout[hours-1]:hours)+" hours";
-                }
-                else
-                {
-                    return "repeats every "+data+" minutes";
-                }
-            }
-            // yearly shouldRepeat
-            if (mode==3 && data==1)
-                return "repeats yearly";
-
-            // monthly on weekday
-            if (mode==5)
-            {
-                DayOfWeek dayOfWeek = DayOfWeek.of(data&0b111);
-                int nth = (data>>3)&0b111;
-                int monthInterval = data>>6;
-                if (monthInterval>1)
-                {
-                    return nth+prefixes[nth]+" "+dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())+
-                            " of every "+monthInterval+prefixes[monthInterval]+" months";
-                }
-                else
-                {
-                    return nth+prefixes[nth]+" "+dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())+
-                            " of every month";
-                }
-            }
-            // monthly on day of month
-            if (mode==6)
-            {
-                int dayOfMonth    = data&0b11111;
-                int monthInterval = data>>5;
-                if (monthInterval>1)
-                {
-                    return "repeats every"+(monthInterval>spellout.length ? data : spellout[monthInterval-1]) +
-                            " months"+(dayOfMonth>0 ? " on the "+dayOfMonth+prefixes[dayOfMonth%10]:"");
-                } else
-                {
-                    return "repeats every month"+(dayOfMonth>0 ? " on the "+dayOfMonth+prefixes[dayOfMonth%10]:"");
-                }
+                return "every "+data+" minutes";
             }
         }
 
-        // weekday shouldRepeat
-        if (mode==4)
+        // yearly
+        if (mode == YEAR_MODE && data == 1)
+            return "every year";
+
+
+        // monthly on weekday
+        if (mode == MONTH1_MODE)
+        {
+            DayOfWeek dayOfWeek = DayOfWeek.of(data&0b111);
+            int nth = (data>>3)&0b111;
+            int monthInterval = data>>6;
+            if (monthInterval>1)
+            {
+                return nth+prefixes[nth]+" " +
+                        dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())+
+                        " of every " + monthInterval+prefixes[monthInterval%10]+" months";
+            }
+            else
+            {
+                return nth+prefixes[nth] + " " +
+                        dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault()) +
+                        " of every month";
+            }
+        }
+        // monthly on day of month
+        if (mode == MONTH2_MODE)
+        {
+            int dayOfMonth    = data&0b11111;
+            int monthInterval = data>>5;
+            if (monthInterval>1)
+            {
+                return "every" + spellout[monthInterval%10] +
+                        " months" + (dayOfMonth>0 ? " on the "+dayOfMonth+prefixes[dayOfMonth%10]:"");
+            }
+            else
+            {
+                return "every month"+(dayOfMonth>0 ? " on the "+dayOfMonth+prefixes[dayOfMonth%10]:"");
+            }
+        }
+
+        // on certain weekday
+        if (mode == WEEK_MODE)
         {
             int weeks = data>>7;
             data &= 0b1111111;
             if (weeks>1)
             {
-                if(isNarrow) str = new StringBuilder("every "+(weeks>spellout.length ? weeks+"":spellout[weeks-1])+" weeks on ");
-                else str = new StringBuilder("repeats every "+(weeks>spellout.length ? weeks+"":spellout[weeks-1])+" weeks on ");
+                str = new StringBuilder("every "+(weeks>spellout.length ? weeks+"":spellout[weeks-1])+" weeks on ");
             }
             else
             {
-                if(isNarrow) str = new StringBuilder("weekly on ");
-                else str = new StringBuilder("repeats weekly on ");
+                str = new StringBuilder("weekly on ");
             }
             for(int j=0; data!=0; j++, data>>=1)
             {
@@ -502,15 +464,15 @@ public class EventRecurrence
         switch(mode)
         {
             // interval repeat
-            case 0:
+            case DAILY_MODE:
                 return date.plusDays(data);
-            case 2:
+            case MINUTE_MODE:
                 return date.plusMinutes(data);
-            case 3:
+            case YEAR_MODE:
                 return date.plusYears(data);
 
             // repeat weekly by day of week
-            case 4:
+            case WEEK_MODE:
                 int day   = 1<<(date.getDayOfWeek().getValue()-1);  // represent current day of week as int
                 int weeks = (data>>7)==0 ? 1:data>>7;               // number of weeks to shouldRepeat
                 data = data & 0b1111111;                            // integer representing weekdays
@@ -532,10 +494,12 @@ public class EventRecurrence
                 return date.plusDays(count);
 
             // repeat on nth week day every mth month
-            case 5:
+            case MONTH1_MODE:
                 DayOfWeek dayOfWeek = DayOfWeek.of(data&0b111);
                 int nth = (data>>3)&0b111;
-                date = date.with(firstDayOfMonth()).plusMonths((data>>6)>1 ? (data>>6):1).with(nextOrSame(dayOfWeek));
+                date = date.with(firstDayOfMonth())
+                        .plusMonths((data>>6)>1 ? (data>>6) : 1)
+                        .with(nextOrSame(dayOfWeek));
                 while(nth>1)
                 {
                    date = date.plusDays(1).with(nextOrSame(dayOfWeek));
@@ -544,7 +508,7 @@ public class EventRecurrence
                 return date;
 
             // repeat on n day of every mth month
-            case 6:
+            case MONTH2_MODE:
                 int dayOfMonth    = data&0b11111;
                 int monthInterval = data>>5;
                 if (dayOfMonth > 0) return date.plusMonths(monthInterval).withDayOfMonth(dayOfMonth);
@@ -571,16 +535,18 @@ public class EventRecurrence
         int data = this.recurrence >> 3;
         switch (mode)
         {
-            // daily interval shouldRepeat
-            case 0:
+            // daily interval
+            case DAILY_MODE:
                 rule += "FREQ=DAILY;INTERVAL="+data+";";
                 break;
-            // yearly shouldRepeat
-            case 3:
+
+            // yearly
+            case YEAR_MODE:
                 rule += "FREQ=YEARLY;INTERVAL="+data+";";
                 break;
-            // shouldRepeat by weekday
-            case 4:
+
+            // by weekday
+            case WEEK_MODE:
                 rule += "FREQ=WEEKLY;BYDAY=";
                 List<String> days = new ArrayList<>();
                 if((data&0b0000001) == 0b0000001) days.add("SU");
@@ -593,14 +559,16 @@ public class EventRecurrence
                 rule += String.join(",",days) + ";";
                 rule += "INTERVAL="+(data>>7)+";";
                 break;
-            // shouldRepeat on nth week day every mth month
-            case 5:
+
+            // on nth week day every mth month
+            case MONTH1_MODE:
                 DayOfWeek dayOfWeek = DayOfWeek.of(data&0b111);
                 int nth = (data>>3)&0b111;
                 rule += "FREQ=MONTHLY;BYDAY="+nth+dayOfWeek+";INTERVAL="+(data>>6==0 ? 1:data>>6)+";";
                 break;
-            // shouldRepeat on n day of every mth month
-            case 6:
+
+            // on n day of every mth month
+            case MONTH2_MODE:
                 int dayOfMonth = data&0b11111;
                 rule += "FREQ=MONTHLY;BYMONTHDAY="+dayOfMonth+";INTERVAL="+(data>>5==0 ? 1:data>>5)+";";
                 break;
@@ -608,7 +576,8 @@ public class EventRecurrence
         if (expire != null)
         {
             rule += "UNTIL="+
-                    String.format("%04d%02d%02d",expire.getYear(),expire.getMonthValue(),expire.getDayOfMonth()) +
+                    String.format("%04d%02d%02d",expire.getYear(),
+                            expire.getMonthValue(),expire.getDayOfMonth()) +
                     "T000000Z;";
         }
         else if (count != null)
@@ -626,24 +595,29 @@ public class EventRecurrence
      */
     public Integer countRemaining(ZonedDateTime now)
     {
-        if (count==null || startDate==null) return -1; // error
-        if (now.isBefore(startDate) || now.equals(startDate)) return count;  // no events have occurred yet
+        if (count==null || startDate==null)
+            return -1; // error
+        if (now.isBefore(startDate) || now.equals(startDate))
+            return count;  // no events have occurred yet
 
         // determine remaining event occurrences
         int mode = this.recurrence & 0b111;
         int data = this.recurrence >> 3;
         switch (mode)
         {
-            case 0:     // daily
+            case DAILY_MODE:     // daily
                 long days = startDate.until(now, ChronoUnit.DAYS);
                 return count - ((int) days/(data==0?1:data));
-            case 2:     // minutely
+
+            case MINUTE_MODE:     // minutely
                 long minutes = startDate.until(now, ChronoUnit.MINUTES);
                 return count - ((int) minutes/(data==0?1:data));
-            case 3:     // yearly
+
+            case YEAR_MODE:     // yearly
                 long years = startDate.until(now, ChronoUnit.YEARS);
                 return count - ((int) years/(data==0?1:data));
-            case 4:     // weekly
+
+            case WEEK_MODE:     // weekly
                 int weeks = (int) (startDate.until(now, ChronoUnit.WEEKS)/((data>>7)==0?1:(data>>7)));
 
                 // calculate the number of days of the week the event repeats on
@@ -660,12 +634,15 @@ public class EventRecurrence
                     cur = cur.plusDays(1);
                 }
                 return rem;
-            case 5:     // mo by day
+
+            case MONTH1_MODE:     // mo by day
                 long months = startDate.until(now, ChronoUnit.MONTHS);
                 return count - ((int) months/((data>>6)==0?1:(data>>5)));
-            case 6:     // mo by date
+
+            case MONTH2_MODE:     // mo by date
                 months = startDate.until(now, ChronoUnit.MONTHS);
                 return count - ((int) months/((data>>5)==0?1:(data>>5)));
+
             default:    // something went wrong!
                 return null;
         }
