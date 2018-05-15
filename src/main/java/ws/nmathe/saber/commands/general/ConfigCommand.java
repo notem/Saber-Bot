@@ -618,7 +618,8 @@ public class ConfigCommand implements Command
                 case "ch":
                 case "chan":
                 case "channel":
-                    String chanIdentifier = args[index].replaceAll("[^\\d]","");
+                    String chanIdentifier = args[index].matches("<#[\\d]+>") ?
+                            args[index].replaceAll("[^\\d]","") : args[index];
                     Main.getScheduleManager().setAnnounceChan(scheduleChan.getId(), chanIdentifier);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.ANN, event.getJDA()), event.getChannel(), null);
                     break;
@@ -646,7 +647,8 @@ public class ConfigCommand implements Command
                             break;
 
                         default:
-                            endChanIdentifier = args[index].replaceAll("[^\\d]","");
+                            endChanIdentifier = args[index].matches("<#[\\d]+>") ?
+                                    args[index].replaceAll("[^\\d]","") : args[index];
                     }
                     Main.getScheduleManager().setEndAnnounceChan(scheduleChan.getId(), endChanIdentifier);
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.ANN, event.getJDA()), event.getChannel(), null);
@@ -819,7 +821,8 @@ public class ConfigCommand implements Command
                             break;
 
                         default:
-                            remindChanIdentifier = args[index].replaceAll("[^\\d]","");
+                            remindChanIdentifier = args[index].matches("<#[\\d]+>") ?
+                                    args[index].replaceAll("[^\\d]","") : args[index];
                             break;
                     }
                     Main.getScheduleManager().setReminderChan(scheduleChan.getId(), remindChanIdentifier);
@@ -1005,7 +1008,8 @@ public class ConfigCommand implements Command
                             break;
 
                         default:
-                            loggingChannel = args[index].replaceAll("[^\\d]","");
+                            loggingChannel = args[index].matches("<#[\\d]+>") ?
+                                    args[index].replaceAll("[^\\d]","") : args[index];
                             break;
                     }
                     Main.getScheduleManager().setRSVPLoggingChannel(cId, loggingChannel);
