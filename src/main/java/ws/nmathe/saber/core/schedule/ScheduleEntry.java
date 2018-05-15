@@ -158,10 +158,6 @@ public class ScheduleEntry
         {   // new recurrence design
             this.recurrence = new EventRecurrence(entryDocument.getInteger("recurrence"), dtStart);
         }
-        else
-        {   // if recurrence is not set, use legacy support
-            this.recurrence = new EventRecurrence(dtStart).fromLegacy(entryDocument.getInteger("repeat"));
-        }
         if (entryDocument.get("expire") != null)
         {   // if event has an expire date
             this.recurrence.setExpire(ZonedDateTime.ofInstant(entryDocument.getDate("expire").toInstant(), zone));

@@ -181,49 +181,6 @@ public class EventRecurrence
         }
     }
 
-    /**
-     * convert an old repeat Integer representation to the new format
-     * @param legacyRepeat old shouldRepeat representation
-     * @return the updated event recurrence object
-     */
-    public EventRecurrence fromLegacy(Integer legacyRepeat)
-    {
-        int mode, data;
-        if (legacyRepeat == 0)
-        {
-            mode = 0;
-            data = 0;
-        }
-        // minute repeat (12th bit)
-        else if ((legacyRepeat & (1<<11)) == 0b100000000000)
-        {
-            int minutes = legacyRepeat & 0b011111111111; // first 11 bits represent minute interval
-            mode = 2;
-            data = minutes;
-        }
-        // yearly repeat (9th bit)
-        else if ((legacyRepeat & (1<<8)) == 0b100000000)
-        {
-            mode = 3;
-            data = 1;                                    // old recurrence format did not support intervals
-        }                                                // other than 1
-        // shouldRepeat on daily interval (8th bit)
-        else if ((legacyRepeat & (1<<7)) == 0b10000000)
-        {
-            mode = 0;
-            data = legacyRepeat & 0b1111111;             //  first 7 bits represent day interval
-        }
-        // day-of-week shouldRepeat
-        else
-        {
-            int weekdays = legacyRepeat & 0b1111111;     // first 7 bits represent days of the week
-            int sunday   = weekdays & 0b1;               // first bit represents Sunday
-            mode = 4;
-            data = (weekdays>>1) | (sunday<<6);          // new recurrence format uses Monday as the start of the week
-        }                                                // so adjustments must be made
-        this.recurrence = mode | (data<<3);
-        return this;
-    }
 
     /**
      * Parses out the intended event shouldRepeat information from user input
@@ -305,7 +262,7 @@ public class EventRecurrence
             // change the mode to by weekday only if at least weekday string was found
             if (data > 0)
             {
-                mode = 4;
+                mode = WEEK_MODE;
             }
         }
         return mode | (data<<3);
