@@ -565,7 +565,7 @@ public class VerifyUtilities
             return "That's not the right number of arguments!\n" +
                     "Use ``" + head + " " + args[0] + " " + args[index-1] + " [color_code]";
         }
-        if (!args[index].matches("0x.+"))
+        if (!args[index].matches("0x.+||off||null||none"))
         {
             return "The color you wish to use should be in a hexadecimal form!\n" +
                     "It should look something like \"0xF4442E\".";
