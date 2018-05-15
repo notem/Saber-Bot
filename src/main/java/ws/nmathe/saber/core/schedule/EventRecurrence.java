@@ -345,7 +345,7 @@ public class EventRecurrence
             int monthInterval = data>>5;
             if (monthInterval>1)
             {
-                return "every" + spellout[monthInterval%10] +
+                return "every " + (monthInterval > spellout.length ? monthInterval : spellout[monthInterval-1]) +
                         " months" + (dayOfMonth>0 ? " on the "+dayOfMonth+prefixes[dayOfMonth%10]:"");
             }
             else
