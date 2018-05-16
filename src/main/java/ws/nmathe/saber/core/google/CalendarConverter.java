@@ -268,7 +268,8 @@ public class CalendarConverter
                     if (event.getDescription() != null)
                     {
                         // process the description line by line
-                        String description = HTMLStripper.cleanDescription(event.getDescription().replace("\n", "<br>"));
+                        String description = HTMLStripper.cleanDescription(
+                                event.getDescription().replace("\n", "<br>"));
                         for (String comment : description.split("\n"))
                         {
                             comment = comment.trim();
@@ -331,7 +332,8 @@ public class CalendarConverter
                             // deadline
                             else if (lowerCase.startsWith("deadline:"))
                             {
-                                String tmp = lowerCase.replace("deadline:","").trim().replaceAll(" ","");
+                                String tmp = lowerCase.replace("deadline:","")
+                                        .trim().replaceAll(" ","");
                                 if(VerifyUtilities.verifyDate(tmp))
                                     rsvpDeadline = ParsingUtilities.parseDate(tmp, zone);
                             }

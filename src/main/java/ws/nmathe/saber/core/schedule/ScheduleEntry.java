@@ -295,11 +295,22 @@ public class ScheduleEntry
         String startMsg = ParsingUtilities.processText(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
 
-        // try to update db
-        int count = 12;
-        while (!Main.getEntryManager().startEvent(this)
-                && (count>0)) { count--; }
-        if (count==0) return;
+        // do database updates before sending announcement
+        if (this.start.isEqual(this.end))
+        {
+            // if the entry's start time is the same as it's end
+            // try to process the event's repeat action before announcement
+            if (!this.repeat()) return;
+        }
+        else // update event to has started
+        {    // try to update db
+            this.hasStarted = true;
+            int count = 12;
+            while (!Main.getEntryManager().startEvent(this)
+                    && (count>0)) { count--; }
+            if (count==0) return;
+            this.reloadDisplay();
+        }
 
         // send start announcement
         if(!this.quietStart)
@@ -320,14 +331,6 @@ public class ScheduleEntry
                 Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
             }
         }
-
-        // if the entry's start time is the same as it's end
-        // skip to end
-        this.hasStarted = true;
-        if(this.start.isEqual(this.end))
-            this.repeat();
-        else
-            this.reloadDisplay();
     }
 
     /**
