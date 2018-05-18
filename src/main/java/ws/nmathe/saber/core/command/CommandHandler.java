@@ -59,6 +59,7 @@ public class CommandHandler
         commands.put((new AnnouncementsCommand()).name(), new AnnouncementsCommand());
         commands.put((new ManageCommand()).name(), new ManageCommand());
         commands.put((new PurgeCommand().name()), new PurgeCommand());
+        commands.put((new DiagnoseCommand()).name(), new DiagnoseCommand());
 
         // add administrator commands with their lookup name
         adminCommands.put((new GlobalMsgCommand()).name(), new GlobalMsgCommand());
@@ -249,7 +250,8 @@ public class CommandHandler
         return commands.getOrDefault(invoke, null);
     }
 
-    public void putSync() {
+    public void putSync()
+    {
         commands.put("sync", new SyncCommand());
     }
 }

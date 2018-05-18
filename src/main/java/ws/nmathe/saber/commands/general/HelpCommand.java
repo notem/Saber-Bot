@@ -39,10 +39,6 @@ public class HelpCommand implements Command
     @Override
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
-        if(args.length>1)
-        {
-            return "That's too many arguments!";
-        }
         return "";
     }
 

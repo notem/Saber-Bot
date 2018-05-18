@@ -54,7 +54,8 @@ public class GuildSettingsManager
         {
             guildId = guildDocument.getString("_id");
             commandPrefix = guildDocument.getString("prefix");
-            commandChannelId = guildDocument.get("command_channel") != null ? guildDocument.getString("command_channel") : null;
+            commandChannelId = guildDocument.get("command_channel") != null ?
+                    guildDocument.getString("command_channel") : null;
             unrestrictedCommands = (ArrayList<String>) guildDocument.get("unrestricted_commands");
         }
 
