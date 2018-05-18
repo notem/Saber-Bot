@@ -69,13 +69,16 @@ public class DiagnoseCommand implements Command
             // attempt to find the control channel using the saved ID
             if (doc != null)
             {
-                String control = doc.getString("control_channel");
-                controlChannel = event.getGuild().getTextChannelById(control);
-                if (controlChannel != null)
+                String controlId = doc.getString("command_channel");
+                if (controlId != null && !controlId.isEmpty())
                 {
-                    builder.append("+ Your guild's control channel is #")
-                            .append(controlChannel.getId())
-                            .append("\n");
+                    controlChannel = event.getGuild().getTextChannelById(controlId);
+                    if (controlChannel != null)
+                    {
+                        builder.append("+ Your guild's control channel is #")
+                                .append(controlChannel.getId())
+                                .append("\n");
+                    }
                 }
             }
             // search for default control channels
@@ -142,53 +145,40 @@ public class DiagnoseCommand implements Command
 
                     // 3) can Saber locate the announcement channels?
                     String start = Main.getScheduleManager().getStartAnnounceChan(channelId);
-                    String end = Main.getScheduleManager().getEndAnnounceChan(channelId);
-                    String reminder = Main.getScheduleManager().getReminderChan(channelId);
                     if (start != null && !start.isEmpty())
                     {
-                        TextChannel startChannel = helper(builder, event, start);
-                        if (startChannel != null)
-                        {
-                            builder.append("+ I will send event start announcements to #")
-                                    .append(startChannel.getName())
-                                    .append(" for this schedule.\n");
+                        helper(builder, event, start, "start announcements", saber);
+                    }
+                    String end = Main.getScheduleManager().getEndAnnounceChan(channelId);
+                    if (end != null)
+                    {
+                        helper(builder, event, end, "end announcements", saber);
+                    }
+                    String reminder = Main.getScheduleManager().getReminderChan(channelId);
+                    if (reminder != null)
+                    {
+                        helper(builder, event, reminder, "reminders", saber);
+                    }
 
-                            // if end-channel is unique, verify it exists
-                            if (end != null && !end.equals(start))
-                            {
-                                TextChannel endChannel = helper(builder, event, end);
-                                if (endChannel != null)
-                                {
-                                    builder.append("+ I will send event end announcements to #")
-                                            .append(endChannel.getName())
-                                            .append(" for this schedule.\n");
-                                }
-                            }
-
-                            // if start-channel is unique, verify it exists
-                            if (reminder != null && !reminder.equals(start))
-                            {
-                                TextChannel remindChannel = helper(builder, event, reminder);
-                                if (remindChannel != null)
-                                {
-                                    builder.append("+ This schedule will send event reminders to #")
-                                            .append(remindChannel.getName())
-                                            .append(" for this schedule.\n");
-                                }
-                            }
-                        }
-                        boolean reaction = saber.hasPermission(channel, Permission.MESSAGE_ADD_REACTION);
-                        if (!reaction)
-                        {
-                            builder.append("- I do not have the permissions to add reactions to messages on #")
-                                    .append(channel.getName())
-                                    .append("!\n");
-                        }
+                    // check for reaction permissions (rsvp)
+                    boolean reaction = saber.hasPermission(channel, Permission.MESSAGE_ADD_REACTION);
+                    if (!reaction)
+                    {
+                        builder.append("- I do not have the permissions to add reactions to messages on #")
+                                .append(channel.getName())
+                                .append("!\n");
                     }
                 }
                 else
                 {
                     builder.append("+ That channel is not a schedule.\n");
+                    boolean read = saber.hasPermission(channel, Permission.MESSAGE_READ);
+                    if (!read)
+                    {
+                        builder.append("- I cannot read messages on #")
+                                .append(channel.getName())
+                                .append("!\n");
+                    }
                 }
 
                 // can Saber write messages with embeds to that channel?
@@ -200,7 +190,7 @@ public class DiagnoseCommand implements Command
                             .append(channel.getName())
                             .append("!\n");
                 }
-                if (!embed)
+                if (write && !embed)
                 {
                     builder.append("- I do not have the permissions to send messages with embeds to #")
                             .append(channel.getName())
@@ -228,18 +218,12 @@ public class DiagnoseCommand implements Command
     /**
      * evaluates if an announcement channel can be accessed
      */
-    private TextChannel helper(StringBuilder builder, MessageReceivedEvent event, String identifier)
+    private TextChannel helper(StringBuilder builder, MessageReceivedEvent event, String identifier, String type, Member saber)
     {
         TextChannel channel = null;
         if (identifier.matches("[\\d]+"))
         {
             channel = event.getGuild().getTextChannelById(identifier);
-            if (channel == null)
-            {
-                builder.append("- An announcement channel configured for this schedule, <#")
-                        .append(identifier)
-                        .append(">, cannot be found!\n");
-            }
         }
         else
         {
@@ -248,12 +232,30 @@ public class DiagnoseCommand implements Command
             {
                 channel = channels.get(0);
             }
+        }
+        if (channel != null)
+        {
+            boolean write = saber.hasPermission(channel, Permission.MESSAGE_WRITE);
+            if (write)
+            {
+                builder.append("+ This schedule will send ")
+                        .append(type)
+                        .append(" to #")
+                        .append(channel.getName())
+                        .append(" for this schedule.\n");
+            }
             else
             {
-                builder.append("- An announcement channel configured for this schedule, #")
-                        .append(identifier)
-                        .append(", cannot be found!\n");
+                builder.append("- I cannot send messages to the channel to which ")
+                        .append(type)
+                        .append(" are configured to be sent!\n");
             }
+        }
+        else
+        {
+            builder.append("- I cannot access the channel to which ")
+                    .append(type)
+                    .append(" are configured to be sent!\n");
         }
         return channel;
     }
