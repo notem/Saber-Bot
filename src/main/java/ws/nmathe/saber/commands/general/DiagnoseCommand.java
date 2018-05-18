@@ -76,7 +76,7 @@ public class DiagnoseCommand implements Command
                     if (controlChannel != null)
                     {
                         builder.append("+ Your guild's control channel is #")
-                                .append(controlChannel.getId())
+                                .append(controlChannel.getName())
                                 .append("\n");
                     }
                 }
@@ -122,9 +122,17 @@ public class DiagnoseCommand implements Command
             // 3) check local channel permissions
             boolean write = saber.hasPermission(event.getTextChannel(), Permission.MESSAGE_WRITE);
             if (!write)
+            {
                 builder.append("- I do not have the permissions to send messages to #")
                         .append(event.getTextChannel().getName())
                         .append("!\n");
+            }
+            else
+            {
+                boolean embed = saber.hasPermission(event.getTextChannel(), Permission.MESSAGE_EMBED_LINKS);
+                if (!embed)
+                    builder.append("- I cannot send messages with embeds to this channel!\n");
+            }
         }
         else
         {   // diagnose a schedule or channel
@@ -145,16 +153,23 @@ public class DiagnoseCommand implements Command
 
                     // 3) can Saber locate the announcement channels?
                     String start = Main.getScheduleManager().getStartAnnounceChan(channelId);
-                    if (start != null && !start.isEmpty())
-                    {
-                        helper(builder, event, start, "start announcements", saber);
-                    }
                     String end = Main.getScheduleManager().getEndAnnounceChan(channelId);
-                    if (end != null)
-                    {
-                        helper(builder, event, end, "end announcements", saber);
-                    }
                     String reminder = Main.getScheduleManager().getReminderChan(channelId);
+                    if (start != null && start.equals(end))
+                    {
+                        helper(builder, event, start, "start and end announcements", saber);
+                    }
+                    else
+                    {
+                        if (start != null && !start.isEmpty())
+                        {
+                            helper(builder, event, start, "start announcements", saber);
+                        }
+                        if (end != null)
+                        {
+                            helper(builder, event, end, "end announcements", saber);
+                        }
+                    }
                     if (reminder != null)
                     {
                         helper(builder, event, reminder, "reminders", saber);
@@ -238,11 +253,11 @@ public class DiagnoseCommand implements Command
             boolean write = saber.hasPermission(channel, Permission.MESSAGE_WRITE);
             if (write)
             {
-                builder.append("+ This schedule will send ")
+                builder.append("+ I will send ")
                         .append(type)
                         .append(" to #")
                         .append(channel.getName())
-                        .append(" for this schedule.\n");
+                        .append(" for events on this schedule.\n");
             }
             else
             {
