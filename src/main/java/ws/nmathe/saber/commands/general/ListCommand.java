@@ -328,26 +328,23 @@ public class ListCommand implements Command
                 return true;
             }
             // check for filtered users
-            if(!userFilters.isEmpty() &&
-                    !userFilters.contains(member.getUser().getId()))
+            if(userFilters.contains(member.getUser().getId()) ||
+                    userFilters.contains(member.getEffectiveName()))
             {
                 return true;
             }
             // check for filtered roles
-            if(!roleFilters.isEmpty())
+            List<String> memberRoleIDs = member.getRoles().stream()
+                    .map(ISnowflake::getId).collect(Collectors.toList());
+            List<String> memberRoleNames = member.getRoles().stream()
+                    .map(Role::getName).collect(Collectors.toList());
+            // include the user if a role filter matches either the
+            // name or ID of a role held by the user
+            for(String role : roleFilters)
             {
-                List<String> memberRoleIDs = member.getRoles().stream()
-                        .map(ISnowflake::getId).collect(Collectors.toList());
-                List<String> memberRoleNames = member.getRoles().stream()
-                        .map(Role::getName).collect(Collectors.toList());
-                // include the user if a role filter matches either the
-                // name or ID of a role held by the user
-                for(String role : roleFilters)
+                if(memberRoleIDs.contains(role) || memberRoleNames.contains(role))
                 {
-                    if(memberRoleIDs.contains(role) || memberRoleNames.contains(role))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
         }
