@@ -5,6 +5,7 @@ import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.ISnowflake;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
@@ -66,12 +67,10 @@ public class ListCommand implements Command
     public String verify(String prefix, String[] args, MessageReceivedEvent event)
     {
         String head = prefix + this.name();
-
         if (args.length==0)
         {
             return "That's not enough arguments! Use ``" + head + " <ID> [filters]``";
         }
-
         int index = 0;
 
         ScheduleEntry entry;
@@ -175,7 +174,6 @@ public class ListCommand implements Command
         boolean filterByType = false;
         Set<String> typeFilters = new HashSet<>();
 
-
         boolean mobileFlag = false;
         boolean IdFlag = false;
         for(; index<args.length; index++)
@@ -197,12 +195,16 @@ public class ListCommand implements Command
             {
                 case "r":
                 case "role":
-                    roleFilters.add(filterValue.replace("<@&","").replace(">",""));
+                    roleFilters.add(filterValue
+                            .replace("<@&","")
+                            .replace(">",""));
                     break;
 
                 case "u":
                 case "user":
-                    userFilters.add(filterValue.replace("<@","").replace(">",""));
+                    userFilters.add(filterValue
+                            .replace("<@","")
+                            .replace(">",""));
                     break;
 
                 case "t":
@@ -226,7 +228,8 @@ public class ListCommand implements Command
                 for(String id : members)
                 {
                     // if the message is nearing maximum length, or if in mobile mode and the max lines have been reached
-                    if(content.length() > lengthCap || (mobileFlag && StringUtils.countMatches(content, "\n") > mobileLineCap))
+                    if(content.length() > lengthCap ||
+                            (mobileFlag && StringUtils.countMatches(content, "\n") > mobileLineCap))
                     {
                         // build and send the embedded message object
                         Message message = (new MessageBuilder()).setEmbed(
@@ -241,8 +244,8 @@ public class ListCommand implements Command
                     if (id.matches("\\d+"))
                     {   // cases in which the id is most likely a valid discord user's ID
                         Member member = event.getGuild().getMemberById(id);
-                        if(member != null) // if the user is still a member of the guild, add to the list
-                        {
+                        if(checkMember(member, userFilters, roleFilters))
+                        {   // if the user is still a member of the guild, add to the list
                             uniqueMembers.add(member.getUser().getId());
                             content += this.getNameDisplay(mobileFlag, IdFlag, member);
                         }
@@ -281,7 +284,8 @@ public class ListCommand implements Command
             }
             else for(String id : noInput)
             {
-                if(content.length() > lengthCap || (mobileFlag && StringUtils.countMatches(content, "\n") > mobileLineCap))
+                if(content.length() > lengthCap ||
+                        (mobileFlag && StringUtils.countMatches(content, "\n") > mobileLineCap))
                 {
                     // build and send the embedded message object
                     Message message = (new MessageBuilder()).setEmbed(
@@ -319,26 +323,30 @@ public class ListCommand implements Command
     {
         if(member!=null)
         {
-            boolean skip = false;
-            if(!userFilters.isEmpty() && !userFilters.contains(member.getUser().getId()))
+            boolean include = false;
+            if(!userFilters.isEmpty() &&    // check for filtered users
+                    !userFilters.contains(member.getUser().getId()))
             {
-                skip = true;
+                include = true;
             }
-            if(!roleFilters.isEmpty())
+            else if(!roleFilters.isEmpty()) // check for filtered roles
             {
-                skip = true;
+                include = true;
                 for(String role : roleFilters)
                 {
-                    List<String> memberRoles = member.getRoles().stream()
+                    List<String> memberRoleIDs = member.getRoles().stream()
                             .map(ISnowflake::getId).collect(Collectors.toList());
-                    if(memberRoles.contains(role))
+                    List<String> memberRoleNames = member.getRoles().stream()
+                            .map(Role::getName).collect(Collectors.toList());
+                    // include the user if a role filter matches either name or ID
+                    if(memberRoleIDs.contains(role) || memberRoleNames.contains(role))
                     {
-                        skip = false;
+                        include = false;
                         break;
                     }
                 }
             }
-            return !skip;
+            return include;
         }
         return false;
     }

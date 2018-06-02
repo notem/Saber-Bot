@@ -2,6 +2,8 @@ package ws.nmathe.saber.core.settings;
 
 import org.bson.Document;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.commands.general.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -25,7 +27,12 @@ public class GuildSettingsManager
         if(guildDoc == null) // create a new guild document and add to db
         {
             // unrestricted commands are commands that may be used outside of the command channel
-            ArrayList<String> unrestrictedCommands = new ArrayList<>(Arrays.asList("list", "help", "schedules", "events", "diagnose")); // defaults
+            ArrayList<String> unrestrictedCommands = new ArrayList<>(Arrays.asList(
+                    new ListCommand().name(),
+                    new HelpCommand().name(),
+                    new SchedulesCommand().name(),
+                    new EventsCommand().name(),
+                    new DiagnoseCommand().name())); // defaults
 
             // initialize with defaults
             guildDoc = new Document()
@@ -87,13 +94,15 @@ public class GuildSettingsManager
 
         public void setPrefix(String prefix)
         {
-            Main.getDBDriver().getGuildCollection().updateOne(eq("_id", guildId), set("prefix", prefix));
+            Main.getDBDriver().getGuildCollection()
+                    .updateOne(eq("_id", guildId), set("prefix", prefix));
             this.commandPrefix = prefix;
         }
 
         public void setCommandChannelId(String channelId)
         {
-            Main.getDBDriver().getGuildCollection().updateOne(eq("_id", guildId), set("command_channel", channelId));
+            Main.getDBDriver().getGuildCollection()
+                    .updateOne(eq("_id", guildId), set("command_channel", channelId));
             this.commandChannelId = channelId;
         }
 
