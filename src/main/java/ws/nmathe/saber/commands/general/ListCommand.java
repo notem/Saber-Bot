@@ -323,31 +323,35 @@ public class ListCommand implements Command
     {
         if(member!=null)
         {
-            boolean include = false;
-            if(!userFilters.isEmpty() &&    // check for filtered users
+            if(userFilters.isEmpty() && roleFilters.isEmpty())
+            {   // filtering is disabled if both lists are empty
+                return true;
+            }
+            // check for filtered users
+            if(!userFilters.isEmpty() &&
                     !userFilters.contains(member.getUser().getId()))
             {
-                include = true;
+                return true;
             }
-            else if(!roleFilters.isEmpty()) // check for filtered roles
+            // check for filtered roles
+            if(!roleFilters.isEmpty())
             {
-                include = true;
+                List<String> memberRoleIDs = member.getRoles().stream()
+                        .map(ISnowflake::getId).collect(Collectors.toList());
+                List<String> memberRoleNames = member.getRoles().stream()
+                        .map(Role::getName).collect(Collectors.toList());
+                // include the user if a role filter matches either the
+                // name or ID of a role held by the user
                 for(String role : roleFilters)
                 {
-                    List<String> memberRoleIDs = member.getRoles().stream()
-                            .map(ISnowflake::getId).collect(Collectors.toList());
-                    List<String> memberRoleNames = member.getRoles().stream()
-                            .map(Role::getName).collect(Collectors.toList());
-                    // include the user if a role filter matches either name or ID
                     if(memberRoleIDs.contains(role) || memberRoleNames.contains(role))
                     {
-                        include = false;
-                        break;
+                        return true;
                     }
                 }
             }
-            return include;
         }
+        // user matched no filters
         return false;
     }
 
