@@ -146,6 +146,7 @@ public class EventsCommand implements Command
                             content.append(":id:``").append(ParsingUtilities.intToEncodedID(top.getId()))
                                     .append("`` ~ **").append(top.getTitle()).append("** ").append(status).append(" in *");
                             ParsingUtilities.addTimeGap(content, timeTil, false, 3);
+                            content.append("*\n");
                             count++;     // iterate event counter
                         }
                         content.append("\n"); // end a schedule list
