@@ -100,7 +100,7 @@ public class CommandHandler
         CommandParser.CommandContainer cc = commandParser.parse(event, prefix);
         if (type == 0)
         {
-            if (rateLimiter.check(event.getAuthor().getId()))
+            if (rateLimiter.check(event.getAuthor().getId() + event.getGuild().getId()))
             {
                 String alert;
                 if (event.getChannelType().equals(ChannelType.PRIVATE))

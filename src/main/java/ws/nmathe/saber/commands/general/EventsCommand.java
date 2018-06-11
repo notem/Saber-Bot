@@ -145,12 +145,7 @@ public class EventsCommand implements Command
                             // add the event as a single line in the content
                             content.append(":id:``").append(ParsingUtilities.intToEncodedID(top.getId()))
                                     .append("`` ~ **").append(top.getTitle()).append("** ").append(status).append(" in *");
-                            if(timeTil < 120)
-                                content.append(timeTil).append(" minutes*\n");
-                            else if(timeTil < 24*60)
-                                content.append(timeTil / 60).append(" hours and ").append(timeTil % 60).append(" minutes*\n");
-                            else
-                                content.append(timeTil / (60 * 24)).append(" days*\n");
+                            ParsingUtilities.addTimeGap(content, timeTil, false, 3);
                             count++;     // iterate event counter
                         }
                         content.append("\n"); // end a schedule list

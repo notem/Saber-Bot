@@ -256,6 +256,8 @@ public class EntryManager
                     .replaceOne(eq("_id", se.getId()), entryDocument);
             if (!res.wasAcknowledged()) return false; // return false, might result in skipped announcement or other issues
 
+            se.reloadDisplay();
+
             // auto-sort
             autoSort(sort, channelId);
             return true;

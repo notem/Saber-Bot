@@ -313,19 +313,6 @@ public class ParsingUtilities
          * parses the format string character by character looking for % characters
          * a token is one % character followed by a key character
          */
-        // function to create string displaying time remaining
-        Function<Long, String> timeTil = (Long minutes) -> {
-            if (minutes>0)
-            {
-                if (minutes > 36*60)
-                    return " in " + (((minutes+1)/60)/24) + " day(s)";
-                else if (minutes > 120)
-                    return " in " + (((minutes + 1) / 60) + " hour(s)");
-                else
-                    return " in " + (minutes + 1) + " minutes";
-            }
-            return "";
-        };
         StringBuilder processed = new StringBuilder();
         for( int i = 0; i < raw.length(); i++ )
         {
@@ -387,12 +374,20 @@ public class ParsingUtilities
                         {
                             processed.append("begins");
                             long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
-                            processed.append(timeTil.apply(minutes));
+                            if (minutes > 0)
+                            {
+                                processed.append(" in ");
+                                addTimeGap(processed, minutes, false, 3);
+                            }
                         } else
                         {
                             processed.append("ends");
                             long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
-                            processed.append(timeTil.apply(minutes));
+                            if (minutes > 0)
+                            {
+                                processed.append(" in ");
+                                addTimeGap(processed, minutes, false, 3);
+                            }
                         }
                         break;
 
@@ -409,12 +404,12 @@ public class ParsingUtilities
                         if(!entry.hasStarted())
                         {
                             long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
-                            processed.append(timeTil.apply(minutes));
+                            addTimeGap(processed, minutes, false, 3);
                         }
                         else
                         {
                             long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
-                            processed.append(timeTil.apply(minutes));
+                            addTimeGap(processed, minutes, false, 3);
                         }
                         break;
 
@@ -768,5 +763,101 @@ public class ParsingUtilities
         if (Character.MAX_RADIX < base) // just in case there are platforms with unusual MAX_RADIX
             base = 16; // revert to hex (0-F)
         return Integer.toString(input, base);
+    }
+
+    /**
+     * Credit goes to @Somename#0436
+     * @param content StringBuilder to which the time text should be appended
+     * @param timeTil the time before an event begins/ends (in minutes)
+     * @param isShort
+     * @param depth 1 (display only minutes), 2 (minutes and hours), or 3 (minutes, hours, and days)
+     */
+    public static void addTimeGap(StringBuilder content, long timeTil, boolean isShort, int depth)
+    {
+        long div, mod, quot;
+        Boolean needSep;
+        String sep;
+
+        if (timeTil <= 0)
+        {
+            content.append(isShort ? "<1m" : "less than 1 minute");
+            return;
+        }
+
+        depth = Math.max(depth, 1);
+        needSep = false;
+        sep = isShort ? " " : " and ";
+
+        // do days
+        quot = (60 * 24);
+        div = timeTil / quot;
+        mod = timeTil % quot;
+        if (div > 0)
+        {
+            if (depth == 1 && mod >= (quot / 2)) div++;
+            addDays(content, div, isShort);
+            needSep = true;
+            depth--;
+        }
+        if (mod <= 0 || depth <= 0) return;
+
+        // do hours
+        quot = 60;
+        div = mod / quot;
+        mod = mod % quot;
+        if (div > 0)
+        {
+            if (depth == 1 && mod >= (quot / 2)) div++;
+            if (needSep) content.append(depth == 1 ? sep : " ");
+            addHours(content, div, isShort);
+            needSep = true;
+            depth--;
+        }
+        if (mod <= 0 || depth <= 0) return;
+
+        // only minutes remaining
+        if (needSep) content.append(sep);
+        addMinutes(content, mod, isShort);
+    }
+
+    /**
+     *
+     */
+    static void addValueCaption(StringBuilder str, long value, String singular, String plural)
+    {
+        str.append(value).append(" ").append(value > 1 ? plural : singular);
+    }
+
+    /**
+     *
+     */
+    static void addValueCaptionType(StringBuilder str, long value, String singularShort, String pluralShort,
+                             String singularLong, String pluralLong, boolean isShort)
+    {
+        addValueCaption(str, value, isShort ? singularShort : singularLong, isShort ? pluralShort : pluralLong);
+    }
+
+    /**
+     *
+     */
+    static void addMinutes(StringBuilder str, long value, boolean isShort)
+    {
+        addValueCaptionType(str, value, "m", "m", "minute", "minutes", isShort);
+    }
+
+    /**
+     *
+     */
+    static void addHours(StringBuilder str, long value, boolean isShort)
+    {
+        addValueCaptionType(str, value, "h", "h", "hour", "hours", isShort);
+    }
+
+    /**
+     *
+     */
+    static void addDays(StringBuilder str, long value, boolean isShort)
+    {
+        addValueCaptionType(str, value, "d", "d", "day", "days", isShort);
     }
 }

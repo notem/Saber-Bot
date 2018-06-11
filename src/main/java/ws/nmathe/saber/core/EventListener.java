@@ -48,7 +48,7 @@ public class EventListener extends ListenerAdapter
         String userId = event.getAuthor().getId();             // the ID of the user
 
         // ignore messages sent by itself
-        if(userId.equals(event.getJDA().getSelfUser().getId())) return;
+        //if(userId.equals(event.getJDA().getSelfUser().getId())) return;
 
         // leave the guild if the message author is blacklisted
         if(Main.getBotSettingsManager().getBlackList().contains(userId))
@@ -68,7 +68,7 @@ public class EventListener extends ListenerAdapter
 
         // process private commands
         String prefix = Main.getBotSettingsManager().getCommandPrefix();
-        if (event.isFromType(ChannelType.PRIVATE))
+        if (event.isFromType(ChannelType.PRIVATE) && !userId.equals(event.getJDA().getSelfUser().getId()))
         {
             String a = "("+prefix+")?help(.+)?$";
             String b = "("+prefix+")?oauth(.+)?$";
