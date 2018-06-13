@@ -320,7 +320,7 @@ public class MessageGenerator
         if (zone != null)
         {
             timeLine.append("<")
-                    .append(zone.getDisplayName(TextStyle.SHORT, Locale.getDefault()))
+                    .append(se.getStart().withZoneSameInstant(zone).format(DateTimeFormatter.ofPattern("z")))
                     .append(">");
         }
         // append newline character & return full string
@@ -337,6 +337,7 @@ public class MessageGenerator
     {
         StringBuilder line = new StringBuilder();
         List<ZoneId> altZones = Main.getScheduleManager().getAltZones(se.getChannelId());
+
         if (altZones.isEmpty())
         {
             line.append("[")
