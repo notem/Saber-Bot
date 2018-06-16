@@ -364,7 +364,7 @@ public class EntryManager
      * @param entryId (Integer) ID of event entry
      * @return true if the remove was acknowledged (safe), otherwise false
      */
-    public boolean removeEntry( Integer entryId )
+    public boolean removeEntry(Integer entryId)
     {
         DeleteResult res = Main.getDBDriver().getEventCollection().deleteOne(eq("_id", entryId));
         return res.wasAcknowledged();
@@ -374,10 +374,10 @@ public class EntryManager
      * regenerates the displayed Message text for a schedule entry
      * @param eId integer Id
      */
-    public void reloadEntry( Integer eId )
+    public void reloadEntry(Integer eId)
     {
-        ScheduleEntry se = getEntry( eId );
-        if( se == null ) return;
+        ScheduleEntry se = getEntry(eId);
+        if(se == null) return;
         se.reloadDisplay();
     }
 
@@ -453,7 +453,6 @@ public class EntryManager
 
         return entries.into(new ArrayList<>());
     }
-
 
     /**
      * Retrieves all entries on a channel

@@ -146,8 +146,17 @@ public class ParsingUtilities
                             .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}.,\\- ]"," ")
                             .replaceAll("\\[.*?]","");
                     String startString = "";
+
+                    ZoneId zone = entry.getStart().getZone();
+                    for (String token : trimmed.replaceAll("now ","").split(" "))
+                    {
+                        if (ZoneId.getAvailableZoneIds().contains(token))
+                            zone = ZoneId.of(token);
+                    }
                     try {
-                        startString = entry.getStart().format(DateTimeFormatter.ofPattern(formatter));
+                        startString = entry.getStart()
+                                .withZoneSameInstant(zone)
+                                .format(DateTimeFormatter.ofPattern(formatter));
                     } catch(Exception ignored) {}
                     sub.append(startString);
                 }
@@ -157,8 +166,17 @@ public class ParsingUtilities
                             .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}.,\\- ]"," ")
                             .replaceAll("\\[.*?]","");
                     String endString = "";
+
+                    ZoneId zone = entry.getEnd().getZone();
+                    for (String token : trimmed.replaceAll("now ","").split(" "))
+                    {
+                        if (ZoneId.getAvailableZoneIds().contains(token))
+                            zone = ZoneId.of(token);
+                    }
                     try {
-                        endString = entry.getEnd().format(DateTimeFormatter.ofPattern(formatter));
+                        endString = entry.getEnd()
+                                .withZoneSameInstant(zone)
+                                .format(DateTimeFormatter.ofPattern(formatter));
                     } catch(Exception ignored) {}
                     sub.append(endString);
                 }
@@ -180,6 +198,26 @@ public class ParsingUtilities
                             sub.append(helper.apply(""+(minutes+1), matcher2));
                         }
                     }
+                }
+                else if(trimmed.matches("(\\[.*?])?now .+(\\[.*?])?")) // advanced remind in minutes
+                {
+                    String formatter = trimmed.replaceAll("now ","")
+                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}.,\\- ]"," ")
+                            .replaceAll("\\[.*?]","");
+                    String nowString = "";
+
+                    ZoneId zone = entry.getStart().getZone();
+                    for (String token : trimmed.replaceAll("now ","").split(" "))
+                    {
+                        if (ZoneId.getAvailableZoneIds().contains(token))
+                            zone = ZoneId.of(token);
+                    }
+                    try {
+                        nowString = ZonedDateTime.now()
+                                .withZoneSameInstant(zone)
+                                .format(DateTimeFormatter.ofPattern(formatter));
+                    } catch(Exception ignored) {}
+                    sub.append(nowString);
                 }
                 else if(trimmed.matches("(\\[.*?])?h(\\[.*?])?")) // advanced remind in hours
                 {

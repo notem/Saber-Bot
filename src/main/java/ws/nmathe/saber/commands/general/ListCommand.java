@@ -251,6 +251,8 @@ public class ListCommand implements Command
                         }
                         else // otherwise, remove the member from the event and update
                         {
+                            List<String> tmp = se.getRsvpMembersOfType(type);
+                            tmp.remove(id);
                             se.getRsvpMembersOfType(type).remove(id);
                             Main.getEntryManager().updateEntry(se, false);
                         }

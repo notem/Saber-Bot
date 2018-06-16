@@ -151,6 +151,30 @@ public class DiagnoseCommand implements Command
                 {
                     builder.append("+ That channel is a schedule.\n");
 
+                    boolean read = saber.hasPermission(channel, Permission.MESSAGE_READ);
+                    boolean history = saber.hasPermission(channel, Permission.MESSAGE_HISTORY);
+                    if (!read || !history)
+                    {
+                        if (read)
+                        {
+                            builder.append("- I cannot read message history on #")
+                                    .append(channel.getName())
+                                    .append("!\n");
+                        }
+                        else if (!history)
+                        {
+                            builder.append("- I cannot read messages or the message history on #")
+                                    .append(channel.getName())
+                                    .append("!\n");
+                        }
+                        else
+                        {
+                            builder.append("- I cannot read messages on #")
+                                    .append(channel.getName())
+                                    .append("!\n");
+                        }
+                    }
+
                     // 3) can Saber locate the announcement channels?
                     String start = Main.getScheduleManager().getStartAnnounceChan(channelId);
                     String end = Main.getScheduleManager().getEndAnnounceChan(channelId);
@@ -180,6 +204,22 @@ public class DiagnoseCommand implements Command
                     if (!reaction)
                     {
                         builder.append("- I do not have the permissions to add reactions to messages on #")
+                                .append(channel.getName())
+                                .append("!\n");
+                    }
+
+                    // mention @everyone
+                    boolean mention = saber.hasPermission(channel, Permission.MESSAGE_MENTION_EVERYONE);
+                    if (!mention)
+                    {
+                        builder.append("- I do not have the permission to mention everyone.");
+                    }
+
+                    // manage messages
+                    boolean manage = saber.hasPermission(channel, Permission.MESSAGE_MANAGE);
+                    if (!manage)
+                    {
+                        builder.append("- I do not have the permission to delete user messages on ")
                                 .append(channel.getName())
                                 .append("!\n");
                     }

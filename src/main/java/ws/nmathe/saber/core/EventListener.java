@@ -20,6 +20,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -247,7 +248,7 @@ public class EventListener extends ListenerAdapter
     @SuppressWarnings("unchecked")
     public void onGuildMemberLeave(GuildMemberLeaveEvent event)
     {
-        String memberId = event.getMember().getUser().getId();
+        String memberId = event.getUser().getId();
 
         // remove user from any events they have rsvp'ed to
         Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromGuild(event.getGuild().getId());
@@ -257,10 +258,11 @@ public class EventListener extends ListenerAdapter
             // check each rsvp group on the entry
             for(String key : se.getRsvpMembers().keySet())
             {
-                if(se.getRsvpMembersOfType(key).contains(memberId))
+                List<String> members = se.getRsvpMembersOfType(key);
+                if (members.contains(event.getUser().getId()))
                 {
-                    // remove the user and flag the entry for updating
-                    se.getRsvpMembersOfType(key).remove(memberId);
+                    members.remove(event.getUser().getId());
+                    se.setRsvpMembers(key, members);
                     updateFlag = true;
                 }
             }

@@ -1,6 +1,8 @@
 package ws.nmathe.saber.commands.general;
 
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.TextChannel;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
@@ -118,6 +120,12 @@ public class EditCommand implements Command
         if(Main.getScheduleManager().isLocked(entry.getChannelId()))
         {
             return "Schedule is locked for sorting/syncing. Please try again after sort/sync finishes.";
+        }
+
+        TextChannel channel = event.getGuild().getTextChannelById(entry.getChannelId());
+        if (!event.getGuild().getMember(event.getJDA().getSelfUser()).hasPermission(channel, Permission.MESSAGE_HISTORY))
+        {
+            return "The bot must have the \"Read Message History\" permission on channel for which that event exists!";
         }
 
         // if only one argument, command is valid
