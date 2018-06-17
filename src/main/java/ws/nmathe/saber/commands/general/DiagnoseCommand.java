@@ -208,13 +208,6 @@ public class DiagnoseCommand implements Command
                                 .append("!\n");
                     }
 
-                    // mention @everyone
-                    boolean mention = saber.hasPermission(channel, Permission.MESSAGE_MENTION_EVERYONE);
-                    if (!mention)
-                    {
-                        builder.append("- I do not have the permission to mention everyone.");
-                    }
-
                     // manage messages
                     boolean manage = saber.hasPermission(channel, Permission.MESSAGE_MANAGE);
                     if (!manage)
@@ -250,6 +243,15 @@ public class DiagnoseCommand implements Command
                     builder.append("- I do not have the permissions to send messages with embeds to #")
                             .append(channel.getName())
                             .append("!\n");
+                }
+
+                // mention @everyone
+                boolean mention = saber.hasPermission(channel, Permission.MESSAGE_MENTION_EVERYONE);
+                if (!mention)
+                {
+                    builder.append("- I do not have the permission to mention everyone on #")
+                            .append(channel.getName())
+                            .append(".\n");
                 }
             }
             else
