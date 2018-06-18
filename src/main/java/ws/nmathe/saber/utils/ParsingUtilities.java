@@ -112,34 +112,20 @@ public class ParsingUtilities
             Matcher matcher2 = Pattern.compile("\\[.*?]").matcher(trimmed);
             if(!trimmed.isEmpty())
             {
+                // the nth comment
+                // unlike the legacy insertion tokens, comment numbers greater than 9 are supported
                 if(trimmed.matches("(\\[.*?])?comment \\d+(\\[.*?])?") && firstPass)
                 {
                     int i = Integer.parseInt(trimmed.replaceAll("(\\[.*?])?comment |\\[.*?]", ""));
                     if(entry.getComments().size() >= i && i > 0)
                     {
-                        sub.append(processText(helper.apply(entry.getComments().get(i - 1), matcher2), entry, false));
+                        String preprocessed = helper.apply(entry.getComments().get(i - 1), matcher2);
+                        sub.append(processText(preprocessed, entry, false));
                     }
                 }
-                else if(trimmed.matches("(\\[.*?])?s(\\[.*?])?")) // advanced start
-                {
-                    if(!entry.hasStarted())
-                    {
-                        while(matcher2.find())
-                        {
-                            sub.append(matcher2.group().replaceAll("[\\[\\]]", ""));
-                        }
-                    }
-                }
-                else if(trimmed.matches("(\\[.*?])?e(\\[.*?])?")) // advanced end
-                {
-                    if(entry.hasStarted())
-                    {
-                        while(matcher2.find())
-                        {
-                            sub.append(matcher2.group().replaceAll("[\\[\\]]", ""));
-                        }
-                    }
-                }
+
+                // inserts the (date)time for the end of the event
+                // using the provided datetime formatter string
                 else if(trimmed.matches("(\\[.*?])?start .+(\\[.*?])?")) // advanced end
                 {
                     String formatter = trimmed.replaceAll("start ","")
@@ -148,7 +134,7 @@ public class ParsingUtilities
                     String startString = "";
 
                     ZoneId zone = entry.getStart().getZone();
-                    for (String token : trimmed.replaceAll("now ","").split(" "))
+                    for (String token : trimmed.replaceAll("start ","").split(" "))
                     {
                         if (ZoneId.getAvailableZoneIds().contains(token))
                             zone = ZoneId.of(token);
@@ -158,8 +144,11 @@ public class ParsingUtilities
                                 .withZoneSameInstant(zone)
                                 .format(DateTimeFormatter.ofPattern(formatter));
                     } catch(Exception ignored) {}
-                    sub.append(startString);
+                    sub.append(helper.apply(startString, matcher2));
                 }
+
+                // inserts the (date)time for the end of the event
+                // using the provided datetime formatter string
                 else if(trimmed.matches("(\\[.*?])?end .+(\\[.*?])?")) // advanced end
                 {
                     String formatter = trimmed.replaceAll("end ","")
@@ -168,7 +157,7 @@ public class ParsingUtilities
                     String endString = "";
 
                     ZoneId zone = entry.getEnd().getZone();
-                    for (String token : trimmed.replaceAll("now ","").split(" "))
+                    for (String token : trimmed.replaceAll("end ","").split(" "))
                     {
                         if (ZoneId.getAvailableZoneIds().contains(token))
                             zone = ZoneId.of(token);
@@ -178,28 +167,11 @@ public class ParsingUtilities
                                 .withZoneSameInstant(zone)
                                 .format(DateTimeFormatter.ofPattern(formatter));
                     } catch(Exception ignored) {}
-                    sub.append(endString);
+                    sub.append(helper.apply(endString, matcher2));
                 }
-                else if(trimmed.matches("(\\[.*?])?m(\\[.*?])?")) // advanced remind in minutes
-                {
-                    if(!entry.hasStarted())
-                    {
-                        long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
-                        if(minutes>0)
-                        {
-                            sub.append(helper.apply("" + (minutes + 1), matcher2));
-                        }
-                    }
-                    else
-                    {
-                        long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
-                        if(minutes>0)
-                        {
-                            sub.append(helper.apply(""+(minutes+1), matcher2));
-                        }
-                    }
-                }
-                else if(trimmed.matches("(\\[.*?])?now .+(\\[.*?])?")) // advanced remind in minutes
+
+                // inserts the current (date)time using the provided datetime formatter string
+                else if(trimmed.matches("(\\[.*?])?now .+(\\[.*?])?"))
                 {
                     String formatter = trimmed.replaceAll("now ","")
                             .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}.,\\- ]"," ")
@@ -217,27 +189,33 @@ public class ParsingUtilities
                                 .withZoneSameInstant(zone)
                                 .format(DateTimeFormatter.ofPattern(formatter));
                     } catch(Exception ignored) {}
-                    sub.append(nowString);
+                    sub.append(helper.apply(nowString, matcher2));
                 }
-                else if(trimmed.matches("(\\[.*?])?h(\\[.*?])?")) // advanced remind in hours
+
+                // time until the event's start or end
+                // users cannot control from which time the until text is calculated from
+                else if(trimmed.matches("(\\[.*?])?until( .+)?(\\[.*?])?"))
                 {
-                    if(!entry.hasStarted())
+                    String args = trimmed.replaceAll("until( )?","").replaceAll("\\[.*?]","");
+                    int depth = 3;
+                    boolean isShort = false;
+                    for (String token : args.split(" "))
                     {
-                        long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
-                        if(minutes>0)
-                        {
-                            sub.append(helper.apply(""+(minutes+1)/60, matcher2));
-                        }
+                        if (token.matches("[123]"))
+                            depth = Integer.parseInt(token);
+                        else if (token.toLowerCase().matches("s(hort)?"))
+                            isShort = true;
                     }
-                    else
-                    {
-                        long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
-                        if(minutes>0)
-                        {
-                            sub.append(helper.apply(""+(minutes+1)/60, matcher2));
-                        }
-                    }
+
+                    long minutes = ZonedDateTime.now()
+                            .until(entry.hasStarted() ? entry.getEnd() : entry.getStart(), ChronoUnit.MINUTES);
+
+                    StringBuilder builder = new StringBuilder();
+                    addTimeGap(builder, minutes, isShort, depth);
+                    sub.append(helper.apply(builder.toString(), matcher2));
                 }
+
+                // inserts the number of users who have rsvp'ed for a particular rsvp category
                 else if(trimmed.matches("(\\[.*?])?rsvp .+(\\[.*?])?")) // rsvp count
                 {
                     String name = trimmed.replaceAll("rsvp ","").replaceAll("\\[.*?]","");
@@ -247,6 +225,8 @@ public class ParsingUtilities
                         sub.append(helper.apply(""+members.size(), matcher2));
                     }
                 }
+
+                // inserts @mentions for all users who have rsvped to a particular rsvp category
                 else if(trimmed.matches("(\\[.*?])?mention .+(\\[.*?])?")) // rsvp mentions
                 {
                     String name = trimmed.replaceAll("mention ","").replaceAll("\\[.*?]","");
@@ -280,6 +260,8 @@ public class ParsingUtilities
                         sub.append(helper.apply(userMentions.toString(), matcher2));
                     }
                 }
+
+                // the raw names of users from a particular rsvp category
                 else if(trimmed.matches("(\\[.*?])?mentionm .+(\\[.*?])?")
                         || trimmed.matches("(\\[.*?])?list .+(\\[.*?])?")) // rsvp mentions
                 {
@@ -321,25 +303,40 @@ public class ParsingUtilities
                         sub.append(helper.apply(userMentions.toString(), matcher2));
                     }
                 }
-                else if(trimmed.matches("(\\[.*?])?u(\\[.*?])?")) // advanced title url
+
+                // inserts the custom title url used by the event (if used)
+                else if(trimmed.matches("(\\[.*?])?url(\\[.*?])?")) // advanced title url
                 {
                     if(entry.getTitleUrl() != null)
                     {
                         sub.append(helper.apply(entry.getTitleUrl(), matcher2));
                     }
                 }
-                else if(trimmed.matches("(\\[.*?])?v(\\[.*?])?")) // advanced image url
+
+                // inserts the custom image url used by the event (if used)
+                else if(trimmed.matches("(\\[.*?])?image(\\[.*?])?")) // advanced image url
                 {
                     if(entry.getImageUrl() != null)
                     {
                         sub.append(helper.apply(entry.getImageUrl(), matcher2));
                     }
                 }
-                else if(trimmed.matches("(\\[.*?])?w(\\[.*?])?")) // advanced thumbnail url
+
+                // inserts the custom thumbnail url used by the event (if used)
+                else if(trimmed.matches("(\\[.*?])?thumbnail(\\[.*?])?")) // advanced thumbnail url
                 {
                     if(entry.getThumbnailUrl() != null)
                     {
                         sub.append(helper.apply(entry.getThumbnailUrl(), matcher2));
+                    }
+                }
+
+                // inserts the custom location string (if used)
+                else if(trimmed.matches("(\\[.*?])?location(\\[.*?])?")) // advanced thumbnail url
+                {
+                    if(entry.getThumbnailUrl() != null)
+                    {
+                        sub.append(helper.apply(entry.getLocation(), matcher2));
                     }
                 }
             }
@@ -415,7 +412,7 @@ public class ParsingUtilities
                             if (minutes > 0)
                             {
                                 processed.append(" in ");
-                                addTimeGap(processed, minutes, false, 3);
+                                addTimeGap(processed, minutes+1, false, 1);
                             }
                         } else
                         {
@@ -424,7 +421,7 @@ public class ParsingUtilities
                             if (minutes > 0)
                             {
                                 processed.append(" in ");
-                                addTimeGap(processed, minutes, false, 3);
+                                addTimeGap(processed, minutes+1, false, 1);
                             }
                         }
                         break;
@@ -442,12 +439,14 @@ public class ParsingUtilities
                         if(!entry.hasStarted())
                         {
                             long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
-                            addTimeGap(processed, minutes, false, 3);
+                            processed.append(" in ");
+                            addTimeGap(processed, minutes+1, false, 1);
                         }
                         else
                         {
                             long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
-                            addTimeGap(processed, minutes, false, 3);
+                            processed.append(" in ");
+                            addTimeGap(processed, minutes+1, false, 1);
                         }
                         break;
 
@@ -586,7 +585,7 @@ public class ParsingUtilities
      * Parses user supplied input for information indicating the reminder intervals to use for a schedule's
      * reminder settings
      * @param arg (String) user input
-     * @return (Set<Integer>) a linked set of integers representing the time (in minutes) before an event starts
+     * @return (Set) a linked set of integers representing the time (in minutes) before an event starts
      */
     public static Set<Integer> parseReminder(String arg)
     {
