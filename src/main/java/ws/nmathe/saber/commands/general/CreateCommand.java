@@ -274,8 +274,10 @@ public class CreateCommand implements Command
 
         // process start
         startTime = ParsingUtilities.parseTime(args[index].trim().toUpperCase());
-        if (LocalTime.now().isAfter(startTime))  // fix date if necessary
+        if (ZonedDateTime.now().isAfter(ZonedDateTime.of(LocalDate.now(), startTime, zone)))
+        {   // fix date if necessary
             startDate = startDate.plusDays(1);
+        }
         index++;
 
         // if minimum args, then ok
