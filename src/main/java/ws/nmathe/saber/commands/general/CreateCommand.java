@@ -103,12 +103,12 @@ public class CreateCommand implements Command
 
         // schedule check
         String cId = args[index].replaceAll("[^\\d]","");
-        if( !Main.getScheduleManager().isASchedule(cId) )
+        if (!Main.getScheduleManager().isASchedule(cId))
         {
             return "Channel " + args[index] + " is not a schedule for your guild. " +
                     "Use the ``" + prefix + "init`` command to create a new schedule!";
         }
-        if( Main.getScheduleManager().isLocked(cId) )
+        if (Main.getScheduleManager().isLocked(cId))
         {
             return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
         }
@@ -128,7 +128,9 @@ public class CreateCommand implements Command
                     "Please use the format hh:mm[am|pm].";
         }
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
-        ZonedDateTime startTime = ZonedDateTime.of(LocalDate.now().plusDays(1), ParsingUtilities.parseTime(args[index]), zone);
+        ZonedDateTime startDateTime = ZonedDateTime.of(LocalDate.now(), ParsingUtilities.parseTime(args[index]), zone);
+        if (ZonedDateTime.now().isAfter(startDateTime))
+            startDateTime = startDateTime.plusDays(1);
 
         // if minimum args, then ok
         if (args.length == 3) return "";
@@ -209,9 +211,9 @@ public class CreateCommand implements Command
                         break;
 
                     case "today":
-                        if(startTime.isBefore(ZonedDateTime.now()))
+                        if(startDateTime.isBefore(ZonedDateTime.now()))
                         {
-                            return "I cannot be schedule the event for today as the start time is in the past!";
+                            return "I cannot schedule the event for today as the start time is in the past!";
                         }
                         break;
 
@@ -254,7 +256,7 @@ public class CreateCommand implements Command
         // init optional variables with values;
         LocalTime endTime       = null;
         int repeat              = 0;
-        ZonedDateTime startDate = ZonedDateTime.now(zone).plusDays(1);
+        ZonedDateTime startDate = ZonedDateTime.now(zone);
         ZonedDateTime endDate   = null;
         String url              = null;
         String image            = null;
@@ -272,6 +274,8 @@ public class CreateCommand implements Command
 
         // process start
         startTime = ParsingUtilities.parseTime(args[index].trim().toUpperCase());
+        if (LocalTime.now().isAfter(startTime))  // fix date if necessary
+            startDate = startDate.plusDays(1);
         index++;
 
         // if minimum args, then ok
@@ -402,17 +406,17 @@ public class CreateCommand implements Command
         // handle all day events
         boolean a = startTime.equals(endTime) && startTime.equals(LocalTime.MIN); // is all day event
         boolean b = startTime.equals(LocalTime.MAX) && endDate == null;           // another way to define all-day events?
-        if(a || b)
+        if (a || b)
         {
             endDate = ZonedDateTime.from(startDate).plusDays(1);
         }
         // if the end time has not been filled, copy start time
-        if(endTime == null)
+        if (endTime == null)
         {
             endTime = LocalTime.from(startTime);
         }
         // if the end date has not been filled, copy start date
-        if(endDate == null)
+        if (endDate == null)
         {
             endDate = ZonedDateTime.from(startDate);
         }
@@ -423,17 +427,17 @@ public class CreateCommand implements Command
 
         // add a year to the date if the provided date is past current time
         Instant now = Instant.now();
-        if(now.isAfter(start.toInstant()))
+        if (now.isAfter(start.toInstant()))
         {
             start = start.plusYears(1);
         }
-        if(now.isAfter(end.toInstant()))
+        if (now.isAfter(end.toInstant()))
         {
             end = end.plusYears(1);
         }
 
         // never allow the end to be before the start
-        if(start.isAfter(end)) end = start;
+        if (start.isAfter(end)) end = start;
 
         /*
          * Create a dummy schedule entry with all processed variables

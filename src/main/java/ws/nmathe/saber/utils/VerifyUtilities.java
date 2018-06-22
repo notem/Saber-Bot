@@ -315,7 +315,7 @@ public class VerifyUtilities
         }
         if(!VerifyUtilities.verifyDate(args[index]))
         {
-            return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
+            return "I could not understand **" + args[index] + "** as a date! Please use the format 'M/d'.";
         }
         ZonedDateTime time = ParsingUtilities.parseDate(args[index], zone);
         if(time.isBefore(ZonedDateTime.now()))
