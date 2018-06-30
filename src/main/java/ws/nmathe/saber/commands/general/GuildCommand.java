@@ -7,8 +7,9 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.settings.GuildSettingsManager.GuildSettings;
-import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
+import ws.nmathe.saber.utils.VerifyUtilities;
+
 import java.util.ArrayList;
 
 /**
@@ -132,9 +133,31 @@ public class GuildCommand implements Command
                             return "I could not find the channel **" + args[1] + "** on your guild server!";
                         }
                     }
-                    catch(NumberFormatException e)
+                    catch (NumberFormatException e)
                     {
                         return "I could not find the channel **" + args[1] + "** on your guild server!";
+                    }
+                    break;
+
+                case "l":
+                case "late":
+                    if (args.length < 2)
+                    {
+                        return "That's not enough arguments!\n" +
+                                "The correct usage is ``" + head + " late [minutes]`` where ``[minutes]`` " +
+                                "is the number of minutes late an announcement is allowed to be before it is discarded.";
+                    }
+                    if(!VerifyUtilities.verifyInteger(args[1]))
+                    {
+                        return "**"+args[1]+"** should be a number!";
+                    }
+                    if(Integer.parseInt(args[1]) <= 0)
+                    {
+                        return "The late threshold must be a positive number!";
+                    }
+                    if(Integer.parseInt(args[1]) > 24*60)
+                    {
+                        return "The late threshold cannot be greater than 24 hours!";
                     }
                     break;
 
@@ -182,6 +205,12 @@ public class GuildCommand implements Command
                     String trimmed = args[1].replaceAll("[^\\d]", "");
                     guildSettings.setCommandChannelId(trimmed);
                     break;
+
+                case "l":
+                case "late":
+                    Integer va = Integer.parseInt(args[1].replaceAll("[^\\d]", ""));
+                    guildSettings.setLateThreshold(va);
+                    break;
             }
         }
 
@@ -190,7 +219,8 @@ public class GuildCommand implements Command
         String body = "```js\n" +
                 (shardInfo!=null?("// Shard-" + shardInfo.getShardId() + " of " + shardInfo.getShardTotal() + "\n"):"") +
                 "// Guild Settings\n" +
-                "[prefix]  \"" + guildSettings.getPrefix() + "\"\n";
+                "[prefix]  \"" + guildSettings.getPrefix() + "\"\n" +
+                "[late]    \"" + guildSettings.getLateThreshold() + "\"\n";
 
         if(guildSettings.getCommandChannelId() != null)
         {

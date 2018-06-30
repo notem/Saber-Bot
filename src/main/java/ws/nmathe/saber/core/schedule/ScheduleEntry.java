@@ -295,6 +295,10 @@ public class ScheduleEntry
         String startMsg = ParsingUtilities.processText(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
 
+        // is the announcement late?
+        Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
+        boolean late = this.start.isAfter(ZonedDateTime.now().minusMinutes(threshold));
+
         // do database updates before sending announcement
         if (this.start.isEqual(this.end))
         {
@@ -316,7 +320,7 @@ public class ScheduleEntry
         if(!this.quietStart)
         {
             // dont send start announcements if 15 minutes late
-            if(this.start.isAfter(ZonedDateTime.now().minusMinutes(15)))
+            if(late)
             {
                 if(identifier != null)
                 {
@@ -346,14 +350,18 @@ public class ScheduleEntry
                 .getEndAnnounceFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
 
+        // check if the event is late
+        Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
+        Boolean late = this.end.isAfter(ZonedDateTime.now().minusMinutes(threshold));
+
         // attempt to adjust the database entry per repeat settings
         if (!this.repeat()) return; // don't send announcement if failure
 
         // send announcement
         if(!this.quietEnd)
         {
-            // dont send end announcement if 15 minutes late
-            if(this.end.isAfter(ZonedDateTime.now().minusMinutes(15)))
+            // dont send end announcement if late
+            if(late)
             {
                 // send the end announcement
                 if(identifier != null)

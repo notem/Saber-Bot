@@ -38,7 +38,8 @@ public class GuildSettingsManager
             guildDoc = new Document()
                     .append("_id", guildId)
                     .append("prefix", Main.getBotSettingsManager().getCommandPrefix())
-                    .append("unrestricted_commands", unrestrictedCommands);
+                    .append("unrestricted_commands", unrestrictedCommands)
+                    .append("late_threshold", 15);
 
             Main.getDBDriver().getGuildCollection().insertOne(guildDoc);
         }
@@ -56,6 +57,7 @@ public class GuildSettingsManager
         String commandPrefix;
         ArrayList<String> unrestrictedCommands;
         String commandChannelId;
+        Integer lateThreshold;
 
         GuildSettings(Document guildDocument)
         {
@@ -64,6 +66,8 @@ public class GuildSettingsManager
             commandChannelId = guildDocument.get("command_channel") != null ?
                     guildDocument.getString("command_channel") : null;
             unrestrictedCommands = (ArrayList<String>) guildDocument.get("unrestricted_commands");
+            lateThreshold = guildDocument.get("late_threshold") != null ?
+                    guildDocument.getInteger("late_threshold") : 15;
         }
 
         // **** getters ****
@@ -90,6 +94,11 @@ public class GuildSettingsManager
             return commands;
         }
 
+        public Integer getLateThreshold()
+        {
+            return this.lateThreshold;
+        }
+
         // **** setters ****
 
         public void setPrefix(String prefix)
@@ -111,6 +120,13 @@ public class GuildSettingsManager
             Main.getDBDriver().getGuildCollection().updateOne(eq("_id", guildId),
                     set("unrestricted_commands", unrestrictedCommands));
             this.unrestrictedCommands = unrestrictedCommands;
+        }
+
+        public void setLateThreshold(Integer minutes)
+        {
+            Main.getDBDriver().getGuildCollection()
+                    .updateOne(eq("_id", guildId), set("late_threshold", minutes));
+            this.lateThreshold = minutes;
         }
 
     }

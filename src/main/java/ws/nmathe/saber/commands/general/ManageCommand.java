@@ -9,9 +9,10 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * used for generating the list of valid timezone strings
@@ -42,6 +43,7 @@ public class ManageCommand implements Command
 
         info.addUsageExample(head+" 10agj2 add Yes @Saber#9015");
         info.addUsageExample(head+" 10agj2 kick Yes @notem#1654");
+        info.addUsageExample(head+" 10agj2 clear all");
 
         return info;
     }
@@ -51,10 +53,10 @@ public class ManageCommand implements Command
     {
         String head = prefix + this.name();
         int index = 0;
-        if (args.length < 3)
+        if (args.length < 2)
         {
             return "Incorrect amount of arguments!" +
-                    "\nUse ``" + head + " <id> <add|kick> <group> <@user>``";
+                    "\nUse ``" + head + " <id> <add|kick|clear> <args>``";
         }
 
         // verify valid entry ID
@@ -87,7 +89,21 @@ public class ManageCommand implements Command
             case "add":
             case "k":
             case "kick":
+                if (args.length < 4)
+                {
+                    return "Incorrect number of arguments!\n" +
+                            "Use ``"+head+" <id> "+args[index]+" <group> <user>";
+                }
                 break;
+
+            case "c":
+            case "clear":
+                if (args.length < 3)
+                {
+                    return "Incorrect number of arguments!\n" +
+                            "Use ``"+head+" <id> "+args[index]+" <'group'|all>``";
+                }
+                return "";
 
             default:
                 return "*" + args[index] + "* is not a valid action argument!\n" +
@@ -156,6 +172,22 @@ public class ManageCommand implements Command
                     msg += " has been kicked from the RSVP group *"+group+"* for **" +
                             se.getTitle() + "** - :id: **" + ParsingUtilities.intToEncodedID(se.getId()) + "**";
                     MessageUtilities.sendMsg(msg, event.getJDA().getTextChannelById(logging), null);
+                }
+                break;
+
+            case "c":
+            case "clear":
+                Set<String> categories = se.getRsvpMembers().keySet();
+                if (categories.contains(args[index]))
+                {   // clear the rsvp category's list
+                    se.setRsvpMembers(args[index], new ArrayList<>());
+                }
+                else if (args[index].equalsIgnoreCase("all"))
+                {   // clear all rsvp category lists
+                    for (String type : categories)
+                    {
+                        se.setRsvpMembers(type, new ArrayList<>());
+                    }
                 }
                 break;
         }
