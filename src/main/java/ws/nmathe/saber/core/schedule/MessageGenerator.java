@@ -33,6 +33,8 @@ public class MessageGenerator
      */
     public static Message generate(ScheduleEntry se)
     {
+        if (se == null) return new MessageBuilder().build();
+
         // prepare title
         String titleUrl = (se.getTitleUrl() != null && VerifyUtilities.verifyUrl(se.getTitleUrl())) ?
                 se.getTitleUrl() : DEFAULT_URL;

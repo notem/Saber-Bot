@@ -1009,7 +1009,7 @@ public class ConfigCommand implements Command
 
                         default:
                             loggingChannel = args[index].matches("<#[\\d]+>") ?
-                                    args[index].replaceAll("[^\\d]","") : args[index];
+                                    args[index].replaceAll("[^\\d]","") : null;
                             break;
                     }
                     Main.getScheduleManager().setRSVPLoggingChannel(cId, loggingChannel);

@@ -570,11 +570,13 @@ public class ScheduleEntry
                     }
 
                     // log the rsvp action
-                    if (!logging.isEmpty())
+                    if (!logging.isEmpty() && logging.matches("\\d+"))
                     {
                         String content = "<@" + event.getUser().getId() + "> has rescinded their RSVP(s) for **" +
                                 this.getTitle() + "** - :id: **" + ParsingUtilities.intToEncodedID(this.getId()) + "**";
-                        MessageUtilities.sendMsg(content, event.getJDA().getTextChannelById(logging), null);
+                        TextChannel loggingChannel = event.getJDA().getTextChannelById(logging);
+                        if (loggingChannel != null)
+                            MessageUtilities.sendMsg(content, loggingChannel, null);
                     }
 
                     Main.getEntryManager().updateEntry(this, false);
@@ -623,12 +625,14 @@ public class ScheduleEntry
                         }
 
                         // log the rsvp action
-                        if (!logging.isEmpty())
+                        if (!logging.isEmpty() && logging.matches("\\d+"))
                         {
                             String content = "<@" + event.getUser().getId() + "> " +
                                     (hasChangedRSVP ? "has changed their RSVP to":"has RSVPed") +" ``" + name + "`` for **" +
                                     this.getTitle() + "** - :id: **" + ParsingUtilities.intToEncodedID(this.getId()) + "**";
-                            MessageUtilities.sendMsg(content, event.getJDA().getTextChannelById(logging), null);
+                            TextChannel loggingChannel = event.getJDA().getTextChannelById(logging);
+                            if (loggingChannel != null)
+                                MessageUtilities.sendMsg(content, loggingChannel, null);
                         }
 
                         Main.getEntryManager().updateEntry(this, false);

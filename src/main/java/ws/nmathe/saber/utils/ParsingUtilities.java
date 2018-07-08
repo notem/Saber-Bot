@@ -209,10 +209,12 @@ public class ParsingUtilities
 
                     long minutes = ZonedDateTime.now()
                             .until(entry.hasStarted() ? entry.getEnd() : entry.getStart(), ChronoUnit.MINUTES);
-
-                    StringBuilder builder = new StringBuilder();
-                    addTimeGap(builder, minutes, isShort, depth);
-                    sub.append(helper.apply(builder.toString(), matcher2));
+                    if (minutes > 1)
+                    {
+                        StringBuilder builder = new StringBuilder();
+                        addTimeGap(builder, minutes, isShort, depth);
+                        sub.append(helper.apply(builder.toString(), matcher2));
+                    }
                 }
 
                 // inserts the number of users who have rsvp'ed for a particular rsvp category
@@ -337,6 +339,32 @@ public class ParsingUtilities
                     if(entry.getThumbnailUrl() != null)
                     {
                         sub.append(helper.apply(entry.getLocation(), matcher2));
+                    }
+                }
+
+                // substitution for event start text (to be used for localization)
+                // TODO remove when full localization features are finished
+                else if(trimmed.matches("(\\[.*?])?s(\\[.*?])?"))
+                {
+                    if(!entry.hasStarted())
+                    {
+                        while(matcher2.find())
+                        {
+                            sub.append(matcher2.group().replaceAll("[\\[\\]]", ""));
+                        }
+                    }
+                }
+
+                // substitution for event end text (to be used for localization)
+                // TODO remove when full localization features are finished
+                else if(trimmed.matches("(\\[.*?])?e(\\[.*?])?"))
+                {
+                    if(entry.hasStarted())
+                    {
+                        while(matcher2.find())
+                        {
+                            sub.append(matcher2.group().replaceAll("[\\[\\]]", ""));
+                        }
                     }
                 }
             }

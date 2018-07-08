@@ -9,7 +9,6 @@ import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
-import net.dv8tion.jda.core.requests.SessionReconnectQueue;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
@@ -82,7 +81,7 @@ public class ShardManager
                 Logging.info(this.getClass(), "Starting shard " + shards.get(0) + ". . .");
 
                 // add the reconnection queue
-                builder.setReconnectQueue(new SessionReconnectQueue());
+                //builder.setReconnectQueue(new SessionReconnectQueue());
 
                 // build the first shard synchronously with Main
                 // to block the initialization process until one shard is active
