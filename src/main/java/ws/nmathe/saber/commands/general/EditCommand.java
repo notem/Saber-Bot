@@ -488,6 +488,7 @@ public class EditCommand implements Command
             while(index < args.length)
             {
                 ZoneId zone = Main.getScheduleManager().getTimeZone(se.getChannelId());
+                ArrayList<String> originalComments = se.getComments();
                 ArrayList<String> comments;
                 switch (args[index++].toLowerCase())
                 {
@@ -495,7 +496,7 @@ public class EditCommand implements Command
                     case "comment":
                     case "comments":
                         comments = se.getComments();
-                        switch( args[index++] )
+                        switch(args[index++])
                         {
                             case "a":
                             case "add" :
@@ -507,7 +508,8 @@ public class EditCommand implements Command
                             case "remove" :
                                 if(VerifyUtilities.verifyInteger(args[index]))
                                 {
-                                    comments.remove(Integer.parseInt(args[index])-1);
+                                    String comment = originalComments.get(Integer.parseInt(args[index])-1);
+                                    comments.remove(comment);
                                 }
                                 else
                                 {
@@ -518,12 +520,16 @@ public class EditCommand implements Command
                                 break;
                             case "s":
                             case "swap":
-                                String a = comments.get(Integer.parseInt(args[index])-1);
-                                String b = comments.get(Integer.parseInt(args[index+1])-1);
-                                comments.set(Integer.parseInt(args[index])-1, b);
-                                comments.set(Integer.parseInt(args[index+1])-1, a);
-
-                                se.setComments(comments);
+                                int i1 = Integer.parseInt(args[index])-1;
+                                int i2 = Integer.parseInt(args[index+1])-1;
+                                if (i1 < comments.size() && i2 < comments.size())
+                                {
+                                    String a = comments.get(i1);
+                                    String b = comments.get(i2);
+                                    comments.set(i1, b);
+                                    comments.set(i2, a);
+                                    se.setComments(comments);
+                                }
                                 index += 2;
                                 break;
                             case "m":
