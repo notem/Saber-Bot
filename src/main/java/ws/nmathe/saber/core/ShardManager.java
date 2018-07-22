@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.utils.MiscUtil;
+import net.dv8tion.jda.core.utils.SessionControllerAdapter;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import ws.nmathe.saber.Main;
@@ -49,25 +50,40 @@ public class ShardManager
 
         try // build the bot
         {
-            // custom OkHttpClient builder
-            OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
-            httpBuilder.connectionPool(new ConnectionPool())
-                    .connectTimeout(queryTimeout, TimeUnit.MILLISECONDS)
-                    .readTimeout(queryTimeout, TimeUnit.MILLISECONDS)
-                    .writeTimeout(queryTimeout, TimeUnit.MILLISECONDS)
-                    .retryOnConnectionFailure(true);
-
-            // custom web socket factory
-            WebSocketFactory webSocketFactory = new WebSocketFactory().setConnectionTimeout(queryTimeout);
-
             // basic skeleton of a jda shard
             this.builder = new JDABuilder(AccountType.BOT)
                     .setToken(Main.getBotSettingsManager().getToken())
                     .setStatus(OnlineStatus.ONLINE)
-                    .addEventListener(new EventListener())
-                    .setHttpClientBuilder(httpBuilder)
-                    .setWebsocketFactory(webSocketFactory)
                     .setAutoReconnect(true);
+
+            // custom OkHttpClient builder
+            //OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
+            //httpBuilder.connectionPool(new ConnectionPool())
+            //        .connectTimeout(queryTimeout, TimeUnit.MILLISECONDS)
+            //        .readTimeout(queryTimeout, TimeUnit.MILLISECONDS)
+            //        .writeTimeout(queryTimeout, TimeUnit.MILLISECONDS)
+            //        .retryOnConnectionFailure(true);
+
+            // custom OkHttpClient uses longer timeout values
+            // custom websocket factory also uses the longer timeout value
+            //   this improved bot responsiveness in a previous era;
+            //   it is unknown if these overrides are still necessary today (2018-07-21)
+            //this.builder.setHttpClientBuilder(httpBuilder);
+            //this.builder.setWebsocketFactory(new WebSocketFactory()
+            //        .setConnectionTimeout(queryTimeout));
+
+            // EventListener handles all types of bot events
+            this.builder.addEventListener(new EventListener());
+
+            // previous session queue mechanism was deprecated and has seemingly been replaced with
+            //   this SessionController object
+            this.builder.setSessionController(new SessionControllerAdapter() {
+                @Override
+                public void appendSession(SessionConnectNode node) {
+                    System.out.println("[SessionController] Adding SessionConnectNode to Queue!");
+                    super.appendSession(node);
+                }
+            });
 
             // handle sharding
             if(shardTotal > 0)
@@ -82,18 +98,20 @@ public class ShardManager
                 // to block the initialization process until one shard is active
                 if(shards.contains(0))
                 {
-                    // build shard id 0
+                    // build primary shard (id 0)
                     JDA jda = this.builder
                             .setCorePoolSize(primaryPoolSize)
                             .useSharding(0, shardTotal)
                             .buildBlocking();
 
                     this.jdaShards.put(0, jda);
-                    shards.remove((Object) 0);
+                    shards.remove((Object) 0);  // remove '0' (not necessarily the first element of the list)
                 }
                 else
                 {
                     // build whatever the first shard id in the list is
+                    // -this ought to occur only if the bot is running on multiple systems
+                    // -and the current system is not responsible for the primary (0) shard
                     JDA jda = this.builder
                             .setCorePoolSize(primaryPoolSize)
                             .useSharding(shards.get(0), shardTotal)
@@ -103,7 +121,11 @@ public class ShardManager
                     shards.remove(shards.get(0));
                 }
 
-                // build remaining shards serially with one-another, but parallel with Main
+                // core functionality can now be initialized
+                Main.getEntryManager().init();
+                Main.getCommandHandler().init();
+
+                // bring each additional shard up one after another
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() ->
                 {
@@ -125,9 +147,6 @@ public class ShardManager
                             this.jdaShards.put(shardId, shard);
                         }
                         this.startGamesTimer();
-
-                        Main.getEntryManager().init();
-                        Main.getCommandHandler().init();
 
                         executor.shutdown();
                     }
@@ -152,7 +171,7 @@ public class ShardManager
                 Main.getCommandHandler().init();
             }
         }
-        catch( Exception e )
+        catch (Exception e)
         {
             Logging.exception(Main.class, e);
             System.exit(1);
