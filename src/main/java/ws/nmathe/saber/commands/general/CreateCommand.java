@@ -8,7 +8,6 @@ import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
-import java.awt.*;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -127,10 +126,9 @@ public class CreateCommand implements Command
             return "I could not understand **" + args[index] + "** as a time!\n" +
                     "Please use the format hh:mm[am|pm].";
         }
+
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
-        ZonedDateTime startDateTime = ZonedDateTime.of(LocalDate.now(), ParsingUtilities.parseTime(args[index]), zone);
-        if (ZonedDateTime.now().isAfter(startDateTime))
-            startDateTime = startDateTime.plusDays(1);
+        ZonedDateTime startDateTime = ZonedDateTime.of(LocalDate.now(zone), ParsingUtilities.parseTime(args[index]), zone);
 
         // if minimum args, then ok
         if (args.length == 3) return "";
@@ -274,7 +272,7 @@ public class CreateCommand implements Command
 
         // process start
         startTime = ParsingUtilities.parseTime(args[index].trim().toUpperCase());
-        if (ZonedDateTime.now().isAfter(ZonedDateTime.of(LocalDate.now(), startTime, zone)))
+        if (ZonedDateTime.now().isAfter(ZonedDateTime.of(LocalDate.now(zone), startTime, zone)))
         {   // fix date if necessary
             startDate = startDate.plusDays(1);
         }
