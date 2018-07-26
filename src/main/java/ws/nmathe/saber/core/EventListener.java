@@ -100,15 +100,15 @@ public class EventListener extends ListenerAdapter
         }
 
         // if channel is a schedule for the guild
-        if (Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId()).contains(event.getChannel().getId()))
-        {
-            // delete all other user's messages
-            if (!userId.equals(event.getJDA().getSelfUser().getId()))
-            {
-                MessageUtilities.deleteMsg(event.getMessage(), null);
-                return;
-            }
-        }
+        // delete all other user's messages
+        //if (Main.getScheduleManager().getSchedulesForGuild(event.getGuild().getId()).contains(event.getChannel().getId()))
+        //{
+        //    if (!userId.equals(event.getJDA().getSelfUser().getId()))
+        //    {
+        //        MessageUtilities.deleteMsg(event.getMessage(), null);
+        //        return;
+        //    }
+        //}
 
         /* command processing */
         // set prefix to local guild prefix or bot @mention

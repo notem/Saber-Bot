@@ -1,7 +1,6 @@
 package ws.nmathe.saber.core;
 
 import com.google.common.collect.Iterables;
-import com.neovisionaries.ws.client.WebSocketFactory;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
@@ -10,8 +9,6 @@ import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import net.dv8tion.jda.core.utils.SessionControllerAdapter;
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import javax.security.auth.login.LoginException;

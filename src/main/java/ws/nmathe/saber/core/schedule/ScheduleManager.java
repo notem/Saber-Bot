@@ -37,7 +37,7 @@ public class ScheduleManager
     {
         // every 15 minutes create a thread to check for schedules to sync
         ScheduledExecutorService syncScheduler = Executors.newScheduledThreadPool(1);
-        syncScheduler.scheduleAtFixedRate( new ScheduleSyncer(), 60*15, 60*15, TimeUnit.SECONDS );
+        syncScheduler.scheduleAtFixedRate(new ScheduleSyncer(), 60*15, 60*15, TimeUnit.SECONDS);
     }
 
     /**
@@ -369,30 +369,18 @@ public class ScheduleManager
     public boolean isRSVPEnabled(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return false;
-        }
         return settings.getBoolean("rsvp_enabled", false);
     }
 
     public boolean isRSVPConfirmationsEnabled(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return false;
-        }
         return settings.getBoolean("rsvp_confirmations", false);
     }
 
     public boolean isEndFormatOverridden(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return false;
-        }
 
         String format = (String) settings.get("announcement_format_end");
         return !(format == null);
@@ -401,10 +389,6 @@ public class ScheduleManager
     public boolean isEndChannelOverridden(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return false;
-        }
 
         String format = (String) settings.get("announcement_channel_end");
         return !(format == null);
@@ -413,10 +397,6 @@ public class ScheduleManager
     public boolean isRemindFormatOverridden(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return false;
-        }
 
         String format = (String) settings.get("reminder_format");
         return !(format == null);
@@ -425,10 +405,6 @@ public class ScheduleManager
     public boolean isRemindChanOverridden(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return false;
-        }
 
         String format = (String) settings.get("reminder_channel");
         return !(format == null);
@@ -437,7 +413,7 @@ public class ScheduleManager
     public boolean isRSVPExclusive(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id", cId)).first();
-        return settings == null || settings.getBoolean("rsvp_exclusivity", true);
+        return settings.getBoolean("rsvp_exclusivity", true);
     }
 
     /*
@@ -458,10 +434,6 @@ public class ScheduleManager
     public String getStartAnnounceChan(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return Main.getBotSettingsManager().getAnnounceChan();
-        }
         String channel = settings.getString("announcement_channel");
         if(channel == null)
         {
@@ -473,10 +445,6 @@ public class ScheduleManager
     public String getStartAnnounceFormat(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return Main.getBotSettingsManager().getAnnounceFormat();
-        }
         String format = settings.getString("announcement_format");
         if(format == null)
         {
@@ -488,10 +456,6 @@ public class ScheduleManager
     public String getEndAnnounceChan(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return Main.getBotSettingsManager().getAnnounceChan();
-        }
         String chan = settings.getString("announcement_channel_end");
         if(chan == null)
         {
@@ -503,10 +467,6 @@ public class ScheduleManager
     public String getEndAnnounceFormat(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return Main.getBotSettingsManager().getAnnounceFormat();
-        }
         String format = settings.getString("announcement_format_end");
         if(format == null)
         {
@@ -518,10 +478,6 @@ public class ScheduleManager
     public String getClockFormat(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return Main.getBotSettingsManager().getClockFormat();
-        }
         String clock = settings.getString("clock_format");
         if(clock == null)
         {
@@ -533,10 +489,6 @@ public class ScheduleManager
     public ZoneId getTimeZone(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return ZoneId.of(Main.getBotSettingsManager().getTimeZone());
-        }
         ZoneId zone = ZoneId.of(settings.getString("timezone"));
         if(zone == null)
         {
@@ -548,10 +500,6 @@ public class ScheduleManager
     public List<ZoneId> getAltZones(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if(settings == null)
-        {
-            return new ArrayList<>();
-        }
         List<String> zones = (List<String>) settings.get("alt_zones");
         if(zones == null)
         {
@@ -563,10 +511,6 @@ public class ScheduleManager
     public String getAddress(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return "off";
-        }
 
         String address = settings.getString("sync_address");
         if(address == null)
@@ -579,11 +523,6 @@ public class ScheduleManager
     public Date getSyncTime(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return Date.from(ZonedDateTime.of(LocalDate.now().plusDays(1),
-                    LocalTime.MIDNIGHT, ZoneId.systemDefault()).toInstant());
-        }
 
         Date syncTime = settings.getDate("sync_time");
         if(syncTime == null)
@@ -598,10 +537,6 @@ public class ScheduleManager
     public List<Integer> getReminders(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return new ArrayList<>();
-        }
 
         List<Integer> reminders = (List<Integer>) settings.get("default_reminders");
         if(reminders == null)
@@ -614,10 +549,6 @@ public class ScheduleManager
     public String getReminderChan(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return Main.getBotSettingsManager().getAnnounceChan();
-        }
 
         String chan_name = (String) settings.get("reminder_channel");
         if(chan_name == null )
@@ -631,10 +562,6 @@ public class ScheduleManager
     public String getReminderFormat(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if( settings == null )
-        {
-            return Main.getBotSettingsManager().getAnnounceFormat();
-        }
 
         String format = (String) settings.get("reminder_format");
         if(format == null )
@@ -647,10 +574,6 @@ public class ScheduleManager
     public String getStyle(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if(settings == null)
-        {
-            return "FULL";
-        }
 
         String style = (String) settings.get("display_style");
         if(style == null)
@@ -663,10 +586,6 @@ public class ScheduleManager
     public int getSyncLength(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if(settings == null)
-        {
-            return 7;
-        }
 
         Integer len = (Integer) settings.get("sync_length");
         if(len == null)
@@ -679,10 +598,6 @@ public class ScheduleManager
     public String getSyncUser(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if(settings == null)
-        {
-            return null;
-        }
 
         String user = settings.getString("sync_user");
         if(user == null)
@@ -695,10 +610,6 @@ public class ScheduleManager
     public int getAutoSort(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if(settings == null)
-        {
-            return 0;
-        }
 
         Integer sort = (Integer) settings.get("auto_sort");
         if(sort == null)
@@ -711,10 +622,6 @@ public class ScheduleManager
     public Map<String, String> getRSVPOptions(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if(settings == null)
-        {
-            return new HashMap<>();
-        }
 
         Map<String, String> map = (Map) settings.get("rsvp_options");
         if(map == null)
@@ -730,10 +637,6 @@ public class ScheduleManager
     public String getRSVPClear(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if(settings == null)
-        {
-            return "";
-        }
         String emoji = settings.getString("rsvp_clear");
         if(emoji == null)
         {
@@ -745,10 +648,6 @@ public class ScheduleManager
     public String getRSVPLogging(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if(settings == null)
-        {
-            return "";
-        }
         String loggingChannel = settings.getString("rsvp_logging");
         if(loggingChannel == null)
         {
@@ -760,10 +659,6 @@ public class ScheduleManager
     public List<Integer> getEndReminders(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
-        if(settings == null)
-        {
-            return new ArrayList<>();
-        }
         List<Integer> reminders = (List<Integer>) settings.get("end_reminders");
         if(reminders == null)
         {
