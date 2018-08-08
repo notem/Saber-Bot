@@ -954,12 +954,14 @@ public class ConfigCommand implements Command
                     }
                     Main.getScheduleManager().setRSVPClear(cId, emoji);
 
+                    // update reactions on all event messages in channel
                     String finalEmoji = emoji;
                     Map<String, String> rsvpOptions = Main.getScheduleManager().getRSVPOptions(cId);
                     Main.getEntryManager().getEntriesFromChannel(cId).forEach(se->
                     {
                         Message message = se.getMessageObject();
-                        message.clearReactions().queue(ignored-> EntryManager.addRSVPReactions(rsvpOptions, finalEmoji, message, se));
+                        message.clearReactions().complete();
+                        EntryManager.addRSVPReactions(rsvpOptions, finalEmoji, message, se);
                     });
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.RSVP, event.getJDA()), event.getChannel(), null);
                     break;

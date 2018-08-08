@@ -656,18 +656,18 @@ public class ParsingUtilities
      * Parses user input for a date information
      * @param arg (String)
      */
-    public static ZonedDateTime parseDate(String arg, ZoneId zone)
+    public static LocalDate parseDate(String arg, ZoneId zone)
     {
         switch (arg)
         {
             case "today":
-                return ZonedDateTime.now(zone);
+                return LocalDate.now(zone);
 
             case "tomorrow":
-                return ZonedDateTime.now(zone).plusDays(1);
+                return LocalDate.now(zone).plusDays(1);
 
             case "overmorrow":
-                return ZonedDateTime.now(zone).plusDays(2);
+                return LocalDate.now(zone).plusDays(2);
 
             default:
                 String[] splt = arg.split("[^0-9]+");
@@ -684,7 +684,7 @@ public class ParsingUtilities
                 {
                     date = LocalDate.of(Integer.parseInt(splt[0]), Integer.parseInt(splt[1]), Integer.parseInt(splt[2]));
                 }
-                return ZonedDateTime.of(date, LocalTime.MAX, zone);
+                return date;
         }
     }
 
@@ -711,7 +711,7 @@ public class ParsingUtilities
     /**
      * Parses out expire and deadline keyword input
      */
-    public static ZonedDateTime parseNullableDate(String input, ZoneId zone)
+    public static LocalDate parseNullableDate(String input, ZoneId zone)
     {
         switch(input)
         {

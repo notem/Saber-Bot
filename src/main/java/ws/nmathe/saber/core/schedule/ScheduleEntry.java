@@ -588,18 +588,18 @@ public class ScheduleEntry
                 String name = options.get(emoteKey);
 
                 // if the rsvp group is full, do nothing
-                if(!this.isFull(name))
+                if (!this.isFull(name))
                 {
                     // add the user to the rsvp type
                     List<String> members = this.getRsvpMembersOfType(name);
-                    if(!members.contains(event.getUser().getId()))
+                    if (!members.contains(event.getUser().getId()))
                     {
                         members.add(event.getUser().getId());
                         this.setRsvpMembers(name, members);
 
                         // remove the user from any other rsvp lists for that event if exclusivity is enabled
                         boolean hasChangedRSVP = false;
-                        if(Main.getScheduleManager().isRSVPExclusive(event.getChannel().getId()))
+                        if (Main.getScheduleManager().isRSVPExclusive(event.getChannel().getId()))
                         {
                             for(String group : options.values())
                             {

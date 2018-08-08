@@ -254,8 +254,8 @@ public class CreateCommand implements Command
         // init optional variables with values;
         LocalTime endTime       = null;
         int repeat              = 0;
-        ZonedDateTime startDate = ZonedDateTime.now(zone);
-        ZonedDateTime endDate   = null;
+        LocalDate startDate     = LocalDate.now(zone);
+        LocalDate endDate       = null;
         String url              = null;
         String image            = null;
         String thumbnail        = null;
@@ -333,7 +333,8 @@ public class CreateCommand implements Command
 
                         case "ex":
                         case "expire":
-                            expire = ParsingUtilities.parseNullableDate(args[index], zone);
+                            expire = ZonedDateTime.of(ParsingUtilities
+                                    .parseNullableDate(args[index], zone), LocalTime.MAX, zone);
                             index++;
                             break;
 
@@ -351,7 +352,8 @@ public class CreateCommand implements Command
 
                         case "deadline":
                         case "dl":
-                            deadline = ParsingUtilities.parseNullableDate(args[index], zone);
+                            deadline = ZonedDateTime.of(ParsingUtilities
+                                    .parseNullableDate(args[index], zone), LocalTime.MAX, zone);
                             index++;
                             break;
 
@@ -371,18 +373,18 @@ public class CreateCommand implements Command
                             break;
 
                         case "today":
-                            startDate = ZonedDateTime.now(zone);
-                            endDate = ZonedDateTime.now(zone);
+                            startDate = LocalDate.now(zone);
+                            endDate = LocalDate.now(zone);
                             break;
 
                         case "tomorrow":
-                            startDate = ZonedDateTime.now(zone).plusDays(1);
-                            endDate = ZonedDateTime.now(zone).plusDays(1);
+                            startDate = LocalDate.now(zone).plusDays(1);
+                            endDate = LocalDate.now(zone).plusDays(1);
                             break;
 
                         case "overmorrow":
-                            startDate = ZonedDateTime.now(zone).plusDays(2);
-                            endDate = ZonedDateTime.now(zone).plusDays(2);
+                            startDate = LocalDate.now(zone).plusDays(2);
+                            endDate = LocalDate.now(zone).plusDays(2);
                             break;
 
                         case "color":
@@ -408,7 +410,7 @@ public class CreateCommand implements Command
         boolean b = startTime.equals(LocalTime.MAX) && endDate == null;           // another way to define all-day events?
         if (a || b)
         {
-            endDate = ZonedDateTime.from(startDate).plusDays(1);
+            endDate = LocalDate.from(startDate).plusDays(1);
         }
         // if the end time has not been filled, copy start time
         if (endTime == null)
@@ -418,12 +420,12 @@ public class CreateCommand implements Command
         // if the end date has not been filled, copy start date
         if (endDate == null)
         {
-            endDate = ZonedDateTime.from(startDate);
+            endDate = LocalDate.from(startDate);
         }
 
         // create the zoned date time using the schedule's timezone
-        ZonedDateTime start = ZonedDateTime.of(startDate.toLocalDate(), startTime, zone);
-        ZonedDateTime end   = ZonedDateTime.of(endDate.toLocalDate(), endTime, zone);
+        ZonedDateTime start = ZonedDateTime.of(startDate, startTime, zone);
+        ZonedDateTime end   = ZonedDateTime.of(endDate, endTime, zone);
 
         // add a year to the date if the provided date is past current time
         Instant now = Instant.now();

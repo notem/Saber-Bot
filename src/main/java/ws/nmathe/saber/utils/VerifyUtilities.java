@@ -290,11 +290,11 @@ public class VerifyUtilities
                 return "";
 
             default:
-                if(!VerifyUtilities.verifyDate( args[index] ))
+                if (!VerifyUtilities.verifyDate(args[index]))
                 {
                     return "I could not understand **" + args[index] + "** as a date! Please use the format M/d.";
                 }
-                if(ParsingUtilities.parseDate(args[index], zone).isBefore(ZonedDateTime.now()))
+                if (ParsingUtilities.parseDate(args[index], zone).isBefore(LocalDate.now(zone)))
                 {
                     return "That date is in the past!";
                 }
@@ -317,8 +317,8 @@ public class VerifyUtilities
         {
             return "I could not understand **" + args[index] + "** as a date! Please use the format 'M/d'.";
         }
-        ZonedDateTime time = ParsingUtilities.parseDate(args[index], zone);
-        if(time.isBefore(ZonedDateTime.now()))
+        LocalDate date = ParsingUtilities.parseDate(args[index], zone);
+        if(date.isBefore(LocalDate.now(zone)))
         {
             return "That date is in the past!";
         }

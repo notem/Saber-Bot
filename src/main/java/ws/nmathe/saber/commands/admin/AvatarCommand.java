@@ -3,7 +3,7 @@ package ws.nmathe.saber.commands.admin;
 import net.dv8tion.jda.core.entities.Icon;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.managers.AccountManagerUpdatable;
+import net.dv8tion.jda.core.managers.AccountManager;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
@@ -39,7 +39,7 @@ public class AvatarCommand implements Command
     @Override
     public void action(String head, String[] args, MessageReceivedEvent event)
     {
-        AccountManagerUpdatable manager = Main.getShardManager().getJDA().getSelfUser().getManagerUpdatable();
+        AccountManager manager = Main.getShardManager().getJDA().getSelfUser().getManager();
         if(event.getMessage().getAttachments().isEmpty()) return;
 
         Message.Attachment attachment = event.getMessage().getAttachments().get(0);
@@ -49,10 +49,13 @@ public class AvatarCommand implements Command
             attachment.download(file);
 
             Icon icon = Icon.from(file);
-            manager.getAvatarField().setValue(icon).update().complete();
+            manager.setAvatar(icon).complete();
 
             MessageUtilities.sendPrivateMsg("Updated bot avatar!", event.getAuthor(), null);
-            file.delete();
+            if (!file.delete())
+            {
+                file.deleteOnExit();
+            }
         }
         catch (IOException e)
         {

@@ -24,7 +24,7 @@ public class GuildSettingsManager
     {
         Document guildDoc = Main.getDBDriver().getGuildCollection().find(eq("_id", guildId)).first();
 
-        if(guildDoc == null) // create a new guild document and add to db
+        if (guildDoc == null) // create a new guild document and add to db
         {
             // unrestricted commands are commands that may be used outside of the command channel
             ArrayList<String> unrestrictedCommands = new ArrayList<>(Arrays.asList(

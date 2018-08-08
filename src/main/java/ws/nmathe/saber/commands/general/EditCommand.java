@@ -15,6 +15,8 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -209,22 +211,22 @@ public class EditCommand implements Command
                 case "s":
                 case "starts":
                 case "start":
-                    if(args.length-index < 1)
+                    if (args.length-index < 1)
                     {
                         return "That's not the right number of arguments for **"+args[index-1]+"**!\n" +
                                 "Use ``" + head + " "+args[index-2]+" "+args[index-1]+" [start time]``";
                     }
-                    if(!VerifyUtilities.verifyTime(args[index]))
+                    if (!VerifyUtilities.verifyTime(args[index]))
                     {
                         return "I could not understand **" + args[index] + "** as a time!" +
                                 "\nPlease use the format hh:mm[am|pm].";
                     }
-                    if(ZonedDateTime.of(entry.getStart().toLocalDate(), ParsingUtilities.parseTime(args[index]), entry.getStart().getZone()).isBefore(ZonedDateTime.now()))
+                    if (ZonedDateTime.of(entry.getStart().toLocalDate(), ParsingUtilities.parseTime(args[index]), entry.getStart().getZone()).isBefore(ZonedDateTime.now()))
                     {
                         return "Today's time is already past *" + args[index] + "*!\n" +
                                 "Please use a different time, or change the date for the event!";
                     }
-                    if(entry.hasStarted())
+                    if (entry.hasStarted())
                     {
                         return "You cannot modify the start time after the event has already started.";
                     }
@@ -591,8 +593,7 @@ public class EditCommand implements Command
                             se.setEnd(se.getStart());
                         }
                         else
-                        {
-                            // otherwise parse the input for a time
+                        {   // otherwise parse the input for a time
                             se.setEnd(ZonedDateTime.of(se.getEnd().toLocalDate(),
                                         ParsingUtilities.parseTime(args[index]),
                                         se.getEnd().getZone()));
@@ -618,16 +619,11 @@ public class EditCommand implements Command
 
                     case "d":
                     case "date":
-                        ZonedDateTime date = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
-                        se.setStart(se.getStart()
-                                .withMonth(date.getMonthValue())
-                                .withDayOfMonth(date.getDayOfMonth())
-                                .withYear(date.getYear()));
-                        se.setEnd(se.getEnd()
-                                .withMonth(date.getMonthValue())
-                                .withDayOfMonth(date.getDayOfMonth())
-                                .withYear(date.getYear()));
+                        LocalDate date = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
+                        se.setStart(ZonedDateTime.of(date, se.getStart().toLocalTime(), zone));
+                        se.setEnd(ZonedDateTime.of(date, se.getEnd().toLocalTime(), zone));
 
+                        // update the reminders and announcements to appropriate datetimes
                         se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
                                 .reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()))
                                 .regenerateAnnouncementOverrides();
@@ -637,18 +633,17 @@ public class EditCommand implements Command
                     case "sd":
                     case "start date":
                     case "start-date":
-                        ZonedDateTime sdate = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
-                        se.setStart(se.getStart()
-                                .withMonth(sdate.getMonthValue())
-                                .withDayOfMonth(sdate.getDayOfMonth())
-                                .withYear(sdate.getYear()));
+                        LocalDate sdate = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
+                        se.setStart(ZonedDateTime.of(sdate, se.getStart().toLocalTime(), zone));
 
+                        // change end date to a valid datetime if necessary
                         if(se.getEnd().isBefore(se.getStart()))
                         {
                             se.setEnd(se.getStart());
                             se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()));
                         }
 
+                        // update the reminders and announcements to appropriate datetimes
                         se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
                                 .regenerateAnnouncementOverrides();
                         index++;
@@ -657,18 +652,17 @@ public class EditCommand implements Command
                     case "ed":
                     case "end date":
                     case "end-date":
-                        ZonedDateTime edate = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
-                        se.setEnd(se.getEnd()
-                                .withMonth(edate.getMonthValue())
-                                .withDayOfMonth(edate.getDayOfMonth())
-                                .withYear(edate.getYear()));
+                        LocalDate edate = ParsingUtilities.parseDate(args[index].toLowerCase(), zone);
+                        se.setEnd(ZonedDateTime.of(edate, se.getEnd().toLocalTime(), zone));
 
+                        // change start date to a valid datetime if necessary
                         if(se.getEnd().isBefore(se.getStart()))
                         {
                             se.setStart(se.getEnd());
                             se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()));
                         }
 
+                        // update the reminders and announcements to appropriate datetimes
                         se.reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()))
                                 .regenerateAnnouncementOverrides();
                         index++;
@@ -701,13 +695,17 @@ public class EditCommand implements Command
 
                     case "ex":
                     case "expire":
-                        se.setExpire(ParsingUtilities.parseNullableDate(args[index], zone));
+                        LocalDate expireDate = ParsingUtilities.parseNullableDate(args[index], zone);
+                        se.setExpire(expireDate == null ?
+                                null : ZonedDateTime.of(expireDate, LocalTime.MAX, zone));
                         index++;
                         break;
 
                     case "deadline":
                     case "dl":
-                        se.setRsvpDeadline(ParsingUtilities.parseNullableDate(args[index], zone));
+                        LocalDate deadlineDate = ParsingUtilities.parseNullableDate(args[index], zone);
+                        se.setRsvpDeadline(deadlineDate == null ?
+                                null : ZonedDateTime.of(deadlineDate, LocalTime.MAX, zone));
                         index++;
                         break;
 
@@ -738,23 +736,19 @@ public class EditCommand implements Command
 
                     case "qa":
                     case "quiet-all":
-                        if(se.isQuietRemind() && se.isQuietEnd() && se.isQuietStart())
-                        {
+                        if (se.isQuietRemind()
+                                && se.isQuietEnd()
+                                && se.isQuietStart())
                             se.setQuietRemind(false).setQuietEnd(false).setQuietStart(false);
-                        }
                         else
-                        {
                             se.setQuietRemind(true).setQuietEnd(true).setQuietStart(true);
-                        }
                         break;
 
                     case "limit":
                     case "l":
                         Integer lim = null;
-                        if(!args[index+1].equalsIgnoreCase("off"))
-                        {
+                        if (!args[index+1].equalsIgnoreCase("off"))
                             lim = Integer.parseInt(args[index+1]);
-                        }
                         se.setRsvpLimit(args[index], lim);
                         limitsChanged = true;
                         index += 2;
@@ -773,7 +767,7 @@ public class EditCommand implements Command
                     case "announce":
                     case "announcement":
                     case "announcements":
-                        switch(args[index++].toLowerCase())
+                        switch (args[index++].toLowerCase())
                         {
                             case "a":
                             case "add":
@@ -795,7 +789,7 @@ public class EditCommand implements Command
 
                     case "a":
                     case "add":
-                        switch(args[index++].toLowerCase())
+                        switch (args[index++].toLowerCase())
                         {
                             case "a":
                             case "an":
@@ -822,7 +816,7 @@ public class EditCommand implements Command
 
                     case "re":
                     case "remove":
-                        switch(args[index++].toLowerCase())
+                        switch (args[index++].toLowerCase())
                         {
                             case "a":
                             case "an":
@@ -839,13 +833,9 @@ public class EditCommand implements Command
                             case "comments":
                                 comments = se.getComments();
                                 if(VerifyUtilities.verifyInteger(args[index]))
-                                {
                                     comments.remove(Integer.parseInt(args[index])-1);
-                                }
                                 else
-                                {
                                     comments.remove(args[index]);
-                                }
                                 se.setComments(comments);
                                 index++;
                                 break;

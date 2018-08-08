@@ -409,7 +409,6 @@ public class EntryManager
     {
         Document entryDocument = Main.getDBDriver().getEventCollection()
                 .find(eq("_id", entryId)).first();
-
         if (entryDocument != null)
         {
             return new ScheduleEntry(entryDocument);
@@ -430,7 +429,6 @@ public class EntryManager
     {
         Document entryDocument = Main.getDBDriver().getEventCollection()
                 .find(and(eq("_id", entryId), eq("guildId",guildId))).first();
-
         if (entryDocument != null)
         {
             return new ScheduleEntry(entryDocument);
@@ -450,7 +448,6 @@ public class EntryManager
     {
         MongoIterable<ScheduleEntry> entries = Main.getDBDriver().getEventCollection()
                 .find(eq("guildId", guildId)).map(ScheduleEntry::new);
-
         return entries.into(new ArrayList<>());
     }
 
@@ -463,7 +460,6 @@ public class EntryManager
     {
         MongoIterable<ScheduleEntry> entries = Main.getDBDriver().getEventCollection()
                 .find(eq("channelId", channelId)).map(ScheduleEntry::new);
-
         return entries.into(new ArrayList<>());
     }
 

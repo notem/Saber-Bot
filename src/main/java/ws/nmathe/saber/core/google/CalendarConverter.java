@@ -335,7 +335,8 @@ public class CalendarConverter
                                 String tmp = lowerCase.replace("deadline:","")
                                         .trim().replaceAll(" ","");
                                 if(VerifyUtilities.verifyDate(tmp))
-                                    rsvpDeadline = ParsingUtilities.parseDate(tmp, zone);
+                                    rsvpDeadline = ZonedDateTime.of(ParsingUtilities
+                                            .parseDate(tmp, zone), LocalTime.MAX, zone);
                             }
                             // plaintext comment
                             else if(!comment.trim().isEmpty())
@@ -451,8 +452,9 @@ public class CalendarConverter
             // set channel topic
             JDA jda = Main.getShardManager().getJDA(channel.getGuild().getId());
             String calLink = "https://calendar.google.com/calendar/embed?src=" + address;
-            boolean hasPerms = channel.getGuild().getMember(jda.getSelfUser()).hasPermission(channel, Permission.MANAGE_CHANNEL);
-            if(hasPerms) channel.getManagerUpdatable().getTopicField().setValue(calLink).update().queue();
+            boolean hasPerms = channel.getGuild().getMember(jda.getSelfUser())
+                    .hasPermission(channel, Permission.MANAGE_CHANNEL);
+            if(hasPerms) channel.getManager().setTopic(calLink).queue();
         }
         catch(Exception e)
         {

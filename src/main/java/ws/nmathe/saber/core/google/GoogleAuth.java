@@ -182,7 +182,6 @@ public class GoogleAuth
                 .setDataStoreFactory(DATA_STORE_FACTORY)
                 .setAccessType("offline")
                 .build();
-
         flow.getCredentialDataStore().delete(userID);
     }
 
