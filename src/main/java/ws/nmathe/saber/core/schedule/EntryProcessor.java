@@ -26,7 +26,7 @@ import static com.mongodb.client.model.Filters.*;
 class EntryProcessor implements Runnable
 {
     // thread pool used to process events
-    private static ExecutorService eventsExecutor = Executors.newFixedThreadPool(2,
+    private static ExecutorService eventsExecutor = Executors.newCachedThreadPool(
             new ThreadFactoryBuilder().setNameFormat("EntryProcessor-%d").build());
 
     private static ExecutorService timerExecutor = Executors.newCachedThreadPool(
@@ -86,9 +86,11 @@ class EntryProcessor implements Runnable
                 Logging.info(this.getClass(), "Finished filling queues.");
             }
             /* Processes the events in each set */
-            else if(type == EntryManager.type.EMPTY)
+            else if (type == EntryManager.type.EMPTY)
             {
                 Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
+                Logging.info(this.getClass(), "There are "+
+                        (endSet.size()+startSet.size()+remindSet.size()+specialSet.size())+" event entries to process.");
                 endSet.forEach(entryId ->
                 {
                     if (!processing.contains(entryId))
@@ -97,10 +99,12 @@ class EntryProcessor implements Runnable
                         {
                             try
                             {
-                                processing.add(entryId);
-                                Main.getEntryManager().getEntry(entryId).end();
-                                endSet.remove(entryId);
-                                processing.remove(entryId);
+                                if (processing.add(entryId))
+                                {
+                                    Main.getEntryManager().getEntry(entryId).end();
+                                    endSet.remove(entryId);
+                                    processing.remove(entryId);
+                                }
                             }
                             catch (Exception e)
                             {
@@ -117,10 +121,12 @@ class EntryProcessor implements Runnable
                         {
                             try
                             {
-                                processing.add(entryId);
-                                Main.getEntryManager().getEntry(entryId).start();
-                                startSet.remove(entryId);
-                                processing.remove(entryId);
+                                if (processing.add(entryId))
+                                {
+                                    Main.getEntryManager().getEntry(entryId).start();
+                                    startSet.remove(entryId);
+                                    processing.remove(entryId);
+                                }
                             }
                             catch (Exception e)
                             {
@@ -137,10 +143,12 @@ class EntryProcessor implements Runnable
                         {
                             try
                             {
-                                processing.add(entryId);
-                                Main.getEntryManager().getEntry(entryId).remind();
-                                remindSet.remove(entryId);
-                                processing.remove(entryId);
+                                if (processing.add(entryId))
+                                {
+                                    Main.getEntryManager().getEntry(entryId).remind();
+                                    remindSet.remove(entryId);
+                                    processing.remove(entryId);
+                                }
                             }
                             catch (Exception e)
                             {
@@ -157,10 +165,12 @@ class EntryProcessor implements Runnable
                         {
                             try
                             {
-                                processing.add(entryId);
-                                Main.getEntryManager().getEntry(entryId).announce();
-                                specialSet.remove(entryId);
-                                processing.remove(entryId);
+                                if (processing.add(entryId))
+                                {
+                                    Main.getEntryManager().getEntry(entryId).announce();
+                                    specialSet.remove(entryId);
+                                    processing.remove(entryId);
+                                }
                             }
                             catch (Exception e)
                             {

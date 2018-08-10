@@ -245,7 +245,7 @@ public class EntryManager
                             .append("deadline", finalDeadline)
                             .append("guildId", guildId)
                             .append("announcements", new ArrayList<>(se.getAnnouncements()))
-                            .append("announcement_dates", se.getaDates())
+                            .append("announcement_dates", se.getAnnouncementDates())
                             .append("announcement_times", se.getAnnouncementTimes())
                             .append("announcement_messages", se.getAnnouncementMessages())
                             .append("announcement_targets", se.getAnnouncementTargets())

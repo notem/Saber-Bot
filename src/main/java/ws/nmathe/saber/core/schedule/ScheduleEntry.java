@@ -361,7 +361,7 @@ public class ScheduleEntry
         if(!this.quietEnd)
         {
             // dont send end announcement if late
-            if(late)
+            if (late)
             {
                 // send the end announcement
                 if(identifier != null)
@@ -386,7 +386,7 @@ public class ScheduleEntry
     public boolean repeat()
     {
         Message msg = this.getMessageObject();
-        if( msg==null ) return false;
+        if (msg==null) return false;
 
         if(this.recurrence.shouldRepeat(this.start)) // find next repeat date and edit the message
         {
@@ -886,7 +886,7 @@ public class ScheduleEntry
     /**
      * retrieves the full map of announcement override active date object
      */
-    public Map<String, Date> getaDates()
+    public Map<String, Date> getAnnouncementDates()
     {
         return this.aDates;
     }
