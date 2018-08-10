@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
@@ -36,7 +37,8 @@ public class ScheduleManager
     public void initScheduleSync()
     {
         // every 15 minutes create a thread to check for schedules to sync
-        ScheduledExecutorService syncScheduler = Executors.newScheduledThreadPool(1);
+        ScheduledExecutorService syncScheduler = Executors.newSingleThreadScheduledExecutor(
+                new ThreadFactoryBuilder().setNameFormat("ScheduleManager-%d").build());
         syncScheduler.scheduleAtFixedRate(new ScheduleSyncer(), 60*15, 60*15, TimeUnit.SECONDS );
     }
 

@@ -119,11 +119,11 @@ public class MessageGenerator
 
         // if rsvp is enabled, show the number of rsvp
         StringBuilder rsvpLine = new StringBuilder();
-        if(Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
+        if (Main.getScheduleManager().isRSVPEnabled(se.getChannelId()))
         {
             rsvpLine.append("- ");
             Map<String, String> options = Main.getScheduleManager().getRSVPOptions(se.getChannelId());
-            for(String emoji : options.keySet()) // I iterate over the keys rather than the values to keep a order consistent with reactions
+            for (String emoji : options.keySet()) // I iterate over the keys rather than the values to keep a order consistent with reactions
             {
                 String type = options.get(emoji);
                 if (se.getRsvpLimit(type) != 0) // don't list the rsvp options on the event
@@ -135,7 +135,7 @@ public class MessageGenerator
                             .append(se.getRsvpLimit(type) >= 0 ? "/" + se.getRsvpLimit(type) + "> " : "> ");
                 }
             }
-            if(se.getDeadline() != null)
+            if (se.getDeadline() != null)
             {
                 rsvpLine.append("\n+ RSVP closes ")
                         .append(se.getDeadline().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH))

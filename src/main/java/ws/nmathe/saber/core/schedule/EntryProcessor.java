@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.dv8tion.jda.core.JDA;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -24,11 +25,9 @@ import static com.mongodb.client.model.Filters.*;
  */
 class EntryProcessor implements Runnable
 {
-    // thread pool used to reload displays of events
-    private static ExecutorService timerExecutor = Executors.newCachedThreadPool();
-
-    // thread pool used to process events when emptying the announcement sets
-    private static ExecutorService setExecutor = Executors.newCachedThreadPool();
+    // thread pool used to process events
+    private static ExecutorService eventsExecutor = Executors.newCachedThreadPool(
+            new ThreadFactoryBuilder().setNameFormat("EntryProcessor-%d").build());
 
     private enum SetType {END_SET, START_SET, REMIND_SET, SPECIAL_SET}
     private EntryManager.type type;
@@ -91,7 +90,7 @@ class EntryProcessor implements Runnable
                 {
                     if (!processing.contains(entryId))
                     {
-                        setExecutor.submit(() ->
+                        eventsExecutor.submit(() ->
                         {
                             try
                             {
@@ -111,7 +110,7 @@ class EntryProcessor implements Runnable
                 {
                     if (!processing.contains(entryId))
                     {
-                        setExecutor.submit(() ->
+                        eventsExecutor.submit(() ->
                         {
                             try
                             {
@@ -131,7 +130,7 @@ class EntryProcessor implements Runnable
                 {
                     if (!processing.contains(entryId))
                     {
-                        setExecutor.submit(() ->
+                        eventsExecutor.submit(() ->
                         {
                             try
                             {
@@ -151,7 +150,7 @@ class EntryProcessor implements Runnable
                 {
                     if (!processing.contains(entryId))
                     {
-                        setExecutor.submit(() ->
+                        eventsExecutor.submit(() ->
                         {
                             try
                             {
@@ -248,7 +247,7 @@ class EntryProcessor implements Runnable
                             if(jda == null) return;
                             if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
-                            timerExecutor.execute(() ->
+                            eventsExecutor.execute(() ->
                             {
                                 try
                                 {   // convert to scheduleEntry object and update display

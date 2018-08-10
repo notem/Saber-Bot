@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.database;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
@@ -19,7 +20,8 @@ public class Driver
         db = mongoClient.getDatabase("saberDB");
 
         // schedule a thread to prune disconnected guild, schedules, and events from the database
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(
+                new ThreadFactoryBuilder().setNameFormat("ScheduleManager-%d").build());
         executor.scheduleAtFixedRate(new Pruner(), 12*60*60, 12*60*60, TimeUnit.SECONDS);
     }
 

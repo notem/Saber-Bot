@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.command;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.entities.User;
 import ws.nmathe.saber.Main;
@@ -22,7 +23,9 @@ import java.util.concurrent.Executors;
 public class CommandHandler
 {
     private final CommandParser commandParser = new CommandParser();      // parses command strings into containers
-    private final ExecutorService executor = Executors.newCachedThreadPool(); // thread pool for running commands
+    private final ExecutorService executor = Executors.newCachedThreadPool(
+            new ThreadFactoryBuilder().setNameFormat("CommandHandler-%d").build()
+    ); // thread pool for running commands
     private final RateLimiter rateLimiter = new RateLimiter();
     private final HashMap<String, Command> commands;         // maps Command to invoke string
     private final HashMap<String, Command> adminCommands;    // ^^ but for admin commands
@@ -82,10 +85,10 @@ public class CommandHandler
     public void handleCommand(MessageReceivedEvent event, Integer type, String prefix)
     {
         // if the command handler has not yet been initialized, send a special error
-        if(!initialized)
+        if (!initialized)
         {
             String msg = "I have not yet finished booting up! Please try again in a moment.";
-            if(event.isFromType(ChannelType.PRIVATE))
+            if (event.isFromType(ChannelType.PRIVATE))
             {   // send message to DM channel
                 MessageUtilities.sendPrivateMsg(msg, event.getAuthor(), null);
             }
@@ -131,7 +134,7 @@ public class CommandHandler
             }
             handleGeneralCommand(cc);
         }
-        else if( type == 1 )
+        else if (type == 1)
         {
             handleAdminCommand(cc);
         }
@@ -202,7 +205,7 @@ public class CommandHandler
     private void handleAdminCommand(CommandParser.CommandContainer cc)
     {
         // for admin commands
-        if(adminCommands.containsKey(cc.invoke))
+        if (adminCommands.containsKey(cc.invoke))
         {
             try // catch any errors which occur while parsing user input
             {

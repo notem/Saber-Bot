@@ -1440,7 +1440,6 @@ public class ScheduleEntry
                 body += "``````js\n" + this.limitsToString();
         }
 
-
         // comments
         if(!this.getComments().isEmpty())
             body += "``````js\n" + this.commentsToString();

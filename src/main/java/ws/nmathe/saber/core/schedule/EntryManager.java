@@ -37,7 +37,8 @@ public class EntryManager
     /** construct EntryManager and seed random from OS random source */
     public EntryManager()
     {
-        this.generator = new Random(new SecureRandom().nextLong()); // not cryptographically secure, which is fine
+        // use system random to seed to avoid repeat seed values on bot restart
+        this.generator = new Random(new SecureRandom().nextLong());
     }
 
     /**

@@ -2,6 +2,7 @@ package ws.nmathe.saber.core.schedule;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.calendar.Calendar;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
@@ -32,7 +33,8 @@ import static ws.nmathe.saber.Main.getGuildSettingsManager;
 class ScheduleSyncer implements Runnable
 {
     // thread pool for sync jobs
-    private static ExecutorService executor = Executors.newCachedThreadPool();
+    private static ExecutorService executor = Executors.newCachedThreadPool(
+            new ThreadFactoryBuilder().setNameFormat("ScheduleSync-%d").build());
 
     public void run()
     {
