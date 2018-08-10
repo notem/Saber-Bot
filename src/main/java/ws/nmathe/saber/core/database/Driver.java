@@ -21,7 +21,7 @@ public class Driver
 
         // schedule a thread to prune disconnected guild, schedules, and events from the database
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(
-                new ThreadFactoryBuilder().setNameFormat("ScheduleManager-%d").build());
+                new ThreadFactoryBuilder().setNameFormat("DatabasePruner-%d").build());
         executor.scheduleAtFixedRate(new Pruner(), 12*60*60, 12*60*60, TimeUnit.SECONDS);
     }
 

@@ -26,8 +26,11 @@ import static com.mongodb.client.model.Filters.*;
 class EntryProcessor implements Runnable
 {
     // thread pool used to process events
-    private static ExecutorService eventsExecutor = Executors.newCachedThreadPool(
+    private static ExecutorService eventsExecutor = Executors.newFixedThreadPool(2,
             new ThreadFactoryBuilder().setNameFormat("EntryProcessor-%d").build());
+
+    private static ExecutorService timerExecutor = Executors.newCachedThreadPool(
+            new ThreadFactoryBuilder().setNameFormat("EntryTimer-%d").build());
 
     private enum SetType {END_SET, START_SET, REMIND_SET, SPECIAL_SET}
     private EntryManager.type type;
@@ -166,7 +169,7 @@ class EntryProcessor implements Runnable
                         });
                     }
                 });
-                //Logging.info(this.getClass(), "Finished emptying queues.");
+                Logging.info(this.getClass(), "Finished emptying queues.");
             }
             else /* Updates the 'starts in x minutes' timer on events */
             {
@@ -247,7 +250,7 @@ class EntryProcessor implements Runnable
                             if(jda == null) return;
                             if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
-                            eventsExecutor.execute(() ->
+                            timerExecutor.execute(() ->
                             {
                                 try
                                 {   // convert to scheduleEntry object and update display

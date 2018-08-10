@@ -53,11 +53,11 @@ public class EntryManager
         // fill
         announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.FILL),
-                30, 30, TimeUnit.SECONDS);
+                0, 60, TimeUnit.SECONDS);
         // empty
         announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.EMPTY),
-                15, 20, TimeUnit.SECONDS);
+                30, 60, TimeUnit.SECONDS);
 
         // scheduler for threads to adjust entry display timers
         ScheduledExecutorService updateDisplayScheduler = Executors.newSingleThreadScheduledExecutor();

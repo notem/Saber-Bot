@@ -235,18 +235,10 @@ public class ScheduleEntry
         expired.forEach(key-> this.aDates.remove(key));           // remove from ID mapping to announcement set
 
         // update db entry
-        //int count = 3;
-        //while (!Main.getEntryManager().updateEntry(this, false)
-        //        && (count > 0))
-        //{
-        //    count--;
-        //    try
-        //    { Thread.sleep(500); }
-        //    catch (InterruptedException e)
-        //    { e.printStackTrace(); }
-        //}
-        //if (count==0) return; // don't send reminder if db couldn't update
-        Main.getEntryManager().updateEntry(this, false);
+        int count = 3;
+        while (!Main.getEntryManager().updateEntry(this, false)
+                && (count > 0)) {count--;}
+        if (count==0) return; // don't send reminder if db couldn't update
 
         // send announcements
         expired.forEach(key->
@@ -272,18 +264,10 @@ public class ScheduleEntry
         this.endReminders.removeIf(date -> date.before(new Date()));
 
         // attempt to update the db record
-        //int count = 3;
-        //while (!Main.getEntryManager().updateEntry(this, false)
-        //        && (count > 0))
-        //{
-        //    count--;
-        //    try
-        //    { Thread.sleep(500); }
-        //    catch (InterruptedException e)
-        //    { e.printStackTrace(); }
-        //}
-        //if (count==0) return; // don't send reminder if db couldn't update
-        Main.getEntryManager().updateEntry(this, false);
+        int count = 3;
+        while (!Main.getEntryManager().updateEntry(this, false)
+                && (count > 0)) {count--;}
+        if (count==0) return; // don't send reminder if db couldn't update
 
         // send reminder
         if(!this.quietRemind)
@@ -325,18 +309,10 @@ public class ScheduleEntry
         else // update event to has started
         {    // try to update db
             this.hasStarted = true;
-            //int count = 3;
-            //while (!Main.getEntryManager().startEvent(this)
-            //        && (count>0))
-            //{
-            //    count--;
-            //    try
-            //    { Thread.sleep(500); }
-            //    catch (InterruptedException e)
-            //    { e.printStackTrace(); }
-            //}
-            //if (count==0) return;
-            Main.getEntryManager().startEvent(this);
+            int count = 3;
+            while (!Main.getEntryManager().startEvent(this)
+                    && (count>0)) {count--;}
+            if (count==0) return;
             this.reloadDisplay();
         }
 
@@ -433,33 +409,17 @@ public class ScheduleEntry
             this.reloadReminders(Main.getScheduleManager().getReminders(this.chanId))
                     .reloadEndReminders(Main.getScheduleManager().getEndReminders(this.chanId));
 
-            //int count = 3;
-            //while (!Main.getEntryManager().updateEntry(this, true)
-            //        && (count > 0))
-            //{
-            //    count--;
-            //    try
-            //    { Thread.sleep(500); }
-            //    catch (InterruptedException e)
-            //    { e.printStackTrace(); }
-            //}
-            //if (count==0) return false;
-            Main.getEntryManager().updateEntry(this, true);
+            int count = 3;
+            while (!Main.getEntryManager().updateEntry(this, true)
+                    && (count > 0)) {count--;}
+            if (count==0) return false;
         }
         else // otherwise remove entry and delete the message
         {
             MessageUtilities.deleteMsg(msg, null);
             int count = 3;
-            //while (!Main.getEntryManager().removeEntry(this.entryId)
-            //        && (count>0))
-            //{
-            //    count--;
-            //    try
-            //    { Thread.sleep(500); }
-            //    catch (InterruptedException e)
-            //    { e.printStackTrace(); }
-            //}
-            Main.getEntryManager().removeEntry(this.entryId);
+            while (!Main.getEntryManager().removeEntry(this.entryId)
+                    && (count>0)) {count--;}
         }
         return true;
     }
@@ -493,7 +453,7 @@ public class ScheduleEntry
         if(!success && !targetIdentifier.isEmpty())
         {
             List<TextChannel> channels = message.getGuild().getTextChannelsByName(targetIdentifier, true);
-            for( TextChannel chan : channels )
+            for(TextChannel chan : channels)
             {
                 MessageUtilities.sendMsg(content, chan, null);
             }
