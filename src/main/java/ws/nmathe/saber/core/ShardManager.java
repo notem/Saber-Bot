@@ -97,9 +97,9 @@ public class ShardManager
                 {
                     // build primary shard (id 0)
                     JDA jda = this.builder
-                            .setCorePoolSize(primaryPoolSize)
+                            //.setCorePoolSize(primaryPoolSize)
                             .useSharding(0, shardTotal)
-                            .buildBlocking();
+                            .build().awaitReady();
 
                     this.jdaShards.put(0, jda);
                     shards.remove((Object) 0);  // remove '0' (not necessarily the first element of the list)
@@ -110,9 +110,9 @@ public class ShardManager
                     // -this ought to occur only if the bot is running on multiple systems
                     // -and the current system is not responsible for the primary (0) shard
                     JDA jda = this.builder
-                            .setCorePoolSize(primaryPoolSize)
+                            //.setCorePoolSize(primaryPoolSize)
                             .useSharding(shards.get(0), shardTotal)
-                            .buildBlocking();
+                            .build().awaitReady();
 
                     this.jdaShards.put(shards.get(0), jda);
                     shards.remove(shards.get(0));
@@ -131,20 +131,16 @@ public class ShardManager
                         for(Integer shardId : shards)
                         {
                             // sleep for 5 seconds before continuing
-                            try { Thread.sleep(5*1000); }
-                            catch (InterruptedException ignored) {}
-
+                            //try { Thread.sleep(5*1000); }
+                            //catch (InterruptedException ignored) {}
                             Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
-
                             JDA shard = this.builder
-                                    .setCorePoolSize(secondaryPoolSize)
+                                    //.setCorePoolSize(secondaryPoolSize)
                                     .useSharding(shardId, shardTotal)
-                                    .buildBlocking();
-
+                                    .build();
                             this.jdaShards.put(shardId, shard);
                         }
                         this.startGamesTimer();
-
                         executor.shutdown();
                     }
                     catch(Exception e)
@@ -156,11 +152,9 @@ public class ShardManager
             else // no sharding
             {
                 Logging.info(this.getClass(), "Starting bot without sharding. . .");
-
                 this.jda = this.builder
-                        .setCorePoolSize(primaryPoolSize)
-                        .buildBlocking();
-
+                        //.setCorePoolSize(primaryPoolSize)
+                        .build().awaitReady();
                 this.jda.setAutoReconnect(true);
                 this.startGamesTimer();
 
@@ -299,13 +293,17 @@ public class ShardManager
             JDABuilder shardBuilder;
             if(shardId == 0)
             {
-                 shardBuilder = this.builder.setCorePoolSize(primaryPoolSize).useSharding(shardId, shardTotal);
+                 shardBuilder = this.builder
+                         //.setCorePoolSize(primaryPoolSize)
+                         .useSharding(shardId, shardTotal);
             }
             else
             {
-                shardBuilder = this.builder.setCorePoolSize(secondaryPoolSize).useSharding(shardId, shardTotal);
+                shardBuilder = this.builder
+                        //.setCorePoolSize(secondaryPoolSize)
+                        .useSharding(shardId, shardTotal);
             }
-            this.jdaShards.put(shardId, shardBuilder.buildAsync());
+            this.jdaShards.put(shardId, shardBuilder.build());
         }
         catch (LoginException e)
         {
@@ -349,14 +347,15 @@ public class ShardManager
                 {
                     for(JDA shard : getShards())
                     {
-                        if(JDA.Status.valueOf("CONNECTED") == shard.getStatus()) task.accept(shard);
+                        if(JDA.Status.valueOf("CONNECTED") == shard.getStatus())
+                            task.accept(shard);
                     }
                 }
                 else
                 {
-                    if(JDA.Status.valueOf("CONNECTED") == getJDA().getStatus()) task.accept(getJDA());
+                    if(JDA.Status.valueOf("CONNECTED") == getJDA().getStatus())
+                        task.accept(getJDA());
                 }
-
             }
         }, 0, 30*1000);
     }
