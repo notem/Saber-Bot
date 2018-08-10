@@ -255,7 +255,11 @@ public class EntryManager
 
             UpdateResult res = Main.getDBDriver().getEventCollection()
                     .replaceOne(eq("_id", se.getId()), entryDocument);
-            if (!res.wasAcknowledged()) return false; // return false, might result in skipped announcement or other issues
+            if (!res.wasAcknowledged())
+            {
+                Logging.warn(this.getClass(), "Attempt to update an entry was unacknowledged!");
+                return false; // return false, might result in skipped announcement or other issues
+            }
 
             se.reloadDisplay();
 
@@ -281,7 +285,9 @@ public class EntryManager
         {
             UpdateResult res = Main.getDBDriver().getEventCollection()
                     .updateOne(eq("_id", se.getId()), set("hasStarted", true));
-            return res.wasAcknowledged(); // might result in skipped announcements or other issues
+            boolean acknowledged = res.wasAcknowledged();
+            if (acknowledged) Logging.warn(this.getClass(), "Unacknowledged event start attempt!");
+            return acknowledged; // might result in skipped announcements or other issues
         }
         catch(MongoException e)
         {
