@@ -509,7 +509,8 @@ public class ScheduleEntry
     public boolean handleRSVPReaction(MessageReactionAddEvent event)
     {
         // if past the deadline, don't add handle new RSVPs
-        if(this.getDeadline()!=null && this.getDeadline().plusDays(1).isBefore(ZonedDateTime.now()))
+        if (this.getDeadline()!=null &&
+                this.getDeadline().plusDays(1).isBefore(ZonedDateTime.now()))
             return false;
 
         MessageReaction.ReactionEmote emote = event.getReactionEmote();
@@ -652,8 +653,15 @@ public class ScheduleEntry
 
         // keep updating the date times until the next
         // occurrence is in the future
+        int count = 100;
         while (this.start.isBefore(now))
         {
+            if (count-- < 0)
+            {
+                Logging.warn(this.getClass(),
+                        "Unable to find next occurrence for '"+this.getTitle()+"' ["+this.getId()+"]!");
+                break;
+            }
             this.start = this.recurrence.next(this.start);
             this.end   = this.recurrence.next(this.end);
         }

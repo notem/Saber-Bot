@@ -214,7 +214,8 @@ class EntryProcessor implements Runnable
                     if(jda == null) return;
                     if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
-                    if (processing.add(se.getId()))
+                    if (!processing.contains(se.getId())
+                            && processing.add(se.getId()))
                     {
                         // submit the event's task to the executor
                         Logging.info(this.getClass(), "Added "+se.getTitle()+" ["+se.getId()+"] to the processing set.");
@@ -249,6 +250,7 @@ class EntryProcessor implements Runnable
                             finally
                             {
                                 processing.remove(se.getId());
+                                Logging.info(this.getClass(), "Removed "+se.getTitle()+" ["+se.getId()+"] from the processing set.");
                             }
                         });
                     }
