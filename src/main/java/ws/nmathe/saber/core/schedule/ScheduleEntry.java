@@ -16,6 +16,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
@@ -218,13 +219,9 @@ public class ScheduleEntry
      */
     public void announce()
     {
-        Message msg = this.getMessageObject();
-        if(msg == null) return; // if msg object is bad
-
-        Set<String> announcementIDs = this.aTimes.keySet();
         // find all expired Dates' announcement IDs
         Collection<String> expired = new ArrayList<>();
-        for(String ID : announcementIDs)
+        for(String ID : this.aTimes.keySet())
         {
             Date date = this.aDates.get(ID);
             if(date!=null && date.before(new Date())) expired.add(ID);
@@ -235,19 +232,21 @@ public class ScheduleEntry
         expired.forEach(key-> this.aDates.remove(key));           // remove from ID mapping to announcement set
 
         // update db entry
-        int count = 3;
-        while (!Main.getEntryManager().updateEntry(this, false)
-                && (count > 0)) {count--;}
-        if (count==0) return; // don't send reminder if db couldn't update
+        Main.getEntryManager().updateEntry(this, false);
 
         // send announcements
-        expired.forEach(key->
+        this.getMessageObject((message) ->
         {
-            String message = ParsingUtilities.processText(this.aMessages.get(key), this, true);
-            String target = this.aTargets.get(key);
-            announcementHelper(msg, message, target);
-            Logging.event(this.getClass(), "Sent special announcement for event " +
-                    this.getTitle() + " [" + this.getId() + "]");
+            expired.forEach(key->
+            {
+                String text = ParsingUtilities.processText(this.aMessages.get(key), this, true);
+                String target = this.aTargets.get(key);
+
+                // send announcement
+                this.makeAnnouncement(message, text, target);
+                Logging.event(this.getClass(), "Sent special announcement for event " +
+                        this.getTitle() + " [" + this.getId() + "]");
+            });
         });
     }
 
@@ -256,29 +255,26 @@ public class ScheduleEntry
      */
     public void remind()
     {
-        Message msg = this.getMessageObject();
-        if(msg == null) return;         // if msg object is bad
-
         // remove expired reminders
         this.reminders.removeIf(date -> date.before(new Date()));
         this.endReminders.removeIf(date -> date.before(new Date()));
 
         // attempt to update the db record
-        int count = 3;
-        while (!Main.getEntryManager().updateEntry(this, false)
-                && (count > 0)) {count--;}
-        if (count==0) return; // don't send reminder if db couldn't update
+        Main.getEntryManager().updateEntry(this, false);
 
         // send reminder
-        if(!this.quietRemind)
+        if (!this.quietRemind)
         {
             // parse message and get the target channels
-            String remindMsg = ParsingUtilities.processText(Main.getScheduleManager().getReminderFormat(this.chanId), this, true);
+            String text = ParsingUtilities.processText(Main.getScheduleManager().getReminderFormat(this.chanId), this, true);
             String identifier = Main.getScheduleManager().getReminderChan(this.chanId);
-            if(identifier != null)
+            if (identifier != null)
             {
-                announcementHelper(msg, remindMsg, identifier);
-                Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
+                this.getMessageObject((message)->
+                {
+                    this.makeAnnouncement(message, text, identifier);
+                    Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
+                });
             }
         }
     }
@@ -288,11 +284,8 @@ public class ScheduleEntry
      */
     public void start()
     {
-        Message msg = this.getMessageObject();
-        if( msg == null ) return;
-
         // create start message and grab identifier before modifying entry
-        String startMsg = ParsingUtilities.processText(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
+        String text = ParsingUtilities.processText(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
 
         // is the announcement late?
@@ -309,25 +302,25 @@ public class ScheduleEntry
         else // update event to has started
         {    // try to update db
             this.hasStarted = true;
-            int count = 3;
-            while (!Main.getEntryManager().startEvent(this)
-                    && (count>0)) {count--;}
-            if (count==0) return;
+            Main.getEntryManager().startEvent(this);
             this.reloadDisplay();
         }
 
         // send start announcement
-        if(!this.quietStart)
+        if (!this.quietStart)
         {
             // dont send start announcements if 15 minutes late
-            if(late)
+            if (late)
             {
                 if(identifier != null)
                 {
-                    announcementHelper(msg, startMsg, identifier);
-                    Logging.event(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
-                            this.getStart().withZoneSameInstant(ZoneId.systemDefault())
-                                    .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+                    this.getMessageObject((message) ->
+                    {
+                        this.makeAnnouncement(message, text, identifier);
+                        Logging.event(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
+                                this.getStart().withZoneSameInstant(ZoneId.systemDefault())
+                                        .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
+                    });
                 }
             }
             else
@@ -342,11 +335,8 @@ public class ScheduleEntry
      */
     public void end()
     {
-        Message msg = this.getMessageObject();
-        if(msg == null) return;
-
         // create the announcement message before modifying event
-        String endMsg = ParsingUtilities.processText(Main.getScheduleManager()
+        String text = ParsingUtilities.processText(Main.getScheduleManager()
                 .getEndAnnounceFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
 
@@ -358,7 +348,7 @@ public class ScheduleEntry
         if (!this.repeat()) return; // don't send announcement if failure
 
         // send announcement
-        if(!this.quietEnd)
+        if (!this.quietEnd)
         {
             // dont send end announcement if late
             if (late)
@@ -366,10 +356,14 @@ public class ScheduleEntry
                 // send the end announcement
                 if(identifier != null)
                 {
-                    announcementHelper(msg, endMsg, identifier);
-                    String logStr = "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
-                            this.getEnd().withZoneSameInstant(ZoneId.systemDefault()).truncatedTo(ChronoUnit.MINUTES).toLocalTime();
-                    Logging.event(this.getClass(), logStr);
+                    this.getMessageObject((message) ->
+                    {
+
+                        this.makeAnnouncement(message, text, identifier);
+                        String logStr = "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
+                                this.getEnd().withZoneSameInstant(ZoneId.systemDefault()).truncatedTo(ChronoUnit.MINUTES).toLocalTime();
+                        Logging.event(this.getClass(), logStr);
+                    });
                 }
             }
             else
@@ -409,17 +403,12 @@ public class ScheduleEntry
             this.reloadReminders(Main.getScheduleManager().getReminders(this.chanId))
                     .reloadEndReminders(Main.getScheduleManager().getEndReminders(this.chanId));
 
-            int count = 3;
-            while (!Main.getEntryManager().updateEntry(this, true)
-                    && (count > 0)) {count--;}
-            if (count==0) return false;
+            Main.getEntryManager().updateEntry(this, true);
         }
         else // otherwise remove entry and delete the message
         {
             MessageUtilities.deleteMsg(msg, null);
-            int count = 3;
-            while (!Main.getEntryManager().removeEntry(this.entryId)
-                    && (count>0)) {count--;}
+            Main.getEntryManager().removeEntry(this.entryId);
         }
         return true;
     }
@@ -429,7 +418,7 @@ public class ScheduleEntry
      * processes a channel identifier (either a channel name or snowflake ID) into a valid channel
      * and sends an event announcement
      */
-    private void announcementHelper(Message message, String content, String targetIdentifier)
+    private void makeAnnouncement(Message message, String content, String targetIdentifier)
     {
         boolean success = false;
 
@@ -921,6 +910,20 @@ public class ScheduleEntry
             msg = null;
         }
         return msg;
+    }
+
+    /**
+     * Attempts to retrieve the discord Message, if the message does not exist
+     * (or the bot can for any other reason cannot retrieve it) the method returns null
+     * @return (Message) if exists, otherwise null
+     */
+    public void getMessageObject(Consumer<Message> success)
+    {
+        JDA jda = Main.getShardManager().isSharding() ?
+                Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
+        jda.getTextChannelById(this.chanId)
+                .getMessageById(this.msgId)
+                .queue(success);
     }
 
     /*

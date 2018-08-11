@@ -41,8 +41,6 @@ class EntryProcessor implements Runnable
     private static Set<Integer> remindSet   = Collections.newSetFromMap(new ConcurrentHashMap<>()); // reminders
     private static Set<Integer> specialSet  = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-specific announcements
 
-    private static Integer TIMEOUT = 180; // three minutes before timeout
-
     // this set is used to track which events are currently being processed and should be ignored
     // if they appear in later database queries
     private static Set<Integer> processing  = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -203,57 +201,71 @@ class EntryProcessor implements Runnable
         switch (setIdentifier)
         {
             case END_SET:
-                set = endSet;
+                set = new HashSet<>(endSet);
                 break;
             case START_SET:
-                set = startSet;
+                set = new HashSet<>(startSet);
                 break;
             case REMIND_SET:
-                set = remindSet;
+                set = new HashSet<>(remindSet);
                 break;
             case SPECIAL_SET:
-                set = specialSet;
+                set = new HashSet<>(specialSet);
                 break;
         }
         set.forEach(entryId ->
         {
-            if (!processing.contains(entryId))
+            // allow only one event-action task per event entry
+            if (processing.add(entryId))
             {
-                if (processing.add(entryId))
+                // submit the event's task to the executor
+                eventsExecutor.submit(() ->
                 {
-                    eventsExecutor.submit(() ->
+                    try
                     {
-                        try
+                        switch (setIdentifier)
                         {
-                            switch (setIdentifier)
-                            {
-                                case END_SET:
-                                    Main.getEntryManager().getEntry(entryId).end();
-                                    break;
-                                case START_SET:
-                                    Main.getEntryManager().getEntry(entryId).start();
-                                    break;
-                                case REMIND_SET:
-                                    Main.getEntryManager().getEntry(entryId).remind();
-                                    break;
-                                case SPECIAL_SET:
-                                    Main.getEntryManager().getEntry(entryId).announce();
-                                    break;
-                            }
+                            case END_SET:
+                                Main.getEntryManager().getEntry(entryId).end();
+                                break;
+                            case START_SET:
+                                Main.getEntryManager().getEntry(entryId).start();
+                                break;
+                            case REMIND_SET:
+                                Main.getEntryManager().getEntry(entryId).remind();
+                                break;
+                            case SPECIAL_SET:
+                                Main.getEntryManager().getEntry(entryId).announce();
+                                break;
                         }
-                        catch (Exception e)
-                        {
-                            Logging.exception(this.getClass(), e);
-                        }
-                        finally
-                        {
-                            processing.remove(entryId);
-                        }
-                    });
+                    }
+                    catch (Exception e)
+                    {
+                        Logging.exception(this.getClass(), e);
+                    }
+                    finally
+                    {
+                        processing.remove(entryId);
+                    }
+                });
+                // remove the entry ID from the to-be-processed queue
+                switch (setIdentifier)
+                {
+                    case END_SET:
+                        endSet.remove(entryId);
+                        break;
+                    case START_SET:
+                        startSet.remove(entryId);
+                        break;
+                    case REMIND_SET:
+                        remindSet.remove(entryId);
+                        break;
+                    case SPECIAL_SET:
+                        specialSet.remove(entryId);
+                        break;
                 }
             }
         });
-        set.clear();
     }
 
     /**
