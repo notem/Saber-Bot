@@ -53,7 +53,7 @@ public class EntryManager
         // fill
         announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.FILL),
-                0, 30, TimeUnit.SECONDS);
+                0, 60, TimeUnit.SECONDS);
         // empty
         announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.EMPTY),

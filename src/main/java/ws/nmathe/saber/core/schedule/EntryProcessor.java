@@ -2,6 +2,7 @@ package ws.nmathe.saber.core.schedule;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.dv8tion.jda.core.JDA;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
@@ -11,6 +12,7 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -39,7 +41,7 @@ class EntryProcessor implements Runnable
     private static Set<Integer> remindSet   = Collections.newSetFromMap(new ConcurrentHashMap<>()); // reminders
     private static Set<Integer> specialSet  = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-specific announcements
 
-    private static Integer TIMEOUT = 30;
+    private static Integer TIMEOUT = 180; // three minutes before timeout
 
     // this set is used to track which events are currently being processed and should be ignored
     // if they appear in later database queries
@@ -64,29 +66,10 @@ class EntryProcessor implements Runnable
             {
                 Logging.info(this.getClass(), "Processing entries: Filling queues. . .");
 
-                // process entries which are ending
-                Bson query = and(eq("hasStarted",true), lte("end", new Date()));
-                processAndQueueEvents(SetType.END_SET, query);
-
-                // process entries which are starting
-                query = and(eq("hasStarted",false), lte("start", new Date()));
-                processAndQueueEvents(SetType.START_SET, query);
-
-                // process entries with reminders
-                query = and(
-                            and(eq("hasStarted",false), lte("reminders", new Date())),
-                            gte("start", new Date()));
-                processAndQueueEvents(SetType.REMIND_SET, query);
-
-                // process entries with end reminders
-                query = and(
-                            and(eq("hasStarted",true), lte("end_reminders", new Date())),
-                            gte("end", new Date()));
-                processAndQueueEvents(SetType.REMIND_SET, query);
-
-                // process entries with announcement overrides
-                query = lte("announcements", new Date());
-                processAndQueueEvents(SetType.SPECIAL_SET, query);
+                fillQueue(SetType.END_SET);
+                fillQueue(SetType.START_SET);
+                fillQueue(SetType.REMIND_SET);
+                fillQueue(SetType.SPECIAL_SET);
 
                 Logging.info(this.getClass(), "Finished filling queues.");
             }
@@ -100,114 +83,11 @@ class EntryProcessor implements Runnable
                 Logging.info(this.getClass(), "Processing entries: Emptying " +
                         (endSet.size()+startSet.size()+remindSet.size()+specialSet.size()) +
                         " items from queues. . .");
-                endSet.forEach(entryId ->
-                {
-                    if (!processing.contains(entryId))
-                    {
-                        eventsExecutor.submit(() ->
-                        {
-                            try
-                            {
-                                FutureTask<Object> task = new FutureTask<>(() ->
-                                {
-                                    if (processing.add(entryId))
-                                    {
-                                        Main.getEntryManager().getEntry(entryId).end();
-                                        endSet.remove(entryId);
-                                        processing.remove(entryId);
-                                    }
-                                    return null;
-                                });
-                                task.get(TIMEOUT, TimeUnit.SECONDS);
-                            }
-                            catch (Exception e)
-                            {
-                                Logging.exception(this.getClass(), e);
-                            }
-                        });
-                    }
-                });
-                startSet.forEach(entryId ->
-                {
-                    if (!processing.contains(entryId))
-                    {
-                        eventsExecutor.submit(() ->
-                        {
-                            try
-                            {
-                                FutureTask<Object> task = new FutureTask<>(() ->
-                                {
-                                    if (processing.add(entryId))
-                                    {
-                                        Main.getEntryManager().getEntry(entryId).start();
-                                        startSet.remove(entryId);
-                                        processing.remove(entryId);
-                                    }
-                                    return null;
-                                });
-                                task.get(TIMEOUT, TimeUnit.SECONDS);
-                            }
-                            catch (Exception e)
-                            {
-                                Logging.exception(this.getClass(), e);
-                            }
-                        });
-                    }
-                });
-                remindSet.forEach(entryId ->
-                {
-                    if (!processing.contains(entryId))
-                    {
-                        eventsExecutor.submit(() ->
-                        {
-                            try
-                            {
-                                FutureTask<Object> task = new FutureTask<>(() ->
-                                {
-                                    if (processing.add(entryId))
-                                    {
-                                        Main.getEntryManager().getEntry(entryId).remind();
-                                        startSet.remove(entryId);
-                                        processing.remove(entryId);
-                                    }
-                                    return null;
-                                });
-                                task.get(TIMEOUT, TimeUnit.SECONDS);
-                            }
-                            catch (Exception e)
-                            {
-                                Logging.exception(this.getClass(), e);
-                            }
-                        });
-                    }
-                });
-                specialSet.forEach(entryId ->
-                {
-                    if (!processing.contains(entryId))
-                    {
-                        eventsExecutor.submit(() ->
-                        {
-                            try
-                            {
-                                FutureTask<Object> task = new FutureTask<>(() ->
-                                {
-                                    if (processing.add(entryId))
-                                    {
-                                        Main.getEntryManager().getEntry(entryId).announce();
-                                        startSet.remove(entryId);
-                                        processing.remove(entryId);
-                                    }
-                                    return null;
-                                });
-                                task.get(TIMEOUT, TimeUnit.SECONDS);
-                            }
-                            catch (Exception e)
-                            {
-                                Logging.exception(this.getClass(), e);
-                            }
-                        });
-                    }
-                });
+
+                emptyQueue(SetType.END_SET);
+                emptyQueue(SetType.START_SET);
+                emptyQueue(SetType.REMIND_SET);
+                emptyQueue(SetType.SPECIAL_SET);
             }
 
             /*
@@ -314,12 +194,101 @@ class EntryProcessor implements Runnable
     }
 
     /**
+     *
+     * @param setIdentifier
+     */
+    private void emptyQueue(SetType setIdentifier)
+    {
+        Set<Integer> set = new HashSet<>();
+        switch (setIdentifier)
+        {
+            case END_SET:
+                set = endSet;
+                break;
+            case START_SET:
+                set = startSet;
+                break;
+            case REMIND_SET:
+                set = remindSet;
+                break;
+            case SPECIAL_SET:
+                set = specialSet;
+                break;
+        }
+        set.forEach(entryId ->
+        {
+            if (!processing.contains(entryId))
+            {
+                if (processing.add(entryId))
+                {
+                    eventsExecutor.submit(() ->
+                    {
+                        try
+                        {
+                            FutureTask<Object> task = new FutureTask<>(() ->
+                            {
+
+                                switch (setIdentifier)
+                                {
+                                    case END_SET:
+                                        Main.getEntryManager().getEntry(entryId).end();
+                                        break;
+                                    case START_SET:
+                                        Main.getEntryManager().getEntry(entryId).start();
+                                        break;
+                                    case REMIND_SET:
+                                        Main.getEntryManager().getEntry(entryId).remind();
+                                        break;
+                                    case SPECIAL_SET:
+                                        Main.getEntryManager().getEntry(entryId).announce();
+                                        break;
+                                }
+                                return null;
+                            });
+                            task.get(TIMEOUT, TimeUnit.SECONDS);
+                        }
+                        catch (Exception e)
+                        {
+                            Logging.exception(this.getClass(), e);
+                        }
+                        finally
+                        {
+                            processing.remove(entryId);
+                        }
+                    });
+                }
+            }
+        });
+        set.clear();
+    }
+
+    /**
      * fills a SetType given a proper query, helper function to run()
      * @param setIdentifier which SetType to SetType the event for
-     * @param query the database query to use
      */
-    private void processAndQueueEvents(SetType setIdentifier, Bson query)
+    private void fillQueue(SetType setIdentifier)
     {
+        Bson query = new BsonDocument();
+        switch(setIdentifier)
+        {
+            case END_SET:
+                query = and(eq("hasStarted",true), lte("end", new Date()));
+                break;
+            case REMIND_SET:
+                query = and(
+                        and(eq("hasStarted",true), lte("end_reminders", new Date())),
+                        gte("end", new Date()));
+                query = or(query, and(
+                        and(eq("hasStarted",false), lte("reminders", new Date())),
+                        gte("start", new Date())));
+                break;
+            case START_SET:
+                query = and(eq("hasStarted",false), lte("start", new Date()));
+                break;
+            case SPECIAL_SET:
+                query = lte("announcements", new Date());
+                break;
+        }
         Main.getDBDriver().getEventCollection().find(query)
                 .forEach((Consumer<? super Document>) document ->
                 {
