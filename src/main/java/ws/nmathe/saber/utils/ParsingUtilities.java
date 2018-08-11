@@ -107,7 +107,11 @@ public class ParsingUtilities
         Matcher matcher = Pattern.compile("%\\{(.*?)}").matcher(raw);
         while (matcher.find())
         {
-            if (count++ > 50) break; // protection against endless loop?
+            if (count++ > 30)
+            {
+                Logging.warn(ParsingUtilities.class, "Reached loop limit in processText()!");
+                break; // protection against endless loop?
+            }
 
             String group = matcher.group();
             String trimmed = group.substring(2, group.length()-1);
@@ -120,7 +124,7 @@ public class ParsingUtilities
                 if(trimmed.matches("(\\[.*?])?comment \\d+(\\[.*?])?") && firstPass)
                 {
                     int i = Integer.parseInt(trimmed.replaceAll("(\\[.*?])?comment |\\[.*?]", ""));
-                    if(entry.getComments().size() >= i && i > 0)
+                    if (entry.getComments().size() >= i && i > 0)
                     {
                         String preprocessed = helper.apply(entry.getComments().get(i - 1), matcher2);
                         sub.append(processText(preprocessed, entry, false));
@@ -221,18 +225,18 @@ public class ParsingUtilities
                 }
 
                 // inserts the number of users who have rsvp'ed for a particular rsvp category
-                else if(trimmed.matches("(\\[.*?])?rsvp .+(\\[.*?])?")) // rsvp count
+                else if (trimmed.matches("(\\[.*?])?rsvp .+(\\[.*?])?")) // rsvp count
                 {
                     String name = trimmed.replaceAll("rsvp ","").replaceAll("\\[.*?]","");
                     List<String> members = entry.getRsvpMembers().get(name);
-                    if(members != null)
+                    if (members != null)
                     {
                         sub.append(helper.apply(""+members.size(), matcher2));
                     }
                 }
 
                 // inserts @mentions for all users who have rsvped to a particular rsvp category
-                else if(trimmed.matches("(\\[.*?])?mention .+(\\[.*?])?")) // rsvp mentions
+                else if (trimmed.matches("(\\[.*?])?mention .+(\\[.*?])?")) // rsvp mentions
                 {
                     String name = trimmed.replaceAll("mention ","").replaceAll("\\[.*?]","");
                     List<String> users = compileUserList(entry, name);
@@ -310,18 +314,18 @@ public class ParsingUtilities
                 }
 
                 // inserts the custom title url used by the event (if used)
-                else if(trimmed.matches("(\\[.*?])?url(\\[.*?])?")) // advanced title url
+                else if (trimmed.matches("(\\[.*?])?url(\\[.*?])?")) // advanced title url
                 {
-                    if(entry.getTitleUrl() != null)
+                    if (entry.getTitleUrl() != null)
                     {
                         sub.append(helper.apply(entry.getTitleUrl(), matcher2));
                     }
                 }
 
                 // inserts the custom image url used by the event (if used)
-                else if(trimmed.matches("(\\[.*?])?image(\\[.*?])?")) // advanced image url
+                else if (trimmed.matches("(\\[.*?])?image(\\[.*?])?")) // advanced image url
                 {
-                    if(entry.getImageUrl() != null)
+                    if (entry.getImageUrl() != null)
                     {
                         sub.append(helper.apply(entry.getImageUrl(), matcher2));
                     }
@@ -330,7 +334,7 @@ public class ParsingUtilities
                 // inserts the custom thumbnail url used by the event (if used)
                 else if(trimmed.matches("(\\[.*?])?thumbnail(\\[.*?])?")) // advanced thumbnail url
                 {
-                    if(entry.getThumbnailUrl() != null)
+                    if (entry.getThumbnailUrl() != null)
                     {
                         sub.append(helper.apply(entry.getThumbnailUrl(), matcher2));
                     }
@@ -339,7 +343,7 @@ public class ParsingUtilities
                 // inserts the custom location string (if used)
                 else if(trimmed.matches("(\\[.*?])?location(\\[.*?])?")) // advanced thumbnail url
                 {
-                    if(entry.getThumbnailUrl() != null)
+                    if (entry.getThumbnailUrl() != null)
                     {
                         sub.append(helper.apply(entry.getLocation(), matcher2));
                     }
@@ -347,27 +351,21 @@ public class ParsingUtilities
 
                 // substitution for event start text (to be used for localization)
                 // TODO remove when full localization features are finished
-                else if(trimmed.matches("(\\[.*?])?s(\\[.*?])?"))
+                else if (trimmed.matches("(\\[.*?])?s(\\[.*?])?"))
                 {
-                    if(!entry.hasStarted())
+                    if (!entry.hasStarted())
                     {
-                        while(matcher2.find())
-                        {
-                            sub.append(matcher2.group().replaceAll("[\\[\\]]", ""));
-                        }
+                        sub.append(helper.apply("", matcher2));
                     }
                 }
 
                 // substitution for event end text (to be used for localization)
                 // TODO remove when full localization features are finished
-                else if(trimmed.matches("(\\[.*?])?e(\\[.*?])?"))
+                else if (trimmed.matches("(\\[.*?])?e(\\[.*?])?"))
                 {
-                    if(entry.hasStarted())
+                    if (entry.hasStarted())
                     {
-                        while(matcher2.find())
-                        {
-                            sub.append(matcher2.group().replaceAll("[\\[\\]]", ""));
-                        }
+                        sub.append(helper.apply("", matcher2));
                     }
                 }
             }
@@ -391,14 +389,14 @@ public class ParsingUtilities
                 {
                     // comments 1-9
                     case 'c' :
-                        if(i+1 < raw.length() && firstPass)
+                        if (i+1 < raw.length() && firstPass)
                         {
                             ch = raw.charAt(i+1);
-                            if( Character.isDigit( ch ) )
+                            if (Character.isDigit(ch))
                             {
                                 i++;
                                 int x = Integer.parseInt("" + ch);
-                                if(entry.getComments().size()>=x && x!=0)
+                                if (entry.getComments().size()>=x && x!=0)
                                 {
                                     String parsedComment =
                                             ParsingUtilities.processText(entry.getComments().get(x - 1), entry, false);
@@ -468,7 +466,7 @@ public class ParsingUtilities
 
                     // dynamic 'in [x] minutes|hours|days' text
                     case 'x' :
-                        if(!entry.hasStarted())
+                        if (!entry.hasStarted())
                         {
                             long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
                             processed.append(" in ");

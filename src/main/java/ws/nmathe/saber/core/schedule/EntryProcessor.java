@@ -217,6 +217,7 @@ class EntryProcessor implements Runnable
                     if (processing.add(se.getId()))
                     {
                         // submit the event's task to the executor
+                        Logging.info(this.getClass(), "Added "+se.getTitle()+" ["+se.getId()+"] to the processing set.");
                         eventsExecutor.submit(() ->
                         {
                             try
@@ -237,7 +238,7 @@ class EntryProcessor implements Runnable
                                         break;
                                 }
                             }
-                            catch(PermissionException e)
+                            catch (PermissionException e)
                             {
                                 Logging.warn(this.getClass(), "Lacking permission: "+e.getPermission());
                             }
