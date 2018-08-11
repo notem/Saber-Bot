@@ -292,41 +292,39 @@ public class ScheduleEntry
         Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
         boolean late = this.start.isAfter(ZonedDateTime.now().minusMinutes(threshold));
 
-        // do database updates before sending announcement
-        if (this.start.isEqual(this.end))
+        this.getMessageObject((message) ->
         {
-            // if the entry's start time is the same as it's end
-            // try to process the event's repeat action before announcement
-            if (!this.repeat()) return;
-        }
-        else // update event to has started
-        {    // try to update db
-            this.hasStarted = true;
-            Main.getEntryManager().startEvent(this);
-        }
+            // do database updates before sending announcement
+            if (this.start.isEqual(this.end))
+            {   // process event repeat
+                this.repeat(message);
+            }
+            else // update event to has started
+            {    // try to update db
+                this.hasStarted = true;
+                Main.getEntryManager().startEvent(this);
+            }
 
-        // send start announcement
-        if (!this.quietStart)
-        {
-            // dont send start announcements if 15 minutes late
-            if (late)
+            // send start announcement
+            if (!this.quietStart)
             {
-                if (identifier != null)
+                // dont send start announcements if 15 minutes late
+                if (late)
                 {
-                    this.getMessageObject((message) ->
+                    if (identifier != null)
                     {
                         this.makeAnnouncement(message, text, identifier);
                         Logging.event(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                                 this.getStart().withZoneSameInstant(ZoneId.systemDefault())
                                         .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
-                    });
+                    }
+                }
+                else
+                {
+                    Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
                 }
             }
-            else
-            {
-                Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
-            }
-        }
+        });
     }
 
     /**
@@ -343,30 +341,31 @@ public class ScheduleEntry
         Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
         Boolean late = this.end.isAfter(ZonedDateTime.now().minusMinutes(threshold));
 
-        // send announcement
-        if (!this.quietEnd)
+        this.getMessageObject((message) ->
         {
-            // dont send end announcement if late
-            if (late)
+            this.repeat(message);
+
+            // send announcement
+            if (!this.quietEnd)
             {
-                // send the end announcement
-                if(identifier != null)
+                // dont send end announcement if late
+                if (late)
                 {
-                    this.getMessageObject((message) ->
+                    // send the end announcement
+                    if (identifier != null)
                     {
-                        this.repeat(message);
                         this.makeAnnouncement(message, text, identifier);
                         String logStr = "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                                 this.getEnd().withZoneSameInstant(ZoneId.systemDefault()).truncatedTo(ChronoUnit.MINUTES).toLocalTime();
                         Logging.event(this.getClass(), logStr);
-                    });
+                    }
+                }
+                else
+                {
+                    Logging.warn(this.getClass(), "Late event end: "+this.title +" ["+this.entryId+"] "+this.end);
                 }
             }
-            else
-            {
-                Logging.warn(this.getClass(), "Late event end: "+this.title +" ["+this.entryId+"] "+this.end);
-            }
-        }
+        });
     }
 
 

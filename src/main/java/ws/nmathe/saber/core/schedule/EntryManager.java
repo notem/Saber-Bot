@@ -273,7 +273,7 @@ public class EntryManager
         try
         {
             UpdateResult res = Main.getDBDriver().getEventCollection()
-                    .updateOne(eq("_id", se.getId()), set("hasStarted", true));
+                    .updateMany(eq("_id", se.getId()), set("hasStarted", true));
             if (!res.wasAcknowledged())
             {
                 Logging.warn(this.getClass(), "Attempt to update '"+se.getTitle()+"' was unacknowledged!");
@@ -366,7 +366,9 @@ public class EntryManager
      */
     public boolean removeEntry(Integer entryId)
     {
-        DeleteResult res = Main.getDBDriver().getEventCollection().deleteOne(eq("_id", entryId));
+        DeleteResult res = Main.getDBDriver().getEventCollection().deleteMany(eq("_id", entryId));
+        if (!res.wasAcknowledged())
+            Logging.warn(this.getClass(), "Attempt to remove entry #"+entryId+"' was unacknowledged!");
         return res.wasAcknowledged();
     }
 
@@ -374,7 +376,7 @@ public class EntryManager
      * regenerates the displayed Message text for a schedule entry
      * @param eId integer Id
      */
-    public void reloadEntry(Integer eId)
+    public void reloadEntryDisplay(Integer eId)
     {
         ScheduleEntry se = getEntry(eId);
         if(se == null) return;

@@ -5,7 +5,6 @@ import com.google.api.services.calendar.Calendar;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
-import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -18,7 +17,6 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 import java.time.*;
-import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
@@ -677,7 +675,7 @@ public class ConfigCommand implements Command
                                 }
 
                                 // reload the entry's display to match new timezone
-                                Main.getEntryManager().reloadEntry(id);
+                                Main.getEntryManager().reloadEntryDisplay(id);
                             });
 
                     // disable auto-sync'ing timezone
@@ -704,7 +702,7 @@ public class ConfigCommand implements Command
                     }
                     // reload each entry on the schedule
                     Main.getEntryManager().getEntriesFromChannel(scheduleChan.getId())
-                            .forEach(se -> Main.getEntryManager().reloadEntry(se.getId()));
+                            .forEach(se -> Main.getEntryManager().reloadEntryDisplay(se.getId()));
                     Main.getScheduleManager().setAltZones(scheduleChan.getId(), new ArrayList<>(altZones));
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
                     break;
@@ -716,7 +714,7 @@ public class ConfigCommand implements Command
                     // reload the schedule display
                     Main.getDBDriver().getEventCollection().find(eq("channelId", scheduleChan.getId()))
                             .forEach((Consumer<? super Document>) document ->
-                                    Main.getEntryManager().reloadEntry((Integer) document.get("_id")));
+                                    Main.getEntryManager().reloadEntryDisplay((Integer) document.get("_id")));
 
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
                     break;
@@ -896,7 +894,7 @@ public class ConfigCommand implements Command
                                                 .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg, se));
                                     });
 
-                                    Main.getEntryManager().reloadEntry(document.getInteger("_id"));
+                                    Main.getEntryManager().reloadEntryDisplay(document.getInteger("_id"));
                                 });
                     }
                     // otherwise, if the rsvp setting was changes
@@ -920,7 +918,7 @@ public class ConfigCommand implements Command
                                                 .getMessageById(document.getString("messageId"))
                                                 .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg, se));
 
-                                        Main.getEntryManager().reloadEntry(document.getInteger("_id"));
+                                        Main.getEntryManager().reloadEntryDisplay(document.getInteger("_id"));
                                     });
                         }
                         else
@@ -934,7 +932,7 @@ public class ConfigCommand implements Command
                                                 .getMessageById(document.getString("messageId")).complete()
                                                 .clearReactions().queue();
 
-                                        Main.getEntryManager().reloadEntry(document.getInteger("_id"));
+                                        Main.getEntryManager().reloadEntryDisplay(document.getInteger("_id"));
                                     });
                         }
                     }
@@ -1029,7 +1027,7 @@ public class ConfigCommand implements Command
                     Main.getDBDriver().getEventCollection()
                             .find(eq("channelId", scheduleChan.getId()))
                             .forEach((Consumer<? super Document>) document ->
-                                    Main.getEntryManager().reloadEntry(document.getInteger("_id"))
+                                    Main.getEntryManager().reloadEntryDisplay(document.getInteger("_id"))
                             );
                     MessageUtilities.sendMsg(this.genMsgStr(cId, Mode.MISC, event.getJDA()), event.getChannel(), null);
                     break;
