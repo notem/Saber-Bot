@@ -227,24 +227,28 @@ class EntryProcessor implements Runnable
                 {
                     try
                     {
-                        switch (setIdentifier)
+                        ScheduleEntry entry = Main.getEntryManager().getEntry(entryId);
+                        if (entry != null)
                         {
-                            case END_SET:
-                                Main.getEntryManager().getEntry(entryId).end();
-                                endSet.remove(entryId);
-                                break;
-                            case START_SET:
-                                Main.getEntryManager().getEntry(entryId).start();
-                                startSet.remove(entryId);
-                                break;
-                            case REMIND_SET:
-                                Main.getEntryManager().getEntry(entryId).remind();
-                                remindSet.remove(entryId);
-                                break;
-                            case SPECIAL_SET:
-                                Main.getEntryManager().getEntry(entryId).announce();
-                                specialSet.remove(entryId);
-                                break;
+                            switch (setIdentifier)
+                            {
+                                case END_SET:
+                                    entry.end();
+                                    endSet.remove(entryId);
+                                    break;
+                                case START_SET:
+                                    entry.start();
+                                    startSet.remove(entryId);
+                                    break;
+                                case REMIND_SET:
+                                    entry.remind();
+                                    remindSet.remove(entryId);
+                                    break;
+                                case SPECIAL_SET:
+                                    entry.announce();
+                                    specialSet.remove(entryId);
+                                    break;
+                            }
                         }
                     }
                     catch(PermissionException e)

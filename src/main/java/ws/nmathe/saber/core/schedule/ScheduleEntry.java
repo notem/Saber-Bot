@@ -284,6 +284,9 @@ public class ScheduleEntry
      */
     public void start()
     {
+        Message message = this.getMessageObject();
+        if (message == null) return;
+
         // create start message and grab identifier before modifying entry
         String text = ParsingUtilities.processText(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
@@ -292,39 +295,36 @@ public class ScheduleEntry
         Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
         boolean late = this.start.isAfter(ZonedDateTime.now().minusMinutes(threshold));
 
-        this.getMessageObject((message) ->
-        {
-            // do database updates before sending announcement
-            if (this.start.isEqual(this.end))
-            {   // process event repeat
-                this.repeat(message);
-            }
-            else // update event to has started
-            {    // try to update db
-                this.hasStarted = true;
-                Main.getEntryManager().startEvent(this);
-            }
+        // do database updates before sending announcement
+        if (this.start.isEqual(this.end))
+        {   // process event repeat
+            this.repeat(message);
+        }
+        else // update event to has started
+        {    // try to update db
+            this.hasStarted = true;
+            Main.getEntryManager().startEvent(this);
+        }
 
-            // send start announcement
-            if (!this.quietStart)
+        // send start announcement
+        if (!this.quietStart)
+        {
+            // dont send start announcements if 15 minutes late
+            if (late)
             {
-                // dont send start announcements if 15 minutes late
-                if (late)
+                if (identifier != null)
                 {
-                    if (identifier != null)
-                    {
-                        this.makeAnnouncement(message, text, identifier);
-                        Logging.event(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
-                                this.getStart().withZoneSameInstant(ZoneId.systemDefault())
-                                        .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
-                    }
-                }
-                else
-                {
-                    Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
+                    this.makeAnnouncement(message, text, identifier);
+                    Logging.event(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
+                            this.getStart().withZoneSameInstant(ZoneId.systemDefault())
+                                    .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
                 }
             }
-        });
+            else
+            {
+                Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
+            }
+        }
     }
 
     /**
@@ -332,6 +332,9 @@ public class ScheduleEntry
      */
     public void end()
     {
+        Message message = this.getMessageObject();
+        if (message == null) return;
+
         // create the announcement message before modifying event
         String text = ParsingUtilities.processText(Main.getScheduleManager()
                 .getEndAnnounceFormat(this.chanId), this, true);
@@ -341,31 +344,29 @@ public class ScheduleEntry
         Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
         Boolean late = this.end.isAfter(ZonedDateTime.now().minusMinutes(threshold));
 
-        this.getMessageObject((message) ->
-        {
-            this.repeat(message);
+        // update entry
+        this.repeat(message);
 
-            // send announcement
-            if (!this.quietEnd)
+        // send announcement
+        if (!this.quietEnd)
+        {
+            // dont send end announcement if late
+            if (late)
             {
-                // dont send end announcement if late
-                if (late)
+                // send the end announcement
+                if (identifier != null)
                 {
-                    // send the end announcement
-                    if (identifier != null)
-                    {
-                        this.makeAnnouncement(message, text, identifier);
-                        String logStr = "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
-                                this.getEnd().withZoneSameInstant(ZoneId.systemDefault()).truncatedTo(ChronoUnit.MINUTES).toLocalTime();
-                        Logging.event(this.getClass(), logStr);
-                    }
-                }
-                else
-                {
-                    Logging.warn(this.getClass(), "Late event end: "+this.title +" ["+this.entryId+"] "+this.end);
+                    this.makeAnnouncement(message, text, identifier);
+                    String logStr = "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
+                            this.getEnd().withZoneSameInstant(ZoneId.systemDefault()).truncatedTo(ChronoUnit.MINUTES).toLocalTime();
+                    Logging.event(this.getClass(), logStr);
                 }
             }
-        });
+            else
+            {
+                Logging.warn(this.getClass(), "Late event end: "+this.title +" ["+this.entryId+"] "+this.end);
+            }
+        }
     }
 
 
