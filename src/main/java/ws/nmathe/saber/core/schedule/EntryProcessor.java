@@ -78,19 +78,19 @@ class EntryProcessor implements Runnable
             */
             else if (type == EntryManager.type.EMPTY)
             {
-                Logging.info(this.getClass(), "Processing entries: Emptying " +
-                        (endSet.size()+startSet.size()+remindSet.size()+specialSet.size()) +
-                        " items from queues. . .");
+                Logging.info(this.getClass(), "Processing entries: Emptying queues...");
 
                 emptyQueue(SetType.END_SET);
                 emptyQueue(SetType.START_SET);
                 emptyQueue(SetType.REMIND_SET);
                 emptyQueue(SetType.SPECIAL_SET);
+
+                Logging.info(this.getClass(), "There are "+processing.size()+" events currently processing.");
             }
 
             /*
             Mode 3
-            Updates the 'starts in x minutes' timer on events
+            Updates the 'starts in x minutes' timer on events and deletes expired events
             */
             else
             {
@@ -124,9 +124,13 @@ class EntryProcessor implements Runnable
                     query = lte("expire", Date.from(ZonedDateTime.now().plusDays(1).toInstant()));
 
                     //delete message objects
-                    Main.getDBDriver().getEventCollection().find(query).forEach((Consumer<? super Document>) document ->
+                    Main.getDBDriver().getEventCollection().find(query)
+                            .forEach((Consumer<? super Document>) document ->
                     {
-                        MessageUtilities.deleteMsg((new ScheduleEntry(document)).getMessageObject(), null);
+                        (new ScheduleEntry(document)).getMessageObject((message) ->
+                        {
+                            MessageUtilities.deleteMsg(message, null);
+                        });
                     });
 
                     // bulk delete entries from the database
@@ -309,7 +313,6 @@ class EntryProcessor implements Runnable
                     try
                     {
                         ScheduleEntry se = (new ScheduleEntry(document));
-                        if (se.getMessageObject() == null) return; // don't add to sets
                         switch(setIdentifier)
                         {
                             case END_SET:
