@@ -392,6 +392,7 @@ public class ScheduleEntry
             {
                 Main.getEntryManager().removeEntry(this.entryId);
                 MessageUtilities.deleteMsg(message, null);
+                return;
             }
 
             // recreate the announcement overrides
@@ -432,8 +433,10 @@ public class ScheduleEntry
                     success = true;
                 }
             }
-            catch (Exception ignored)
-            {}
+            catch (Exception e)
+            {
+                Logging.warn(this.getClass(), "Error when sending announcement: "+e.getMessage());
+            }
         }
         // if the announcement has not sent using the identifier as a snowflake,
         // treat the identifier as a channel name
@@ -923,9 +926,12 @@ public class ScheduleEntry
     {
         JDA jda = Main.getShardManager().isSharding() ?
                 Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
-        jda.getTextChannelById(this.chanId)
-                .getMessageById(this.msgId)
-                .queue(success);
+        TextChannel channel = jda.getTextChannelById(this.chanId);
+        if (channel != null)
+        {
+            channel.getMessageById(this.msgId)
+                    .queue(success);
+        }
     }
 
     /*

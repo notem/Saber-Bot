@@ -2,6 +2,7 @@ package ws.nmathe.saber.core.schedule;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -64,10 +65,10 @@ class EntryProcessor implements Runnable
             {
                 Logging.info(this.getClass(), "Processing entries: Filling queues. . .");
 
-                fillQueue(SetType.END_SET);
-                fillQueue(SetType.START_SET);
-                fillQueue(SetType.REMIND_SET);
-                fillQueue(SetType.SPECIAL_SET);
+                fillSet(SetType.END_SET);
+                fillSet(SetType.START_SET);
+                fillSet(SetType.REMIND_SET);
+                fillSet(SetType.SPECIAL_SET);
 
                 Logging.info(this.getClass(), "Finished filling queues.");
             }
@@ -80,10 +81,10 @@ class EntryProcessor implements Runnable
             {
                 Logging.info(this.getClass(), "Processing entries: Emptying queues...");
 
-                emptyQueue(SetType.END_SET);
-                emptyQueue(SetType.START_SET);
-                emptyQueue(SetType.REMIND_SET);
-                emptyQueue(SetType.SPECIAL_SET);
+                emptySet(SetType.END_SET);
+                emptySet(SetType.START_SET);
+                emptySet(SetType.REMIND_SET);
+                emptySet(SetType.SPECIAL_SET);
 
                 Logging.info(this.getClass(), "There are "+processing.size()+" events currently processing.");
             }
@@ -199,7 +200,7 @@ class EntryProcessor implements Runnable
      *
      * @param setIdentifier
      */
-    private void emptyQueue(SetType setIdentifier)
+    private void emptySet(SetType setIdentifier)
     {
         Set<Integer> set = new HashSet<>();
         switch (setIdentifier)
@@ -219,7 +220,6 @@ class EntryProcessor implements Runnable
         }
         set.forEach(entryId ->
         {
-            // allow only one event-action task per event entry
             if (processing.add(entryId))
             {
                 // submit the event's task to the executor
@@ -231,17 +231,25 @@ class EntryProcessor implements Runnable
                         {
                             case END_SET:
                                 Main.getEntryManager().getEntry(entryId).end();
+                                endSet.remove(entryId);
                                 break;
                             case START_SET:
                                 Main.getEntryManager().getEntry(entryId).start();
+                                startSet.remove(entryId);
                                 break;
                             case REMIND_SET:
                                 Main.getEntryManager().getEntry(entryId).remind();
+                                remindSet.remove(entryId);
                                 break;
                             case SPECIAL_SET:
                                 Main.getEntryManager().getEntry(entryId).announce();
+                                specialSet.remove(entryId);
                                 break;
                         }
+                    }
+                    catch(PermissionException e)
+                    {
+                        Logging.warn(this.getClass(), "Lacking permission: "+e.getPermission());
                     }
                     catch (Exception e)
                     {
@@ -252,22 +260,6 @@ class EntryProcessor implements Runnable
                         processing.remove(entryId);
                     }
                 });
-                // remove the entry ID from the to-be-processed queue
-                switch (setIdentifier)
-                {
-                    case END_SET:
-                        endSet.remove(entryId);
-                        break;
-                    case START_SET:
-                        startSet.remove(entryId);
-                        break;
-                    case REMIND_SET:
-                        remindSet.remove(entryId);
-                        break;
-                    case SPECIAL_SET:
-                        specialSet.remove(entryId);
-                        break;
-                }
             }
         });
     }
@@ -276,7 +268,7 @@ class EntryProcessor implements Runnable
      * fills a SetType given a proper query, helper function to run()
      * @param setIdentifier which SetType to SetType the event for
      */
-    private void fillQueue(SetType setIdentifier)
+    private void fillSet(SetType setIdentifier)
     {
         Bson query = new BsonDocument();
         switch(setIdentifier)
