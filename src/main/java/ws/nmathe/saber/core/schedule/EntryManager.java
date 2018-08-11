@@ -126,7 +126,7 @@ public class EntryManager
             try
             {
                 // add reaction options if rsvp is enabled
-                if( Main.getScheduleManager().isRSVPEnabled(channelId) )
+                if (Main.getScheduleManager().isRSVPEnabled(channelId))
                 {
                     Map<String, String> map = Main.getScheduleManager().getRSVPOptions(channelId);
                     addRSVPReactions(map, Main.getScheduleManager().getRSVPClear(channelId), msg, se);
@@ -186,9 +186,6 @@ public class EntryManager
      */
     public boolean updateEntry(ScheduleEntry se, boolean sort)
     {
-        Message origMessage = se.getMessageObject();
-        if(origMessage == null) return false;
-
         // process expiration date
         Date expire = null;
         if (se.getExpire() != null)
@@ -203,20 +200,12 @@ public class EntryManager
             deadline = Date.from(se.getDeadline().toInstant());
         }
 
-        // generate event display message
-        Message message = MessageGenerator.generate(se);
-
         // update message display
         Date finalExpire = expire;
         Date finalDeadline = deadline;
 
-        Message msg = MessageUtilities.editMsg(message, origMessage);
-        if (msg == null) return false;
         try
         {
-            String guildId = msg.getGuild().getId();
-            String channelId = msg.getChannel().getId();
-
             // replace whole document
             Document entryDocument =
                     new Document("_id", se.getId())
@@ -229,8 +218,8 @@ public class EntryManager
                             .append("end_reminders", se.getEndReminders())
                             .append("url", se.getTitleUrl())
                             .append("hasStarted", se.hasStarted())
-                            .append("messageId", msg.getId())
-                            .append("channelId", channelId)
+                            .append("messageId", se.getMessageId())
+                            .append("channelId", se.getChannelId())
                             .append("googleId", se.getGoogleId())
                             .append("rsvp_members", se.getRsvpMembers())
                             .append("rsvp_limits", se.getRsvpLimits())
@@ -243,7 +232,7 @@ public class EntryManager
                             .append("image", se.getImageUrl())
                             .append("thumbnail", se.getThumbnailUrl())
                             .append("deadline", finalDeadline)
-                            .append("guildId", guildId)
+                            .append("guildId", se.getGuildId())
                             .append("announcements", new ArrayList<>(se.getAnnouncements()))
                             .append("announcement_dates", se.getAnnouncementDates())
                             .append("announcement_times", se.getAnnouncementTimes())
@@ -264,7 +253,7 @@ public class EntryManager
             se.reloadDisplay();
 
             // auto-sort
-            autoSort(sort, channelId);
+            autoSort(sort, se.getChannelId());
             return true;
         }
         catch(Exception e)
@@ -285,10 +274,13 @@ public class EntryManager
         {
             UpdateResult res = Main.getDBDriver().getEventCollection()
                     .updateOne(eq("_id", se.getId()), set("hasStarted", true));
-            boolean acknowledged = res.wasAcknowledged();
-            if (!acknowledged)
+            if (!res.wasAcknowledged())
+            {
                 Logging.warn(this.getClass(), "Attempt to update '"+se.getTitle()+"' was unacknowledged!");
-            return acknowledged; // might result in skipped announcements or other issues
+                return false; // might result in skipped announcements or other issues
+            }
+            se.reloadDisplay();
+            return true;
         }
         catch(MongoException e)
         {

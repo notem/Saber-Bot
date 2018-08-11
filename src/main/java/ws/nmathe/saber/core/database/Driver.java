@@ -3,6 +3,7 @@ package ws.nmathe.saber.core.database;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.ReadConcern;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -29,18 +30,21 @@ public class Driver
     public MongoCollection<Document> getScheduleCollection()
     {
         return db.getCollection("schedules")
-                .withWriteConcern(WriteConcern.MAJORITY);
+                .withWriteConcern(WriteConcern.MAJORITY)
+                .withReadConcern(ReadConcern.LINEARIZABLE);
     }
 
     public MongoCollection<Document> getEventCollection()
     {
         return db.getCollection("events")
-                .withWriteConcern(WriteConcern.MAJORITY);
+                .withWriteConcern(WriteConcern.MAJORITY)
+                .withReadConcern(ReadConcern.LINEARIZABLE);
     }
 
     public MongoCollection<Document> getGuildCollection()
     {
         return db.getCollection("guilds")
-                .withWriteConcern(WriteConcern.MAJORITY);
+                .withWriteConcern(WriteConcern.MAJORITY)
+                .withReadConcern(ReadConcern.LINEARIZABLE);
     }
 }

@@ -303,7 +303,6 @@ public class ScheduleEntry
         {    // try to update db
             this.hasStarted = true;
             Main.getEntryManager().startEvent(this);
-            this.reloadDisplay();
         }
 
         // send start announcement
@@ -312,7 +311,7 @@ public class ScheduleEntry
             // dont send start announcements if 15 minutes late
             if (late)
             {
-                if(identifier != null)
+                if (identifier != null)
                 {
                     this.getMessageObject((message) ->
                     {
@@ -344,9 +343,6 @@ public class ScheduleEntry
         Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
         Boolean late = this.end.isAfter(ZonedDateTime.now().minusMinutes(threshold));
 
-        // attempt to adjust the database entry per repeat settings
-        if (!this.repeat()) return; // don't send announcement if failure
-
         // send announcement
         if (!this.quietEnd)
         {
@@ -358,7 +354,7 @@ public class ScheduleEntry
                 {
                     this.getMessageObject((message) ->
                     {
-
+                        this.repeat(message);
                         this.makeAnnouncement(message, text, identifier);
                         String logStr = "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                                 this.getEnd().withZoneSameInstant(ZoneId.systemDefault()).truncatedTo(ChronoUnit.MINUTES).toLocalTime();
@@ -380,8 +376,13 @@ public class ScheduleEntry
     public boolean repeat()
     {
         Message msg = this.getMessageObject();
-        if (msg==null) return false;
+        if (msg == null) return false;
+        this.repeat(msg);
+        return true;
+    }
 
+    private void repeat(Message message)
+    {
         if(this.recurrence.shouldRepeat(this.start)) // find next repeat date and edit the message
         {
             this.setNextOccurrence().setStarted(false);
@@ -391,8 +392,7 @@ public class ScheduleEntry
             if(expire != null && expire.isBefore(this.getStart()))
             {
                 Main.getEntryManager().removeEntry(this.entryId);
-                MessageUtilities.deleteMsg(msg, null);
-                return true;
+                MessageUtilities.deleteMsg(message, null);
             }
 
             // recreate the announcement overrides
@@ -407,10 +407,9 @@ public class ScheduleEntry
         }
         else // otherwise remove entry and delete the message
         {
-            MessageUtilities.deleteMsg(msg, null);
+            MessageUtilities.deleteMsg(message, null);
             Main.getEntryManager().removeEntry(this.entryId);
         }
-        return true;
     }
 
 
@@ -428,21 +427,21 @@ public class ScheduleEntry
             try
             {
                 TextChannel channel = message.getGuild().getTextChannelById(targetIdentifier);
-                if(channel != null)
+                if (channel != null)
                 {
                     MessageUtilities.sendMsg(content, channel, null);
                     success = true;
                 }
             }
-            catch(Exception ignored)
+            catch (Exception ignored)
             {}
         }
         // if the announcement has not sent using the identifier as a snowflake,
         // treat the identifier as a channel name
-        if(!success && !targetIdentifier.isEmpty())
+        if (!success && !targetIdentifier.isEmpty())
         {
             List<TextChannel> channels = message.getGuild().getTextChannelsByName(targetIdentifier, true);
-            for(TextChannel chan : channels)
+            for (TextChannel chan : channels)
             {
                 MessageUtilities.sendMsg(content, chan, null);
             }
@@ -456,9 +455,8 @@ public class ScheduleEntry
      */
     void reloadDisplay()
     {
-        Message msg = this.getMessageObject();
-        if (msg == null) return;
-        MessageUtilities.editMsg(MessageGenerator.generate(this), msg, null);
+        this.getMessageObject((message)->
+                MessageUtilities.editMsg(MessageGenerator.generate(this), message, null));
     }
 
 
@@ -886,6 +884,11 @@ public class ScheduleEntry
     public Set<Date> getAnnouncements()
     {
         return this.announcements;
+    }
+
+    public String getMessageId()
+    {
+        return this.msgId;
     }
 
     /**
