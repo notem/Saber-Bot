@@ -30,21 +30,18 @@ public class Driver
     public MongoCollection<Document> getScheduleCollection()
     {
         return db.getCollection("schedules")
-                .withWriteConcern(WriteConcern.MAJORITY)
-                .withReadConcern(ReadConcern.LINEARIZABLE);
+                .withWriteConcern(WriteConcern.MAJORITY);
     }
 
     public MongoCollection<Document> getEventCollection()
     {
         return db.getCollection("events")
-                .withWriteConcern(WriteConcern.MAJORITY)
-                .withReadConcern(ReadConcern.LINEARIZABLE);
+                .withWriteConcern(WriteConcern.MAJORITY);
     }
 
     public MongoCollection<Document> getGuildCollection()
     {
         return db.getCollection("guilds")
-                .withWriteConcern(WriteConcern.MAJORITY)
-                .withReadConcern(ReadConcern.LINEARIZABLE);
+                .withWriteConcern(WriteConcern.MAJORITY);
     }
 }
