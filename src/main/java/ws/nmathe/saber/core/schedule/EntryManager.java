@@ -32,7 +32,7 @@ import static com.mongodb.client.model.Updates.set;
 public class EntryManager
 {
     private Random generator;
-    public enum type {ANNOUNCE, UPDATE1, UPDATE2, UPDATE3 }
+    public enum type { FILL, EMPTY, UPDATE1, UPDATE2, UPDATE3 }
 
     /** construct EntryManager and seed random from OS random source */
     public EntryManager()
@@ -47,12 +47,16 @@ public class EntryManager
      */
     public void init()
     {
-        /* thread to fill announcement queues and thread to empty announcement queues,
-         share the same scheduler to avoid collisions (as only one thread can be running at any given time) */
+        /* thread to fill announcement queues and to empty announcement queues */
         ScheduledExecutorService announcementScheduler = Executors.newSingleThreadScheduledExecutor();
+        // fill
         announcementScheduler.scheduleWithFixedDelay(
-                new EntryProcessor(type.ANNOUNCE),
-                30, 30, TimeUnit.SECONDS);
+                new EntryProcessor(type.FILL),
+                0, 60, TimeUnit.SECONDS);
+        // empty
+        announcementScheduler.scheduleWithFixedDelay(
+                new EntryProcessor(type.EMPTY),
+                10, 20, TimeUnit.SECONDS);
 
         // scheduler for threads to adjust entry display timers
         ScheduledExecutorService updateDisplayScheduler = Executors.newSingleThreadScheduledExecutor();

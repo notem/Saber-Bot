@@ -653,7 +653,7 @@ public class ScheduleEntry
 
         // keep updating the date times until the next
         // occurrence is in the future
-        int count = 100;
+        int count = 365;
         while (this.start.isBefore(now))
         {
             if (count-- < 0)

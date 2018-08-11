@@ -1,5 +1,7 @@
 package ws.nmathe.saber.core.schedule;
 
+import ws.nmathe.saber.utils.Logging;
+
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -473,6 +475,7 @@ public class EventRecurrence
 
             // something went wrong
             default:
+                Logging.warn(this.getClass(), "Encountered invalid repeat mode!");
                 return date;
         }
     }
