@@ -39,6 +39,8 @@ class EntryProcessor implements Runnable
     private static Set<Integer> remindSet   = Collections.newSetFromMap(new ConcurrentHashMap<>()); // reminders
     private static Set<Integer> specialSet  = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-specific announcements
 
+    private static Integer TIMEOUT = 30;
+
     // this set is used to track which events are currently being processed and should be ignored
     // if they appear in later database queries
     private static Set<Integer> processing  = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -54,7 +56,10 @@ class EntryProcessor implements Runnable
     {
         try
         {
-            /* Fills the sets which events which have announcements that should be processed */
+            /*
+            Mode 1
+            Fills the sets which events which have announcements that should be processed
+            */
             if(type == EntryManager.type.FILL)
             {
                 Logging.info(this.getClass(), "Processing entries: Filling queues. . .");
@@ -85,12 +90,16 @@ class EntryProcessor implements Runnable
 
                 Logging.info(this.getClass(), "Finished filling queues.");
             }
-            /* Processes the events in each set */
+
+            /*
+            Mode 2
+            Processes the events in each set
+            */
             else if (type == EntryManager.type.EMPTY)
             {
-                Logging.info(this.getClass(), "Processing entries: Emptying queues. . .");
-                Logging.info(this.getClass(), "There are "+
-                        (endSet.size()+startSet.size()+remindSet.size()+specialSet.size())+" event entries to process.");
+                Logging.info(this.getClass(), "Processing entries: Emptying " +
+                        (endSet.size()+startSet.size()+remindSet.size()+specialSet.size()) +
+                        " items from queues. . .");
                 endSet.forEach(entryId ->
                 {
                     if (!processing.contains(entryId))
@@ -99,12 +108,17 @@ class EntryProcessor implements Runnable
                         {
                             try
                             {
-                                if (processing.add(entryId))
+                                FutureTask<Object> task = new FutureTask<>(() ->
                                 {
-                                    Main.getEntryManager().getEntry(entryId).end();
-                                    endSet.remove(entryId);
-                                    processing.remove(entryId);
-                                }
+                                    if (processing.add(entryId))
+                                    {
+                                        Main.getEntryManager().getEntry(entryId).end();
+                                        endSet.remove(entryId);
+                                        processing.remove(entryId);
+                                    }
+                                    return null;
+                                });
+                                task.get(TIMEOUT, TimeUnit.SECONDS);
                             }
                             catch (Exception e)
                             {
@@ -121,12 +135,17 @@ class EntryProcessor implements Runnable
                         {
                             try
                             {
-                                if (processing.add(entryId))
+                                FutureTask<Object> task = new FutureTask<>(() ->
                                 {
-                                    Main.getEntryManager().getEntry(entryId).start();
-                                    startSet.remove(entryId);
-                                    processing.remove(entryId);
-                                }
+                                    if (processing.add(entryId))
+                                    {
+                                        Main.getEntryManager().getEntry(entryId).start();
+                                        startSet.remove(entryId);
+                                        processing.remove(entryId);
+                                    }
+                                    return null;
+                                });
+                                task.get(TIMEOUT, TimeUnit.SECONDS);
                             }
                             catch (Exception e)
                             {
@@ -143,12 +162,17 @@ class EntryProcessor implements Runnable
                         {
                             try
                             {
-                                if (processing.add(entryId))
+                                FutureTask<Object> task = new FutureTask<>(() ->
                                 {
-                                    Main.getEntryManager().getEntry(entryId).remind();
-                                    remindSet.remove(entryId);
-                                    processing.remove(entryId);
-                                }
+                                    if (processing.add(entryId))
+                                    {
+                                        Main.getEntryManager().getEntry(entryId).remind();
+                                        startSet.remove(entryId);
+                                        processing.remove(entryId);
+                                    }
+                                    return null;
+                                });
+                                task.get(TIMEOUT, TimeUnit.SECONDS);
                             }
                             catch (Exception e)
                             {
@@ -165,12 +189,17 @@ class EntryProcessor implements Runnable
                         {
                             try
                             {
-                                if (processing.add(entryId))
+                                FutureTask<Object> task = new FutureTask<>(() ->
                                 {
-                                    Main.getEntryManager().getEntry(entryId).announce();
-                                    specialSet.remove(entryId);
-                                    processing.remove(entryId);
-                                }
+                                    if (processing.add(entryId))
+                                    {
+                                        Main.getEntryManager().getEntry(entryId).announce();
+                                        startSet.remove(entryId);
+                                        processing.remove(entryId);
+                                    }
+                                    return null;
+                                });
+                                task.get(TIMEOUT, TimeUnit.SECONDS);
                             }
                             catch (Exception e)
                             {
@@ -179,9 +208,13 @@ class EntryProcessor implements Runnable
                         });
                     }
                 });
-                Logging.info(this.getClass(), "Finished emptying queues.");
             }
-            else /* Updates the 'starts in x minutes' timer on events */
+
+            /*
+            Mode 3
+            Updates the 'starts in x minutes' timer on events
+            */
+            else
             {
                 // dummy document query will filter all events
                 // should an invalid level ever be passed in, all entries will be reloaded!
@@ -272,8 +305,6 @@ class EntryProcessor implements Runnable
                                 }
                             });
                         });
-
-                Logging.info(this.getClass(), "Finished processing entries. . .");
             }
         }
         catch(Exception e)

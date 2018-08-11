@@ -53,11 +53,11 @@ public class EntryManager
         // fill
         announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.FILL),
-                0, 60, TimeUnit.SECONDS);
+                0, 30, TimeUnit.SECONDS);
         // empty
         announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.EMPTY),
-                30, 60, TimeUnit.SECONDS);
+                15, 20, TimeUnit.SECONDS);
 
         // scheduler for threads to adjust entry display timers
         ScheduledExecutorService updateDisplayScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -257,7 +257,7 @@ public class EntryManager
                     .replaceOne(eq("_id", se.getId()), entryDocument);
             if (!res.wasAcknowledged())
             {
-                Logging.warn(this.getClass(), "Attempt to update an entry was unacknowledged!");
+                Logging.warn(this.getClass(), "Attempt to update '"+se.getTitle()+"' was unacknowledged!");
                 return false; // return false, might result in skipped announcement or other issues
             }
 
@@ -286,7 +286,8 @@ public class EntryManager
             UpdateResult res = Main.getDBDriver().getEventCollection()
                     .updateOne(eq("_id", se.getId()), set("hasStarted", true));
             boolean acknowledged = res.wasAcknowledged();
-            if (acknowledged) Logging.warn(this.getClass(), "Unacknowledged event start attempt!");
+            if (!acknowledged)
+                Logging.warn(this.getClass(), "Attempt to update '"+se.getTitle()+"' was unacknowledged!");
             return acknowledged; // might result in skipped announcements or other issues
         }
         catch(MongoException e)
