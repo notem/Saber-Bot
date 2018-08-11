@@ -225,27 +225,21 @@ class EntryProcessor implements Runnable
                     {
                         try
                         {
-                            FutureTask<Object> task = new FutureTask<>(() ->
+                            switch (setIdentifier)
                             {
-
-                                switch (setIdentifier)
-                                {
-                                    case END_SET:
-                                        Main.getEntryManager().getEntry(entryId).end();
-                                        break;
-                                    case START_SET:
-                                        Main.getEntryManager().getEntry(entryId).start();
-                                        break;
-                                    case REMIND_SET:
-                                        Main.getEntryManager().getEntry(entryId).remind();
-                                        break;
-                                    case SPECIAL_SET:
-                                        Main.getEntryManager().getEntry(entryId).announce();
-                                        break;
-                                }
-                                return null;
-                            });
-                            task.get(TIMEOUT, TimeUnit.SECONDS);
+                                case END_SET:
+                                    Main.getEntryManager().getEntry(entryId).end();
+                                    break;
+                                case START_SET:
+                                    Main.getEntryManager().getEntry(entryId).start();
+                                    break;
+                                case REMIND_SET:
+                                    Main.getEntryManager().getEntry(entryId).remind();
+                                    break;
+                                case SPECIAL_SET:
+                                    Main.getEntryManager().getEntry(entryId).announce();
+                                    break;
+                            }
                         }
                         catch (Exception e)
                         {
