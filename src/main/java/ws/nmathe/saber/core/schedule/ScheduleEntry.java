@@ -383,27 +383,29 @@ public class ScheduleEntry
 
     private void repeat(Message message)
     {
-        if(this.recurrence.shouldRepeat(this.start)) // find next repeat date and edit the message
+        if (this.recurrence.shouldRepeat(this.start)) // find next repeat date and edit the message
         {
-            this.setNextOccurrence().setStarted(false);
+            this.setNextOccurrence();
+            this.setStarted(false);
 
             // if the next time an event repeats is after the event's expire, delete the event
             ZonedDateTime expire = this.recurrence.getExpire();
-            if(expire != null && expire.isBefore(this.getStart()))
+            if (expire != null && expire.isBefore(this.getStart()))
             {
                 Main.getEntryManager().removeEntry(this.entryId);
                 MessageUtilities.deleteMsg(message, null);
                 return;
             }
 
-            // recreate the announcement overrides
+            // reload time-dependent announcements
             this.regenerateAnnouncementOverrides();
+            this.reloadReminders(Main.getScheduleManager().getReminders(this.chanId));
+            this.reloadEndReminders(Main.getScheduleManager().getEndReminders(this.chanId));
 
             // clear rsvp members list and reload reminders
             this.rsvpMembers = new HashMap<>();
-            this.reloadReminders(Main.getScheduleManager().getReminders(this.chanId))
-                    .reloadEndReminders(Main.getScheduleManager().getEndReminders(this.chanId));
 
+            // send changes to database
             Main.getEntryManager().updateEntry(this, true);
         }
         else // otherwise remove entry and delete the message

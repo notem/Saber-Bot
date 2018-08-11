@@ -13,7 +13,6 @@ import ws.nmathe.saber.utils.MessageUtilities;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -35,12 +34,8 @@ class EntryProcessor implements Runnable
     private static ExecutorService timerExecutor = Executors.newCachedThreadPool(
             new ThreadFactoryBuilder().setNameFormat("EntryTimer-%d").build());
 
-    private enum SetType {END_SET, START_SET, REMIND_SET, SPECIAL_SET}
+    private enum ActionType {END, START, REMIND, SPECIAL}
     private EntryManager.type type;
-    private static Set<Integer> endSet      = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-end announcements
-    private static Set<Integer> startSet    = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-start announcements
-    private static Set<Integer> remindSet   = Collections.newSetFromMap(new ConcurrentHashMap<>()); // reminders
-    private static Set<Integer> specialSet  = Collections.newSetFromMap(new ConcurrentHashMap<>()); // event-specific announcements
 
     // this set is used to track which events are currently being processed and should be ignored
     // if they appear in later database queries
@@ -61,36 +56,20 @@ class EntryProcessor implements Runnable
             Mode 1
             Fills the sets which events which have announcements that should be processed
             */
-            if(type == EntryManager.type.FILL)
+            if(type == EntryManager.type.ANNOUNCE)
             {
-                Logging.info(this.getClass(), "Processing entries: Filling queues. . .");
+                Logging.info(this.getClass(), "Processing entries: queueing event actions. . .");
 
-                fillSet(SetType.END_SET);
-                fillSet(SetType.START_SET);
-                fillSet(SetType.REMIND_SET);
-                fillSet(SetType.SPECIAL_SET);
+                processEvents(ActionType.END);
+                processEvents(ActionType.START);
+                processEvents(ActionType.REMIND);
+                processEvents(ActionType.SPECIAL);
 
-                Logging.info(this.getClass(), "Finished filling queues.");
+                Logging.info(this.getClass(), "There are "+processing.size()+" events processing.");
             }
 
             /*
             Mode 2
-            Processes the events in each set
-            */
-            else if (type == EntryManager.type.EMPTY)
-            {
-                Logging.info(this.getClass(), "Processing entries: Emptying queues...");
-
-                emptySet(SetType.END_SET);
-                emptySet(SetType.START_SET);
-                emptySet(SetType.REMIND_SET);
-                emptySet(SetType.SPECIAL_SET);
-
-                Logging.info(this.getClass(), "There are "+processing.size()+" events currently processing.");
-            }
-
-            /*
-            Mode 3
             Updates the 'starts in x minutes' timer on events and deletes expired events
             */
             else
@@ -196,91 +175,20 @@ class EntryProcessor implements Runnable
         }
     }
 
-    /**
-     *
-     * @param setIdentifier
-     */
-    private void emptySet(SetType setIdentifier)
-    {
-        Set<Integer> set = new HashSet<>();
-        switch (setIdentifier)
-        {
-            case END_SET:
-                set = new HashSet<>(endSet);
-                break;
-            case START_SET:
-                set = new HashSet<>(startSet);
-                break;
-            case REMIND_SET:
-                set = new HashSet<>(remindSet);
-                break;
-            case SPECIAL_SET:
-                set = new HashSet<>(specialSet);
-                break;
-        }
-        set.forEach(entryId ->
-        {
-            if (processing.add(entryId))
-            {
-                // submit the event's task to the executor
-                eventsExecutor.submit(() ->
-                {
-                    try
-                    {
-                        ScheduleEntry entry = Main.getEntryManager().getEntry(entryId);
-                        if (entry != null)
-                        {
-                            switch (setIdentifier)
-                            {
-                                case END_SET:
-                                    entry.end();
-                                    endSet.remove(entryId);
-                                    break;
-                                case START_SET:
-                                    entry.start();
-                                    startSet.remove(entryId);
-                                    break;
-                                case REMIND_SET:
-                                    entry.remind();
-                                    remindSet.remove(entryId);
-                                    break;
-                                case SPECIAL_SET:
-                                    entry.announce();
-                                    specialSet.remove(entryId);
-                                    break;
-                            }
-                        }
-                    }
-                    catch(PermissionException e)
-                    {
-                        Logging.warn(this.getClass(), "Lacking permission: "+e.getPermission());
-                    }
-                    catch (Exception e)
-                    {
-                        Logging.exception(this.getClass(), e);
-                    }
-                    finally
-                    {
-                        processing.remove(entryId);
-                    }
-                });
-            }
-        });
-    }
 
     /**
-     * fills a SetType given a proper query, helper function to run()
-     * @param setIdentifier which SetType to SetType the event for
+     * fills a ActionType given a proper query, helper function to run()
+     * @param type which ActionType to ActionType the event for
      */
-    private void fillSet(SetType setIdentifier)
+    private void processEvents(ActionType type)
     {
         Bson query = new BsonDocument();
-        switch(setIdentifier)
+        switch(type)
         {
-            case END_SET:
+            case END:
                 query = and(eq("hasStarted",true), lte("end", new Date()));
                 break;
-            case REMIND_SET:
+            case REMIND:
                 query = and(
                         and(eq("hasStarted",true), lte("end_reminders", new Date())),
                         gte("end", new Date()));
@@ -288,10 +196,10 @@ class EntryProcessor implements Runnable
                         and(eq("hasStarted",false), lte("reminders", new Date())),
                         gte("start", new Date())));
                 break;
-            case START_SET:
+            case START:
                 query = and(eq("hasStarted",false), lte("start", new Date()));
                 break;
-            case SPECIAL_SET:
+            case SPECIAL:
                 query = lte("announcements", new Date());
                 break;
         }
@@ -299,55 +207,49 @@ class EntryProcessor implements Runnable
                 .forEach((Consumer<? super Document>) document ->
                 {
                     // identify which shard is responsible for the schedule
-                    String guildId = document.getString("guildId");
-                    JDA jda = Main.getShardManager().getJDA(guildId);
+                    ScheduleEntry se = (new ScheduleEntry(document));
+                    JDA jda = Main.getShardManager().getJDA(se.getGuildId());
 
                     // if the shard is not connected, do process the event
                     if(jda == null) return;
                     if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
-                    try
+                    if (processing.add(se.getId()))
                     {
-                        ScheduleEntry se = (new ScheduleEntry(document));
-                        switch(setIdentifier)
+                        // submit the event's task to the executor
+                        eventsExecutor.submit(() ->
                         {
-                            case END_SET:
-                                if(!endSet.contains(se.getId()))
+                            try
+                            {
+                                switch (type)
                                 {
-                                    endSet.add(se.getId());
-                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the end set");
+                                    case END:
+                                        se.end();
+                                        break;
+                                    case START:
+                                        se.start();
+                                        break;
+                                    case REMIND:
+                                        se.remind();
+                                        break;
+                                    case SPECIAL:
+                                        se.announce();
+                                        break;
                                 }
-                                break;
-                            case REMIND_SET:
-                                if(!remindSet.contains(se.getId()))
-                                {
-                                    remindSet.add(se.getId());
-                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the remind set");
-                                }
-                                break;
-                            case START_SET:
-                                if(!startSet.contains(se.getId()))
-                                {
-                                    startSet.add(se.getId());
-                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the start set");
-                                }
-                                break;
-                            case SPECIAL_SET:
-                                if(!specialSet.contains(se.getId()))
-                                {
-                                    specialSet.add(se.getId());
-                                    Logging.info(this.getClass(), "Added \"" + se.getTitle() +
-                                    "\" ["+se.getId()+"] to the announce set");
-                                }
-                                break;
-                        }
-                    }
-                    catch(Exception e)
-                    {
-                        Logging.exception(this.getClass(), e);
+                            }
+                            catch(PermissionException e)
+                            {
+                                Logging.warn(this.getClass(), "Lacking permission: "+e.getPermission());
+                            }
+                            catch (Exception e)
+                            {
+                                Logging.exception(this.getClass(), e);
+                            }
+                            finally
+                            {
+                                processing.remove(se.getId());
+                            }
+                        });
                     }
                 });
     }

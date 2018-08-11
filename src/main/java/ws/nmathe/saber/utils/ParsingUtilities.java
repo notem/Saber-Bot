@@ -103,9 +103,12 @@ public class ParsingUtilities
          * parses the format string using regex grouping
          * allows for an 'if element exists, print string + element + string' type of insertion
          */
+        int count = 0;
         Matcher matcher = Pattern.compile("%\\{(.*?)}").matcher(raw);
-        while(matcher.find())
+        while (matcher.find())
         {
+            if (count++ > 50) break; // protection against endless loop?
+
             String group = matcher.group();
             String trimmed = group.substring(2, group.length()-1);
             StringBuilder sub = new StringBuilder();
@@ -275,7 +278,7 @@ public class ParsingUtilities
                     if (users != null)
                     {
                         StringBuilder userMentions = new StringBuilder();
-                        for(int i=0; i<users.size(); i++)
+                        for (int i=0; i<users.size(); i++)
                         {
                             String user = users.get(i);
                             boolean isId = user.matches("\\d+"); // looks like an ID
@@ -377,7 +380,7 @@ public class ParsingUtilities
          * a token is one % character followed by a key character
          */
         StringBuilder processed = new StringBuilder();
-        for( int i = 0; i < raw.length(); i++ )
+        for (int i = 0; i < raw.length(); i++)
         {
             char ch = raw.charAt(i);
             if(ch == '%' && i+1 < raw.length())
@@ -407,7 +410,7 @@ public class ParsingUtilities
 
                     // full list of comments, no line padding
                     case 'f' :
-                        if(firstPass)
+                        if (firstPass)
                         {   // if this call of the parser is nested, don't insert comments
                             processed.append(String.join("\n", entry.getComments().stream()
                                     .map(comment -> ParsingUtilities.processText(comment, entry, false))
@@ -424,7 +427,8 @@ public class ParsingUtilities
                             for (int j=0; j<entry.getComments().size(); j++)
                             {
                                 if (j>0) stringBuilder.append("\n"); // newline pad between comment lines
-                                stringBuilder.append(processText(entry.getComments().get(j), entry, false))
+                                stringBuilder
+                                        .append(processText(entry.getComments().get(j), entry, false))
                                         .append("\n"); // trailing newline
                             }
                             processed.append(stringBuilder.toString());
