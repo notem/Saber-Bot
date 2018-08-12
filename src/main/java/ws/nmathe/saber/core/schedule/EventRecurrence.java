@@ -470,8 +470,14 @@ public class EventRecurrence
             case MONTH2_MODE:
                 int dayOfMonth    = data&0b11111;
                 int monthInterval = data>>5;
-                if (dayOfMonth > 0) return date.plusMonths(monthInterval).withDayOfMonth(dayOfMonth);
-                else return date.plusMonths(monthInterval);
+                if (dayOfMonth > 0)
+                {   // dayOfMonth portion indicates the day of the month the event should repeat on
+                    return date.plusMonths(monthInterval).withDayOfMonth(dayOfMonth);
+                }
+                else
+                {   // if the monthInterval portion is zero, increment to one
+                    return date.plusMonths(monthInterval == 0 ? 1 : monthInterval);
+                }
 
             // something went wrong
             default:

@@ -645,25 +645,15 @@ public class ScheduleEntry
      */
     private ScheduleEntry setNextOccurrence()
     {
-        ZonedDateTime now = ZonedDateTime.now();
-
         // update to next occurrence
         this.start = this.recurrence.next(this.start);
         this.end   = this.recurrence.next(this.end);
 
-        // keep updating the date times until the next
-        // occurrence is in the future
-        int count = 365;
-        while (this.start.isBefore(now))
+        ZonedDateTime now = ZonedDateTime.now();
+        if (this.start.isBefore(now))
         {
-            if (count-- < 0)
-            {
-                Logging.warn(this.getClass(),
-                        "Unable to find next occurrence for '"+this.getTitle()+"' ["+this.getId()+"]!");
-                break;
-            }
-            this.start = this.recurrence.next(this.start);
-            this.end   = this.recurrence.next(this.end);
+            Logging.warn(this.getClass(),
+                    "The next occurrence date for event #"+this.getId()+" is invalid! ("+this.recurrence+")");
         }
         return this;
     }
