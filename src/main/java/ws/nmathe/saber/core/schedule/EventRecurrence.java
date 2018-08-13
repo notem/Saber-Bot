@@ -475,7 +475,7 @@ public class EventRecurrence
                     return date.plusMonths(monthInterval).withDayOfMonth(dayOfMonth);
                 }
                 else
-                {   // if the monthInterval portion is zero, increment to one
+                {   // if the monthInterval portion is zero, increment to onet
                     return date.plusMonths(monthInterval == 0 ? 1 : monthInterval);
                 }
 
