@@ -219,6 +219,9 @@ public class ScheduleEntry
      */
     public void announce()
     {
+        Message message = this.getMessageObject();
+        if (message == null) return;
+
         // find all expired Dates' announcement IDs
         Collection<String> expired = new ArrayList<>();
         for(String ID : this.aTimes.keySet())
@@ -235,18 +238,15 @@ public class ScheduleEntry
         Main.getEntryManager().updateEntry(this, false);
 
         // send announcements
-        this.getMessageObject((message) ->
+        expired.forEach(key->
         {
-            expired.forEach(key->
-            {
-                String text = ParsingUtilities.processText(this.aMessages.get(key), this, true);
-                String target = this.aTargets.get(key);
+            String text = ParsingUtilities.processText(this.aMessages.get(key), this, true);
+            String target = this.aTargets.get(key);
 
-                // send announcement
-                this.makeAnnouncement(message, text, target);
-                Logging.event(this.getClass(), "Sent special announcement for event " +
-                        this.getTitle() + " [" + this.getId() + "]");
-            });
+            // send announcement
+            this.makeAnnouncement(message, text, target);
+            Logging.event(this.getClass(), "Sent special announcement for event " +
+                    this.getTitle() + " [" + this.getId() + "]");
         });
     }
 
@@ -255,6 +255,9 @@ public class ScheduleEntry
      */
     public void remind()
     {
+        Message message = this.getMessageObject();
+        if (message == null) return;
+
         // remove expired reminders
         this.reminders.removeIf(date -> date.before(new Date()));
         this.endReminders.removeIf(date -> date.before(new Date()));
@@ -270,11 +273,8 @@ public class ScheduleEntry
             String identifier = Main.getScheduleManager().getReminderChan(this.chanId);
             if (identifier != null)
             {
-                this.getMessageObject((message)->
-                {
-                    this.makeAnnouncement(message, text, identifier);
-                    Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
-                });
+                this.makeAnnouncement(message, text, identifier);
+                Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
             }
         }
     }
@@ -572,7 +572,6 @@ public class ScheduleEntry
                             MessageUtilities.sendMsg(content, loggingChannel, null);
                     }
 
-                    // update the event with the adjusted RSVP list
                     Main.getEntryManager().updateEntry(this, false);
                 }
             }

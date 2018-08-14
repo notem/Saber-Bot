@@ -33,12 +33,11 @@ import static com.mongodb.client.model.Updates.set;
 public class EntryManager
 {
     private Random generator;
-    public enum type { FILL, EMPTY, UPDATE1, UPDATE2, UPDATE3 }
+    public enum type { PROCESS, UPDATE1, UPDATE2, UPDATE3 }
 
     /** construct EntryManager and seed random from OS random source */
     public EntryManager()
-    {
-        // use system random to seed to avoid repeat seed values on bot restart
+    {   // use system random to seed to avoid repeat seed values on bot restart
         this.generator = new Random(new SecureRandom().nextLong());
     }
 
@@ -48,16 +47,11 @@ public class EntryManager
      */
     public void init()
     {
-        /* thread to fill and to empty queues containing events that need to be processed */
+        /* thread to process events */
         ScheduledExecutorService announcementScheduler = Executors.newSingleThreadScheduledExecutor();
-        // fill sets with events
         announcementScheduler.scheduleWithFixedDelay(
-                new EntryProcessor(type.FILL),
-                30, 30, TimeUnit.SECONDS);
-        // empty sets and process event actions
-        announcementScheduler.scheduleWithFixedDelay(
-                new EntryProcessor(type.EMPTY),
-                10, 15, TimeUnit.SECONDS);
+                new EntryProcessor(type.PROCESS),
+                15, 15, TimeUnit.SECONDS);
 
         // scheduler for threads to adjust entry display timers
         ScheduledExecutorService updateDisplayScheduler = Executors.newSingleThreadScheduledExecutor();
