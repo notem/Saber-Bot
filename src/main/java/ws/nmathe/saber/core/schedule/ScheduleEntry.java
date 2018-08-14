@@ -277,10 +277,6 @@ public class ScheduleEntry
                 });
             }
         }
-        else
-        {
-            Logging.event(this.getClass(), "Silenced reminder for event " + this.getTitle() + " [" + this.getId() + "]");
-        }
     }
 
     /**
@@ -293,6 +289,7 @@ public class ScheduleEntry
 
         // create start message and grab identifier before modifying entry
         String text = ParsingUtilities.processText(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
+        String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
 
         // is the announcement late?
         Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
@@ -309,31 +306,24 @@ public class ScheduleEntry
             Main.getEntryManager().startEvent(this);
         }
 
-        // dont send start announcements if 15 minutes late
-        if (late)
+        // send start announcement
+        if (!this.quietStart)
         {
-            if (!this.quietStart)
+            // dont send start announcements if 15 minutes late
+            if (late)
             {
-                // send start announcement
-                String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
                 if (identifier != null)
                 {
                     this.makeAnnouncement(message, text, identifier);
-                    Logging.event(this.getClass(),
-                            "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
+                    Logging.event(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
                             this.getStart().withZoneSameInstant(ZoneId.systemDefault())
                                     .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
                 }
             }
             else
             {
-                Logging.event(this.getClass(),
-                        "Silenced start announcement for event " + this.getTitle() + " [" + this.getId() + "]");
+                Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
             }
-        }
-        else
-        {
-            Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
         }
     }
 
@@ -348,6 +338,7 @@ public class ScheduleEntry
         // create the announcement message before modifying event
         String text = ParsingUtilities.processText(Main.getScheduleManager()
                 .getEndAnnounceFormat(this.chanId), this, true);
+        String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
 
         // check if the event is late
         Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
@@ -356,14 +347,13 @@ public class ScheduleEntry
         // update entry
         this.repeat(message);
 
-        // dont send end announcement if late
-        if (late)
+        // send announcement
+        if (!this.quietEnd)
         {
-            // send announcement
-            if (!this.quietEnd)
+            // dont send end announcement if late
+            if (late)
             {
                 // send the end announcement
-                String identifier = Main.getScheduleManager().getEndAnnounceChan(this.chanId);
                 if (identifier != null)
                 {
                     this.makeAnnouncement(message, text, identifier);
@@ -374,13 +364,8 @@ public class ScheduleEntry
             }
             else
             {
-                Logging.event(this.getClass(),
-                        "Silenced end announcement for event " + this.getTitle() + " [" + this.getId() + "]");
+                Logging.warn(this.getClass(), "Late event end: "+this.title +" ["+this.entryId+"] "+this.end);
             }
-        }
-        else
-        {
-            Logging.warn(this.getClass(), "Late event end: "+this.title +" ["+this.entryId+"] "+this.end);
         }
     }
 
@@ -587,6 +572,7 @@ public class ScheduleEntry
                             MessageUtilities.sendMsg(content, loggingChannel, null);
                     }
 
+                    // update the event with the adjusted RSVP list
                     Main.getEntryManager().updateEntry(this, false);
                 }
             }
@@ -643,6 +629,7 @@ public class ScheduleEntry
                                 MessageUtilities.sendMsg(content, loggingChannel, null);
                         }
 
+                        // update the event with the adjusted RSVP list
                         Main.getEntryManager().updateEntry(this, false);
                     }
                 }

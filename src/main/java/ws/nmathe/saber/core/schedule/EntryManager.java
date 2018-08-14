@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -47,31 +48,31 @@ public class EntryManager
      */
     public void init()
     {
-        /* thread to fill announcement queues and to empty announcement queues */
+        /* thread to fill and to empty queues containing events that need to be processed */
         ScheduledExecutorService announcementScheduler = Executors.newSingleThreadScheduledExecutor();
-        // fill
+        // fill sets with events
         announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.FILL),
-                0, 60, TimeUnit.SECONDS);
-        // empty
+                30, 30, TimeUnit.SECONDS);
+        // empty sets and process event actions
         announcementScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.EMPTY),
-                10, 20, TimeUnit.SECONDS);
+                10, 15, TimeUnit.SECONDS);
 
         // scheduler for threads to adjust entry display timers
         ScheduledExecutorService updateDisplayScheduler = Executors.newSingleThreadScheduledExecutor();
-        // 1 day timer
+        // updates events with times >24h
         updateDisplayScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.UPDATE3),
-                12*60*60, 12*60*60, TimeUnit.SECONDS);
-        // 1 hour timer
+                12, 6, TimeUnit.HOURS);
+        // updates events with times >1 hour (but <24h)
         updateDisplayScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.UPDATE2),
-                60*30, 60*30, TimeUnit.SECONDS);
-        // 4.5 min timer
+                30, 15, TimeUnit.MINUTES);
+        // update events with times <1 hour
         updateDisplayScheduler.scheduleWithFixedDelay(
                 new EntryProcessor(type.UPDATE1),
-                60*4+30, 60*3, TimeUnit.SECONDS);
+                5, 3, TimeUnit.MINUTES);
     }
 
     /**
@@ -164,7 +165,7 @@ public class EntryManager
 
                 Main.getDBDriver().getEventCollection().insertOne(entryDocument);
 
-                // auto-sort
+                // auto-sort the schedule if configured
                 autoSort(sort, channelId);
             }
             catch(Exception e)
@@ -249,9 +250,13 @@ public class EntryManager
                 return false; // return false, might result in skipped announcement or other issues
             }
 
+            // update the event message with the information changes (if any)
+            // this may (is) over-aggressive, however it is convenient and easier to manage
+            // (ie. avoid updating the display in other code sections)
             se.reloadDisplay();
 
-            // auto-sort
+            // auto-sort the schedule if configured
+            // may be necessary if the start time was changed
             autoSort(sort, se.getChannelId());
             return true;
         }
@@ -272,6 +277,7 @@ public class EntryManager
         try
         {
             UpdateResult res = Main.getDBDriver().getEventCollection()
+                    // using the 'update many' call seems to work more effectively
                     .updateMany(eq("_id", se.getId()), set("hasStarted", true));
             if (!res.wasAcknowledged())
             {
@@ -297,13 +303,13 @@ public class EntryManager
      */
     public static void addRSVPReactions
     (Map<String, String> options, String clearEmoji, Message message, ScheduleEntry se)
-    {
+    {   // add all RSVP emoji's
         for(String emoji : options.keySet())
-        {
-            // don't add the reaction for categories with 0 limit
+        {   // don't add the reaction for categories with 0 limit
             if (se.getRsvpLimit(options.get(emoji)) != 0)
                 addRSVPReaction(emoji, message);
         }
+        // add clear emoji if configured
         if(!clearEmoji.isEmpty())
         {
             addRSVPReaction(clearEmoji, message);
@@ -317,7 +323,7 @@ public class EntryManager
      */
     private static void addRSVPReaction(String emoji, Message message)
     {
-        if(EmojiManager.isEmoji(emoji))
+        if (EmojiManager.isEmoji(emoji))
         {
             message.addReaction(emoji).queue();
         }
@@ -365,9 +371,8 @@ public class EntryManager
      */
     public boolean removeEntry(Integer entryId)
     {
-        DeleteResult res = Main.getDBDriver().getEventCollection().deleteMany(eq("_id", entryId));
-        if (!res.wasAcknowledged())
-            Logging.warn(this.getClass(), "Attempt to remove entry #"+entryId+"' was unacknowledged!");
+        DeleteResult res = Main.getDBDriver().getEventCollection()
+                .deleteMany(eq("_id", entryId));
         return res.wasAcknowledged();
     }
 
@@ -375,7 +380,7 @@ public class EntryManager
      * regenerates the displayed Message text for a schedule entry
      * @param eId integer Id
      */
-    public void reloadEntryDisplay(Integer eId)
+    public void reloadEntry(Integer eId)
     {
         ScheduleEntry se = getEntry(eId);
         if(se == null) return;
@@ -393,9 +398,11 @@ public class EntryManager
         ID = (int) Math.ceil(generator.nextDouble() * (Math.pow(2, 32) - 1));
 
         // if the Id is in use, generate a new one until a free one is found
-        while (Main.getDBDriver().getEventCollection().find(eq("_id", ID)).first() != null)
+        Bson document = Main.getDBDriver().getEventCollection().find(eq("_id", ID)).first();
+        while (document != null)
         {
             ID = (int) Math.ceil(generator.nextDouble() * (Math.pow(2, 32) - 1));
+            document = Main.getDBDriver().getEventCollection().find(eq("_id", ID)).first();
         }
 
         return ID;
