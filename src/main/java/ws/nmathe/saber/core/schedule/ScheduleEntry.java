@@ -3,6 +3,7 @@ package ws.nmathe.saber.core.schedule;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -214,14 +215,20 @@ public class ScheduleEntry
                 null : entryDocument.getString("color");
     }
 
-    /**
-     * handles sending special announcements
-     */
+
     public void announce()
     {
         Message message = this.getMessageObject();
         if (message == null) return;
+        this.announce(message);
+    }
 
+
+    /**
+     * handles sending special announcements
+     */
+    public void announce(Message message)
+    {
         // find all expired Dates' announcement IDs
         Collection<String> expired = new ArrayList<>();
         for(String ID : this.aTimes.keySet())
@@ -250,14 +257,20 @@ public class ScheduleEntry
         });
     }
 
-    /**
-     * handles sending reminder notifications
-     */
+
     public void remind()
     {
         Message message = this.getMessageObject();
         if (message == null) return;
+        this.remind(message);
+    }
 
+
+    /**
+     * handles sending reminder notifications
+     */
+    public void remind(Message message)
+    {
         // remove expired reminders
         this.reminders.removeIf(date -> date.before(new Date()));
         this.endReminders.removeIf(date -> date.before(new Date()));
@@ -265,28 +278,35 @@ public class ScheduleEntry
         // attempt to update the db record
         Main.getEntryManager().updateEntry(this, false);
 
+        // parse message and get the target channels
+        String text = ParsingUtilities.processText(Main.getScheduleManager().getReminderFormat(this.chanId), this, true);
+        String identifier = Main.getScheduleManager().getReminderChan(this.chanId);
+
         // send reminder
         if (!this.quietRemind)
         {
-            // parse message and get the target channels
-            String text = ParsingUtilities.processText(Main.getScheduleManager().getReminderFormat(this.chanId), this, true);
-            String identifier = Main.getScheduleManager().getReminderChan(this.chanId);
-            if (identifier != null)
-            {
-                this.makeAnnouncement(message, text, identifier);
-                Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
-            }
+            this.makeAnnouncement(message, text, identifier);
+            Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
         }
+        else
+        {
+            String logStr = "Silenced reminder for event \"" + this.getTitle() + "\" [" + this.entryId + "]";
+            Logging.event(this.getClass(), logStr);
+        }
+    }
+
+    public void start()
+    {
+        Message message = this.getMessageObject();
+        if (message == null) return;
+        this.start(message);
     }
 
     /**
      * Handles when an event begins
      */
-    public void start()
+    public void start(Message message)
     {
-        Message message = this.getMessageObject();
-        if (message == null) return;
-
         // create start message and grab identifier before modifying entry
         String text = ParsingUtilities.processText(Main.getScheduleManager().getStartAnnounceFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getStartAnnounceChan(this.chanId);
@@ -306,35 +326,42 @@ public class ScheduleEntry
             Main.getEntryManager().startEvent(this);
         }
 
-        // send start announcement
-        if (!this.quietStart)
+        // dont send start announcements if 15 minutes late
+        if (late)
         {
-            // dont send start announcements if 15 minutes late
-            if (late)
+            // send start announcement
+            if (!this.quietStart)
             {
-                if (identifier != null)
-                {
-                    this.makeAnnouncement(message, text, identifier);
-                    Logging.event(this.getClass(), "Started event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
-                            this.getStart().withZoneSameInstant(ZoneId.systemDefault())
-                                    .truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString());
-                }
+                this.makeAnnouncement(message, text, identifier);
+                String logStr = "Sent start announcement for event \"" + this.getTitle() + "\" [" + this.entryId + "]";
+                Logging.event(this.getClass(), logStr);
             }
             else
             {
-                Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
+                String logStr = "Silenced start announcement for event \"" + this.getTitle() + "\" [" + this.entryId + "]";
+                Logging.event(this.getClass(), logStr);
             }
+        }
+        else
+        {
+            Logging.warn(this.getClass(), "Late event start: "+this.title +" ["+this.entryId+"] "+this.start);
         }
     }
 
-    /**
-     * handles when an event ends
-     */
+
     public void end()
     {
         Message message = this.getMessageObject();
         if (message == null) return;
+        this.end(message);
+    }
 
+
+    /**
+     * handles when an event ends
+     */
+    public void end(Message message)
+    {
         // create the announcement message before modifying event
         String text = ParsingUtilities.processText(Main.getScheduleManager()
                 .getEndAnnounceFormat(this.chanId), this, true);
@@ -347,25 +374,24 @@ public class ScheduleEntry
         // update entry
         this.repeat(message);
 
-        // send announcement
-        if (!this.quietEnd)
+        // dont send end announcement if late
+        if (late)
         {
-            // dont send end announcement if late
-            if (late)
+            if (!this.quietEnd)
             {
-                // send the end announcement
-                if (identifier != null)
-                {
-                    this.makeAnnouncement(message, text, identifier);
-                    String logStr = "Ended event \"" + this.getTitle() + "\" [" + this.entryId + "] scheduled for " +
-                            this.getEnd().withZoneSameInstant(ZoneId.systemDefault()).truncatedTo(ChronoUnit.MINUTES).toLocalTime();
-                    Logging.event(this.getClass(), logStr);
-                }
+                this.makeAnnouncement(message, text, identifier);
+                String logStr = "Sent ended announcement for event \"" + this.getTitle() + "\" [" + this.entryId + "]";
+                Logging.event(this.getClass(), logStr);
             }
             else
             {
-                Logging.warn(this.getClass(), "Late event end: "+this.title +" ["+this.entryId+"] "+this.end);
+                String logStr = "Silenced end announcement for event \"" + this.getTitle() + "\" [" + this.entryId + "]";
+                Logging.event(this.getClass(), logStr);
             }
+        }
+        else
+        {
+            Logging.warn(this.getClass(), "Late event end: "+this.title +" ["+this.entryId+"] "+this.end);
         }
     }
 
@@ -420,35 +446,43 @@ public class ScheduleEntry
      * processes a channel identifier (either a channel name or snowflake ID) into a valid channel
      * and sends an event announcement
      */
-    private void makeAnnouncement(Message message, String content, String targetIdentifier)
+    private void makeAnnouncement(Message message, String content, String target)
     {
-        boolean success = false;
-
-        // if the identifier is all digits, attempt to treat the identifier as a snowflake ID
-        if(targetIdentifier.matches("\\d+"))
+        // don't send to any announcement if target is null
+        if (target != null)
         {
-            try
+            boolean success = false;
+
+            // the identifier is an all digits sting,
+            // treat the identifier as a snowflake (channel) ID
+            if(target.matches("([c])?\\d+"))
             {
-                TextChannel channel = message.getGuild().getTextChannelById(targetIdentifier);
-                if (channel != null)
+                try
                 {
-                    MessageUtilities.sendMsg(content, channel, null);
-                    success = true;
+                    TextChannel channel = message.getGuild().getTextChannelById(target);
+                    if (channel != null)
+                    {
+                        MessageUtilities.sendMsg(content, channel, null);
+                        success = true;
+                    }
+                }
+                catch (PermissionException ignored)
+                { /* dont care */}
+                catch (Exception e)
+                {
+                    Logging.warn(this.getClass(), "Error when sending announcement: "+e.getMessage());
                 }
             }
-            catch (Exception e)
+
+            // if the announcement has not sent using the identifier as a snowflake,
+            // treat the identifier as a channel name
+            if (!success && !target.isEmpty())
             {
-                Logging.warn(this.getClass(), "Error when sending announcement: "+e.getMessage());
-            }
-        }
-        // if the announcement has not sent using the identifier as a snowflake,
-        // treat the identifier as a channel name
-        if (!success && !targetIdentifier.isEmpty())
-        {
-            List<TextChannel> channels = message.getGuild().getTextChannelsByName(targetIdentifier, true);
-            for (TextChannel chan : channels)
-            {
-                MessageUtilities.sendMsg(content, chan, null);
+                List<TextChannel> channels = message.getGuild().getTextChannelsByName(target, true);
+                for (TextChannel chan : channels)
+                {
+                    MessageUtilities.sendMsg(content, chan, null);
+                }
             }
         }
     }
@@ -907,7 +941,6 @@ public class ScheduleEntry
         {
             JDA jda = Main.getShardManager().isSharding() ?
                     Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
-
             msg = jda.getTextChannelById(this.chanId)
                     .getMessageById(this.msgId)
                     .complete();

@@ -179,6 +179,8 @@ class EntryProcessor implements Runnable
                                 {   // convert to scheduleEntry object and update display
                                     (new ScheduleEntry(document)).reloadDisplay();
                                 }
+                                catch (PermissionException ignored)
+                                {/* dont care */}
                                 catch(Exception e)
                                 {
                                     Logging.exception(this.getClass(), e);
@@ -214,7 +216,8 @@ class EntryProcessor implements Runnable
                     if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
 
                     ScheduleEntry se = (new ScheduleEntry(document));
-                    if (processing.add(se.getId()))
+                    Integer id = se.getId();
+                    if (processing.add(id))
                     {
                         setExecutor.submit(() ->
                         {
@@ -247,7 +250,7 @@ class EntryProcessor implements Runnable
                             }
                             finally
                             {
-                                processing.remove(se.getId());
+                                processing.remove(id);
                             }
                         });
                     }
