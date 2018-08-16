@@ -1,7 +1,6 @@
 package ws.nmathe.saber.core;
 
 import com.google.common.collect.Iterables;
-import com.neovisionaries.ws.client.WebSocketFactory;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
@@ -10,8 +9,6 @@ import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import net.dv8tion.jda.core.utils.SessionControllerAdapter;
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import javax.security.auth.login.LoginException;
@@ -24,17 +21,17 @@ import java.util.function.Consumer;
  */
 public class ShardManager
 {
-    private Integer shardTotal = null;
-    private ConcurrentMap<Integer, JDA> jdaShards = null;        // used only when sharded
-    private JDA jda = null;                                      // used only when unsharded
+    private Integer shardTotal = null;                      // >0 sharding; =0 no sharding
+    private ConcurrentMap<Integer, JDA> jdaShards = null;   // used only when sharded
+    private JDA jda = null;                                 // used only when unsharded
 
+    // list of game names which are used to create a rotating bulletin board-like message system
     private Iterator<String> games;
 
-    private Integer primaryPoolSize = 15;    // used by the jda responsible for handling DMs
+    private Integer primaryPoolSize = 14;    // used by the jda responsible for handling DMs
     private Integer secondaryPoolSize = 7;   // used by all other shards
-    private Integer queryTimeout = 5*60*1000;// time to wait for API queries (milliseconds)
 
-    private JDABuilder builder;
+    private JDABuilder builder;  // builder to be used as the template for starting/restarting shards
 
     /**
      * Populates the shard manager with initialized JDA shards (if sharding)
@@ -48,7 +45,7 @@ public class ShardManager
         this.loadGamesList();
         this.shardTotal = shardTotal;
 
-        try // build the bot
+        try // connect the bot to the discord API and initialize schedule components
         {
             // basic skeleton of a jda shard
             this.builder = new JDABuilder(AccountType.BOT)
@@ -56,30 +53,16 @@ public class ShardManager
                     .setStatus(OnlineStatus.ONLINE)
                     .setAutoReconnect(true);
 
-            // custom OkHttpClient builder
-            OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
-            httpBuilder.connectionPool(new ConnectionPool())
-                    .connectTimeout(queryTimeout, TimeUnit.MILLISECONDS)
-                    .readTimeout(queryTimeout, TimeUnit.MILLISECONDS)
-                    .writeTimeout(queryTimeout, TimeUnit.MILLISECONDS)
-                    .retryOnConnectionFailure(true);
-
-            // custom OkHttpClient uses longer timeout values
-            // custom websocket factory also uses the longer timeout value
-            //   this improved bot responsiveness in a previous era;
-            //   it is unknown if these overrides are still necessary today (2018-07-21)
-            this.builder.setHttpClientBuilder(httpBuilder);
-            this.builder.setWebsocketFactory(new WebSocketFactory()
-                    .setConnectionTimeout(queryTimeout));
-
             // EventListener handles all types of bot events
             this.builder.addEventListener(new EventListener());
 
             // previous session queue mechanism was deprecated and has seemingly been replaced with
             //   this SessionController object
-            this.builder.setSessionController(new SessionControllerAdapter() {
+            this.builder.setSessionController(new SessionControllerAdapter()
+            {
                 @Override
-                public void appendSession(SessionConnectNode node) {
+                public void appendSession(SessionConnectNode node)
+                {
                     System.out.println("[SessionController] Adding SessionConnectNode to Queue!");
                     super.appendSession(node);
                 }
@@ -90,9 +73,6 @@ public class ShardManager
             {
                 this.jdaShards = new ConcurrentHashMap<>();
                 Logging.info(this.getClass(), "Starting shard " + shards.get(0) + ". . .");
-
-                // add the reconnection queue
-                //builder.setReconnectQueue(new SessionReconnectQueue());
 
                 // build the first shard synchronously with Main
                 // to block the initialization process until one shard is active
@@ -113,7 +93,7 @@ public class ShardManager
                     // -this ought to occur only if the bot is running on multiple systems
                     // -and the current system is not responsible for the primary (0) shard
                     JDA jda = this.builder
-                            .setCorePoolSize(primaryPoolSize)
+                            .setCorePoolSize(secondaryPoolSize)
                             .useSharding(shards.get(0), shardTotal)
                             .build().awaitReady();
 
@@ -125,32 +105,16 @@ public class ShardManager
                 Main.getEntryManager().init();
                 Main.getCommandHandler().init();
 
-                // bring each additional shard up one after another
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() ->
+                // start additional shards
+                for (Integer shardId : shards)
                 {
-                    try
-                    {
-                        for(Integer shardId : shards)
-                        {
-                            // sleep for 5 seconds before continuing
-                            //try { Thread.sleep(5*1000); }
-                            //catch (InterruptedException ignored) {}
-                            Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
-                            JDA shard = this.builder
-                                    .setCorePoolSize(secondaryPoolSize)
-                                    .useSharding(shardId, shardTotal)
-                                    .build();
-                            this.jdaShards.put(shardId, shard);
-                        }
-                        this.startGamesTimer();
-                        executor.shutdown();
-                    }
-                    catch(Exception e)
-                    {
-                        Logging.exception(this.getClass(), e);
-                    }
-                });
+                    Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
+                    JDA shard = this.builder
+                            .setCorePoolSize(secondaryPoolSize)
+                            .useSharding(shardId, shardTotal)
+                            .build();
+                    this.jdaShards.put(shardId, shard);
+                }
             }
             else // no sharding
             {
@@ -159,11 +123,44 @@ public class ShardManager
                         .setCorePoolSize(primaryPoolSize)
                         .build().awaitReady();
                 this.jda.setAutoReconnect(true);
-                this.startGamesTimer();
 
                 Main.getEntryManager().init();
                 Main.getCommandHandler().init();
             }
+
+            // start the "Now playing.." message cycler
+            this.startGamesTimer();
+
+            // executor service schedules shard-checking threads
+            // restart any shards which are not in a CONNECTED state
+            ScheduledExecutorService shardExecutor = Executors.newSingleThreadScheduledExecutor();
+            shardExecutor.scheduleWithFixedDelay(() ->
+            {
+                Logging.info(this.getClass(), "Examining status of shards. . .");
+                this.getShards().forEach((shard) ->
+                {
+                    JDA.Status status = shard.getStatus();
+                    if (!status.equals(JDA.Status.CONNECTED))
+                    {
+                        Integer id = shard.getShardInfo().getShardId();
+                        Logging.warn(this.getClass(), "Shard-"+id+" is not connected! ["+status+"]");
+
+                        try
+                        {
+                            this.restartShard(id);
+                        }
+                        catch (LoginException | InterruptedException e)
+                        {
+                            Logging.warn(this.getClass(), "Failed to restart shard! ["+e.getMessage()+"]");
+                        }
+                        catch (Exception e)
+                        {
+                            Logging.exception(this.getClass(), e);
+                            System.exit(-1);
+                        }
+                    }
+                });
+            }, 15, 15, TimeUnit.MINUTES);
         }
         catch (Exception e)
         {
@@ -182,17 +179,17 @@ public class ShardManager
     }
 
     /**
-     * Retrieves the JDA if unsharded, or the JDA shardID 0 if sharded
-     * @return primary JDA
+     * Retrieves the bot JDA if unsharded, otherwise take a shard from the shards collection
+     * @return bot JDA
      */
     public JDA getJDA()
     {
-        if(jda == null)
-        {
-            return jdaShards.get(0);
+        if(this.jda == null)
+        {   // take a shard, any shard
+            return this.jdaShards.values()
+                    .iterator().next();
         }
-
-        return jda;
+        return this.jda;
     }
 
     /**
@@ -202,7 +199,8 @@ public class ShardManager
      */
     public JDA getJDA(String guildId)
     {
-        return Main.getShardManager().isSharding() ? Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
+        return Main.getShardManager().isSharding() ?
+                Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
     }
 
     /**
@@ -276,46 +274,49 @@ public class ShardManager
         this.games = Iterables.cycle(Main.getBotSettingsManager().getNowPlayingList()).iterator();
     }
 
-
     /**
      * Shuts down and recreates a JDA shard
      * @param shardId (Integer) shardID of the JDA shard
      */
-    public void restartShard(Integer shardId)
-    {
-        try
+    public void restartShard(Integer shardId) throws LoginException, InterruptedException {
+        if (this.isSharding())
         {
-            if(this.jdaShards.containsKey(shardId))
+            // do not handle shards not assigned to the current instance of the bot
+            if (this.jdaShards.containsKey(shardId))
             {
+                // shutdown the shard
                 Logging.info(this.getClass(), "Shutting down shard-" + shardId + ". . .");
-                this.getShard(shardId).shutdown();
+                this.getShard(shardId).shutdownNow();
                 this.jdaShards.remove(shardId);
-            }
 
-            Logging.info(this.getClass(), "Starting shard-" + shardId + ". . .");
-            JDABuilder shardBuilder;
-            if(shardId == 0)
-            {
-                 shardBuilder = this.builder
-                         //.setCorePoolSize(primaryPoolSize)
-                         .useSharding(shardId, shardTotal);
+                // configure the builder from the template
+                Logging.info(this.getClass(), "Starting shard-" + shardId + ". . .");
+                JDABuilder shardBuilder;
+                if (shardId == 0)
+                {
+                    shardBuilder = this.builder
+                            .setCorePoolSize(primaryPoolSize)
+                            .useSharding(shardId, shardTotal);
+                }
+                else
+                {
+                    shardBuilder = this.builder
+                            .setCorePoolSize(secondaryPoolSize)
+                            .useSharding(shardId, shardTotal);
+                }
+
+                // restart the shard (asynchronously)
+                JDA shard = shardBuilder.build();
+                this.jdaShards.put(shardId, shard);
             }
-            else
-            {
-                shardBuilder = this.builder
-                        //.setCorePoolSize(secondaryPoolSize)
-                        .useSharding(shardId, shardTotal);
-            }
-            this.jdaShards.put(shardId, shardBuilder.build());
         }
-        catch (LoginException e)
+        else
         {
-            Logging.warn(this.getClass(), e.getMessage());
-            this.restartShard(shardId);
-        }
-        catch (Exception e)
-        {
-            Logging.exception(this.getClass(), e);
+            Logging.info(this.getClass(), "Restarting bot JDA. . .");
+            this.jda.shutdownNow();
+            this.jda = this.builder
+                    .setCorePoolSize(primaryPoolSize)
+                    .build().awaitReady();
         }
     }
 
@@ -335,28 +336,33 @@ public class ShardManager
                 {
                     if(!games.hasNext()) return;
 
+                    // add shard-specific information
                     String name = games.next();
                     if(name.contains("%"))
                     {
-                        if(name.contains("%shardId"))
+                        if (name.contains("%shardId"))
                             name = name.replaceAll("%shardId", shard.getShardInfo().getShardId() + "");
-                        if(name.contains("%shardTotal"))
+                        if (name.contains("%shardTotal"))
                             name = name.replaceAll("%shardTotal", shard.getShardInfo().getShardTotal() + "");
+                        if (name.contains("%guilds"))
+                            name = name.replaceAll("%guilds", ""+shard.getGuilds().size());
                     }
-                    shard.getPresence().setGame(Game.of(Game.GameType.DEFAULT, name, "https://nmathe.ws/bots/saber"));
+
+                    // update shard presence
+                    shard.getPresence().setGame(Game.playing(name));
                 };
 
                 if(isSharding())
                 {
                     for(JDA shard : getShards())
                     {
-                        if(JDA.Status.valueOf("CONNECTED") == shard.getStatus())
+                        if (shard.getStatus().equals(JDA.Status.CONNECTED))
                             task.accept(shard);
                     }
                 }
                 else
                 {
-                    if(JDA.Status.valueOf("CONNECTED") == getJDA().getStatus())
+                    if (getJDA().getStatus().equals(JDA.Status.CONNECTED))
                         task.accept(getJDA());
                 }
             }

@@ -170,8 +170,8 @@ class EntryProcessor implements Runnable
                             JDA jda = Main.getShardManager().getJDA(guildId);
 
                             // if the shard is not connected, do process the event
-                            if(jda == null) return;
-                            if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+                            if (jda == null) return;
+                            if (!jda.getStatus().equals(JDA.Status.CONNECTED)) return;
 
                             timerExecutor.execute(() ->
                             {
@@ -213,7 +213,7 @@ class EntryProcessor implements Runnable
 
                     // if the shard is not connected, do process the event
                     if(jda == null) return;
-                    if(JDA.Status.valueOf("CONNECTED") != jda.getStatus()) return;
+                    if (!jda.getStatus().equals(JDA.Status.CONNECTED)) return;
 
                     ScheduleEntry se = (new ScheduleEntry(document));
                     Integer id = se.getId();
