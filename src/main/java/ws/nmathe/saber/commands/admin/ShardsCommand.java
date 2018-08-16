@@ -51,20 +51,6 @@ public class ShardsCommand implements Command
         String msg = "I am not sharded!";
         if(Main.getShardManager().isSharding())
         {
-            if(args.length > 0)
-            {
-                switch(args[0])
-                {
-                    case "restart":
-                        Integer shardId = Integer.parseInt(args[1]);
-                        Main.getShardManager().restartShard(shardId);
-                        try
-                        { Thread.sleep(2000); }
-                        catch (InterruptedException ignored) {}
-                        break;
-                }
-            }
-
             msg = "```javascript\n" +
                     "\"Total Shards\" (" + Main.getBotSettingsManager().getShardTotal() + ")\n";
             for(JDA shard : Main.getShardManager().getShards())
