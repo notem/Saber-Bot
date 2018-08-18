@@ -5,7 +5,6 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
-import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
@@ -78,7 +77,7 @@ public class DeleteCommand implements Command
         }
         else // arg should be a schedule id
         {
-            if(!Main.getScheduleManager().isASchedule(args[0].replaceAll("[^\\d]","")))
+            if(!Main.getScheduleManager().isSchedule(args[0].replaceAll("[^\\d]","")))
             {
                 return "Argument ``" + args[0] + "`` is not a schedule channel or an event id!";
             }

@@ -1,20 +1,15 @@
 package ws.nmathe.saber.commands.general;
 
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Channel;
-import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
-import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
-import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -136,7 +131,7 @@ public class InitCommand implements Command
             }
             else // convert the channel to a schedule
             {
-                if(Main.getScheduleManager().isASchedule(chan.getId()))
+                if(Main.getScheduleManager().isSchedule(chan.getId()))
                 {   // clear the channel of events
                     TextChannel finalChan = chan;
                     Main.getDBDriver().getEventCollection().find(eq("channelId", chan.getId()))

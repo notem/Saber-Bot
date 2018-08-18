@@ -99,9 +99,9 @@ public class EntryManager
         }
 
         // is rsvp enabled on the channel set empty rsvp lists
-        if( Main.getScheduleManager().isRSVPEnabled(se.getChannelId()) )
+        if (Main.getScheduleManager().isRSVPEnabled(se.getChannelId()) )
         {
-            for(String type : Main.getScheduleManager().getRSVPOptions(se.getChannelId()).values())
+            for (String type : Main.getScheduleManager().getRSVPOptions(se.getChannelId()).values())
             {
                 se.setRsvpMembers(type, new ArrayList<>());
             }

@@ -160,7 +160,7 @@ public class ShardManager
                         }
                     }
                 });
-            }, 15, 15, TimeUnit.MINUTES);
+            }, 1, 1, TimeUnit.HOURS);
         }
         catch (Exception e)
         {

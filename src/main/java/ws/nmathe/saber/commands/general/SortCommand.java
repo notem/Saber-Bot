@@ -4,7 +4,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
-import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 /**
@@ -61,7 +60,7 @@ public class SortCommand implements Command
 
         // check channel
         String cId = args[index].replaceAll("[^\\d]","");
-        if( !Main.getScheduleManager().isASchedule(cId) )
+        if( !Main.getScheduleManager().isSchedule(cId) )
         {
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild. " +
                     "Use the ``" + prefix + "init`` command to create a new schedule!";

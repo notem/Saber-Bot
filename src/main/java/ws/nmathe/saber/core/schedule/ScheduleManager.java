@@ -1,6 +1,5 @@
 package ws.nmathe.saber.core.schedule;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
@@ -33,13 +32,16 @@ import static com.mongodb.client.model.Updates.set;
 public class ScheduleManager
 {
     private Set<String> locks = new HashSet<>(); // locks channels from running multiple sorts simultaneously
+    private Integer MAX_SIZE_TO_SYNC = 15;  // do not sort schedules more than this number of events
 
-    public void initScheduleSync()
-    {
-        // every 15 minutes create a thread to check for schedules to sync
-        ScheduledExecutorService syncScheduler = Executors.newSingleThreadScheduledExecutor(
-                new ThreadFactoryBuilder().setNameFormat("ScheduleManager-%d").build());
-        syncScheduler.scheduleAtFixedRate(new ScheduleSyncer(), 60*15, 60*15, TimeUnit.SECONDS );
+    /**
+     * starts a scheduled thread responsible for synchronizing channels with their linked google calendar counterparts
+     * init() need not be called if the bot has not been configured to use a google service account
+     */
+    public void init()
+    {   // every 15 minutes create a thread to check for schedules to sync
+        ScheduledExecutorService syncScheduler = Executors.newScheduledThreadPool(1);
+        syncScheduler.scheduleAtFixedRate(new ScheduleSyncer(), 30, 30, TimeUnit.MINUTES);
     }
 
     /**
@@ -70,46 +72,20 @@ public class ScheduleManager
                             Collections.singletonList(Permission.MESSAGE_WRITE))
                     .complete().getId();
         }
-        catch( PermissionException e)
+        catch (PermissionException e)
         {
             String m = e.getMessage() + ": Guild ID " + gId;
             Logging.warn(this.getClass(), m);
             return;
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Logging.exception(this.getClass(), e);
             return;
         }
 
-        // set default reminders
-        List<Integer> default_reminders = new ArrayList<>();
-        default_reminders.add(10);
-
-        // set default rsvp options
-        Map<String, String> default_rsvp = new LinkedHashMap<>();
-        default_rsvp.put(Main.getBotSettingsManager().getYesEmoji(), "Yes");
-        default_rsvp.put(Main.getBotSettingsManager().getNoEmoji(), "No");
-        default_rsvp.put(Main.getBotSettingsManager().getClearEmoji(), "Undecided");
-
-        // create DB document for new schedule
-        Document schedule =
-                new Document("_id", cId)
-                        .append("guildId", gId)
-                        .append("announcement_channel", Main.getBotSettingsManager().getAnnounceChan())
-                        .append("announcement_format", Main.getBotSettingsManager().getAnnounceFormat())
-                        .append("clock_format", Main.getBotSettingsManager().getClockFormat())
-                        .append("timezone", Main.getBotSettingsManager().getTimeZone())
-                        .append("sync_time", Date.from(ZonedDateTime.of(LocalDate.now().plusDays(1),
-                                LocalTime.now().truncatedTo(ChronoUnit.HOURS), ZoneId.systemDefault()).toInstant()))
-                        .append("default_reminders", default_reminders)
-                        .append("rsvp_enabled", false)
-                        .append("display_style", "full")
-                        .append("sync_length", 7)
-                        .append("sync_address", "off")
-                        .append("rsvp_options", default_rsvp);
-
-        Main.getDBDriver().getScheduleCollection().insertOne(schedule);
+        // create the schedule database entry
+        createNewSchedule(cId, gId);
     }
 
 
@@ -135,16 +111,27 @@ public class ScheduleManager
             channel.createPermissionOverride(channel.getGuild().getPublicRole())              // @everyone perms
                     .setDeny(Collections.singleton(Permission.MESSAGE_WRITE)).queue();
         }
-        catch( PermissionException e)
+        catch (PermissionException e)
         {
             String m = e.getMessage() + ": Guild ID " + channel.getGuild().getId();
             Logging.warn(this.getClass(), m);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Logging.exception(this.getClass(), e);
         }
 
+        // create the schedule database entry
+        createNewSchedule(channel.getId(), channel.getGuild().getId());
+    }
+
+    /**
+     * initializes default values and creates a new database entry to represent the schedule
+     * @param channelId the channel (and now schedule) ID; should be a unique Snowflake
+     * @param guildId unique snowflake for the guild to which the channel/schedule belongs
+     */
+    private void createNewSchedule(String channelId, String guildId)
+    {
         // default reminders
         List<Integer> default_reminders = new ArrayList<>();
         default_reminders.add(10);
@@ -157,8 +144,8 @@ public class ScheduleManager
 
         // create DB entry
         Document schedule =
-                new Document("_id", channel.getId())
-                        .append("guildId", channel.getGuild().getId())
+                new Document("_id", channelId)
+                        .append("guildId", guildId)
                         .append("announcement_channel", Main.getBotSettingsManager().getAnnounceChan())
                         .append("announcement_format", Main.getBotSettingsManager().getAnnounceFormat())
                         .append("clock_format", Main.getBotSettingsManager().getClockFormat())
@@ -212,7 +199,7 @@ public class ScheduleManager
      * @param cId (String) channel ID, synonymous to schedule id
      * @return (boolean) true if channel ID maps to a schedule
      */
-    public boolean isASchedule(String cId)
+    public boolean isSchedule(String cId)
     {
         Document settings = Main.getDBDriver().getScheduleCollection().find(eq("_id",cId)).first();
         return settings != null;
@@ -276,7 +263,7 @@ public class ScheduleManager
      */
     public void sortSchedule(String cId, boolean reverseOrder)
     {
-        if(this.getScheduleSize(cId) > 15) return;
+        if(this.getScheduleSize(cId) > MAX_SIZE_TO_SYNC) return;
         if(this.isLocked(cId)) return;
 
         this.lock(cId); // lock the channel
@@ -316,7 +303,7 @@ public class ScheduleManager
                 {
                     Message minMsg = min.getMessageObject();
                     Message topMsg = cur.getMessageObject();
-                    if(minMsg!=null && topMsg!=null)
+                    if (minMsg!=null && topMsg!=null)
                     {
                         OffsetDateTime a = minMsg.getCreationTime();
                         OffsetDateTime b = topMsg.getCreationTime();
@@ -328,7 +315,7 @@ public class ScheduleManager
 
                 }
                 // swap messages and update db
-                if(!(min==top))
+                if (!(min==top))
                 {
                     Message tmp = top.getMessageObject();
                     top.setMessageObject(min.getMessageObject());

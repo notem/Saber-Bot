@@ -121,7 +121,7 @@ public class EditCommand implements Command
         }
         if(Main.getScheduleManager().isLocked(entry.getChannelId()))
         {
-            return "Schedule is locked for sorting/syncing. Please try again after sort/sync finishes.";
+            return "This schedule is locked. Please try again after the sort/sync operation finishes.";
         }
 
         TextChannel channel = event.getGuild().getTextChannelById(entry.getChannelId());

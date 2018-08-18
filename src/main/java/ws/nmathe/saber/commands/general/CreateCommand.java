@@ -102,14 +102,14 @@ public class CreateCommand implements Command
 
         // schedule check
         String cId = args[index].replaceAll("[^\\d]","");
-        if (!Main.getScheduleManager().isASchedule(cId))
+        if (!Main.getScheduleManager().isSchedule(cId))
         {
             return "Channel " + args[index] + " is not a schedule for your guild. " +
                     "Use the ``" + prefix + "init`` command to create a new schedule!";
         }
         if (Main.getScheduleManager().isLocked(cId))
         {
-            return "Schedule is locked while sorting/syncing. Please try again after sort/sync finishes.";
+            return "This schedule is locked. Please try again after the sort/sync operation finishes.";
         }
         index++; // 1
 

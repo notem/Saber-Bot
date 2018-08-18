@@ -146,7 +146,7 @@ public class DiagnoseCommand implements Command
                         .append(".\n");
 
                 // 2) is the channel a schedule?
-                boolean schedule = Main.getScheduleManager().isASchedule(channelId);
+                boolean schedule = Main.getScheduleManager().isSchedule(channelId);
                 if (schedule)
                 {
                     builder.append("+ That channel is a schedule.\n");

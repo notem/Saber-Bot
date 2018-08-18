@@ -237,7 +237,7 @@ public class EventListener extends ListenerAdapter
         String cId = event.getChannel().getId();
 
         // if the deleted channel was a schedule, clear the db entries
-        if(Main.getScheduleManager().isASchedule(cId))
+        if(Main.getScheduleManager().isSchedule(cId))
         {
             Main.getDBDriver().getEventCollection().deleteMany(eq("channelId", cId));
             Main.getDBDriver().getScheduleCollection().deleteOne(eq("_id", cId));

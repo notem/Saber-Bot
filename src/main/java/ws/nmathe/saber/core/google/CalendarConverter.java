@@ -22,8 +22,6 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.*;
 
@@ -47,7 +45,7 @@ public class CalendarConverter
             Calendar service = GoogleAuth.getCalendarService(GoogleAuth.authorize());
 
             Main.getCommandHandler().putSync(); // enable the sync command
-            Main.getScheduleManager().initScheduleSync(); // start the schedule sync timer
+            Main.getScheduleManager().init(); // start the schedule sync timer
         }
         catch( IOException e )
         {
@@ -99,7 +97,7 @@ public class CalendarConverter
     public boolean exportCalendar(String address, TextChannel channel, Calendar service)
     {
         if(channel == null || address == null) return false;
-        if(!Main.getScheduleManager().isASchedule(channel.getId()))
+        if(!Main.getScheduleManager().isSchedule(channel.getId()))
         {   // safety check to insure exportCalendar is being applied to a valid channel
             return false;
         }
@@ -176,7 +174,7 @@ public class CalendarConverter
     {
         // sanity checks
         if(channel == null || address == null) return;
-        if(!Main.getScheduleManager().isASchedule(channel.getId())) return;
+        if(!Main.getScheduleManager().isSchedule(channel.getId())) return;
 
         // query the google calendar address for the list of events
         Events events;

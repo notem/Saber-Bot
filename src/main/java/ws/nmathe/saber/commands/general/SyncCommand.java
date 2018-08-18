@@ -8,10 +8,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.google.GoogleAuth;
-import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
-
-import java.io.IOException;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.set;
@@ -75,7 +72,7 @@ public class SyncCommand implements Command
 
         // validate the supplied channel
         String cId = args[0].replaceAll("[^\\d]","");
-        if(!Main.getScheduleManager().isASchedule(cId))
+        if(!Main.getScheduleManager().isSchedule(cId))
         {
             return "Channel " + args[index] + " is not on my list of schedule channels for your guild.";
         }
