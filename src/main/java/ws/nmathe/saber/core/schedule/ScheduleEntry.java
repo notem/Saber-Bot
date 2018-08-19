@@ -947,7 +947,6 @@ public class ScheduleEntry
         }
         catch (Exception e)
         {
-            Logging.exception(this.getClass(), e);
             msg = null;
         }
         return msg;
