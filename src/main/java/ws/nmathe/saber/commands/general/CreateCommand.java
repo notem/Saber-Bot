@@ -11,6 +11,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * CreateCommand places a new entry message on the discord schedule channel
@@ -221,6 +223,15 @@ public class CreateCommand implements Command
                         index++;
                         break;
 
+                    case "limit":
+                    case "l":
+                        if (!VerifyUtilities.verifyInteger(args[index+1]))
+                        {
+                           return "The limit keyword should have arguments of the form ``limit [group] [number]!";
+                        } // note: the group for which the limit is for is not validated
+                        index+=2;
+                        break;
+
                     default:
                         if(args[index-1].length() > 1024) return "Comments should not be larger than 1024 characters!";
                         break;
@@ -265,6 +276,7 @@ public class CreateCommand implements Command
         String location         = null;
         String color            = null;
         ArrayList<String> comments = new ArrayList<>();
+        Map<String, Integer> limits = new HashMap<>();
 
         // process title
         title = args[index];
@@ -392,6 +404,13 @@ public class CreateCommand implements Command
                             index++;
                             break;
 
+                        case "limit":
+                        case "l":
+                            Integer lim = Integer.parseInt(args[index+1]);
+                            limits.put(args[index], lim);
+                            index += 2;
+                            break;
+
                         default:
                             comments.add(args[index-1]);
                             break;
@@ -458,6 +477,12 @@ public class CreateCommand implements Command
                 .setRsvpDeadline(deadline)
                 .setLocation(location)
                 .setColor(color);
+
+        // set the limits (if any)
+        for (String key : limits.keySet())
+        {
+            se.setRsvpLimit(key, limits.get(key));
+        }
 
         // finalize the schedule entry
         Integer entryId = Main.getEntryManager().newEntry(se, true);
