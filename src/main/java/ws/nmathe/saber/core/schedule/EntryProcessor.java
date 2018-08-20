@@ -88,6 +88,11 @@ class EntryProcessor implements Runnable
                 processEvents(ActionType.REMIND, query);
 
                 Logging.info(this.getClass(), "Currently processing "+processing.size()+" events.");
+                if (processing.size() > 150)
+                {
+                    Logging.info(this.getClass(), "Detected possible issue, exiting the bot.");
+                    System.exit(-100);
+                }
             }
 
             /*
