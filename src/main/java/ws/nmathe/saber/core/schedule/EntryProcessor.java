@@ -88,11 +88,11 @@ class EntryProcessor implements Runnable
                 processEvents(ActionType.REMIND, query);
 
                 Logging.info(this.getClass(), "Currently processing "+processing.size()+" events.");
-                if (processing.size() > 150)
-                {
-                    Logging.info(this.getClass(), "Detected possible issue, exiting the bot.");
-                    System.exit(-100);
-                }
+                //if (processing.size() > 150)
+                //{
+                //    Logging.info(this.getClass(), "Detected possible issue, exiting the bot.");
+                //    System.exit(-100);
+                //}
             }
 
             /*
@@ -188,6 +188,7 @@ class EntryProcessor implements Runnable
                                 {/* dont care */}
                                 catch(Exception e)
                                 {
+                                    Logging.warn(this.getClass(), "Error occurred while updating event timer.");
                                     Logging.exception(this.getClass(), e);
                                 }
                             });
@@ -251,6 +252,7 @@ class EntryProcessor implements Runnable
                             }
                             catch (Exception e)
                             {
+                                Logging.warn(this.getClass(), "Error occurred when processing event action!");
                                 Logging.exception(this.getClass(), e);
                             }
                             finally

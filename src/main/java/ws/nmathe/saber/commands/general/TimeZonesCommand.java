@@ -60,7 +60,7 @@ public class TimeZonesCommand implements Command
 
                 // sleep for a second so as to not get rate limited
                 try {Thread.sleep(1000);}
-                catch( Exception ignored ) { }
+                catch (Exception ignored) { }
             }
             if (args.length == 0)
             {
