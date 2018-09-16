@@ -389,13 +389,13 @@ public class EntryManager
     {
         // try first to use the requested Id
         Integer ID;
-        ID = (int) Math.ceil(generator.nextDouble() * (Math.pow(2, 32) - 1));
+        ID = this.generator.nextInt();
 
         // if the Id is in use, generate a new one until a free one is found
         Bson document = Main.getDBDriver().getEventCollection().find(eq("_id", ID)).first();
         while (document != null)
         {
-            ID = (int) Math.ceil(generator.nextDouble() * (Math.pow(2, 32) - 1));
+            ID = this.generator.nextInt();
             document = Main.getDBDriver().getEventCollection().find(eq("_id", ID)).first();
         }
 
