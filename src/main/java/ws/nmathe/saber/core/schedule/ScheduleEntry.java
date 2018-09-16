@@ -244,9 +244,16 @@ public class ScheduleEntry
             if(date!=null && date.before(new Date())) expired.add(ID);
         }
 
+        // collection of expired Dates
+        Map<String, Date> dates = new HashMap<>();
+
         // remove all the processed announcements and update event
         this.announcements.removeIf(date->date.before(new Date())); // remove from announcement set
-        expired.forEach(key-> this.aDates.remove(key));           // remove from ID mapping to announcement set
+        expired.forEach(key ->
+        {   // remove from aDates but add to temporary dates list for use in lateness checking
+            dates.put(key, this.aDates.remove(key));
+            this.aDates.remove(key);
+        });
 
         // update db entry
         Main.getEntryManager().updateEntry(this, false);
@@ -257,7 +264,7 @@ public class ScheduleEntry
         // send announcements
         expired.forEach(key->
         {
-            Boolean late = this.aDates.get(key).after(Date.from(Instant.now().minus(threshold, ChronoUnit.MINUTES)));
+            Boolean late = dates.get(key).after(Date.from(Instant.now().minus(threshold, ChronoUnit.MINUTES)));
             if (!late)
             {
                 String text = ParsingUtilities.processText(this.aMessages.get(key), this, true);
