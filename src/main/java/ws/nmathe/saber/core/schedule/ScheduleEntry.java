@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A ScheduleEntry object represents a currently scheduled entry is either waiting to start or has already started
@@ -249,16 +251,27 @@ public class ScheduleEntry
         // update db entry
         Main.getEntryManager().updateEntry(this, false);
 
+        // lateness threshold (minutes)
+        Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
+
         // send announcements
         expired.forEach(key->
         {
-            String text = ParsingUtilities.processText(this.aMessages.get(key), this, true);
-            String target = this.aTargets.get(key);
+            Boolean late = this.aDates.get(key).after(Date.from(Instant.now().minus(threshold, ChronoUnit.MINUTES)));
+            if (!late)
+            {
+                String text = ParsingUtilities.processText(this.aMessages.get(key), this, true);
+                String target = this.aTargets.get(key);
 
-            // send announcement
-            this.makeAnnouncement(message, text, target);
-            Logging.event(this.getClass(), "Sent special announcement for event " +
-                    this.getTitle() + " [" + this.getId() + "]");
+                // send announcement
+                this.makeAnnouncement(message, text, target);
+                Logging.event(this.getClass(), "Sent special announcement for event " +
+                        this.getTitle() + " [" + this.getId() + "]");
+            }
+            else
+            {
+                Logging.warn(this.getClass(), "Late special event announcement: " + this.title + " ["+this.entryId+"]");
+            }
         });
     }
 
@@ -276,6 +289,18 @@ public class ScheduleEntry
      */
     public void remind(Message message)
     {
+        Date lastDate = null;
+        List<Date> dates = Stream.concat(this.reminders.stream(), this.endReminders.stream())
+                .collect(Collectors.toList());
+        for (Date date : dates)
+        {
+            if (lastDate == null ||
+                    (date.before(new Date()) && date.after(lastDate)))
+            {
+                lastDate = date;
+            }
+        }
+
         // remove expired reminders
         this.reminders.removeIf(date -> date.before(new Date()));
         this.endReminders.removeIf(date -> date.before(new Date()));
@@ -287,16 +312,27 @@ public class ScheduleEntry
         String text = ParsingUtilities.processText(Main.getScheduleManager().getReminderFormat(this.chanId), this, true);
         String identifier = Main.getScheduleManager().getReminderChan(this.chanId);
 
-        // send reminder
-        if (!this.quietRemind)
+        if (lastDate != null)
         {
-            this.makeAnnouncement(message, text, identifier);
-            Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
-        }
-        else
-        {
-            String logStr = "Silenced reminder for event \"" + this.getTitle() + "\" [" + this.entryId + "]";
-            Logging.event(this.getClass(), logStr);
+            Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
+            Boolean late = lastDate.after(Date.from(Instant.now().minus(threshold, ChronoUnit.MINUTES)));
+            if (!late)
+            {   // send reminder
+                if (!this.quietRemind)
+                {
+                    this.makeAnnouncement(message, text, identifier);
+                    Logging.event(this.getClass(), "Sent reminder for event " + this.getTitle() + " [" + this.getId() + "]");
+                }
+                else
+                {
+                    String logStr = "Silenced reminder for event \"" + this.getTitle() + "\" [" + this.entryId + "]";
+                    Logging.event(this.getClass(), logStr);
+                }
+            }
+            else
+            {
+                Logging.warn(this.getClass(), "Late event reminder: " + this.title + " ["+this.entryId+"] " + lastDate);
+            }
         }
     }
 
