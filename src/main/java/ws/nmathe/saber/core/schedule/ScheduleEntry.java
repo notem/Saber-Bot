@@ -265,7 +265,7 @@ public class ScheduleEntry
         expired.forEach(key->
         {
             Boolean late = dates.get(key).after(Date.from(Instant.now().minus(threshold, ChronoUnit.MINUTES)));
-            if (!late)
+            if (late)
             {
                 String text = ParsingUtilities.processText(this.aMessages.get(key), this, true);
                 String target = this.aTargets.get(key);
@@ -323,7 +323,7 @@ public class ScheduleEntry
         {
             Integer threshold = Main.getGuildSettingsManager().getGuildSettings(this.getGuildId()).getLateThreshold();
             Boolean late = lastDate.after(Date.from(Instant.now().minus(threshold, ChronoUnit.MINUTES)));
-            if (!late)
+            if (late)
             {   // send reminder
                 if (!this.quietRemind)
                 {
