@@ -746,7 +746,7 @@ public class ConfigCommand implements Command
                 case "time":
                     ZonedDateTime syncTime = ZonedDateTime.of(
                             LocalDate.now(),
-                            ParsingUtilities.parseTime(args[index]),
+                            ParsingUtilities.parseTime(args[index], null),
                             Main.getScheduleManager().getTimeZone(cId));
 
                     // don't allow times set in the past

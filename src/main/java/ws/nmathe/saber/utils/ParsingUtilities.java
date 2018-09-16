@@ -30,41 +30,40 @@ public class ParsingUtilities
      * @param userInput the local time
      * @return new ZonedDateTime with the new time
      */
-    public static LocalTime parseTime(String userInput)
+    public static LocalTime parseTime(String userInput, ZoneId zone)
     {
-        LocalTime time;
+        // use the system zone if zoneId is null
+        zone = (zone == null) ? ZoneId.systemDefault() : zone;
+
+        LocalTime time = LocalTime.now(zone);
+
         // relative time
-        if(userInput.matches(".+[mM][iI][nN]$"))
+        if (userInput.toLowerCase().matches(".+min(ute)?(s)?$"))
         {
-            time = LocalTime.now().plusMinutes(Long.parseLong(userInput.replaceAll("[^\\d]", "")));
+            Long minutes = Long.parseLong(userInput.replaceAll("[^\\d]", ""));
+            time = time.plusMinutes(minutes);
         }
+
         // absolute time
-        else if(userInput.equals("24:00") || userInput.equals("24")) // 24:00 is not really a valid time
+        // special case (24:00 == 00:00)
+        else if(userInput.equals("24:00") || userInput.equals("24"))
         {
             time = LocalTime.MAX;
         }
-        else if(userInput.contains(":")) // 1:00pm or 13:00
+        // 1:00pm or 13:00
+        else if(userInput.contains(":"))
         {
-            if(userInput.matches(".+([aApP][mM])"))
-            {
-                time = LocalTime.parse(userInput.toUpperCase(), DateTimeFormatter.ofPattern("h:mma"));
-            }
-            else
-            {
-                time = LocalTime.parse(userInput, DateTimeFormatter.ofPattern("H:mm"));
-            }
+            DateTimeFormatter format = userInput.toLowerCase().matches(".+([ap][m])") ?
+                    DateTimeFormatter.ofPattern("h:mma") : DateTimeFormatter.ofPattern("H:mm");
+            time = LocalTime.parse(userInput.toUpperCase(), format);
         }
         else // 1pm or 13
         {
-            if(userInput.matches(".+([aApP][mM])"))
-            {
-                time = LocalTime.parse(userInput.toUpperCase(), DateTimeFormatter.ofPattern("ha"));
-            }
-            else
-            {
-                time = LocalTime.parse(userInput, DateTimeFormatter.ofPattern("H"));
-            }
+            DateTimeFormatter format = userInput.toLowerCase().matches(".+([ap][m])") ?
+                    DateTimeFormatter.ofPattern("ha") : DateTimeFormatter.ofPattern("H");
+            time = LocalTime.parse(userInput.toUpperCase(), format);
         }
+
         return time;
     }
 

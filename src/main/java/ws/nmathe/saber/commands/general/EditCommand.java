@@ -221,7 +221,10 @@ public class EditCommand implements Command
                         return "I could not understand **" + args[index] + "** as a time!" +
                                 "\nPlease use the format hh:mm[am|pm].";
                     }
-                    if (ZonedDateTime.of(entry.getStart().toLocalDate(), ParsingUtilities.parseTime(args[index]), entry.getStart().getZone()).isBefore(ZonedDateTime.now()))
+                    if (ZonedDateTime.of(entry.getStart().toLocalDate(),
+                                            ParsingUtilities.parseTime(args[index], entry.getStart().getZone()),
+                                            entry.getStart().getZone())
+                            .isBefore(ZonedDateTime.now()))
                     {
                         return "Today's time is already past *" + args[index] + "*!\n" +
                                 "Please use a different time, or change the date for the event!";
@@ -251,7 +254,7 @@ public class EditCommand implements Command
                     if (!args[index].equalsIgnoreCase("off"))
                     {
                         ZonedDateTime end = ZonedDateTime.of(entry.getEnd().toLocalDate(),
-                                ParsingUtilities.parseTime(args[index]),
+                                ParsingUtilities.parseTime(args[index], entry.getEnd().getZone()),
                                 entry.getEnd().getZone());
                         if (end.isBefore(ZonedDateTime.now()))
                         {
@@ -560,7 +563,8 @@ public class EditCommand implements Command
                     case "start":
                         // create new datetime and update the schedule entry object
                         ZonedDateTime newStart = ZonedDateTime.of(se.getStart().toLocalDate(),
-                                ParsingUtilities.parseTime(args[index]), se.getStart().getZone());
+                                                    ParsingUtilities.parseTime(args[index], se.getStart().getZone()),
+                                                    se.getStart().getZone());
                         se.setStart(newStart);
 
                         // do some final processing on start/end times
@@ -595,8 +599,8 @@ public class EditCommand implements Command
                         else
                         {   // otherwise parse the input for a time
                             se.setEnd(ZonedDateTime.of(se.getEnd().toLocalDate(),
-                                        ParsingUtilities.parseTime(args[index]),
-                                        se.getEnd().getZone()));
+                                                        ParsingUtilities.parseTime(args[index], se.getEnd().getZone()),
+                                                        se.getEnd().getZone()));
                         }
 
                         // add a day if the time has already passed

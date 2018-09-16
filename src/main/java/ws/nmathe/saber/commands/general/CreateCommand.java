@@ -130,7 +130,9 @@ public class CreateCommand implements Command
         }
 
         ZoneId zone = Main.getScheduleManager().getTimeZone(cId);
-        ZonedDateTime startDateTime = ZonedDateTime.of(LocalDate.now(zone), ParsingUtilities.parseTime(args[index]), zone);
+        ZonedDateTime startDateTime = ZonedDateTime.of(LocalDate.now(zone),
+                                        ParsingUtilities.parseTime(args[index], zone),
+                                        zone);
 
         // if minimum args, then ok
         if (args.length == 3) return "";
@@ -283,7 +285,7 @@ public class CreateCommand implements Command
         index++;
 
         // process start
-        startTime = ParsingUtilities.parseTime(args[index].trim().toUpperCase());
+        startTime = ParsingUtilities.parseTime(args[index].trim().toUpperCase(), zone);
         if (ZonedDateTime.now().isAfter(ZonedDateTime.of(LocalDate.now(zone), startTime, zone)))
         {   // fix date if necessary
             startDate = startDate.plusDays(1);
@@ -296,7 +298,7 @@ public class CreateCommand implements Command
             // if <end> fails verification, assume <end> has been omitted
             if(VerifyUtilities.verifyTime(args[index]))
             {
-                endTime = ParsingUtilities.parseTime(args[index].trim().toUpperCase());
+                endTime = ParsingUtilities.parseTime(args[index].trim().toUpperCase(), zone);
                 index++;
             }
 
