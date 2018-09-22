@@ -8,9 +8,12 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 
+import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -37,6 +40,7 @@ class EntryProcessor implements Runnable
     // simple mechanism to avoid conflicting database updates
     // (ie. simultaneous remind() and announce() update)
     private static Set<Integer> processing = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static Map<Integer, Date> timestamps = new ConcurrentHashMap<>();
 
     /** construct the entry processor with type */
     EntryProcessor(EntryManager.type type)
@@ -88,10 +92,16 @@ class EntryProcessor implements Runnable
                 processEvents(ActionType.REMIND, query);
 
                 Logging.info(this.getClass(), "Currently processing "+processing.size()+" events.");
-                if (processing.size() > 150)
+
+                // exit the bot if any event takes more than a few minutes to process
+                int threshold = 3;
+                for (Date value : timestamps.values())
                 {
-                    Logging.info(this.getClass(), "Detected possible issue, exiting the bot.");
-                    System.exit(-100);
+                    if (value.before(Date.from(Instant.now().minus(threshold, ChronoUnit.MINUTES))))
+                    {
+                        Logging.info(this.getClass(), "Detected possible issue, exiting the bot.");
+                        System.exit(-100);
+                    }
                 }
             }
 
@@ -225,6 +235,7 @@ class EntryProcessor implements Runnable
                     Integer id = se.getId();
                     if (processing.add(id))
                     {
+                        timestamps.put(id, new Date());
                         setExecutor.submit(() ->
                         {
                             try
@@ -257,6 +268,7 @@ class EntryProcessor implements Runnable
                             }
                             finally
                             {
+                                timestamps.remove(id);
                                 processing.remove(id);
                             }
                         });

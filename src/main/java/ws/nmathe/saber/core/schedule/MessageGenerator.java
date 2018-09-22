@@ -387,21 +387,21 @@ public class MessageGenerator
     private static void genTimerHelper(ZonedDateTime time, StringBuilder timer)
     {
         long timeTil = ZonedDateTime.now().until(time, ChronoUnit.SECONDS);
-        if (timeTil < 60 * 60)
-        {
-            int minutesTil = (int)Math.ceil((double)timeTil/(60));
-            if (minutesTil <= 1)
-            {
-                timer.append("in a minute");
-            }
-            else
-            {
-                timer.append("in ")
-                        .append(minutesTil)
-                        .append(" minutes");
-            }
-        }
-        else if (timeTil < 24 * 60 * 60)
+        //if (timeTil < 60 * 60)
+        //{
+        //    int minutesTil = (int)Math.ceil((double)timeTil/(60));
+        //    if (minutesTil <= 1)
+        //    {
+        //        timer.append("in a minute");
+        //    }
+        //    else
+        //    {
+        //        timer.append("in ")
+        //                .append(minutesTil)
+        //                .append(" minutes");
+        //    }
+        //}
+        if (timeTil < 24 * 60 * 60)
         {
             int hoursTil = (int)Math.ceil((double)timeTil/(60*60));
             if (hoursTil <= 1)
