@@ -389,7 +389,7 @@ public class EntryManager
     {
         // try first to use the requested Id
         Integer ID;
-        ID = this.generator.nextInt();
+        ID = this.generator.nextInt(Integer.MAX_VALUE);
 
         // if the Id is in use, generate a new one until a free one is found
         Bson document = Main.getDBDriver().getEventCollection().find(eq("_id", ID)).first();
