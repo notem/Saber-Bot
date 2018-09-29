@@ -160,7 +160,7 @@ public class EntryManager
                 Main.getDBDriver().getEventCollection().insertOne(entryDocument);
 
                 // auto-sort the schedule if configured
-                //autoSort(sort, channelId);
+                autoSort(sort, channelId);
             }
             catch(Exception e)
             {
@@ -251,7 +251,7 @@ public class EntryManager
 
             // auto-sort the schedule if configured
             // may be necessary if the start time was changed
-            //autoSort(sort, se.getChannelId());
+            autoSort(sort, se.getChannelId());
             return true;
         }
         catch(Exception e)

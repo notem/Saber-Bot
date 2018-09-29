@@ -31,8 +31,8 @@ class EntryProcessor implements Runnable
     // thread pool used to reload displays of events
     private static ExecutorService timerExecutor = Executors.newCachedThreadPool();
 
-    // thread pool used to process events when emptying the announcement sets
-    private static ExecutorService setExecutor = Executors.newCachedThreadPool();
+    // thread pool used to process event announcements
+    private static ExecutorService setExecutor = Executors.newFixedThreadPool(10);
 
     private enum ActionType {END, START, REMIND, SPECIAL}
     private EntryManager.type type;

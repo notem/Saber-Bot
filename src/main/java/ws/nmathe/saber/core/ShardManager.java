@@ -28,8 +28,8 @@ public class ShardManager
     // list of game names which are used to create a rotating bulletin board-like message system
     private Iterator<String> games;
 
-    private Integer primaryPoolSize = 20;    // used by the jda responsible for handling DMs
-    private Integer secondaryPoolSize = 15;   // used by all other shards
+    private Integer primaryPoolSize = 7;    // used by the jda responsible for handling DMs
+    private Integer secondaryPoolSize = 5;   // used by all other shards
 
     private JDABuilder builder;  // builder to be used as the template for starting/restarting shards
 
