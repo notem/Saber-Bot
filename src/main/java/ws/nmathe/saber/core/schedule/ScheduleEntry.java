@@ -626,7 +626,7 @@ public class ScheduleEntry
                 boolean atLeastOne = false;
                 for(String group : options.values())
                 {
-                    List<String> members = this.getRsvpMembersOfType(group);
+                    Set<String> members = this.getRsvpMembersOfType(group);
                     if (members.contains(event.getUser().getId()))
                     {
                         members.remove(event.getUser().getId());
@@ -666,7 +666,7 @@ public class ScheduleEntry
                 if (!this.isFull(name))
                 {
                     // add the user to the rsvp type
-                    List<String> members = this.getRsvpMembersOfType(name);
+                    Set<String> members = this.getRsvpMembersOfType(name);
                     if (!members.contains(event.getUser().getId()))
                     {
                         members.add(event.getUser().getId());
@@ -874,14 +874,14 @@ public class ScheduleEntry
     /**
      * retrieves an rsvp category's list of members
      */
-    public List<String> getRsvpMembersOfType(String type)
+    public Set<String> getRsvpMembersOfType(String type)
     {
-        List<String> members = this.rsvpMembers.get(type);
+        List<String> members = this.rsvpMembers.getOrDefault(type, null);
         if(members == null)
         {
-            return new ArrayList<>();
+            return new HashSet<>();
         }
-        return new ArrayList<>(members);
+        return new HashSet<>(members);
     }
 
     /**
@@ -1253,15 +1253,15 @@ public class ScheduleEntry
     /**
      * set the full mapping of rsvp'ed members
      */
-    public ScheduleEntry setRsvpMembers(String type, List<String> members)
+    public ScheduleEntry setRsvpMembers(String type, Collection<String> members)
     {
         if(this.rsvpMembers.containsKey(type))
         {
-            this.rsvpMembers.replace(type, members);
+            this.rsvpMembers.replace(type, new ArrayList<>(new HashSet<>(members)));
         }
         else
         {
-            this.rsvpMembers.put(type, members);
+            this.rsvpMembers.put(type, new ArrayList<>(new HashSet<>(members)));
         }
         return this;
     }

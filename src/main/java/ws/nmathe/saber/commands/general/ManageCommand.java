@@ -130,7 +130,7 @@ public class ManageCommand implements Command
         String logging = Main.getScheduleManager().getRSVPLogging(se.getChannelId());
 
         String content="", group, user;
-        List<String> members;
+        Set<String> members;
         switch(args[index++].toLowerCase())
         {
             case "a":

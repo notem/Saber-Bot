@@ -224,7 +224,7 @@ public class ListCommand implements Command
             if(!filterByType || typeFilters.contains(type))
             {
                 content += "**\"" + type + "\"\n======================**\n";
-                List<String> members = se.getRsvpMembersOfType(type);
+                Set<String> members = se.getRsvpMembersOfType(type);
                 for(String id : members)
                 {
                     // if the message is nearing maximum length, or if in mobile mode and the max lines have been reached
@@ -251,7 +251,7 @@ public class ListCommand implements Command
                         }
                         else // otherwise, remove the member from the event and update
                         {
-                            List<String> tmp = se.getRsvpMembersOfType(type);
+                            Set<String> tmp = se.getRsvpMembersOfType(type);
                             tmp.remove(id);
                             se.getRsvpMembersOfType(type).remove(id);
                             Main.getEntryManager().updateEntry(se, false);

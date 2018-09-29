@@ -21,6 +21,7 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -258,7 +259,7 @@ public class EventListener extends ListenerAdapter
             // check each rsvp group on the entry
             for(String key : se.getRsvpMembers().keySet())
             {
-                List<String> members = se.getRsvpMembersOfType(key);
+                Set<String> members = se.getRsvpMembersOfType(key);
                 if (members.contains(event.getUser().getId()))
                 {
                     members.remove(event.getUser().getId());

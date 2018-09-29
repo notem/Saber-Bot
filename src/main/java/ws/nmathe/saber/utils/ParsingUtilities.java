@@ -584,7 +584,7 @@ public class ParsingUtilities
      */
     private static List<String> compileUserList(ScheduleEntry entry, String category)
     {
-        List<String> users = null;
+        Set<String> users = null;
         if (category.toLowerCase().equals("no-input"))
         {
             List<String> rsvped = new ArrayList<>();
@@ -599,14 +599,14 @@ public class ParsingUtilities
             users = guild.getMembers().stream()
                     .filter(member -> member.getPermissions(channel).contains(Permission.MESSAGE_READ))
                     .map(member -> member.getUser().getId())
-                    .filter(memberId -> !rsvped.contains(memberId)).collect(Collectors.toList());
+                    .filter(memberId -> !rsvped.contains(memberId)).collect(Collectors.toSet());
         } else
         {
             List<String> members = entry.getRsvpMembers().get(category);
             if(members != null)
                 users = entry.getRsvpMembersOfType(category);
         }
-        return users;
+        return (users == null) ? null : new ArrayList<>(users);
     }
 
 
