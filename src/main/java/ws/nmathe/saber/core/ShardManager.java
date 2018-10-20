@@ -28,7 +28,7 @@ public class ShardManager
     // list of game names which are used to create a rotating bulletin board-like message system
     private Iterator<String> games;
 
-    private Integer primaryPoolSize = 7;    // used by the jda responsible for handling DMs
+    private Integer primaryPoolSize = 7;     // used by the jda responsible for handling DMs
     private Integer secondaryPoolSize = 5;   // used by all other shards
 
     private JDABuilder builder;  // builder to be used as the template for starting/restarting shards
@@ -326,7 +326,7 @@ public class ShardManager
      */
     private void startGamesTimer()
     {
-        // cycle "now playing" message every 30 seconds
+        // cycle "now playing" message every minute
         (new Timer()).scheduleAtFixedRate(new TimerTask()
         {
             @Override
@@ -366,6 +366,6 @@ public class ShardManager
                         task.accept(getJDA());
                 }
             }
-        }, 0, 30*1000);
+        }, 0, 60*1000);
     }
 }

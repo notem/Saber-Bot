@@ -94,14 +94,19 @@ class EntryProcessor implements Runnable
                 Logging.info(this.getClass(), "Currently processing "+processing.size()+" events.");
 
                 // exit the bot if any event takes more than a few minutes to process
-                int threshold = 3;
+                int timeThreshold  = 3;
+                int countThreshold = 30;
+                int count = 0;
                 for (Date value : timestamps.values())
                 {
-                    if (value.before(Date.from(Instant.now().minus(threshold, ChronoUnit.MINUTES))))
-                    {
-                        Logging.info(this.getClass(), "Detected possible issue, exiting the bot.");
-                        System.exit(-100);
-                    }
+                    boolean flagged = value.before(Date.from(Instant.now().minus(timeThreshold, ChronoUnit.MINUTES)));
+                    if (flagged) count += 1;
+                }
+                if (count > countThreshold)
+                {
+                    String txt = "[EXIT] There are "+count+" events that have been in processing for over "+timeThreshold+".";
+                    Logging.warn(this.getClass(), txt);
+                    System.exit(-100);
                 }
             }
 
