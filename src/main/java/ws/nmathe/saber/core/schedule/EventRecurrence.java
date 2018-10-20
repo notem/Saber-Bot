@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -522,8 +523,14 @@ public class EventRecurrence
                 if((data&0b0010000) == 0b0010000) days.add("TH");
                 if((data&0b0100000) == 0b0100000) days.add("FR");
                 if((data&0b1000000) == 0b1000000) days.add("SA");
+                if(days.size() <= 0)
+                {
+                    int v = startDate.getDayOfWeek().getValue();
+                    days.add(Arrays.asList("MO","TU","WE","TH","FR","SA","SU").get(v));
+                }
                 rule += String.join(",",days) + ";";
-                rule += "INTERVAL="+(data>>7)+";";
+                int interval = (data>>7) > 0 ? (data>>7) : 1;
+                rule += "INTERVAL="+interval+";";
                 break;
 
             // on nth week day every mth month
