@@ -234,6 +234,17 @@ public class CreateCommand implements Command
                         index+=2;
                         break;
 
+                    case "qs":
+                    case "quiet-start":
+                    case "qe":
+                    case "quiet-end":
+                    case "qr":
+                    case "quiet-remind":
+                    case "qa":
+                    case "quiet-all":
+                        index++;
+                        break;
+
                     default:
                         if(args[index-1].length() > 1024) return "Comments should not be larger than 1024 characters!";
                         break;
@@ -277,6 +288,9 @@ public class CreateCommand implements Command
         Integer count           = null;
         String location         = null;
         String color            = null;
+        Boolean qstart          = false;
+        Boolean qend            = false;
+        Boolean qremind         = false;
         ArrayList<String> comments = new ArrayList<>();
         Map<String, Integer> limits = new HashMap<>();
 
@@ -413,6 +427,32 @@ public class CreateCommand implements Command
                             index += 2;
                             break;
 
+                        case "qs":
+                        case "quiet-start":
+                            qstart = true;
+                            index++;
+                            break;
+
+                        case "qe":
+                        case "quiet-end":
+                            qend = true;
+                            index++;
+                            break;
+
+                        case "qr":
+                        case "quiet-remind":
+                            qremind = true;
+                            index++;
+                            break;
+
+                        case "qa":
+                        case "quiet-all":
+                            qstart = true;
+                            qend = true;
+                            qremind = true;
+                            index++;
+                            break;
+
                         default:
                             comments.add(args[index-1]);
                             break;
@@ -478,7 +518,10 @@ public class CreateCommand implements Command
                 .setCount(count)
                 .setRsvpDeadline(deadline)
                 .setLocation(location)
-                .setColor(color);
+                .setColor(color)
+                .setQuietStart(qend)
+                .setQuietEnd(qstart)
+                .setQuietRemind(qremind);
 
         // set the limits (if any)
         for (String key : limits.keySet())
