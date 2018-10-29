@@ -245,6 +245,17 @@ public class CreateCommand implements Command
                         index++;
                         break;
 
+                    case "n":
+                    case "nonembed":
+                        if (args.length-index < 1)
+                            return "That's not the right number of arguments!\n" +
+                                    "Use ``" + head + " " + args[0] + " " + args[index-1] + " [non_embeded_text]";
+                        if (args[index].length() > 1024)
+                            return "The described text to appear outside the event message embed is too long!" +
+                                    "\nThe text should be at most 1024 characters!";
+                        index++;
+                        break;
+
                     default:
                         if(args[index-1].length() > 1024) return "Comments should not be larger than 1024 characters!";
                         break;
@@ -291,6 +302,7 @@ public class CreateCommand implements Command
         Boolean qstart          = false;
         Boolean qend            = false;
         Boolean qremind         = false;
+        String nonembeded       = null;
         ArrayList<String> comments = new ArrayList<>();
         Map<String, Integer> limits = new HashMap<>();
 
@@ -453,6 +465,12 @@ public class CreateCommand implements Command
                             index++;
                             break;
 
+                        case "n":
+                        case "nonembed":
+                            nonembeded = args[index-1];
+                            index++;
+                            break;
+
                         default:
                             comments.add(args[index-1]);
                             break;
@@ -521,7 +539,8 @@ public class CreateCommand implements Command
                 .setColor(color)
                 .setQuietStart(qend)
                 .setQuietEnd(qstart)
-                .setQuietRemind(qremind);
+                .setQuietRemind(qremind)
+                .setNonEmbededText(nonembeded);
 
         // set the limits (if any)
         for (String key : limits.keySet())

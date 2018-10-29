@@ -66,6 +66,7 @@ public class ScheduleEntry
     private boolean hasStarted;
     private String location;
     private String colorCode;
+    private String nonEmbeded;
 
     // announcement overrides
     // these hold temporary values
@@ -119,6 +120,7 @@ public class ScheduleEntry
         this.hasStarted = false;
         this.location   = null;
         this.colorCode  = null;
+        this.nonEmbeded = null;
 
         // announcement overrides
         this.announcements = new HashSet<>();
@@ -220,6 +222,8 @@ public class ScheduleEntry
                 null : entryDocument.getString("location");
         this.colorCode = entryDocument.get("color") == null ?
                 null : entryDocument.getString("color");
+        this.nonEmbeded = entryDocument.get("non_embeded") == null?
+                null : entryDocument.getString("non_embeded");
     }
 
 
@@ -977,6 +981,11 @@ public class ScheduleEntry
         return this.msgId;
     }
 
+    public String getNonEmbededText()
+    {
+        return this.nonEmbeded;
+    }
+
     /**
      * Attempts to retrieve the discord Message, if the message does not exist
      * (or the bot can for any other reason cannot retrieve it) the method returns null
@@ -1077,6 +1086,12 @@ public class ScheduleEntry
     public ScheduleEntry setTitleUrl(String url)
     {
         this.titleUrl = url;
+        return this;
+    }
+
+    public ScheduleEntry setNonEmbededText(String text)
+    {
+        this.nonEmbeded = text;
         return this;
     }
 

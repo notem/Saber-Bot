@@ -135,7 +135,6 @@ public class ParsingUtilities
                 else if(trimmed.matches("(\\[.*?])?start .+(\\[.*?])?")) // advanced end
                 {
                     String formatter = trimmed.replaceAll("start ","")
-                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}.,\\- ]"," ")
                             .replaceAll("\\[.*?]","");
                     String startString = "";
 
@@ -158,7 +157,6 @@ public class ParsingUtilities
                 else if(trimmed.matches("(\\[.*?])?end .+(\\[.*?])?")) // advanced end
                 {
                     String formatter = trimmed.replaceAll("end ","")
-                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}.,\\- ]"," ")
                             .replaceAll("\\[.*?]","");
                     String endString = "";
 
@@ -180,7 +178,6 @@ public class ParsingUtilities
                 else if(trimmed.matches("(\\[.*?])?now .+(\\[.*?])?"))
                 {
                     String formatter = trimmed.replaceAll("now ","")
-                            .replaceAll("^[GuyDMLdQqYwWEeCFahkKHmsSAnNVzOXxZp'\\[\\]#{}.,\\- ]"," ")
                             .replaceAll("\\[.*?]","");
                     String nowString = "";
 

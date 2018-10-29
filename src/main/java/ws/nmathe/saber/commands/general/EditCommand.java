@@ -463,6 +463,17 @@ public class EditCommand implements Command
                     index++;
                     break;
 
+                case "n":
+                case "nonembed":
+                    if (args.length-index < 1)
+                        return "That's not the right number of arguments!\n" +
+                                "Use ``" + head + " " + args[0] + " " + args[index-1] + " [non_embeded_text]";
+                    if (args[index].length() > 1024)
+                        return "The described text to appear outside the event message embed is too long!" +
+                                "\nThe text should be at most 1024 characters!";
+                    index++;
+                    break;
+
                 default:
                     return "**" + args[index-1] + "** is not an option I know of!\n" +
                             "Please use the ``help`` command to see available options!";
@@ -851,6 +862,16 @@ public class EditCommand implements Command
                             se.setColor(null);
                         else
                             se.setColor(args[index]);
+                        index++;
+                        break;
+
+
+                    case "n":
+                    case "nonembed":
+                        if (args[index].toLowerCase().matches("off||null|none"))
+                            se.setNonEmbededText(null);
+                        else
+                            se.setNonEmbededText(args[index]);
                         index++;
                         break;
                 }

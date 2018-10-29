@@ -1,5 +1,6 @@
 package ws.nmathe.saber.core.schedule;
 
+import net.dv8tion.jda.client.events.relationship.GenericRelationshipAddEvent;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
@@ -75,8 +76,15 @@ public class MessageGenerator
             builder.setThumbnail(se.getThumbnailUrl());
         }
 
+        MessageBuilder msgBuilder = new MessageBuilder().setEmbed(builder.build());
+        if (se.getNonEmbededText() != null)
+        {
+            String fulltext = ParsingUtilities.processText(se.getNonEmbededText(), se, true);
+            msgBuilder.setContent(fulltext);
+        }
+
         // return the fully constructed message
-        return new MessageBuilder().setEmbed(builder.build()).build();
+        return msgBuilder.build();
     }
 
 
@@ -348,13 +356,13 @@ public class MessageGenerator
             if (!se.hasStarted())
             {
                 line.append("(begins ");
-                genTimerHelper(se.getStart(), line);
+                genTimerHelper(se.getStart(), line, Granularity.HOUR, false);
                 line.append(")");
             }
             else
             {
                 line.append("(ends ");
-                genTimerHelper(se.getEnd(), line);
+                genTimerHelper(se.getEnd(), line, Granularity.HOUR, false);
                 line.append(")");
             }
         }
@@ -364,13 +372,13 @@ public class MessageGenerator
             if (!se.hasStarted())
             {
                 line.append("begins ");
-                genTimerHelper(se.getStart(), line);
+                genTimerHelper(se.getStart(), line, Granularity.HOUR, false);
                 line.append("](---");
             }
             else
             {
                 line.append("in-progress](ends ");
-                genTimerHelper(se.getEnd(), line);
+                genTimerHelper(se.getEnd(), line, Granularity.HOUR, false);
             }
             line.append(")");
         }
@@ -378,41 +386,50 @@ public class MessageGenerator
         return line.toString();
     }
 
+    private enum Granularity {MINUTE, HOUR}
 
     /**
      * used by generateTimeLine() to reduce code repetition
      * @param time the start or end time of the event
      * @param timer the string that should be built onto
      */
-    private static void genTimerHelper(ZonedDateTime time, StringBuilder timer)
+    private static void genTimerHelper(ZonedDateTime time, StringBuilder timer, Granularity granularity, boolean useShort)
     {
         long timeTil = ZonedDateTime.now().until(time, ChronoUnit.SECONDS);
-        //if (timeTil < 60 * 60)
-        //{
-        //    int minutesTil = (int)Math.ceil((double)timeTil/(60));
-        //    if (minutesTil <= 1)
-        //    {
-        //        timer.append("in a minute");
-        //    }
-        //    else
-        //    {
-        //        timer.append("in ")
-        //                .append(minutesTil)
-        //                .append(" minutes");
-        //    }
-        //}
-        if (timeTil < 24 * 60 * 60)
+        if (granularity == Granularity.MINUTE && timeTil < 60 * 60)
+        {
+            int minutesTil = (int)Math.ceil((double)timeTil/(60));
+            if (minutesTil <= 1)
+            {
+                timer.append(useShort ? "<1m" : "in a minute");
+            }
+            else
+            {
+                if (useShort)
+                    timer.append(minutesTil)
+                            .append("m");
+                else
+                    timer.append("in ")
+                            .append(minutesTil)
+                            .append(" minutes");
+            }
+        }
+        if (granularity == Granularity.MINUTE && timeTil < 24 * 60 * 60)
         {
             int hoursTil = (int)Math.ceil((double)timeTil/(60*60));
             if (hoursTil <= 1)
             {
-                timer.append("in the hour");
+                timer.append(useShort ? "<1h" : "in the hour");
             }
             else
             {
-                timer.append("in ")
-                        .append(hoursTil)
-                        .append(" hours");
+                if (useShort)
+                    timer.append(hoursTil)
+                            .append("h");
+                else
+                    timer.append("in ")
+                            .append(hoursTil)
+                            .append(" hours");
             }
         }
         else
@@ -422,10 +439,13 @@ public class MessageGenerator
                     time.truncatedTo(ChronoUnit.DAYS));
             if (daysTil <= 1)
             {
-                timer.append("in one day");
+                timer.append(useShort ? "<"+daysTil+"d" : "in one day");
             }
             else
             {
+                if (useShort)
+                    timer.append(daysTil)
+                            .append("d");
                 timer.append("in ").append(daysTil).append(" days");
             }
         }
@@ -458,49 +478,12 @@ public class MessageGenerator
         if (!reminders.isEmpty())
         {
             footerStr.append(" | remind in ");
-            long minutes = Instant.now().until(reminders.get(0).toInstant(), ChronoUnit.MINUTES);
-            if(minutes<=120)
+            for (int i=0; i<reminders.size(); i++)
             {
-                footerStr.append(" ")
-                        .append(minutes)
-                        .append("m");
-            }
-            else
-            {
-                footerStr.append(" ")
-                        .append((int) Math.ceil(minutes / 60))
-                        .append("h");
-            }
-            for (int i=1; i<reminders.size()-1; i++)
-            {
-                minutes = Instant.now().until(reminders.get(i).toInstant(), ChronoUnit.MINUTES);
-                if(minutes<=120)
-                {
-                    footerStr.append(", ")
-                            .append(minutes)
-                            .append("m");
-                }
-                else
-                {
-                    footerStr.append(", ")
-                            .append((int) Math.ceil(minutes / 60))
-                            .append("h");
-                }
-            }
-            if (reminders.size()>1)
-            {
-                minutes = Instant.now().until(reminders.get(reminders.size()-1).toInstant(), ChronoUnit.MINUTES);
-                footerStr.append(" and ");
-                if(minutes<=120)
-                {
-                    footerStr.append(minutes)
-                            .append("m");
-                }
-                else
-                {
-                    footerStr.append((int) Math.ceil(minutes / 60))
-                            .append("h");
-                }
+                genTimerHelper(ZonedDateTime.from(reminders.get(i).toInstant()),
+                        footerStr, Granularity.MINUTE, true);
+                if (i != reminders.size()-1)
+                    footerStr.append(", ");
             }
         }
 
