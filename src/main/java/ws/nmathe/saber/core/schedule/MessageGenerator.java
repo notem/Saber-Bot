@@ -356,13 +356,13 @@ public class MessageGenerator
             if (!se.hasStarted())
             {
                 line.append("(begins ");
-                genTimerHelper(se.getStart(), line, Granularity.HOUR, false);
+                genTimerHelper(se.getStart(), line, false, false);
                 line.append(")");
             }
             else
             {
                 line.append("(ends ");
-                genTimerHelper(se.getEnd(), line, Granularity.HOUR, false);
+                genTimerHelper(se.getEnd(), line, false, false);
                 line.append(")");
             }
         }
@@ -372,13 +372,13 @@ public class MessageGenerator
             if (!se.hasStarted())
             {
                 line.append("begins ");
-                genTimerHelper(se.getStart(), line, Granularity.HOUR, false);
+                genTimerHelper(se.getStart(), line, false, false);
                 line.append("](---");
             }
             else
             {
                 line.append("in-progress](ends ");
-                genTimerHelper(se.getEnd(), line, Granularity.HOUR, false);
+                genTimerHelper(se.getEnd(), line, false, false);
             }
             line.append(")");
         }
@@ -386,17 +386,15 @@ public class MessageGenerator
         return line.toString();
     }
 
-    private enum Granularity {MINUTE, HOUR}
-
     /**
      * used by generateTimeLine() to reduce code repetition
      * @param time the start or end time of the event
      * @param timer the string that should be built onto
      */
-    private static void genTimerHelper(ZonedDateTime time, StringBuilder timer, Granularity granularity, boolean useShort)
+    private static void genTimerHelper(ZonedDateTime time, StringBuilder timer, boolean fineGrain, boolean useShort)
     {
         long timeTil = ZonedDateTime.now().until(time, ChronoUnit.SECONDS);
-        if (granularity == Granularity.MINUTE && timeTil < 60 * 60)
+        if (fineGrain && timeTil < 60 * 60)
         {
             int minutesTil = (int)Math.ceil((double)timeTil/(60));
             if (minutesTil <= 1)
@@ -414,7 +412,7 @@ public class MessageGenerator
                             .append(" minutes");
             }
         }
-        if (granularity == Granularity.MINUTE && timeTil < 24 * 60 * 60)
+        else if (timeTil < 24 * 60 * 60)
         {
             int hoursTil = (int)Math.ceil((double)timeTil/(60*60));
             if (hoursTil <= 1)
@@ -482,7 +480,7 @@ public class MessageGenerator
             for (int i=0; i<reminders.size(); i++)
             {
                 ZonedDateTime time = ZonedDateTime.ofInstant(reminders.get(i).toInstant(), ZoneId.systemDefault());
-                genTimerHelper(time, footerStr, Granularity.MINUTE, true);
+                genTimerHelper(time, footerStr, true, true);
                 if (i != reminders.size()-1)
                     if (reminders.size() > 2)
                         footerStr.append(", ");
