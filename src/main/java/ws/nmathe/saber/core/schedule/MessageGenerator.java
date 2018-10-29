@@ -480,8 +480,8 @@ public class MessageGenerator
             footerStr.append(" | remind in ");
             for (int i=0; i<reminders.size(); i++)
             {
-                genTimerHelper(ZonedDateTime.from(reminders.get(i).toInstant()),
-                        footerStr, Granularity.MINUTE, true);
+                ZonedDateTime time = ZonedDateTime.ofInstant(reminders.get(i).toInstant(), ZoneId.systemDefault());
+                genTimerHelper(time, footerStr, Granularity.MINUTE, true);
                 if (i != reminders.size()-1)
                     footerStr.append(", ");
             }
