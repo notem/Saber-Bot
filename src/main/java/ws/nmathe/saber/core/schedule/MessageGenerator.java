@@ -446,7 +446,8 @@ public class MessageGenerator
                 if (useShort)
                     timer.append(daysTil)
                             .append("d");
-                timer.append("in ").append(daysTil).append(" days");
+                else
+                    timer.append("in ").append(daysTil).append(" days");
             }
         }
     }
@@ -483,7 +484,11 @@ public class MessageGenerator
                 ZonedDateTime time = ZonedDateTime.ofInstant(reminders.get(i).toInstant(), ZoneId.systemDefault());
                 genTimerHelper(time, footerStr, Granularity.MINUTE, true);
                 if (i != reminders.size()-1)
-                    footerStr.append(", ");
+                    if (reminders.size() > 2)
+                        footerStr.append(", ");
+                else if (reminders.size() > 1)
+                    footerStr.append(" and ");
+
             }
         }
 
