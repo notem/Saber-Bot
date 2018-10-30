@@ -186,7 +186,7 @@ public class EditCommand implements Command
                                         " you wish to replace!";
                             }
                             int num = Integer.parseInt(args[index]);
-                            if (entry.getComments().size() <= num && num > 0)
+                            if (num <= entry.getComments().size() && num > 0)
                             {
                                 return "The provided comment number must be between 1 and " +
                                         entry.getComments().size() + "!";
