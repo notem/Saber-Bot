@@ -63,7 +63,7 @@ public class MessageGenerator
         EmbedBuilder builder = new EmbedBuilder();
         builder.setDescription(bodyContent.substring(0,Math.min(bodyContent.length(), 2048)))
                 .setColor(embedColor)
-                .setAuthor(se.getTitle(), titleUrl, titleImage)
+                .setAuthor(se.getTitle(), titleUrl)//, titleImage)
                 .setFooter(footerStr.substring(0,Math.min(footerStr.length(), 2048)), null);
 
         // add the image and thumbnail url links (if valid)
