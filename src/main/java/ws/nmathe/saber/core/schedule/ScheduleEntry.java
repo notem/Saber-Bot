@@ -1225,7 +1225,7 @@ public class ScheduleEntry
 
     public ScheduleEntry setDescription(String desc)
     {
-        this.description = desc;
+        this.description = desc != null ? desc : "%g";
         return this;
     }
 
