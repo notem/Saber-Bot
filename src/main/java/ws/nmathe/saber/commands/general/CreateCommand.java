@@ -256,6 +256,16 @@ public class CreateCommand implements Command
                         index++;
                         break;
 
+                    case "desc":
+                    case "description":
+                        if (args.length-index < 1)
+                        {
+                            return "That's not the right number of arguments for **"+args[index-1]+"**!\n"+
+                                    "Use ``" + head + " " + args[index-2] + " " + args[index-1] + " [description]``";
+                        }
+                        index++;
+                        break;
+
                     default:
                         if(args[index-1].length() > 1024) return "Comments should not be larger than 1024 characters!";
                         break;
@@ -303,6 +313,7 @@ public class CreateCommand implements Command
         Boolean qend            = false;
         Boolean qremind         = false;
         String nonembeded       = null;
+        String description      = null;
         ArrayList<String> comments = new ArrayList<>();
         Map<String, Integer> limits = new HashMap<>();
 
@@ -467,7 +478,13 @@ public class CreateCommand implements Command
 
                         case "n":
                         case "nonembed":
-                            nonembeded = args[index-1];
+                            nonembeded = args[index];
+                            index++;
+                            break;
+
+                        case "desc":
+                        case "description":
+                            description = args[index].toLowerCase().matches("(off)|(default)") ? "%g" : args[index];
                             index++;
                             break;
 
@@ -540,7 +557,8 @@ public class CreateCommand implements Command
                 .setQuietStart(qend)
                 .setQuietEnd(qstart)
                 .setQuietRemind(qremind)
-                .setNonEmbededText(nonembeded);
+                .setNonEmbededText(nonembeded)
+                .setDescription(description);
 
         // set the limits (if any)
         for (String key : limits.keySet())

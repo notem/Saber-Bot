@@ -1540,6 +1540,9 @@ public class ScheduleEntry
         if(this.getThumbnailUrl() != null)
             body += "Thumbnail: \n\"" + this.getThumbnailUrl() + "\"\n";
 
+        if(this.getNonEmbededText() != null)
+            body += "Non-Embeded-Text: \n\"" + this.getNonEmbededText() + "\"\n";
+
         // rsvp limits
         if(Main.getScheduleManager().isRSVPEnabled(this.getChannelId()))
         {
