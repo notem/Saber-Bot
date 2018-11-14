@@ -103,28 +103,44 @@ public class EventsCommand implements Command
                 List<Permission> permissions = sChannel!=null ? caller.getPermissions(sChannel) : new ArrayList();
                 if (sChannel!=null && permissions!=null && permissions.contains(Permission.MESSAGE_READ))
                 {
+                    if (content.length() > 1400)
+                    {
+                        // build embed and message
+                        embed = new EmbedBuilder()
+                                .setFooter(footer, null)
+                                .setTitle(title)
+                                .setDescription(content.toString()).build();
+
+                        Message message = new MessageBuilder().setEmbed(embed).build();            // build message
+                        MessageUtilities.sendMsg(message, event.getTextChannel(), null);     // send message
+
+                        // adjust title and footer to reflect future messages are a continuation
+                        title = "Events on " + guild.getName() + " (continued)";
+                        footer="(events list continued on next page)";
+                    }
                     // for each schedule, generate a list of events scheduled
                     Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromChannel(sId);
                     if(!entries.isEmpty())
                     {
-                        if (content.length() > 1700)
-                        {
-                            // build embed and message
-                            embed = new EmbedBuilder()
-                                    .setFooter(footer, null)
-                                    .setTitle(title)
-                                    .setDescription(content.toString()).build();
-
-                            Message message = new MessageBuilder().setEmbed(embed).build();            // build message
-                            MessageUtilities.sendMsg(message, event.getTextChannel(), null);     // send message
-
-                            // adjust title and footer to reflect future messages are a continuation
-                            title = "Events on " + guild.getName() + " (continued)";
-                            footer="(events list continued on next page)";
-                        }
                         content.append("<#").append(sId).append("> ...\n");  // start a new schedule list
                         while(!entries.isEmpty())
                         {
+                            if (content.length() > 1800)
+                            {
+                                // build embed and message
+                                embed = new EmbedBuilder()
+                                        .setFooter(footer, null)
+                                        .setTitle(title)
+                                        .setDescription(content.toString()).build();
+
+                                Message message = new MessageBuilder().setEmbed(embed).build();            // build message
+                                MessageUtilities.sendMsg(message, event.getTextChannel(), null);     // send message
+
+                                // adjust title and footer to reflect future messages are a continuation
+                                title = "Events on " + guild.getName() + " (continued)";
+                                footer="(events list continued on next page)";
+                            }
+
                             // find and remove the next earliest occurring event
                             ScheduleEntry top = entries.toArray(new ScheduleEntry[entries.size()])[0];
                             for(ScheduleEntry se : entries)
