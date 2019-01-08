@@ -465,13 +465,11 @@ public class ParsingUtilities
                         if (!entry.hasStarted())
                         {
                             long minutes = ZonedDateTime.now().until(entry.getStart(), ChronoUnit.MINUTES);
-                            processed.append(" in ");
                             addTimeGap(processed, minutes+1, false, 1);
                         }
                         else
                         {
                             long minutes = ZonedDateTime.now().until(entry.getEnd(), ChronoUnit.MINUTES);
-                            processed.append(" in ");
                             addTimeGap(processed, minutes+1, false, 1);
                         }
                         break;

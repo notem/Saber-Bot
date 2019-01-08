@@ -12,15 +12,11 @@ import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
 
-import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -88,7 +84,6 @@ public class EventsCommand implements Command
         StringBuilder content = new StringBuilder();
         String title="Events on "+guild.getName(),
                 footer="(events list continued on next page)";
-        MessageEmbed embed;
         int count = 0; // total number of events
 
         // get the caller's guild member information
@@ -105,18 +100,12 @@ public class EventsCommand implements Command
                 {
                     if (content.length() > 1400)
                     {
-                        // build embed and message
-                        embed = new EmbedBuilder()
-                                .setFooter(footer, null)
-                                .setTitle(title)
-                                .setDescription(content.toString()).build();
-
-                        Message message = new MessageBuilder().setEmbed(embed).build();            // build message
-                        MessageUtilities.sendMsg(message, event.getTextChannel(), null);     // send message
+                        sendEventsMessage(footer, title, content, event.getTextChannel());
 
                         // adjust title and footer to reflect future messages are a continuation
                         title = "Events on " + guild.getName() + " (continued)";
-                        footer="(events list continued on next page)";
+                        footer = "(events list continued on next page)";
+                        content = new StringBuilder();
                     }
                     // for each schedule, generate a list of events scheduled
                     Collection<ScheduleEntry> entries = Main.getEntryManager().getEntriesFromChannel(sId);
@@ -127,18 +116,12 @@ public class EventsCommand implements Command
                         {
                             if (content.length() > 1800)
                             {
-                                // build embed and message
-                                embed = new EmbedBuilder()
-                                        .setFooter(footer, null)
-                                        .setTitle(title)
-                                        .setDescription(content.toString()).build();
-
-                                Message message = new MessageBuilder().setEmbed(embed).build();            // build message
-                                MessageUtilities.sendMsg(message, event.getTextChannel(), null);     // send message
+                                sendEventsMessage(footer, title, content, event.getTextChannel());
 
                                 // adjust title and footer to reflect future messages are a continuation
                                 title = "Events on " + guild.getName() + " (continued)";
-                                footer="(events list continued on next page)";
+                                footer = "(events list continued on next page)";
+                                content = new StringBuilder();
                             }
 
                             // find and remove the next earliest occurring event
@@ -173,14 +156,20 @@ public class EventsCommand implements Command
 
         // final footer shows count
         footer = count + " event(s)";
+        sendEventsMessage(footer, title, content, event.getTextChannel());
+    }
 
+    /**
+     * Helper function to reduce code-duplication
+     */
+    private void sendEventsMessage(String footer, String title, StringBuilder content, TextChannel channel)
+    {
         // build embed and message
-        embed = new EmbedBuilder()
+        MessageEmbed embed = new EmbedBuilder()
                 .setFooter(footer, null)
                 .setTitle(title)
                 .setDescription(content.toString()).build();
-
-        Message message = new MessageBuilder().setEmbed(embed).build();            // build message
-        MessageUtilities.sendMsg(message, event.getTextChannel(), null);     // send message
+        Message message = new MessageBuilder().setEmbed(embed).build();   // build message
+        MessageUtilities.sendMsg(message, channel, null);           // send message
     }
 }
