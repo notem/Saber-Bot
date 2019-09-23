@@ -150,6 +150,8 @@ public class MessageGenerator
                         .append(" ").append(se.getDeadline().getDayOfMonth())
                         .append(", ")
                         .append(se.getDeadline().getYear())
+                        .append(" @ ")
+                        .append(se.getDeadline().toLocalTime())
                         .append(".");
             }
 

@@ -719,8 +719,21 @@ public class EditCommand implements Command
                     case "deadline":
                     case "dl":
                         LocalDate deadlineDate = ParsingUtilities.parseNullableDate(args[index], zone);
-                        se.setRsvpDeadline(deadlineDate == null ?
-                                null : ZonedDateTime.of(deadlineDate, LocalTime.MAX, zone));
+                        LocalTime deadlineTime = LocalTime.MAX;
+                        // allow users in specify exact time RSVPs close
+                        if (args.length-index == 2 && VerifyUtilities.verifyTime(args[index+1]))
+                        {
+                             deadlineTime = ParsingUtilities.parseTime(args[index+1], zone);
+                             index++;
+                        }
+                        if (deadlineDate == null)
+                        {   // remove deadline
+                            se.setRsvpDeadline(null);
+                        }
+                        else
+                        {   // update deadline
+                            se.setRsvpDeadline(ZonedDateTime.of(deadlineDate, deadlineTime, zone));
+                        }
                         index++;
                         break;
 

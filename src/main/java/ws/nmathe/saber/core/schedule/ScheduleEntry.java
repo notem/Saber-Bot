@@ -596,7 +596,7 @@ public class ScheduleEntry
     {
         // if past the deadline, don't add handle new RSVPs
         if (this.getDeadline()!=null &&
-                this.getDeadline().plusDays(1).isBefore(ZonedDateTime.now()))
+                this.getDeadline().isBefore(ZonedDateTime.now()))
             return false;
 
         MessageReaction.ReactionEmote emote = event.getReactionEmote();
