@@ -1,6 +1,5 @@
 package ws.nmathe.saber.core;
 
-import com.google.common.collect.Iterables;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -43,6 +42,12 @@ public class ShardManager
                     .setToken(Main.getBotSettingsManager().getToken())
                     .setStatus(OnlineStatus.ONLINE)
                     .setAutoReconnect(true);
+            // set now playing status
+            List<String> playing = Main.getBotSettingsManager().getNowPlayingList();
+            if(!playing.isEmpty())
+            {
+                this.builder.setActivity(Activity.playing(playing.get(0)));
+            }
 
             // EventListener handles all types of bot events
             this.builder.addEventListeners(new EventListener());
@@ -103,15 +108,6 @@ public class ShardManager
                             .build();
                     this.jdaShards.put(shardId, shard);
                 }
-
-                List<String> playing = Main.getBotSettingsManager().getNowPlayingList();
-                if(!playing.isEmpty())
-                {
-                    for (JDA jda : this.getShards())
-                    {
-                        jda.getShardManager().setActivity(Activity.playing(playing.get(0)));
-                    }
-                }
             }
             else // no sharding
             {
@@ -119,12 +115,6 @@ public class ShardManager
                 this.jda = this.builder
                         .build().awaitReady();
                 this.jda.setAutoReconnect(true);
-
-                List<String> playing = Main.getBotSettingsManager().getNowPlayingList();
-                if(!playing.isEmpty())
-                {
-                    this.jda.getShardManager().setActivity(Activity.playing(playing.get(0)));
-                }
 
                 Main.getEntryManager().init();
                 Main.getCommandHandler().init();
@@ -299,12 +289,6 @@ public class ShardManager
                 // restart the shard (asynchronously)
                 JDA shard = shardBuilder.build();
                 this.jdaShards.put(shardId, shard);
-
-                List<String> playing = Main.getBotSettingsManager().getNowPlayingList();
-                if(!playing.isEmpty())
-                {
-                    shard.getShardManager().setActivity(Activity.playing(playing.get(0)));
-                }
             }
         }
         else
@@ -314,12 +298,6 @@ public class ShardManager
             this.jda = this.builder
                     //.setCorePoolSize(primaryPoolSize)
                     .build().awaitReady();
-
-            List<String> playing = Main.getBotSettingsManager().getNowPlayingList();
-            if(!playing.isEmpty())
-            {
-                this.jda.getShardManager().setActivity(Activity.playing(playing.get(0)));
-            }
         }
     }
 }
