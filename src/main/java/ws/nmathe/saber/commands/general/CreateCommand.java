@@ -6,7 +6,7 @@ import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.schedule.EventRecurrence;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.*;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.time.*;
 import java.util.ArrayList;

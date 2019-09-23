@@ -1,12 +1,12 @@
 package ws.nmathe.saber.core.schedule;
 
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.exceptions.PermissionException;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
@@ -65,7 +65,7 @@ public class ScheduleManager
         try
         {
             Guild guild = jda.getGuildById(gId);
-            cId = guild.getController().createTextChannel(optional!=null ? optional : "new_schedule")
+            cId = guild.createTextChannel(optional!=null ? optional : "new_schedule")
                     .addPermissionOverride(guild.getMember(jda.getSelfUser()),          // allow self permissions
                             channelPerms, new ArrayList<>())
                     .addPermissionOverride(guild.getPublicRole(), new ArrayList<>(),    // disable @everyone message write
@@ -305,8 +305,8 @@ public class ScheduleManager
                     Message topMsg = cur.getMessageObject();
                     if (minMsg!=null && topMsg!=null)
                     {
-                        OffsetDateTime a = minMsg.getCreationTime();
-                        OffsetDateTime b = topMsg.getCreationTime();
+                        OffsetDateTime a = minMsg.getTimeCreated();
+                        OffsetDateTime b = topMsg.getTimeCreated();
                         if (a.isAfter(b))
                         {
                             min = cur;

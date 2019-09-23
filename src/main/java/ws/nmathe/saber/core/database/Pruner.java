@@ -1,10 +1,10 @@
 package ws.nmathe.saber.core.database;
 
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
@@ -127,7 +127,7 @@ public class Pruner implements Runnable
                         }
 
                         // attempt to retrieve the message so as to verify it's existence
-                        channel.getMessageById(messageId).queue(
+                        channel.retrieveMessageById(messageId).queue(
                                 message ->
                                 {
                                     if(message == null)

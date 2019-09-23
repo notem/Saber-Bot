@@ -4,7 +4,7 @@ import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.time.ZoneId;
 import java.util.Set;

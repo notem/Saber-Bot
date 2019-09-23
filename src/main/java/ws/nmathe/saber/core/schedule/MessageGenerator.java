@@ -1,12 +1,12 @@
 package ws.nmathe.saber.core.schedule;
 
-import net.dv8tion.jda.client.events.relationship.GenericRelationshipAddEvent;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.entities.Role;
+//import net.dv8tion.jda.client.events.relationship.GenericRelationshipAddEvent;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.Message;
 import ws.nmathe.saber.Main;
-import net.dv8tion.jda.core.entities.Message;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
 

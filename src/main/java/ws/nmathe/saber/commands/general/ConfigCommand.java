@@ -3,12 +3,12 @@ package ws.nmathe.saber.commands.general;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.calendar.Calendar;
 import com.vdurmont.emoji.EmojiManager;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.core.schedule.EntryManager;
@@ -889,7 +889,7 @@ public class ConfigCommand implements Command
                                 {
                                     // clear reactions
                                     event.getGuild().getTextChannelById(document.getString("channelId"))
-                                            .getMessageById(document.getString("messageId")).complete()
+                                            .retrieveMessageById(document.getString("messageId")).complete()
                                             .clearReactions().queue((message) ->
                                     {
                                         Map<String, String> map = Main.getScheduleManager()
@@ -899,7 +899,7 @@ public class ConfigCommand implements Command
                                         // add reaction options
                                         event.getGuild()
                                                 .getTextChannelById(document.getString("channelId"))
-                                                .getMessageById(document.getString("messageId"))
+                                                .retrieveMessageById(document.getString("messageId"))
                                                 .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg, se));
                                     });
 
@@ -924,7 +924,7 @@ public class ConfigCommand implements Command
                                         // add reaction options
                                         event.getGuild()
                                                 .getTextChannelById(document.getString("channelId"))
-                                                .getMessageById(document.getString("messageId"))
+                                                .retrieveMessageById(document.getString("messageId"))
                                                 .queue(msg -> EntryManager.addRSVPReactions(map, clearEmoji, msg, se));
 
                                         Main.getEntryManager().reloadEntry(document.getInteger("_id"));
@@ -938,7 +938,7 @@ public class ConfigCommand implements Command
                                     {
                                         // clear reactions
                                         event.getGuild().getTextChannelById(document.getString("channelId"))
-                                                .getMessageById(document.getString("messageId")).complete()
+                                                .retrieveMessageById(document.getString("messageId")).complete()
                                                 .clearReactions().queue();
 
                                         Main.getEntryManager().reloadEntry(document.getInteger("_id"));

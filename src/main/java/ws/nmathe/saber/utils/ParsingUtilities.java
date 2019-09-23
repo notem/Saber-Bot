@@ -1,8 +1,8 @@
 package ws.nmathe.saber.utils;
 
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -590,7 +590,7 @@ public class ParsingUtilities
             }
             JDA shard = Main.getShardManager().getJDA(entry.getGuildId());
             Guild guild = shard.getGuildById(entry.getGuildId());
-            Channel channel = shard.getTextChannelById(entry.getChannelId());
+            GuildChannel channel = shard.getTextChannelById(entry.getChannelId());
             users = guild.getMembers().stream()
                     .filter(member -> member.getPermissions(channel).contains(Permission.MESSAGE_READ))
                     .map(member -> member.getUser().getId())

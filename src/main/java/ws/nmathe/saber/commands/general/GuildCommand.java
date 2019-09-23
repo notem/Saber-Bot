@@ -1,8 +1,8 @@
 package ws.nmathe.saber.commands.general;
 
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Channel;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
@@ -127,7 +127,7 @@ public class GuildCommand implements Command
                     String chanId = args[1].replaceAll("[^\\d]", "");
                     try
                     {
-                        Channel chan = event.getGuild().getTextChannelById(chanId);
+                        MessageChannel chan = event.getGuild().getTextChannelById(chanId);
                         if(chan == null)
                         {
                             return "I could not find the channel **" + args[1] + "** on your guild server!";

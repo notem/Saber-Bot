@@ -1,7 +1,7 @@
 package ws.nmathe.saber.core.schedule;
 
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.exceptions.PermissionException;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;

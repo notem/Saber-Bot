@@ -1,9 +1,9 @@
 package ws.nmathe.saber.core.schedule;
 
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.exceptions.PermissionException;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -564,7 +564,7 @@ public class ScheduleEntry
         Guild guild = jda.getGuildById(guildId);
 
         // create the event RSVP role
-        Role role = guild.getController().createRole()
+        Role role = guild.createRole()
                 .setName(group)
                 .setMentionable(true)
                 .setColor(Color.ORANGE)
@@ -577,7 +577,7 @@ public class ScheduleEntry
             if (memberId.matches("\\d+"))
             {
                 Member member = guild.getMemberById(memberId);
-                guild.getController().addSingleRoleToMember(member, role)
+                guild.addRoleToMember(member, role)
                         .reason("dynamic RSVP role for event announcement").complete();
             }
         });
@@ -999,7 +999,7 @@ public class ScheduleEntry
             JDA jda = Main.getShardManager().isSharding() ?
                     Main.getShardManager().getShard(guildId) : Main.getShardManager().getJDA();
             msg = jda.getTextChannelById(this.chanId)
-                    .getMessageById(this.msgId)
+                    .retrieveMessageById(this.msgId)
                     .complete();
         }
         catch (Exception e)
@@ -1021,7 +1021,7 @@ public class ScheduleEntry
         TextChannel channel = jda.getTextChannelById(this.chanId);
         if (channel != null)
         {
-            channel.getMessageById(this.msgId)
+            channel.retrieveMessageById(this.msgId)
                     .queue(success);
         }
     }

@@ -1,14 +1,14 @@
 package ws.nmathe.saber.core.command;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import net.dv8tion.jda.core.entities.ChannelType;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.ChannelType;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.admin.*;
 import ws.nmathe.saber.core.RateLimiter;
 import ws.nmathe.saber.utils.MessageUtilities;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.commands.general.*;
 import ws.nmathe.saber.utils.Logging;
 

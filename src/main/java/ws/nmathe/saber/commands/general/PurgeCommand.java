@@ -1,8 +1,8 @@
 package ws.nmathe.saber.commands.general;
 
-import net.dv8tion.jda.core.entities.Channel;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.bson.conversions.Bson;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -69,7 +69,7 @@ public class PurgeCommand implements Command
         }
 
         // verify that argument is a proper link to a channel
-        Channel channel = event.getJDA().getTextChannelById(args[index].replaceAll("[^\\d]", ""));
+        MessageChannel channel = event.getJDA().getTextChannelById(args[index].replaceAll("[^\\d]", ""));
         if (channel == null)
         {
             return "I could not find " + args[index] + " on your guild!";

@@ -63,7 +63,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>3.7.1_422</version>
+            <version>4.0.0_46</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>

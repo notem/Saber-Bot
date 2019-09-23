@@ -1,9 +1,9 @@
 package ws.nmathe.saber.commands.admin;
 
-import net.dv8tion.jda.core.entities.Icon;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.managers.AccountManager;
+import net.dv8tion.jda.api.entities.Icon;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.managers.AccountManager;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
@@ -46,7 +46,7 @@ public class AvatarCommand implements Command
         try
         {
             File file = new File(attachment.getFileName());
-            attachment.download(file);
+            attachment.downloadToFile(file);
 
             Icon icon = Icon.from(file);
             manager.setAvatar(icon).complete();

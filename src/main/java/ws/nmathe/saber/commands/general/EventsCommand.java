@@ -1,10 +1,10 @@
 package ws.nmathe.saber.commands.general;
 
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
@@ -95,7 +95,7 @@ public class EventsCommand implements Command
             {
                 // only show users events that are on schedules they can view
                 TextChannel sChannel = event.getGuild().getTextChannelById(sId);
-                List<Permission> permissions = sChannel!=null ? caller.getPermissions(sChannel) : new ArrayList();
+                Collection<Permission> permissions = sChannel!=null ? caller.getPermissions(sChannel) : new ArrayList();
                 if (sChannel!=null && permissions!=null && permissions.contains(Permission.MESSAGE_READ))
                 {
                     if (content.length() > 1400)
