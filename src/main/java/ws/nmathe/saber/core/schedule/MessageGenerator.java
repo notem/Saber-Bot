@@ -151,7 +151,7 @@ public class MessageGenerator
                         .append(", ")
                         .append(se.getDeadline().getYear())
                         .append(" @ ")
-                        .append(se.getDeadline().toLocalTime())
+                        .append(se.getDeadline().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")))
                         .append(".");
             }
 

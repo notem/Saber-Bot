@@ -344,6 +344,8 @@ public class EditCommand implements Command
                     verify = VerifyUtilities.verifyDeadline(args, index, head);
                     if(!verify.isEmpty()) return verify;
                     index++;
+                    if(index < args.length && VerifyUtilities.verifyTime(args[index]))
+                        index++;
                     break;
 
                 case "co":

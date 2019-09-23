@@ -608,14 +608,14 @@ public class ScheduleEntry
 
         // does options contain the emote's name?
         String emoteName = emote.getName();
-        String emoteId = emote.getId();
-        if(emoteName!=null && (options.containsKey(emoteName) || emoteName.equals(clearEmoji)))
+        String emoteId = emote.isEmote() ? emote.getId() : null;
+        if(options.containsKey(emoteName) || emoteName.equals(clearEmoji))
         {
             emoteIsRSVP = true;
             emoteKey = emoteName;
         }
         // does options contain the emote's ID?
-        else if(emoteId!=null && (options.containsKey(emoteId) || emoteId.equals(clearEmoji)))
+        else if(options.containsKey(emoteId) || emoteId.equals(clearEmoji))
         {
             emoteIsRSVP = true;
             emoteKey = emoteId;
