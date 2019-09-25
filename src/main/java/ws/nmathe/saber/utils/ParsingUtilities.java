@@ -134,15 +134,21 @@ public class ParsingUtilities
                 // using the provided datetime formatter string
                 else if(trimmed.matches("(\\[.*?])?start .+(\\[.*?])?")) // advanced end
                 {
-                    String formatter = trimmed.replaceAll("start ","")
-                            .replaceAll("\\[.*?]","");
+                    String formatter = trimmed
+                            .replaceAll("start ","")
+                            .replaceAll("\\[.*?]","")
+                            .trim();
                     String startString = "";
 
                     ZoneId zone = entry.getStart().getZone();
                     for (String token : trimmed.replaceAll("start ","").split(" "))
                     {
                         if (ZoneId.getAvailableZoneIds().contains(token))
+                        {
                             zone = ZoneId.of(token);
+                            formatter = formatter
+                                    .replaceAll(token+"( )?", "");
+                        }
                     }
                     try {
                         startString = entry.getStart()
@@ -164,7 +170,11 @@ public class ParsingUtilities
                     for (String token : trimmed.replaceAll("end ","").split(" "))
                     {
                         if (ZoneId.getAvailableZoneIds().contains(token))
+                        {
                             zone = ZoneId.of(token);
+                            formatter = formatter
+                                    .replaceAll(token+"( )?", "");
+                        }
                     }
                     try {
                         endString = entry.getEnd()
@@ -185,7 +195,11 @@ public class ParsingUtilities
                     for (String token : trimmed.replaceAll("now ","").split(" "))
                     {
                         if (ZoneId.getAvailableZoneIds().contains(token))
+                        {
                             zone = ZoneId.of(token);
+                            formatter = formatter
+                                    .replaceAll(token+"( )?", "");
+                        }
                     }
                     try {
                         nowString = ZonedDateTime.now()
