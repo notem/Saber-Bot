@@ -224,7 +224,7 @@ public class ParsingUtilities
                         else if (token.toLowerCase().matches("s(hort)?"))
                             isShort = true;
                         else if (token.toLowerCase().matches("r(aw)?"))
-                            useRaw = false;
+                            useRaw = true;
                     }
 
                     long minutes = ZonedDateTime.now()
