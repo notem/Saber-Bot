@@ -216,21 +216,31 @@ public class ParsingUtilities
                     String args = trimmed.replaceAll("until( )?","").replaceAll("\\[.*?]","");
                     int depth = 3;
                     boolean isShort = false;
+                    boolean useRaw = false;
                     for (String token : args.split(" "))
                     {
-                        if (token.matches("[123]"))
+                        if (token.matches("[0123]"))
                             depth = Integer.parseInt(token);
                         else if (token.toLowerCase().matches("s(hort)?"))
                             isShort = true;
+                        else if (token.toLowerCase().matches("r(aw)?"))
+                            useRaw = false;
                     }
 
                     long minutes = ZonedDateTime.now()
                             .until(entry.hasStarted() ? entry.getEnd() : entry.getStart(), ChronoUnit.MINUTES);
-                    if (minutes > 1)
+                    if (useRaw == true)
                     {
-                        StringBuilder builder = new StringBuilder();
-                        addTimeGap(builder, minutes, isShort, depth);
-                        sub.append(helper.apply(builder.toString(), matcher2));
+                        sub.append(helper.apply(Long.toString(minutes), matcher2));
+                    }
+                    else
+                    {
+                        if (minutes > 1)
+                        {
+                            StringBuilder builder = new StringBuilder();
+                            addTimeGap(builder, minutes, isShort, depth);
+                            sub.append(helper.apply(builder.toString(), matcher2));
+                        }
                     }
                 }
 
