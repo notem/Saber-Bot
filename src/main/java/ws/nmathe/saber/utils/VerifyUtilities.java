@@ -370,8 +370,26 @@ public class VerifyUtilities
                     "Use ``"+ head +" "+ args[0] +" "+ args[index-1]+" [deadline]`` where ``[deadline]`` is " +
                     "the last day to RSVP for the event in a yyyy/mm/dd format.";
         }
-        if(!VerifyUtilities.verifyDate(args[index]))
+        if(args[index].contains("@"))
         {
+            String a[] = args[index].split("@");
+            if(!VerifyUtilities.verifyDate(a[0]))
+            {
+                return "*" + a[0] + "* does not look like a date! Be sure to use the format yyyy/mm/dd!";
+            }
+            if(!VerifyUtilities.verifyTime(a[1]))
+            {
+                return "*" + a[1] + "* does not look like a time! Be sure to use the format HH:mm!";
+            }
+        }
+        else if(!VerifyUtilities.verifyDate(args[index]))
+        {
+            if (args[index].equalsIgnoreCase("off") ||
+                args[index].equalsIgnoreCase("never") ||
+                args[index].equalsIgnoreCase("none"))
+            {
+                return "";
+            }
             return "*" + args[index] + "* does not look like a date! Be sure to use the format yyyy/mm/dd!";
         }
         return "";

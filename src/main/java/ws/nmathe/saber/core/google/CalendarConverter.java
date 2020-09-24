@@ -219,217 +219,226 @@ public class CalendarConverter
             // process events
             for(Event event : events.getItems())
             {
-                channel.sendTyping().queue();   // continue to send 'is typing'
-
-                // if the unique google event ID does not appear in the already processed events
-                // convert the event and add it to the schedule
-                String recurrenceId = event.getRecurringEventId();
-                String googleId = recurrenceId==null ? event.getId() : recurrenceId;
-                if(!uniqueEvents.contains(googleId))
+                try // convert the list of Google Events into discord event entries
                 {
-                    // declare and initialize event parameters
-                    ZonedDateTime start, end;
-                    String title;
-                    ArrayList<String> comments      = new ArrayList<>();
-                    int repeat                      = 0;
-                    ZonedDateTime expire            = null;
-                    String imageUrl                 = null;
-                    String thumbnailUrl             = null;
-                    ZonedDateTime rsvpDeadline      = null;
-                    String titleUrl                 = null;
-                    Map<String, Integer> rsvpLimits = new HashMap<>();
 
+                    channel.sendTyping().queue();   // continue to send 'is typing'
 
-                    if(event.getStart().getDateTime() == null)
-                    {   /* parse start and end dates for all day events */
-                        start = ZonedDateTime.of(
-                                LocalDate.parse(event.getStart().getDate().toStringRfc3339()),
-                                LocalTime.MIN,
-                                zone);
-                        end = ZonedDateTime.of(
-                                LocalDate.parse(event.getEnd().getDate().toStringRfc3339()),
-                                LocalTime.MIN,
-                                zone);
-                    } else
-                    {   /* parse start and end times for normal events */
-                        start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
-                                .withZoneSameInstant(zone);
-                        end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
-                                .withZoneSameInstant(zone);
-                    }
-
-                    // get event title
-                    if(event.getSummary() == null) title = "(No title)";
-                    else title = event.getSummary();
-
-                    // process event description into event comments or other settings
-                    if (event.getDescription() != null)
+                    // if the unique google event ID does not appear in the already processed events
+                    // convert the event and add it to the schedule
+                    String recurrenceId = event.getRecurringEventId();
+                    String googleId = recurrenceId==null ? event.getId() : recurrenceId;
+                    if(!uniqueEvents.contains(googleId))
                     {
-                        // process the description line by line
-                        String description = HTMLStripper.cleanDescription(
-                                event.getDescription().replace("\n", "<br>"));
-                        for (String comment : description.split("\n"))
+                        // declare and initialize event parameters
+                        ZonedDateTime start, end;
+                        String title;
+                        ArrayList<String> comments      = new ArrayList<>();
+                        int repeat                      = 0;
+                        ZonedDateTime expire            = null;
+                        String imageUrl                 = null;
+                        String thumbnailUrl             = null;
+                        ZonedDateTime rsvpDeadline      = null;
+                        String titleUrl                 = null;
+                        Map<String, Integer> rsvpLimits = new HashMap<>();
+
+
+                        if(event.getStart().getDateTime() == null)
+                        {   /* parse start and end dates for all day events */
+                            start = ZonedDateTime.of(
+                                    LocalDate.parse(event.getStart().getDate().toStringRfc3339()),
+                                    LocalTime.MIN,
+                                    zone);
+                            end = ZonedDateTime.of(
+                                    LocalDate.parse(event.getEnd().getDate().toStringRfc3339()),
+                                    LocalTime.MIN,
+                                    zone);
+                        } else
+                        {   /* parse start and end times for normal events */
+                            start = ZonedDateTime.parse(event.getStart().getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
+                                    .withZoneSameInstant(zone);
+                            end = ZonedDateTime.parse(event.getEnd().getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
+                                    .withZoneSameInstant(zone);
+                        }
+
+                        // get event title
+                        if(event.getSummary() == null) title = "(No title)";
+                        else title = event.getSummary();
+
+                        // process event description into event comments or other settings
+                        if (event.getDescription() != null)
                         {
-                            comment = comment.trim();
-                            String lowerCase = comment.toLowerCase();
+                            // process the description line by line
+                            String description = HTMLStripper.cleanDescription(
+                                    event.getDescription().replace("\n", "<br>"));
+                            for (String comment : description.split("\n"))
+                            {
+                                comment = comment.trim();
+                                Logging.info(this.getClass(), comment);
+                                String lowerCase = comment.toLowerCase();
 
-                            // image
-                            if (lowerCase.startsWith("image:"))
-                            {
-                                String[] tmp = comment.split(":",2); // split to limit:
-                                if(tmp.length > 1)
+                                // image
+                                if (lowerCase.startsWith("image:"))
                                 {
-                                    imageUrl = tmp[1].trim().replaceAll(" ","");
-                                    if (!VerifyUtilities.verifyUrl(imageUrl)) imageUrl = null;
-                                }
-                            }
-                            // thumbnail
-                            else if (lowerCase.startsWith("thumbnail:"))
-                            {
-                                String[] tmp = comment.split(":",2);
-                                if(tmp.length > 1)
-                                {
-                                    thumbnailUrl = tmp[1].trim().trim().replaceAll(" ","");
-                                    if(!VerifyUtilities.verifyUrl(thumbnailUrl)) thumbnailUrl = null;
-                                }
-                            }
-                            // limit
-                            else if (lowerCase.startsWith("limit:"))
-                            {
-                                String[] tmp = comment.split(":",2); // split to limit:
-                                if(tmp.length > 1)
-                                {
-                                    String[] str = tmp[1].trim().split("[^\\S\n\r]+"); // split into white space separated segments
-                                    if(str.length >= 2)
+                                    String[] tmp = comment.split(":",2); // split to limit:
+                                    if(tmp.length > 1)
                                     {
-                                        // rebuild the rsvp group name
-                                        StringBuilder name = new StringBuilder();
-                                        for(int i=0; i<str.length-1; i++)
-                                        {
-                                            name.append(str[i]);
-                                            if(i != str.length-2) name.append(" ");
-                                        }
-
-                                        // parse the limit
-                                        Integer limit = -1;
-                                        if(VerifyUtilities.verifyInteger(str[str.length-1]))
-                                            limit = Integer.parseInt(str[str.length-1]);
-
-                                        rsvpLimits.put(name.toString(), limit);
+                                        imageUrl = tmp[1].trim().replaceAll(" ","");
+                                        if (!VerifyUtilities.verifyUrl(imageUrl)) imageUrl = null;
                                     }
                                 }
+                                // thumbnail
+                                else if (lowerCase.startsWith("thumbnail:"))
+                                {
+                                    String[] tmp = comment.split(":",2);
+                                    if(tmp.length > 1)
+                                    {
+                                        thumbnailUrl = tmp[1].trim().trim().replaceAll(" ","");
+                                        if(!VerifyUtilities.verifyUrl(thumbnailUrl)) thumbnailUrl = null;
+                                    }
+                                }
+                                // limit
+                                else if (lowerCase.startsWith("limit:"))
+                                {
+                                    String[] tmp = comment.split(":",2); // split to limit:
+                                    if(tmp.length > 1)
+                                    {
+                                        String[] str = tmp[1].trim().split("[^\\S\n\r]+"); // split into white space separated segments
+                                        if(str.length >= 2)
+                                        {
+                                            // rebuild the rsvp group name
+                                            StringBuilder name = new StringBuilder();
+                                            for(int i=0; i<str.length-1; i++)
+                                            {
+                                                name.append(str[i]);
+                                                if(i != str.length-2) name.append(" ");
+                                            }
 
-                            }
-                            // title url
-                            else if (lowerCase.startsWith("url:"))
-                            {
-                                String[] tmp = comment.split(":",2);
-                                if(tmp.length > 1 && VerifyUtilities.verifyUrl(tmp[1].trim().replaceAll(" ","")))
-                                    titleUrl = tmp[1].trim().replaceAll(" ","");
-                            }
-                            // deadline
-                            else if (lowerCase.startsWith("deadline:"))
-                            {
-                                String tmp = lowerCase.replace("deadline:","")
-                                        .trim().replaceAll(" ","");
-                                if(VerifyUtilities.verifyDate(tmp))
-                                    rsvpDeadline = ZonedDateTime.of(ParsingUtilities
-                                            .parseDate(tmp, zone), LocalTime.MAX, zone);
-                            }
-                            // plaintext comment
-                            else if(!comment.trim().isEmpty())
-                            {
-                                comments.add(comment);
+                                            // parse the limit
+                                            Integer limit = -1;
+                                            if(VerifyUtilities.verifyInteger(str[str.length-1]))
+                                                limit = Integer.parseInt(str[str.length-1]);
+
+                                            rsvpLimits.put(name.toString(), limit);
+                                        }
+                                    }
+
+                                }
+                                // title url
+                                else if (lowerCase.startsWith("url:"))
+                                {
+                                    String[] tmp = comment.split(":",2);
+                                    if(tmp.length > 1 && VerifyUtilities.verifyUrl(tmp[1].trim().replaceAll(" ","")))
+                                        titleUrl = tmp[1].trim().replaceAll(" ","");
+                                }
+                                // deadline
+                                else if (lowerCase.startsWith("deadline:"))
+                                {
+                                    String tmp = lowerCase.replace("deadline:","")
+                                            .trim().replaceAll(" ","");
+                                    if(VerifyUtilities.verifyDate(tmp))
+                                        rsvpDeadline = ZonedDateTime.of(ParsingUtilities
+                                                .parseDate(tmp, zone), LocalTime.MAX, zone);
+                                }
+                                // plaintext comment
+                                else if(!comment.trim().isEmpty())
+                                {
+                                    comments.add(comment);
+                                }
                             }
                         }
+
+                        // get the event recurrence information
+                        List<String> recurrence = event.getRecurrence();
+                        if(recurrenceId != null)
+                            recurrence = service.events().get(address, recurrenceId).execute().getRecurrence();
+
+                        // parse the event recurrence information
+                        if(recurrence != null)
+                        {   // determine the start date
+                            ZonedDateTime dtStart = event.getOriginalStartTime() == null ? start :     // if orig is null, use start
+                                        (event.getOriginalStartTime().getDateTime() == null ? start :
+                                            ZonedDateTime.parse(event.getOriginalStartTime()
+                                                    .getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
+                                                    .withZoneSameInstant(zone));
+                            EventRecurrence eventRecurrence = new EventRecurrence(recurrence, dtStart);
+                            expire = eventRecurrence.getExpire();
+                            repeat = eventRecurrence.getRepeat();
+                        }
+
+                        // if the google event already exists as a saber event on the schedule, update it
+                        // otherwise add as a new saber event
+                        Document doc = Main.getDBDriver().getEventCollection()
+                                .find(and(
+                                        eq("channelId", channel.getId()),
+                                        eq("googleId", googleId))).first();
+
+                        // should the event be flagged as already started?
+                        boolean hasStarted = start.isBefore(ZonedDateTime.now());
+
+                        if(doc != null && (new ScheduleEntry(doc)).getMessageObject() != null)
+                        {   /* update an existing event */
+                            ScheduleEntry se = (new ScheduleEntry(doc))
+                                    .setTitle(title)
+                                    .setStart(start)
+                                    .setEnd(end)
+                                    .setRepeat(repeat)
+                                    .setGoogleId(googleId)
+                                    .setExpire(expire)
+                                    .setStarted(hasStarted)
+                                    .setComments(comments)
+                                    .setLocation(event.getLocation());
+
+                            // set special attributes if not null
+                            if (titleUrl!=null)
+                                se.setTitleUrl(titleUrl);
+                            if (imageUrl!=null)
+                                se.setImageUrl(imageUrl);
+                            if (thumbnailUrl!=null)
+                                se.setThumbnailUrl(thumbnailUrl);
+                            if (rsvpDeadline!=null)
+                                se.setRsvpDeadline(rsvpDeadline);
+                            if (rsvpLimits.keySet().size()>0)
+                                se.setRsvpLimits(rsvpLimits);
+
+                            // update event reminders using schedule default settings
+                            se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
+                                    .reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()))
+                                    .regenerateAnnouncementOverrides();
+
+                            Main.getEntryManager().updateEntry(se, false);
+                        }
+                        else
+                        {   /* create a new event */
+                            ScheduleEntry se = (new ScheduleEntry(channel, title, start, end))
+                                    .setTitleUrl(titleUrl!=null ? titleUrl:event.getHtmlLink())
+                                    .setRepeat(repeat)
+                                    .setGoogleId(googleId)
+                                    .setExpire(expire)
+                                    .setStarted(hasStarted)
+                                    .setComments(comments)
+                                    .setLocation(event.getLocation());
+
+                            // set special attributes if not null
+                            if (imageUrl!=null)
+                                se.setImageUrl(imageUrl);
+                            if (thumbnailUrl!=null)
+                                se.setThumbnailUrl(thumbnailUrl);
+                            if (rsvpDeadline!=null)
+                                se.setRsvpDeadline(rsvpDeadline);
+                            if (rsvpLimits.keySet().size()>0)
+                                se.setRsvpLimits(rsvpLimits);
+
+                            Main.getEntryManager().newEntry(se, false);
+                        }
+
+                        // add to google ID to unique event mapping
+                        uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);
                     }
-
-                    // get the event recurrence information
-                    List<String> recurrence = event.getRecurrence();
-                    if(recurrenceId != null)
-                        recurrence = service.events().get(address, recurrenceId).execute().getRecurrence();
-
-                    // parse the event recurrence information
-                    if(recurrence != null)
-                    {   // determine the start date
-                        ZonedDateTime dtStart = event.getOriginalStartTime() == null ? start :     // if orig is null, use start
-                                    (event.getOriginalStartTime().getDateTime() == null ? start :
-                                        ZonedDateTime.parse(event.getOriginalStartTime()
-                                                .getDateTime().toStringRfc3339(), EventRecurrence.RFC3339_FORMATTER)
-                                                .withZoneSameInstant(zone));
-                        EventRecurrence eventRecurrence = new EventRecurrence(recurrence, dtStart);
-                        expire = eventRecurrence.getExpire();
-                        repeat = eventRecurrence.getRepeat();
-                    }
-
-                    // if the google event already exists as a saber event on the schedule, update it
-                    // otherwise add as a new saber event
-                    Document doc = Main.getDBDriver().getEventCollection()
-                            .find(and(
-                                    eq("channelId", channel.getId()),
-                                    eq("googleId", googleId))).first();
-
-                    // should the event be flagged as already started?
-                    boolean hasStarted = start.isBefore(ZonedDateTime.now());
-
-                    if(doc != null && (new ScheduleEntry(doc)).getMessageObject() != null)
-                    {   /* update an existing event */
-                        ScheduleEntry se = (new ScheduleEntry(doc))
-                                .setTitle(title)
-                                .setStart(start)
-                                .setEnd(end)
-                                .setRepeat(repeat)
-                                .setGoogleId(googleId)
-                                .setExpire(expire)
-                                .setStarted(hasStarted)
-                                .setComments(comments)
-                                .setLocation(event.getLocation());
-
-                        // set special attributes if not null
-                        if (titleUrl!=null)
-                            se.setTitleUrl(titleUrl);
-                        if (imageUrl!=null)
-                            se.setImageUrl(imageUrl);
-                        if (thumbnailUrl!=null)
-                            se.setThumbnailUrl(thumbnailUrl);
-                        if (rsvpDeadline!=null)
-                            se.setRsvpDeadline(rsvpDeadline);
-                        if (rsvpLimits.keySet().size()>0)
-                            se.setRsvpLimits(rsvpLimits);
-
-                        // update event reminders using schedule default settings
-                        se.reloadReminders(Main.getScheduleManager().getReminders(se.getChannelId()))
-                                .reloadEndReminders(Main.getScheduleManager().getEndReminders(se.getChannelId()))
-                                .regenerateAnnouncementOverrides();
-
-                        Main.getEntryManager().updateEntry(se, false);
-                    }
-                    else
-                    {   /* create a new event */
-                        ScheduleEntry se = (new ScheduleEntry(channel, title, start, end))
-                                .setTitleUrl(titleUrl!=null ? titleUrl:event.getHtmlLink())
-                                .setRepeat(repeat)
-                                .setGoogleId(googleId)
-                                .setExpire(expire)
-                                .setStarted(hasStarted)
-                                .setComments(comments)
-                                .setLocation(event.getLocation());
-
-                        // set special attributes if not null
-                        if (imageUrl!=null)
-                            se.setImageUrl(imageUrl);
-                        if (thumbnailUrl!=null)
-                            se.setThumbnailUrl(thumbnailUrl);
-                        if (rsvpDeadline!=null)
-                            se.setRsvpDeadline(rsvpDeadline);
-                        if (rsvpLimits.keySet().size()>0)
-                            se.setRsvpLimits(rsvpLimits);
-
-                        Main.getEntryManager().newEntry(se, false);
-                    }
-
-                    // add to google ID to unique event mapping
-                    uniqueEvents.add(recurrenceId==null ? event.getId() : recurrenceId);
+                }
+                catch(Exception e)
+                {
+                    Logging.exception(this.getClass(), e);
                 }
             }
 

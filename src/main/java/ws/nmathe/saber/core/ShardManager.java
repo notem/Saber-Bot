@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.utils.MiscUtil;
 import net.dv8tion.jda.api.utils.SessionControllerAdapter;
+import net.dv8tion.jda.api.utils.*;
+import net.dv8tion.jda.api.requests.*;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import javax.security.auth.login.LoginException;
@@ -41,6 +43,18 @@ public class ShardManager
             this.builder = new JDABuilder(AccountType.BOT)
                     .setToken(Main.getBotSettingsManager().getToken())
                     .setStatus(OnlineStatus.ONLINE)
+                    .setChunkingFilter(ChunkingFilter.NONE)
+                    //.disableIntents(GatewayIntent.GUILD_MEMBERS)
+                    //.disableIntents(GatewayIntent.GUILD_BANS)
+                    //.disableIntents(GatewayIntent.GUILD_EMOJIS)
+                    //.disableIntents(GatewayIntent.GUILD_INVITES)
+                    //.disableIntents(GatewayIntent.GUILD_VOICE_STATES)
+                    //.disableIntents(GatewayIntent.GUILD_PRESENCES)
+                    //.disableIntents(GatewayIntent.GUILD_MESSAGE_TYPING)
+                    //.disableIntents(GatewayIntent.DIRECT_MESSAGE_TYPING)
+                    //.enableIntents(GatewayIntent.GUILD_MESSAGES)
+                    //.enableIntents(GatewayIntent.GUILD_MESSAGE_REACTIONS)
+                    //.enableIntents(GatewayIntent.DIRECT_MESSAGES)
                     .setAutoReconnect(true);
             // set now playing status
             List<String> playing = Main.getBotSettingsManager().getNowPlayingList();

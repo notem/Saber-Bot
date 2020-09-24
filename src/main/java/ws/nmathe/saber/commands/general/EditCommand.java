@@ -344,7 +344,9 @@ public class EditCommand implements Command
                     verify = VerifyUtilities.verifyDeadline(args, index, head);
                     if(!verify.isEmpty()) return verify;
                     index++;
-                    if(index < args.length && VerifyUtilities.verifyTime(args[index]))
+                    if(index < args.length && 
+                       VerifyUtilities.verifyTime(args[index]) && 
+                       !args[index].contains("@"))
                         index++;
                     break;
 
@@ -723,7 +725,13 @@ public class EditCommand implements Command
                         LocalDate deadlineDate = ParsingUtilities.parseNullableDate(args[index], zone);
                         LocalTime deadlineTime = LocalTime.MAX;
                         // allow users in specify exact time RSVPs close
-                        if (args.length-index == 2 && VerifyUtilities.verifyTime(args[index+1]))
+                        if (args[index].contains("@"))
+                        {
+                             String a[] = args[index].split("@");
+                             deadlineDate = ParsingUtilities.parseNullableDate(a[0], zone);
+                             deadlineTime = ParsingUtilities.parseTime(a[1], zone);
+                        }
+                        else if (args.length-index == 2 && VerifyUtilities.verifyTime(args[index+1]))
                         {
                              deadlineTime = ParsingUtilities.parseTime(args[index+1], zone);
                              index++;

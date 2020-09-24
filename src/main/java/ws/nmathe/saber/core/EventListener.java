@@ -114,9 +114,18 @@ public class EventListener extends ListenerAdapter
         /* command processing */
         // set prefix to local guild prefix or bot @mention
         GuildSettingsManager.GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
-        if (content.matches("<@"+event.getJDA().getSelfUser().getId()+">([ ]*)(.)*"))
+        String botID = "<@250801603630596100>";
+        //if (content.matches("<@"+event.getJDA().getSelfUser().getId()+">([ ]*)(.)*"))
+        //{   // use @mention as prefix
+        //    prefix = "<@"+event.getJDA().getSelfUser().getId()+">";
+        //}
+        if (content.trim().startsWith(botID))
         {   // use @mention as prefix
-            prefix = "<@"+event.getJDA().getSelfUser().getId()+">";
+            prefix = botID;
+        }
+        else if (content.trim().startsWith("!?!?!?"))
+        {
+            prefix = "!?!?!?";
         }
         else
         {   // use local guild prefix
@@ -124,10 +133,10 @@ public class EventListener extends ListenerAdapter
         }
 
         // operate on the command if the string starts with the prefix
-        if(content.startsWith(prefix))
+        if(content.trim().startsWith(prefix))
         {
             // remove the prefix from the command string
-            String trimmedContent = StringUtils.replaceOnce(content, prefix, "");
+            String trimmedContent = StringUtils.replaceOnce(content, prefix, "").trim();
 
             // check if command is restricted on the guild
             Boolean isRestricted = true;

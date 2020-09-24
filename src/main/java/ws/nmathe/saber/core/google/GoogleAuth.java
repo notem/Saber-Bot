@@ -196,12 +196,13 @@ public class GoogleAuth
     {
         try
         {
-            Credential credential = GoogleAuth.authorize(userID);
-            if(credential == null)
-            {
-                credential = GoogleAuth.authorize();
-            }
-            return credential;
+            return GoogleAuth.authorize();
+            //Credential credential = GoogleAuth.authorize(userID);
+            //if(credential == null)
+            //{
+            //    credential = GoogleAuth.authorize();
+            //}
+            //return credential;
         }
         catch (IOException e)
         {
