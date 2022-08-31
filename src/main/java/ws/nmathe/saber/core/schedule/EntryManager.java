@@ -6,8 +6,9 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.api.entities.Message;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -109,7 +110,7 @@ public class EntryManager
 
         // generate event display message
         se.setId(this.newId());
-        Message message = MessageGenerator.generate(se);
+        MessageCreateData message = MessageGenerator.generate(se);
 
         // send message to schedule
         TextChannel channel = jda.getTextChannelById(channelId);
@@ -319,14 +320,14 @@ public class EntryManager
     {
         if (EmojiManager.isEmoji(emoji))
         {
-            message.addReaction(emoji).queue();
+            message.addReaction(Emoji.fromUnicode(emoji)).queue();
         }
         else
         {
-            Emote emote;
+            Emoji emote;
             for(JDA shard : Main.getShardManager().getShards())
             {
-                emote = shard.getEmoteById(emoji);
+                emote = shard.getEmojiById(emoji);
                 if(emote != null)
                 {
                     message.addReaction(emote).queue();

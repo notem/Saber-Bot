@@ -2,7 +2,7 @@ package ws.nmathe.saber.utils;
 
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Emote;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
@@ -204,12 +204,13 @@ public class VerifyUtilities
         {
             String[] split = emoji.split(":"); // split on colons to isolate the reaction name from it's ID
             String emoteId = split[split.length-1].replaceAll("[^\\d]", ""); // trim to include only the ID
-            Emote emote = null;
+            //Emote emote = null;
+            Emoji emote = null;
             try
             {
                 for(JDA jda : Main.getShardManager().getShards())
                 {
-                    emote = jda.getEmoteById(emoteId);
+                    emote = jda.getEmojiById(emoteId);
                     if(emote != null) break;
                 }
             }

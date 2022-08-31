@@ -6,8 +6,6 @@ import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
-import java.util.Collection;
-
 /**
  * the command which causes the bot to message the user with
  * the bot operation command list/guide.

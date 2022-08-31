@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.utils.MiscUtil;
 import net.dv8tion.jda.api.utils.SessionControllerAdapter;
 import net.dv8tion.jda.api.utils.*;
 import net.dv8tion.jda.api.requests.*;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
 import javax.security.auth.login.LoginException;
@@ -40,8 +41,7 @@ public class ShardManager
         try // connect the bot to the discord API and initialize schedule components
         {
             // basic skeleton of a jda shard
-            this.builder = new JDABuilder(AccountType.BOT)
-                    .setToken(Main.getBotSettingsManager().getToken())
+            this.builder = JDABuilder.createLight(Main.getBotSettingsManager().getToken())
                     .setStatus(OnlineStatus.ONLINE)
                     .setChunkingFilter(ChunkingFilter.NONE)
                     //.disableIntents(GatewayIntent.GUILD_MEMBERS)
@@ -65,6 +65,9 @@ public class ShardManager
 
             // EventListener handles all types of bot events
             this.builder.addEventListeners(new EventListener());
+
+            // Disable parts of the cache
+            builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS, CacheFlag.ACTIVITY);
 
             // previous session queue mechanism was deprecated and has seemingly been replaced with
             //   this SessionController object

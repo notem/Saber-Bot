@@ -3,8 +3,9 @@ package ws.nmathe.saber.core.schedule;
 //import net.dv8tion.jda.client.events.relationship.GenericRelationshipAddEvent;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.api.entities.Message;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.ParsingUtilities;
@@ -32,9 +33,9 @@ public class MessageGenerator
      * @param se (ScheduleEntry) to generate a message display
      * @return the message to be used to display the event in it's associated Discord channel
      */
-    public static Message generate(ScheduleEntry se)
+    public static MessageCreateData generate(ScheduleEntry se)
     {
-        if (se == null) return new MessageBuilder().build();
+        if (se == null) return new MessageCreateBuilder().build();
 
         // prepare title
         String titleUrl = (se.getTitleUrl() != null && VerifyUtilities.verifyUrl(se.getTitleUrl())) ?
@@ -76,7 +77,8 @@ public class MessageGenerator
             builder.setThumbnail(se.getThumbnailUrl());
         }
 
-        MessageBuilder msgBuilder = new MessageBuilder().setEmbed(builder.build());
+        
+        MessageCreateBuilder msgBuilder = new MessageCreateBuilder().setEmbeds(builder.build());
         if (se.getNonEmbededText() != null)
         {
             String fulltext = ParsingUtilities.processText(se.getNonEmbededText(), se, true);

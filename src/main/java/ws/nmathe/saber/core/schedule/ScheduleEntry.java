@@ -2,6 +2,7 @@ package ws.nmathe.saber.core.schedule;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.exceptions.PermissionException;
 import org.bson.Document;
@@ -599,7 +600,7 @@ public class ScheduleEntry
                 this.getDeadline().isBefore(ZonedDateTime.now()))
             return false;
 
-        MessageReaction.ReactionEmote emote = event.getReactionEmote();
+        Emoji emote = event.getReaction().getEmoji();
         Map<String, String> options = Main.getScheduleManager().getRSVPOptions(this.getChannelId());
         String clearEmoji = Main.getScheduleManager().getRSVPClear(this.getChannelId());
 
@@ -608,7 +609,7 @@ public class ScheduleEntry
 
         // does options contain the emote's name?
         String emoteName = emote.getName();
-        String emoteId = emote.isEmote() ? emote.getId() : null;
+        String emoteId = emote.getAsReactionCode();
         if(options.containsKey(emoteName) || emoteName.equals(clearEmoji))
         {
             emoteIsRSVP = true;

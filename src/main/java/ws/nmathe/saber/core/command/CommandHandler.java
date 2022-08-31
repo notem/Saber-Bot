@@ -94,7 +94,7 @@ public class CommandHandler
             }
             else
             {   // send message to channel the message was received on
-                MessageUtilities.sendMsg(msg, event.getTextChannel(), null);
+                MessageUtilities.sendMsg(msg, event.getChannel(), null);
             }
             return;
         }

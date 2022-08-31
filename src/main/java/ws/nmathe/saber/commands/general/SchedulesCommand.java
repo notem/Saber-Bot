@@ -1,12 +1,13 @@
 package ws.nmathe.saber.commands.general;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
@@ -79,7 +80,7 @@ public class SchedulesCommand implements Command
                                 .setTitle(title)
                                 .setFooter(footer, null).build();
 
-        Message message = new MessageBuilder().setEmbed(embed).build();           // build message
-        MessageUtilities.sendMsg(message, event.getTextChannel(), null);    // send message
+        MessageCreateData message = new MessageCreateBuilder().setEmbeds(embed).build();           // build message
+        MessageUtilities.sendMsg(message, event.getGuildChannel(), null);    // send message
     }
 }

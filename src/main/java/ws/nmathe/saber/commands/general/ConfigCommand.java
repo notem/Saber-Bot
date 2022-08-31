@@ -5,6 +5,7 @@ import com.google.api.services.calendar.Calendar;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.bson.Document;
 import ws.nmathe.saber.Main;
@@ -1309,10 +1310,10 @@ public class ConfigCommand implements Command
                         }
                         else
                         {
-                            Emote emote = null;
+                            Emoji emote = null;
                             for(JDA shard : Main.getShardManager().getShards())
                             {
-                                emote = shard.getEmoteById(key);
+                                emote = shard.getEmojiById(key);
                                 if(emote != null) break;
                             }
                             if(emote!=null)

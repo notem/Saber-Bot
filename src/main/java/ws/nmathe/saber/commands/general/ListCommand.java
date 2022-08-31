@@ -1,12 +1,14 @@
 package ws.nmathe.saber.commands.general;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+
 import org.apache.commons.lang3.StringUtils;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -232,7 +234,7 @@ public class ListCommand implements Command
                             (mobileFlag && StringUtils.countMatches(content, "\n") > mobileLineCap))
                     {
                         // build and send the embedded message object
-                        Message message = (new MessageBuilder()).setEmbed(
+                        MessageCreateData message = (new MessageCreateBuilder()).setEmbeds(
                                 (new EmbedBuilder()).setDescription(content).setTitle(title, titleUrl).build()
                         ).build();
                         MessageUtilities.sendMsg(message, event.getChannel(), null);
@@ -290,7 +292,7 @@ public class ListCommand implements Command
                         (mobileFlag && StringUtils.countMatches(content, "\n") > mobileLineCap))
                 {
                     // build and send the embedded message object
-                    Message message = (new MessageBuilder()).setEmbed(
+                    MessageCreateData message = (new MessageCreateBuilder()).setEmbeds(
                             (new EmbedBuilder()).setDescription(content).setTitle(title, titleUrl).build()
                     ).build();
                     MessageUtilities.sendMsg(message, event.getChannel(), null);
@@ -306,7 +308,7 @@ public class ListCommand implements Command
         String footer = uniqueMembers.size() + " unique member(s) appear in this search";
 
         // build and send the embedded message object
-        Message message = (new MessageBuilder()).setEmbed(
+        MessageCreateData message = (new MessageCreateBuilder()).setEmbeds(
                 (new EmbedBuilder()).setDescription(content)
                         .setTitle(title, titleUrl)
                         .setFooter(footer, null).build()

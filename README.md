@@ -13,17 +13,7 @@
 
 ### Dependencies
 
-+ [JDA](https://github.com/DV8FromTheWorld/JDA) - 3.2.0_273
-+ [Unirest](https://github.com/Mashape/unirest-java) - 1.4.9
-+ [MongoDB](http://mongodb.github.io/mongo-java-driver/3.4/) - mongodb-driver 3.4.2
-+ [Google Libraries]()
-   + google-oauth-client - 1.22.0
-   + google-api-client - 1.22.0
-   + google-api-services-calendar - v3-rev227-1.22.0
-   + google-oauth-client-jetty - 1.22.0
-   + guava - 21.0
-+ [Toml]() - toml4j - 0.7.1
-+ [Apache Commons]() - commons-lang3 - 3.5
+> See pom.xml
 
 ### Suggestions/Complaints
 
@@ -33,4 +23,4 @@ If you're looking for user documentation, the bots invite link, or a list of com
 
 ## User Docs
 
-Comprehensive documentation is available on [my website](https://nmathe.ws/bots/saber).  Alternatively, the docs can also be found [on my website's github repository](https://github.com/notem/nmathe.ws-content/blob/master/bots/saber/index.md) should my website become unavailable.
+No real documentation has been prepared aside from information provided by the help command. 

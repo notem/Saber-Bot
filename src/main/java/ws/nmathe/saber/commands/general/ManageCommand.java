@@ -193,6 +193,6 @@ public class ManageCommand implements Command
         }
 
         Main.getEntryManager().updateEntry(se, false);
-        MessageUtilities.sendMsg(content, event.getTextChannel(), null);
+        MessageUtilities.sendMsg(content, event.getGuildChannel(), null);
     }
 }

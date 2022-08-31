@@ -119,6 +119,6 @@ public class PurgeCommand implements Command
 
         // send success message
         String content = "Finished purging old message.";
-        MessageUtilities.sendMsg(content, event.getTextChannel(), null);
+        MessageUtilities.sendMsg(content, event.getGuildChannel(), null);
     }
 }

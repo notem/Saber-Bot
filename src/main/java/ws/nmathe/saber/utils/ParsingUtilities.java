@@ -616,7 +616,7 @@ public class ParsingUtilities
             Guild guild = shard.getGuildById(entry.getGuildId());
             GuildChannel channel = shard.getTextChannelById(entry.getChannelId());
             users = guild.getMembers().stream()
-                    .filter(member -> member.getPermissions(channel).contains(Permission.MESSAGE_READ))
+                    .filter(member -> member.getPermissions(channel).contains(Permission.MESSAGE_HISTORY))
                     .map(member -> member.getUser().getId())
                     .filter(memberId -> !rsvped.contains(memberId)).collect(Collectors.toSet());
         } else

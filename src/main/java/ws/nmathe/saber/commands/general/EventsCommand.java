@@ -1,10 +1,11 @@
 package ws.nmathe.saber.commands.general;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
@@ -96,11 +97,11 @@ public class EventsCommand implements Command
                 // only show users events that are on schedules they can view
                 TextChannel sChannel = event.getGuild().getTextChannelById(sId);
                 Collection<Permission> permissions = sChannel!=null ? caller.getPermissions(sChannel) : new ArrayList();
-                if (true || (sChannel!=null && permissions!=null && permissions.contains(Permission.MESSAGE_READ)))
+                if (true || (sChannel!=null && permissions!=null && permissions.contains(Permission.MESSAGE_HISTORY)))
                 {
                     if (content.length() > 1400)
                     {
-                        sendEventsMessage(footer, title, content, event.getTextChannel());
+                        sendEventsMessage(footer, title, content, event.getGuildChannel());
 
                         // adjust title and footer to reflect future messages are a continuation
                         title = "Events on " + guild.getName() + " (continued)";
@@ -116,7 +117,7 @@ public class EventsCommand implements Command
                         {
                             if (content.length() > 1800)
                             {
-                                sendEventsMessage(footer, title, content, event.getTextChannel());
+                                sendEventsMessage(footer, title, content, event.getGuildChannel());
 
                                 // adjust title and footer to reflect future messages are a continuation
                                 title = "Events on " + guild.getName() + " (continued)";
@@ -156,20 +157,20 @@ public class EventsCommand implements Command
 
         // final footer shows count
         footer = count + " event(s)";
-        sendEventsMessage(footer, title, content, event.getTextChannel());
+        sendEventsMessage(footer, title, content, event.getGuildChannel());
     }
 
     /**
      * Helper function to reduce code-duplication
      */
-    private void sendEventsMessage(String footer, String title, StringBuilder content, TextChannel channel)
+    private void sendEventsMessage(String footer, String title, StringBuilder content, MessageChannel channel)
     {
         // build embed and message
         MessageEmbed embed = new EmbedBuilder()
                 .setFooter(footer, null)
                 .setTitle(title)
                 .setDescription(content.toString()).build();
-        Message message = new MessageBuilder().setEmbed(embed).build();   // build message
+        MessageCreateData message = new MessageCreateBuilder().setEmbeds(embed).build();   // build message
         MessageUtilities.sendMsg(message, channel, null);           // send message
     }
 }

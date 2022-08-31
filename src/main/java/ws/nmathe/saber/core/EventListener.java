@@ -2,8 +2,7 @@ package ws.nmathe.saber.core;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.ReadyEvent;
-import net.dv8tion.jda.api.events.channel.text.TextChannelDeleteEvent;
-import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent;
+import net.dv8tion.jda.api.events.channel.ChannelDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.exceptions.PermissionException;
@@ -242,7 +241,7 @@ public class EventListener extends ListenerAdapter
     }
 
     @Override
-    public void onTextChannelDelete(TextChannelDeleteEvent event)
+    public void onChannelDelete(ChannelDeleteEvent event)
     {
         String cId = event.getChannel().getId();
 
@@ -254,6 +253,7 @@ public class EventListener extends ListenerAdapter
         }
     }
 
+    /* This interface appears to have been removed 
     @Override
     @SuppressWarnings("unchecked")
     public void onGuildMemberLeave(GuildMemberLeaveEvent event)
@@ -282,6 +282,7 @@ public class EventListener extends ListenerAdapter
             }
         }
     }
+    */
 
     @Override
     @SuppressWarnings("unchecked")

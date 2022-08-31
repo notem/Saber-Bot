@@ -94,6 +94,6 @@ public class SkipCommand implements Command
             se.repeat();
             content = "The event has been cancelled.";
         }
-        MessageUtilities.sendMsg(content, event.getTextChannel(), null);
+        MessageUtilities.sendMsg(content, event.getGuildChannel(), null);
     }
 }

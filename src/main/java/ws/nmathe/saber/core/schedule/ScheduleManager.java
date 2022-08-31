@@ -7,6 +7,8 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.managers.channel.concrete.TextChannelManager;
+
 import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.Logging;
@@ -57,7 +59,7 @@ public class ScheduleManager
         // bot self permissions
         Collection<Permission> channelPerms = Stream.of(Permission.MESSAGE_ADD_REACTION,
                 Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY,
-                Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_ATTACH_FILES)
+                Permission.MESSAGE_HISTORY, Permission.MESSAGE_SEND, Permission.MESSAGE_ATTACH_FILES)
                 .collect(Collectors.toList());
 
         // create channel and get ID
@@ -69,7 +71,7 @@ public class ScheduleManager
                     .addPermissionOverride(guild.getMember(jda.getSelfUser()),          // allow self permissions
                             channelPerms, new ArrayList<>())
                     .addPermissionOverride(guild.getPublicRole(), new ArrayList<>(),    // disable @everyone message write
-                            Collections.singletonList(Permission.MESSAGE_WRITE))
+                            Collections.singletonList(Permission.MESSAGE_HISTORY))
                     .complete().getId();
         }
         catch (PermissionException e)
@@ -100,16 +102,17 @@ public class ScheduleManager
         // bot self permissions
         Collection<Permission> channelPerms = Stream.of(Permission.MESSAGE_ADD_REACTION,
                 Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY,
-                Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_ATTACH_FILES)
+                Permission.MESSAGE_HISTORY, Permission.MESSAGE_SEND, Permission.MESSAGE_ATTACH_FILES)
                 .collect(Collectors.toList());
 
         // attempt to set the channel permissions
         try
         {
-            channel.createPermissionOverride(channel.getGuild().getMember(jda.getSelfUser())) // self perms
-                    .setAllow(channelPerms).queue();
-            channel.createPermissionOverride(channel.getGuild().getPublicRole())              // @everyone perms
-                    .setDeny(Collections.singleton(Permission.MESSAGE_WRITE)).queue();
+            TextChannelManager manager = channel.getManager();
+            manager.putMemberPermissionOverride(channel.getGuild().getMember(jda.getSelfUser()).getIdLong(), 
+                                                channelPerms, null).queue();; // self perms
+            manager.putRolePermissionOverride(channel.getGuild().getPublicRole().getIdLong(),  // @everyone perms
+                                              null, Collections.singleton(Permission.MESSAGE_SEND)).queue();;
         }
         catch (PermissionException e)
         {

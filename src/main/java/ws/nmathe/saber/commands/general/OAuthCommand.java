@@ -136,7 +136,7 @@ public class OAuthCommand implements Command
         }
         else
         {
-            MessageUtilities.sendMsg(message, event.getTextChannel(), null);
+            MessageUtilities.sendMsg(message, event.getGuildChannel(), null);
         }
     }
 }

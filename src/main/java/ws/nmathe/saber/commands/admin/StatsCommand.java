@@ -65,7 +65,7 @@ public class StatsCommand implements Command
         }
         else
         {
-            MessageUtilities.sendMsg( msg, event.getTextChannel(), null );
+            MessageUtilities.sendMsg( msg, event.getGuildChannel(), null );
         }
     }
 }
