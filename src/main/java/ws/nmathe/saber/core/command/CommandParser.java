@@ -109,7 +109,6 @@ public class CommandParser
     public class EventCompat
     {
         final MessageChannel channel;
-        final GuildChannel gchannel;
         final JDA jda;
         final Guild guild;
         final User user;
@@ -120,7 +119,6 @@ public class CommandParser
             this.jda = e.getJDA();
             this.guild = e.getGuild();
             this.user = e.getAuthor();
-            this.gchannel = e.getGuildChannel();
         }
         EventCompat(SlashCommandInteractionEvent e)
         {
@@ -128,11 +126,9 @@ public class CommandParser
             this.jda = e.getJDA();
             this.guild = e.getGuild();
             this.user = e.getUser();
-            this.gchannel = e.getGuildChannel();
         }
 
         public MessageChannel getChannel() { return this.channel; }
-        public GuildChannel getGuildChannel() { return this.gchannel; }
         public JDA getJDA() { return this.jda; } 
         public Guild getGuild() { return this.guild; }
         public User getAuthor() { return this.user; }

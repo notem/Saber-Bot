@@ -121,19 +121,19 @@ public class DiagnoseCommand implements Command
                 builder.append("- I do not have the permissions to create new channels!\n");
 
             // 3) check local channel permissions
-            boolean write = saber.hasPermission(event.getGuildChannel(), Permission.MESSAGE_SEND);
-            if (!write)
-            {
-                builder.append("- I do not have the permissions to send messages to #")
-                        .append(event.getGuildChannel().getName())
-                        .append("!\n");
-            }
-            else
-            {
-                boolean embed = saber.hasPermission(event.getGuildChannel(), Permission.MESSAGE_EMBED_LINKS);
-                if (!embed)
-                    builder.append("- I cannot send messages with embeds to this channel!\n");
-            }
+            //boolean write = saber.hasPermission(event.getGuildChannel(), Permission.MESSAGE_SEND);
+            //if (!write)
+            //{
+            //    builder.append("- I do not have the permissions to send messages to #")
+            //            .append(event.getGuildChannel().getName())
+            //            .append("!\n");
+            //}
+            //else
+            //{
+            //    boolean embed = saber.hasPermission(event.getGuildChannel(), Permission.MESSAGE_EMBED_LINKS);
+            //    if (!embed)
+            //        builder.append("- I cannot send messages with embeds to this channel!\n");
+            //}
         }
         else
         {   // diagnose a schedule or channel
@@ -256,14 +256,14 @@ public class DiagnoseCommand implements Command
         builder.append("```");
 
         // send the diagnosis message
-        if (saber.hasPermission(event.getGuildChannel(), Permission.MESSAGE_SEND))
-        {   // only if Saber can write to the channel
-            MessageUtilities.sendMsg(builder.toString(), event.getChannel(), null);
-        }
-        else
-        {   // attempt to DM the user the diagnosis
+        //if (saber.hasPermission(event.getGuildChannel(), Permission.MESSAGE_SEND))
+        //{   // only if Saber can write to the channel
+        //    MessageUtilities.sendMsg(builder.toString(), event.getChannel(), null);
+        //}
+        //else
+        //{   // attempt to DM the user the diagnosis
             MessageUtilities.sendPrivateMsg(builder.toString(), event.getAuthor(), null);
-        }
+        //}
     }
 
     /**

@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.exceptions.PermissionException;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
 
 import java.util.function.Consumer;
 
@@ -128,8 +129,9 @@ public class MessageUtilities
      * @param msg the message object to edit
      * @param action a non null Consumer will do operations on the results returned
      */
-    public static void editMsg(MessageCreateData newMsg, Message msg, Consumer<Message> action )
+    public static void editMsg(MessageCreateData data, Message msg, Consumer<Message> action )
     {
+        MessageEditData newMsg = MessageEditData.fromCreateData(data);
         if (newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return;
 
         try
@@ -150,8 +152,9 @@ public class MessageUtilities
     }
 
     // blocking
-    public static Message editMsg(MessageCreateData newMsg, Message msg)
+    public static Message editMsg(MessageCreateData data, Message msg)
     {
+        MessageEditData newMsg = MessageEditData.fromCreateData(data);
         if (newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return null;
 
         try
