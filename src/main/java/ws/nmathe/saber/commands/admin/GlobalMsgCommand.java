@@ -3,6 +3,7 @@ package ws.nmathe.saber.commands.admin;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.Guild;
@@ -30,13 +31,13 @@ public class GlobalMsgCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         return "";
     }
 
     @Override
-    public void action(String prefix, String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, EventCompat event)
     {
         String msg = "";
         for(String arg : args)

@@ -1,6 +1,8 @@
 package ws.nmathe.saber.commands;
 
+import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 
 /**
  * file: Command.java
@@ -30,7 +32,7 @@ public interface Command
      * @param event the originating event
      * @return true if arguments are properly formed, false otherwise
      */
-    String verify(String prefix, String[] args, MessageReceivedEvent event);
+    String verify(String prefix, String[] args, EventCompat event);
 
     /**
      * what the bot does when the command is called by the user
@@ -38,5 +40,5 @@ public interface Command
      * @param args an array of arguments provided with the commands (excludes the invoking argument)
      * @param event the originating event object
      */
-    void action(String prefix, String[] args, MessageReceivedEvent event);
+    void action(String prefix, String[] args, EventCompat event);
 }

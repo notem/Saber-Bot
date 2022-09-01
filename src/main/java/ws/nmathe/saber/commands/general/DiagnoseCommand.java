@@ -7,6 +7,7 @@ import org.bson.Document;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.util.List;
@@ -43,7 +44,7 @@ public class DiagnoseCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         if (args.length > 0)
         {
@@ -56,7 +57,7 @@ public class DiagnoseCommand implements Command
     }
 
     @Override
-    public void action(String prefix, String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, EventCompat event)
     {
         Member saber = event.getGuild().getMember(event.getJDA().getSelfUser());
         StringBuilder builder = new StringBuilder("```diff\n");
@@ -257,7 +258,7 @@ public class DiagnoseCommand implements Command
         // send the diagnosis message
         if (saber.hasPermission(event.getGuildChannel(), Permission.MESSAGE_SEND))
         {   // only if Saber can write to the channel
-            MessageUtilities.sendMsg(builder.toString(), event.getGuildChannel(), null);
+            MessageUtilities.sendMsg(builder.toString(), event.getChannel(), null);
         }
         else
         {   // attempt to DM the user the diagnosis
@@ -268,7 +269,7 @@ public class DiagnoseCommand implements Command
     /**
      * evaluates if an announcement channel can be accessed
      */
-    private TextChannel helper(StringBuilder builder, MessageReceivedEvent event, String identifier, String type, Member saber)
+    private TextChannel helper(StringBuilder builder, EventCompat event, String identifier, String type, Member saber)
     {
         TextChannel channel = null;
         if (identifier.matches("[\\d]+"))

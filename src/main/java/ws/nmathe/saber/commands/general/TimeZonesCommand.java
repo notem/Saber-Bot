@@ -2,6 +2,7 @@ package ws.nmathe.saber.commands.general;
 
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -39,7 +40,7 @@ public class TimeZonesCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         String head = prefix + this.name();
         return args.length==1 ? "" : "Incorrect amount of arguments!" +
@@ -47,7 +48,7 @@ public class TimeZonesCommand implements Command
     }
 
     @Override
-    public void action(String prefix, String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, EventCompat event)
     {
         Set<String> zones = ZoneId.getAvailableZoneIds();
         StringBuilder msg = new StringBuilder("**Available options for time zones**\n");

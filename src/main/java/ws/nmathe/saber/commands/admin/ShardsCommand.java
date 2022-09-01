@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.util.function.Consumer;
@@ -28,13 +29,13 @@ public class ShardsCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         return "";
     }
 
     @Override
-    public void action(String prefix, String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, EventCompat event)
     {
         Consumer<String> sendMsg = (msg) ->
         {
@@ -44,7 +45,7 @@ public class ShardsCommand implements Command
             }
             else
             {
-                MessageUtilities.sendMsg( msg, event.getGuildChannel(), null );
+                MessageUtilities.sendMsg( msg, event.getChannel(), null );
             }
         };
 

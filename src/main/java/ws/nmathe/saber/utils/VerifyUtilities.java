@@ -3,8 +3,8 @@ package ws.nmathe.saber.utils;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 
 import java.awt.*;
@@ -412,7 +412,7 @@ public class VerifyUtilities
     /**
      *  Returns error message (or empty string) for announcement add keyword verification
      */
-    public static String verifyAnnouncementAdd(String[] args, int index, String head, MessageReceivedEvent event)
+    public static String verifyAnnouncementAdd(String[] args, int index, String head, EventCompat event)
     {
         if (args.length - index < 3)
         {

@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.utils.Logging;
 import ws.nmathe.saber.utils.MessageUtilities;
@@ -50,7 +51,7 @@ public class OAuthCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         if(args.length > 1) return "That is too many arguments!\n" +
                 "Use ``" + prefix + this.name() + " [token]`` to link your Discord ID with an authorization token.";
@@ -58,7 +59,7 @@ public class OAuthCommand implements Command
     }
 
     @Override
-    public void action(String prefix, String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, EventCompat event)
     {
         String message = "";
         if(args.length == 0)
@@ -136,7 +137,7 @@ public class OAuthCommand implements Command
         }
         else
         {
-            MessageUtilities.sendMsg(message, event.getGuildChannel(), null);
+            MessageUtilities.sendMsg(message, event.getChannel(), null);
         }
     }
 }

@@ -1,9 +1,13 @@
 package ws.nmathe.saber.core.command;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.admin.*;
@@ -70,9 +74,66 @@ public class CommandHandler
         adminCommands.put((new ReloadSettingsCommand()).name(), new ReloadSettingsCommand());
         adminCommands.put((new ClearLocksCommand()).name(), new ClearLocksCommand());
         adminCommands.put((new ShardsCommand()).name(), new ShardsCommand());
-        adminCommands.put((new AvatarCommand()).name(), new AvatarCommand());
 
         initialized = true;
+    }
+
+    public void updateCommands(JDA jda)
+    {
+        jda.updateCommands()
+        .addCommands(Commands.slash("help", "DM the user bot info"))
+        .addCommands(Commands.slash("init", "Create a schedule")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("create", "Add event to schedule")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("delete", "Delete an event")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("edit", "Modify an event")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("config", "Configure a schedule")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("timezones", "List valid timezones")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("test", "Test event announcement")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("sort", "Sort events on schedule")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("events", "List all events")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("schedules", "List all schedules")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("announcements", "List upcoming announcements")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("guild", "Configure guild options")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("skip", "Skip an event")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("list", "Show member RSVPs")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("manage", "Manage member RSVPs")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("purge", "Bulk delete messages")
+                        .setGuildOnly(true)
+                    )
+        .addCommands(Commands.slash("diagnose", "Debug permision issues")
+                        .setGuildOnly(true)
+                    )
+        .queue();
     }
 
     /**
@@ -138,7 +199,71 @@ public class CommandHandler
         {
             handleAdminCommand(cc);
         }
+    }
 
+    /**
+     * Processes a MessageReceivedEvent into a command using the command parser
+     * and executes the command
+     * @param event (MessageReceivedEvent) containing the command
+     * @param type (Integer) the type of command, 0 for public, 1 for admin
+     * @param prefix (String) the prefix of the command (depends on guild)
+     */
+    public void handleCommand(SlashCommandInteractionEvent event, Integer type, String prefix)
+    {
+        // if the command handler has not yet been initialized, send a special error
+        if (!initialized)
+        {
+            String msg = "I have not yet finished booting up! Please try again in a moment.";
+            if (event.getChannel().equals(ChannelType.PRIVATE))
+            {   // send message to DM channel
+                MessageUtilities.sendPrivateMsg(msg, event.getUser(), null);
+            }
+            else
+            {   // send message to channel the message was received on
+                MessageUtilities.sendMsg(msg, event.getChannel(), null);
+            }
+            return;
+        }
+
+        // otherwise handle the received command
+        CommandParser.CommandContainer cc = commandParser.parse(event, prefix);
+        if (type == 0)
+        {
+            String identifier = event.getUser().getId();
+            if (event.getChannel().equals(ChannelType.TEXT))
+                identifier +=  event.getGuild().getId();
+            if (rateLimiter.check(identifier))
+            {
+                String alert;
+                if (event.getChannelType().equals(ChannelType.PRIVATE))
+                {
+                    alert = "@" + event.getUser().getName() +
+                            " [" + event.getUser().getId() + "] was rate limited using the '" +
+                            cc.invoke + "' command via DM!";
+                }
+                else
+                {
+                    alert = "@" + event.getUser().getName() +
+                            " [" + event.getUser().getId() + "] was rate limited on '" +
+                            event.getGuild().getName() +"' [" + event.getGuild().getId() + "] using the '" +
+                            cc.invoke + "' command!";
+                }
+
+                // alert admin
+                Logging.warn(this.getClass(), alert);
+                User admin = event.getJDA().getUserById(Main.getBotSettingsManager().getAdminId());
+                if(admin != null)
+                {
+                    MessageUtilities.sendPrivateMsg(alert, admin, null);
+                }
+                return;
+            }
+            handleGeneralCommand(cc);
+        }
+        else if (type == 1)
+        {
+            handleAdminCommand(cc);
+        }
     }
 
     /**
@@ -162,8 +287,8 @@ public class CommandHandler
                         {
                             commands.get(cc.invoke).action(cc.prefix, cc.args, cc.event);
 
-                            String info = "Executed command [" + cc.event.getMessage().getContentRaw() +
-                                    "] by " + cc.event.getAuthor().getName() + " [" + cc.event.getMessage().getAuthor().getId()+ "]";
+                            String info = "Executed command [" + cc.raw +
+                                    "] by " + cc.event.getAuthor().getName() + " [" + cc.event.getAuthor().getId()+ "]";
                             if(cc.event.getGuild() != null)
                                 info += " on " + cc.event.getGuild().getName()+ " [" + cc.event.getGuild().getId() + "]";
                             Logging.cmd(this.getClass(), info);

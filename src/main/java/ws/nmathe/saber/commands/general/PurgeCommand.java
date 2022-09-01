@@ -8,6 +8,7 @@ import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
 import ws.nmathe.saber.core.RateLimiter;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.utils.MessageUtilities;
 
 import java.util.Map;
@@ -51,7 +52,7 @@ public class PurgeCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         String head = prefix + this.name();
         int index = 0;
@@ -92,7 +93,7 @@ public class PurgeCommand implements Command
     }
 
     @Override
-    public void action(String prefix, String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, EventCompat event)
     {
         TextChannel channel = event.getGuild().getJDA().getTextChannelById(args[0].replaceAll("[^\\d]", ""));
         Integer[] count = {100};                                // number of messages to remove
@@ -119,6 +120,6 @@ public class PurgeCommand implements Command
 
         // send success message
         String content = "Finished purging old message.";
-        MessageUtilities.sendMsg(content, event.getGuildChannel(), null);
+        MessageUtilities.sendMsg(content, event.getChannel(), null);
     }
 }

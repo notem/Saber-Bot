@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
@@ -53,7 +54,7 @@ public class EventsCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         /*
         * this command is non-destructive, so it is allowable that verify never fails
@@ -64,7 +65,7 @@ public class EventsCommand implements Command
     }
 
     @Override
-    public void action(String prefix, String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, EventCompat event)
     {
         // process any optional channel arguments
         List<String> channelIds = new ArrayList<>();
@@ -101,7 +102,7 @@ public class EventsCommand implements Command
                 {
                     if (content.length() > 1400)
                     {
-                        sendEventsMessage(footer, title, content, event.getGuildChannel());
+                        sendEventsMessage(footer, title, content, event.getChannel());
 
                         // adjust title and footer to reflect future messages are a continuation
                         title = "Events on " + guild.getName() + " (continued)";
@@ -117,7 +118,7 @@ public class EventsCommand implements Command
                         {
                             if (content.length() > 1800)
                             {
-                                sendEventsMessage(footer, title, content, event.getGuildChannel());
+                                sendEventsMessage(footer, title, content, event.getChannel());
 
                                 // adjust title and footer to reflect future messages are a continuation
                                 title = "Events on " + guild.getName() + " (continued)";
@@ -157,7 +158,7 @@ public class EventsCommand implements Command
 
         // final footer shows count
         footer = count + " event(s)";
-        sendEventsMessage(footer, title, content, event.getGuildChannel());
+        sendEventsMessage(footer, title, content, event.getChannel());
     }
 
     /**

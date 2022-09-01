@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.core.google.GoogleAuth;
 import ws.nmathe.saber.utils.MessageUtilities;
 
@@ -53,7 +54,7 @@ public class SyncCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         String head = prefix + this.name();
         int index = 0;
@@ -125,7 +126,7 @@ public class SyncCommand implements Command
     }
 
     @Override
-    public void action(String head, String[] args, MessageReceivedEvent event)
+    public void action(String head, String[] args, EventCompat event)
     {
         // get user Google credentials (if they exist)
         Credential credential = GoogleAuth.getCredential(event.getAuthor().getId());

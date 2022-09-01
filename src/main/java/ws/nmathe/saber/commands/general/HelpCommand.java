@@ -3,6 +3,7 @@ package ws.nmathe.saber.commands.general;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.utils.MessageUtilities;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
@@ -35,13 +36,13 @@ public class HelpCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         return "";
     }
 
     @Override
-    public void action(String prefix, String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, EventCompat event)
     {
         // no arguments
         // send the bot intro with a brief list of commands to the user
@@ -52,7 +53,6 @@ public class HelpCommand implements Command
                     "a dedicated command channel named **" + Main.getBotSettingsManager().getControlChan() + "** to get started.\n\n" +
 
                     "github: <https://github.com/notem/Saber-Bot>\n" +
-                    "userdocs: <https://nmathe.ws/bots/saber>\n" +
                     "support: <https://discord.gg/ZQZnXsC>\n" +
                     "invite: <https://discordapp.com/api/oauth2/authorize?client_id=" + Main.getShardManager().getJDA().getSelfUser().getId() +
                     "&scope=bot&permissions=523344>\n\n";

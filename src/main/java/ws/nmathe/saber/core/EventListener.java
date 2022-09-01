@@ -15,6 +15,7 @@ import ws.nmathe.saber.utils.*;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -176,6 +177,75 @@ public class EventListener extends ListenerAdapter
                 Main.getCommandHandler().handleCommand(event, 0, prefix);
                 return;
             }
+        }
+    }
+
+    @Override
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event)
+    {
+        String prefix = "/";
+        String content = event.getCommandString();   // the raw string the user sent
+        String userId = event.getUser().getId();             // the ID of the user
+        if (event.getChannelType().equals(ChannelType.PRIVATE) && !userId.equals(event.getJDA().getSelfUser().getId()))
+        {
+            String a = "("+prefix+")?help(.+)?$";
+            String b = "("+prefix+")?oauth(.+)?$";
+            // info and setup general commands
+            if (content.matches(a) || content.matches(b))
+            {
+                Main.getCommandHandler().handleCommand(event, 0, prefix);
+                return;
+            }
+            return;
+        }
+
+        // stop processing if the event is not from a guild text channel
+        if (!event.getChannelType().equals(ChannelType.TEXT)) return;
+
+        // handle typical command
+        GuildSettingsManager.GuildSettings guildSettings = Main.getGuildSettingsManager().getGuildSettings(event.getGuild().getId());
+
+        // remove the prefix from the command string
+        String trimmedContent = StringUtils.replaceOnce(content, prefix, "").trim();
+
+        // check if command is restricted on the guild
+        Boolean isRestricted = true;
+        for(String command : guildSettings.getUnrestrictedCommands())
+        {
+            if(trimmedContent.startsWith(command))
+            {
+                isRestricted = false;
+                break;
+            }
+        }
+
+        // if the command is restricted on the guild
+        // check if the guild has a custom command channel and if the channel IDs match,
+        // otherwise check if the channel is equal to the default command channel name
+        if(isRestricted)
+        {
+            String controlChannelName = Main.getBotSettingsManager().getControlChan();
+            if(guildSettings.getCommandChannelId() != null &&
+                    guildSettings.getCommandChannelId().equals(event.getChannel().getId()))
+            {
+                Main.getCommandHandler().handleCommand(event, 0, prefix);
+                return;
+            }
+            else if (event.getChannel().getName().toLowerCase().equals(controlChannelName))
+            {
+                Main.getCommandHandler().handleCommand(event, 0, prefix);
+                guildSettings.setCommandChannelId(event.getChannel().getId());
+                String body = "<#" + event.getChannel().getId() + "> is now set as my control channel.\n" +
+                        "You can now safely rename <#" + event.getChannel().getId() + "> without affecting my behavior.";
+                MessageUtilities.sendMsg(body, event.getChannel(), null);
+                return;
+            }
+        }
+        // if not restricted, process the command
+        else
+        {
+            Main.getCommandHandler().handleCommand(event, 0, prefix);
+            return;
         }
     }
 

@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.CommandInfo;
+import ws.nmathe.saber.core.command.CommandParser.EventCompat;
 import ws.nmathe.saber.core.schedule.ScheduleEntry;
 import ws.nmathe.saber.utils.MessageUtilities;
 import ws.nmathe.saber.utils.ParsingUtilities;
@@ -49,7 +50,7 @@ public class ManageCommand implements Command
     }
 
     @Override
-    public String verify(String prefix, String[] args, MessageReceivedEvent event)
+    public String verify(String prefix, String[] args, EventCompat event)
     {
         String head = prefix + this.name();
         int index = 0;
@@ -122,7 +123,7 @@ public class ManageCommand implements Command
     }
 
     @Override
-    public void action(String prefix, String[] args, MessageReceivedEvent event)
+    public void action(String prefix, String[] args, EventCompat event)
     {
         int index = 0;
         Integer entryId = ParsingUtilities.encodeIDToInt(args[index++]);
@@ -193,6 +194,6 @@ public class ManageCommand implements Command
         }
 
         Main.getEntryManager().updateEntry(se, false);
-        MessageUtilities.sendMsg(content, event.getGuildChannel(), null);
+        MessageUtilities.sendMsg(content, event.getChannel(), null);
     }
 }
