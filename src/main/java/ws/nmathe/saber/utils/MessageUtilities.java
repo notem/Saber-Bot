@@ -53,7 +53,7 @@ public class MessageUtilities
 
         try
         {
-            chan.sendMessage(message.getContent()).queue(action, e ->
+            chan.sendMessage(message).queue(action, e ->
             {
                 if(!(e instanceof PermissionException))
                 {
@@ -76,7 +76,7 @@ public class MessageUtilities
 
         try
         {
-            chan.sendMessage(message.getContent()).queue(action, error);
+            chan.sendMessage(message).queue(action, error);
         }
         catch(Exception e)
         {
@@ -92,7 +92,7 @@ public class MessageUtilities
 
         try
         {
-            return chan.sendMessage(message.getContent()).complete();
+            return chan.sendMessage(message).complete();
         }
         catch (PermissionException e) { return null; }
         catch (Exception e)
@@ -139,7 +139,7 @@ public class MessageUtilities
 
         try
         {
-            msg.editMessage(newMsg.getContent()).queue(action, e ->
+            msg.editMessage(newMsg).queue(action, e ->
             {
                 if (!(e instanceof PermissionException))
                 {
@@ -162,7 +162,7 @@ public class MessageUtilities
 
         try
         {
-            return msg.editMessage(newMsg.getContent()).complete();
+            return msg.editMessage(newMsg).complete();
         }
         catch (PermissionException e) { return null; }
         catch (Exception e)
