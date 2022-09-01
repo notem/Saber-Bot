@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
@@ -81,56 +82,75 @@ public class CommandHandler
     public void updateCommands(JDA jda)
     {
         jda.updateCommands()
-        .addCommands(Commands.slash("help", "DM the user bot info"))
+        .addCommands(Commands.slash("help", "DM the user bot info")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
+                    )
         .addCommands(Commands.slash("init", "Create a schedule")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("create", "Add event to schedule")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("delete", "Delete an event")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("edit", "Modify an event")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("config", "Configure a schedule")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("timezones", "List valid timezones")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("test", "Test event announcement")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("sort", "Sort events on schedule")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("events", "List all events")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("schedules", "List all schedules")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("announcements", "List upcoming announcements")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("guild", "Configure guild options")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("skip", "Skip an event")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("list", "Show member RSVPs")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("manage", "Manage member RSVPs")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("purge", "Bulk delete messages")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .addCommands(Commands.slash("diagnose", "Debug permision issues")
+                        .addOption(OptionType.STRING, "stuff", "required command content")
                         //.setGuildOnly(true)
                     )
         .queue();
@@ -214,7 +234,7 @@ public class CommandHandler
         if (!initialized)
         {
             String msg = "I have not yet finished booting up! Please try again in a moment.";
-            if (event.getChannel().equals(ChannelType.PRIVATE))
+            if (event.getChannel().getType().equals(ChannelType.PRIVATE))
             {   // send message to DM channel
                 MessageUtilities.sendPrivateMsg(msg, event.getUser(), null);
             }
@@ -230,7 +250,7 @@ public class CommandHandler
         if (type == 0)
         {
             String identifier = event.getUser().getId();
-            if (event.getChannel().equals(ChannelType.TEXT))
+            if (event.getChannel().getType().equals(ChannelType.TEXT))
                 identifier +=  event.getGuild().getId();
             if (rateLimiter.check(identifier))
             {

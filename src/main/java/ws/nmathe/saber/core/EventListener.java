@@ -184,7 +184,7 @@ public class EventListener extends ListenerAdapter
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event)
     {
         String prefix = "/";
-        String content = event.getCommandString();   // the raw string the user sent
+        String content = event.getName();   // the raw string the user sent
         String userId = event.getUser().getId();             // the ID of the user
         if (event.getChannelType().equals(ChannelType.PRIVATE) && !userId.equals(event.getJDA().getSelfUser().getId()))
         {

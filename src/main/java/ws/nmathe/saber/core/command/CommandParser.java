@@ -59,11 +59,11 @@ public class CommandParser
     CommandContainer parse(SlashCommandInteractionEvent e, String prefix)
     {
         /// trim off the prefix
-        String raw = e.getCommandString();
-        String trimmed = StringUtils.replaceOnce(raw,prefix, "").trim();
+        String invoke = e.getName();
 
         // split at white spaces (non newlines) or quotation captures
-        Matcher matcher = Pattern.compile("[\"\\u201C\\u201D][\\S\\s]*?[\\u201C\\u201D\"]|[^ \"\\u201C\\u201D]+").matcher(trimmed);
+        String content = e.getOption("stuff").getAsString();
+        Matcher matcher = Pattern.compile("[\"\\u201C\\u201D][\\S\\s]*?[\\u201C\\u201D\"]|[^ \"\\u201C\\u201D]+").matcher(content);
         List<String> list = new ArrayList<>();
         while (matcher.find())
         {
@@ -74,14 +74,14 @@ public class CommandParser
         String[] args = list.stream().toArray(String[]::new);
 
         // separate out first arg
-        String invoke = args[0];
+        //String invoke = args[0];
 
         // divide out the remaining args from the first arg
-        args = Arrays.copyOfRange(args, 1, args.length);
+        //args = Arrays.copyOfRange(args, 1, args.length);
 
         EventCompat e_compat = new EventCompat(e);
 
-        return new CommandContainer(raw, prefix, invoke, args, e_compat);
+        return new CommandContainer(invoke, prefix, invoke, args, e_compat);
     }
 
     /**
