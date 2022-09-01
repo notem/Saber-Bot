@@ -122,9 +122,10 @@ public class ShardManager
                     Logging.info(this.getClass(), "Starting shard " + shardId + ". . .");
                     JDA shard = this.builder
                             .useSharding(shardId, shardTotal)
-                            .build();
+                            .build().awaitReady();
                     this.jdaShards.put(shardId, shard);
-                    Main.getCommandHandler().updateCommands(shard); // update per-shard necessary? I don't know
+                    for (Guild guild : shard.getGuilds())
+                        Main.getCommandHandler().updateCommands(guild); // update per-shard necessary? I don't know
                 }
             }
             else // no sharding
@@ -136,7 +137,8 @@ public class ShardManager
 
                 Main.getEntryManager().init();
                 Main.getCommandHandler().init();
-                Main.getCommandHandler().updateCommands(jda);
+                for (Guild guild : jda.getGuilds())
+                    Main.getCommandHandler().updateCommands(guild); // update per-shard necessary? I don't know
             }
 
             // executor service schedules shard-checking threads
