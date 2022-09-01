@@ -48,6 +48,7 @@ public class MessageUtilities
     /// version which takes a message rather than a string
     public static void sendMsg(MessageCreateData message, MessageChannel chan, Consumer<Message> action )
     {
+        if (message == null) return;
         if (message.getContent().isEmpty() && message.getEmbeds().isEmpty()) return;
 
         try
@@ -70,6 +71,7 @@ public class MessageUtilities
     /// customizable error handling (used by list command temporarily)
     public static void sendMsg(MessageCreateData message, MessageChannel chan, Consumer<Message> action, Consumer<Throwable> error )
     {
+        if (message == null) return;
         if (message.getContent().isEmpty() && message.getEmbeds().isEmpty()) return;
 
         try
@@ -85,6 +87,7 @@ public class MessageUtilities
     /// blocking version
     public static Message sendMsg(MessageCreateData message, MessageChannel chan)
     {
+        if (message == null) return null;
         if (message.getContent().isEmpty() && message.getEmbeds().isEmpty()) return null;
 
         try
@@ -129,9 +132,9 @@ public class MessageUtilities
      * @param msg the message object to edit
      * @param action a non null Consumer will do operations on the results returned
      */
-    public static void editMsg(MessageCreateData data, Message msg, Consumer<Message> action )
+    public static void editMsg(MessageEditData newMsg, Message msg, Consumer<Message> action )
     {
-        MessageEditData newMsg = MessageEditData.fromCreateData(data);
+        if (newMsg == null) return;
         if (newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return;
 
         try
@@ -152,9 +155,9 @@ public class MessageUtilities
     }
 
     // blocking
-    public static Message editMsg(MessageCreateData data, Message msg)
+    public static Message editMsg(MessageEditData newMsg, Message msg)
     {
-        MessageEditData newMsg = MessageEditData.fromCreateData(data);
+        if (newMsg == null) return null;
         if (newMsg.getContent().isEmpty() && newMsg.getEmbeds().isEmpty()) return null;
 
         try

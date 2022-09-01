@@ -6,7 +6,10 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.utils.ParsingUtilities;
 import ws.nmathe.saber.utils.VerifyUtilities;
@@ -35,8 +38,45 @@ public class MessageGenerator
      */
     public static MessageCreateData generate(ScheduleEntry se)
     {
-        if (se == null) return new MessageCreateBuilder().build();
+        if (se == null) return null;
 
+        MessageEmbed embed = generateEmbed(se);
+        
+        MessageCreateBuilder msgBuilder = new MessageCreateBuilder().setEmbeds(embed);
+        if (se.getNonEmbededText() != null)
+        {
+            String fulltext = ParsingUtilities.processText(se.getNonEmbededText(), se, true);
+            msgBuilder.setContent(fulltext);
+        }
+
+        // return the fully constructed message
+        return msgBuilder.build();
+    }
+
+    /**
+     * Primary method which generates a complete Discord message object for the event
+     * @param se (ScheduleEntry) to generate a message display
+     * @return the message to be used to display the event in it's associated Discord channel
+     */
+    public static MessageEditData generate(ScheduleEntry se, Message oldMessage)
+    {
+        if (se == null) return null;
+
+        MessageEmbed embed = generateEmbed(se);
+        
+        MessageEditBuilder msgBuilder = MessageEditBuilder.fromMessage(oldMessage).setEmbeds(embed);
+        if (se.getNonEmbededText() != null)
+        {
+            String fulltext = ParsingUtilities.processText(se.getNonEmbededText(), se, true);
+            msgBuilder.setContent(fulltext);
+        }
+
+        // return the fully constructed message
+        return msgBuilder.build();
+    }
+
+    private static MessageEmbed generateEmbed(ScheduleEntry se)
+    {
         // prepare title
         String titleUrl = (se.getTitleUrl() != null && VerifyUtilities.verifyUrl(se.getTitleUrl())) ?
                 se.getTitleUrl() : DEFAULT_URL;
@@ -76,17 +116,7 @@ public class MessageGenerator
         {
             builder.setThumbnail(se.getThumbnailUrl());
         }
-
-        
-        MessageCreateBuilder msgBuilder = new MessageCreateBuilder().setEmbeds(builder.build());
-        if (se.getNonEmbededText() != null)
-        {
-            String fulltext = ParsingUtilities.processText(se.getNonEmbededText(), se, true);
-            msgBuilder.setContent(fulltext);
-        }
-
-        // return the fully constructed message
-        return msgBuilder.build();
+        return builder.build();
     }
 
 

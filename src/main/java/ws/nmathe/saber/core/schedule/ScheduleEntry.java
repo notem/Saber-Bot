@@ -548,7 +548,7 @@ public class ScheduleEntry
     void reloadDisplay()
     {
         this.getMessageObject((message)->
-                MessageUtilities.editMsg(MessageGenerator.generate(this), message, null));
+                MessageUtilities.editMsg(MessageGenerator.generate(this, message), message, null));
     }
 
 
