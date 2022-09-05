@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import ws.nmathe.saber.Main;
 
 import org.apache.commons.lang3.StringUtils;
@@ -63,9 +64,12 @@ public class CommandParser
         /// trim off the prefix
         String invoke = e.getName();
 
+        OptionMapping option = e.getOption(Main.getCommandHandler().argName);
+        String content;
+        if (option == null) content = "";
+        else content = option.getAsString();
+
         // split at white spaces (non newlines) or quotation captures
-        String content = e.getOption(Main.getCommandHandler().argName).getAsString();
-        if (content == null) content = "";
         Matcher matcher = Pattern.compile("[\"\\u201C\\u201D][\\S\\s]*?[\\u201C\\u201D\"]|[^ \"\\u201C\\u201D]+").matcher(content);
         List<String> list = new ArrayList<>();
         while (matcher.find())
