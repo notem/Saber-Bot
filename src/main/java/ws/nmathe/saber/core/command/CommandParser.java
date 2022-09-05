@@ -65,6 +65,7 @@ public class CommandParser
 
         // split at white spaces (non newlines) or quotation captures
         String content = e.getOption(Main.getCommandHandler().argName).getAsString();
+        if (content == null) content = "";
         Matcher matcher = Pattern.compile("[\"\\u201C\\u201D][\\S\\s]*?[\\u201C\\u201D\"]|[^ \"\\u201C\\u201D]+").matcher(content);
         List<String> list = new ArrayList<>();
         while (matcher.find())
@@ -74,12 +75,6 @@ public class CommandParser
         }
 
         String[] args = list.stream().toArray(String[]::new);
-
-        // separate out first arg
-        //String invoke = args[0];
-
-        // divide out the remaining args from the first arg
-        //args = Arrays.copyOfRange(args, 1, args.length);
 
         EventCompat e_compat = new EventCompat(e);
 
