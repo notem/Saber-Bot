@@ -6,10 +6,13 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.Message.Interaction;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import ws.nmathe.saber.Main;
 import ws.nmathe.saber.commands.Command;
 import ws.nmathe.saber.commands.admin.*;
@@ -202,7 +205,7 @@ public class CommandHandler
                 }
                 return;
             }
-            handleGeneralCommand(cc);
+            handleGeneralCommand(cc, null);
         }
         else if (type == 1)
         {
@@ -219,18 +222,13 @@ public class CommandHandler
      */
     public void handleCommand(SlashCommandInteractionEvent event, Integer type, String prefix)
     {
+        SlashCommandInteraction interaction = event.getInteraction();
+
         // if the command handler has not yet been initialized, send a special error
         if (!initialized)
         {
             String msg = "I have not yet finished booting up! Please try again in a moment.";
-            if (event.getChannel().getType().equals(ChannelType.PRIVATE))
-            {   // send message to DM channel
-                MessageUtilities.sendPrivateMsg(msg, event.getUser(), null);
-            }
-            else
-            {   // send message to channel the message was received on
-                MessageUtilities.sendMsg(msg, event.getChannel(), null);
-            }
+            interaction.reply(msg).queue();
             return;
         }
 
@@ -243,6 +241,9 @@ public class CommandHandler
                 identifier +=  event.getGuild().getId();
             if (rateLimiter.check(identifier))
             {
+                String userMsg = "You have hit the ratelimit, please wait a few minutes before retrying your command.";
+                interaction.reply(userMsg).queue();;
+
                 String alert;
                 if (event.getChannelType().equals(ChannelType.PRIVATE))
                 {
@@ -267,7 +268,7 @@ public class CommandHandler
                 }
                 return;
             }
-            handleGeneralCommand(cc);
+            handleGeneralCommand(cc, interaction.deferReply());
         }
         else if (type == 1)
         {
@@ -279,7 +280,7 @@ public class CommandHandler
      * Executes a public/general command
      * @param cc (CommandContainer) holding the command information
      */
-    private void handleGeneralCommand(CommandParser.CommandContainer cc)
+    private void handleGeneralCommand(CommandParser.CommandContainer cc, ReplyCallbackAction action)
     {
         // if the invoking command appears in commands
         if(commands.containsKey(cc.invoke))
@@ -306,13 +307,16 @@ public class CommandHandler
                         {
                             Logging.exception(commands.get(cc.invoke).getClass(), e);
                         }
+                        String sucString = "Completed execution of " + cc.invoke + " command.";
+                        action.addContent(sucString).queue();
                     });
                 }
                 // otherwise send error message
                 else
                 {
                     String msg = "**Error** : " + err;
-                    MessageUtilities.sendMsg(msg, cc.event.getChannel(), null);
+                    action.addContent(msg).queue();
+                    //MessageUtilities.sendMsg(msg, cc.event.getChannel(), null);
                 }
             }
             catch(Exception e)
@@ -328,7 +332,8 @@ public class CommandHandler
         else
         {   // command is not a valid command
             String msg = "**" + cc.invoke + "** is not a command!";
-            MessageUtilities.sendMsg(msg, cc.event.getChannel(), null);
+            action.addContent(msg).queue();
+            //MessageUtilities.sendMsg(msg, cc.event.getChannel(), null);
         }
     }
 
