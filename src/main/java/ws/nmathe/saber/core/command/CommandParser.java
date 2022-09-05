@@ -6,6 +6,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import ws.nmathe.saber.Main;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -62,7 +64,7 @@ public class CommandParser
         String invoke = e.getName();
 
         // split at white spaces (non newlines) or quotation captures
-        String content = e.getOption("stuff").getAsString();
+        String content = e.getOption(Main.getCommandHandler().argName).getAsString();
         Matcher matcher = Pattern.compile("[\"\\u201C\\u201D][\\S\\s]*?[\\u201C\\u201D\"]|[^ \"\\u201C\\u201D]+").matcher(content);
         List<String> list = new ArrayList<>();
         while (matcher.find())
